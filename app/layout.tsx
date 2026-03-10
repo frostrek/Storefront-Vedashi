@@ -31,12 +31,12 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "KSP Wines — Premium Vietnamese Wines",
-    template: "%s | KSP Wines",
+    default: "Vedashi — Premium Ayurvedic Wellness",
+    template: "%s | Vedashi",
   },
   description:
-    "Experience the unique terroir of Vietnam, bottled with passion and tradition. Discover our curated collection of premium wines.",
-  keywords: ["wine", "Vietnamese wine", "premium wine", "KSP Wines", "red wine", "white wine"],
+    "Experience the healing power of authentic Ayurvedic remedies crafted from nature. Discover clinically tested herbal formulations for holistic wellness.",
+  keywords: ["ayurveda", "ayurvedic wellness", "herbal remedies", "Vedashi", "natural healing", "dosha", "panchakarma"],
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
     other: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION ? {
@@ -45,14 +45,14 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    siteName: "KSP Wines",
-    title: "KSP Wines — Premium Vietnamese Wines",
-    description: "Experience the unique terroir of Vietnam, bottled with passion and tradition.",
+    siteName: "Vedashi",
+    title: "Vedashi — Premium Ayurvedic Wellness",
+    description: "Experience the healing power of authentic Ayurvedic remedies crafted from nature.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "KSP Wines — Premium Vietnamese Wines",
-    description: "Experience the unique terroir of Vietnam, bottled with passion and tradition.",
+    title: "Vedashi — Premium Ayurvedic Wellness",
+    description: "Experience the healing power of authentic Ayurvedic remedies crafted from nature.",
   },
 };
 
@@ -127,7 +127,8 @@ export default async function RootLayout({
                       },
                     }}
                   />
-                  <AgeVerificationModal />
+                  {/* AgeVerificationModal disabled for Ayurvedic wellness site */}
+                  {/* <AgeVerificationModal /> */}
                   <Navbar />
                   <PromoBanner />
                   <main className="flex-1">{children}</main>

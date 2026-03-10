@@ -1,25 +1,25 @@
 @import "tailwindcss";
 
-/* === KSP Wines — Luxury Wine Theme === */
+/* === Vedashi — Premium Ayurvedic Wellness Theme === */
 
 @theme {
-  --color-cream: #FAF7F2;
-  --color-cream-dark: #F0EBE3;
-  --color-burgundy: #722F37;
-  --color-burgundy-dark: #5A252C;
-  --color-burgundy-light: #8B3A42;
-  --color-wine-gold: #C9A96E;
-  --color-wine-gold-light: #D4B87A;
-  --color-charcoal: #2D2926;
-  --color-warm-gray: #6B6462;
-  --color-light-border: #E8E2DA;
+  --color-cream: #FAF8F0;
+  --color-cream-dark: #EDE8D0;
+  --color-burgundy: #3B5D3B;
+  --color-burgundy-dark: #2D4A2D;
+  --color-burgundy-light: #4A7A4A;
+  --color-wine-gold: #8B7A3D;
+  --color-wine-gold-light: #A89250;
+  --color-charcoal: #2C2C2C;
+  --color-warm-gray: #6B6B60;
+  --color-light-border: #D4CFC0;
   --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 :root {
-  --background: #FAF7F2;
-  --foreground: #2D2926;
+  --background: #FAF8F0;
+  --foreground: #2C2C2C;
 }
 
 html {
@@ -42,27 +42,27 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #FAF7F2;
+  background: #FAF8F0;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #C9A96E;
+  background: #8B7A3D;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #722F37;
+  background: #3B5D3B;
 }
 
 /* Focus */
 *:focus-visible {
-  outline: 2px solid #722F37;
+  outline: 2px solid #3B5D3B;
   outline-offset: 2px;
 }
 
 /* Selection */
 ::selection {
-  background-color: #722F37;
+  background-color: #3B5D3B;
   color: white;
 }
 
@@ -111,6 +111,18 @@ body {
   }
 }
 
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
 .animate-fade-in-up {
   animation: fadeInUp 0.6s ease-out forwards;
 }
@@ -124,12 +136,16 @@ body {
 }
 
 .animate-shimmer {
-  background: linear-gradient(90deg, #E8E2DA 25%, #F0EBE3 50%, #E8E2DA 75%);
+  background: linear-gradient(90deg, #D4CFC0 25%, #EDE8D0 50%, #D4CFC0 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
 }
 
-/* Age verification modal animations */
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Scale-in modal animations */
 @keyframes scaleIn {
   from {
     opacity: 0;
@@ -209,20 +225,20 @@ body {
 .glass {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  background: rgba(250, 247, 242, 0.9);
+  background: rgba(250, 248, 240, 0.9);
 }
 
-/* Wine gradient */
+/* Ayurveda gradient (replaces wine-gradient) */
 .wine-gradient {
-  background: linear-gradient(135deg, #722F37 0%, #5A252C 50%, #3D1A1E 100%);
+  background: linear-gradient(135deg, #3B5D3B 0%, #2D4A2D 50%, #1F331F 100%);
 }
 
-/* Gold gradient */
+/* Olive gold gradient (replaces gold-gradient) */
 .gold-gradient {
-  background: linear-gradient(135deg, #C9A96E 0%, #D4B87A 50%, #C9A96E 100%);
+  background: linear-gradient(135deg, #8B7A3D 0%, #A89250 50%, #8B7A3D 100%);
 }
 
-/* Shiny gold text shimmer */
+/* Herbal shimmer text */
 @keyframes goldShimmer {
   0% {
     background-position: -200% center;
@@ -235,11 +251,11 @@ body {
 
 .shiny-gold-text {
   background: linear-gradient(90deg,
-      #C6A75E 0%,
-      #FFE6A0 25%,
-      #FFF8DC 50%,
-      #FFE6A0 75%,
-      #C6A75E 100%);
+      #8B7A3D 0%,
+      #C9B87A 25%,
+      #E8DCAF 50%,
+      #C9B87A 75%,
+      #8B7A3D 100%);
   background-size: 200% auto;
   -webkit-background-clip: text;
   background-clip: text;
@@ -249,13 +265,12 @@ body {
   letter-spacing: 0.05em;
 }
 
-/* Royal category bar */
-/* Royal category bar */
+/* Category bar */
 .royal-bar {
-  border-top: 2px solid #C6A75E;
+  border-top: 2px solid #8B7A3D;
   box-shadow:
     0 4px 15px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(198, 167, 94, 0.3);
+    inset 0 1px 0 rgba(139, 122, 61, 0.3);
 }
 
 /* Range slider thumb */
@@ -265,7 +280,7 @@ body {
   height: 18px;
   width: 18px;
   border-radius: 50%;
-  background: #722F37;
+  background: #3B5D3B;
   border: 2px solid #fff;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
   cursor: pointer;
@@ -276,14 +291,14 @@ body {
 
 .range-thumb::-webkit-slider-thumb:hover {
   transform: scale(1.15);
-  box-shadow: 0 2px 8px rgba(114, 47, 55, 0.35);
+  box-shadow: 0 2px 8px rgba(59, 93, 59, 0.35);
 }
 
 .range-thumb::-moz-range-thumb {
   height: 18px;
   width: 18px;
   border-radius: 50%;
-  background: #722F37;
+  background: #3B5D3B;
   border: 2px solid #fff;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
   cursor: pointer;
@@ -320,18 +335,35 @@ body {
 
 /* Promo Banner Animations */
 @keyframes marqueeLeft {
-  0% { transform: translateX(100vw); }
-  100% { transform: translateX(-100%); }
+  0% {
+    transform: translateX(100vw);
+  }
+
+  100% {
+    transform: translateX(-100%);
+  }
 }
 
 @keyframes marqueeRight {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100vw); }
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100vw);
+  }
 }
 
 @keyframes blinkText {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
 }
 
 .animate-marquee-left {

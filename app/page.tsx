@@ -2,23 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Award, Star, Mail, Wine, Grape, Sparkles, Layers } from 'lucide-react';
-import { getProducts, getCategories, getBestSellers, getFeaturedProducts as fetchFeatured, getFeaturedCollections, StorefrontCollection } from '@/lib/api';
+import { ArrowRight, Star, Sparkles, Leaf, ShieldCheck, Beaker, Heart, Stethoscope, Salad, FlaskConical, CalendarCheck } from 'lucide-react';
+import { getBestSellers, getFeaturedProducts as fetchFeatured } from '@/lib/api';
 import { Product } from '@/types';
 import ProductCard from '@/components/ProductCard';
-import HeroCarousel from '@/components/HeroCarousel';
+import HeroSection from '@/components/HeroSection';
 import { SkeletonProductGrid } from '@/components/Skeleton';
+import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
 
 export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [featuredLoading, setFeaturedLoading] = useState(true);
   const [bestSellers, setBestSellers] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [collections, setCollections] = useState<StorefrontCollection[]>([]);
-  const [collectionsLoading, setCollectionsLoading] = useState(true);
-
-  // Icon lookup for dynamic collections
-  const iconMap: Record<string, any> = { Wine, Grape, Sparkles, Layers, Star, Award };
 
   useEffect(() => {
     getBestSellers({ limit: 8 }).then(res => {
@@ -29,347 +25,299 @@ export default function HomePage() {
       setFeaturedProducts(products);
       setFeaturedLoading(false);
     });
-    getFeaturedCollections(6).then(cols => {
-      setCollections(cols);
-      setCollectionsLoading(false);
-    });
   }, []);
 
-  // Fallback static collections (used only when API returns nothing)
-  const fallbackCollections = [
-    { icon: Wine, title: 'Red Wines', subtitle: 'Bold & Complex', color: 'from-red-900/20 to-red-800/10', href: '/products?category=Red%20Wine' },
-    { icon: Sparkles, title: 'White Wines', subtitle: 'Crisp & Elegant', color: 'from-amber-100/60 to-yellow-50/40', href: '/products?category=White%20Wine' },
-    { icon: Grape, title: 'Sparkling', subtitle: 'Celebratory', color: 'from-pink-100/60 to-rose-50/40', href: '/products?category=Sparkling' },
-  ];
+  const allProducts = featuredProducts.length > 0 ? featuredProducts : bestSellers;
+  const productsLoading = featuredLoading && loading;
 
   return (
     <div className="bg-cream">
-      {/* ─── HERO SECTION — CMS driven ─── */}
-      <HeroCarousel />
+      {/* ═══ 1. HERO ═══ */}
+      <HeroSection />
 
-      {/* ─── FEATURED COLLECTIONS ─── */}
-      <section className="py-10 sm:py-16 lg:py-20 px-4">
-        <div className="mx-auto max-w-7xl">
-          <div className="text-center mb-8 sm:mb-12">
-            <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-wine-gold">
-              Featured Collections
-            </h2>
-            <p className="mt-2 sm:mt-3 text-sm sm:text-base text-warm-gray">Discover our finest curated collections</p>
-          </div>
-
-          {collectionsLoading ? (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="animate-pulse rounded-2xl border border-light-border bg-white p-8">
-                  <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-cream-dark" />
-                  <div className="mx-auto h-5 w-32 rounded bg-cream-dark mb-2" />
-                  <div className="mx-auto h-4 w-24 rounded bg-cream-dark/60" />
+      {/* ═══ 2. DOSHA DISCOVERY ═══ */}
+      <section className="py-12 sm:py-20 lg:py-24 px-4">
+        <AnimateOnScroll animation="fadeUp" className="mx-auto max-w-7xl">
+          <div className="rounded-3xl bg-[#F5F2E8] border border-[#E0DCCF] overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
+              {/* Left — Text */}
+              <div className="p-8 sm:p-12 lg:p-16 flex flex-col justify-center">
+                <div className="flex items-center gap-2 mb-4">
+                  <Sparkles className="h-4 w-4 text-[#8B7A3D]" />
+                  <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#8B7A3D]">
+                    Discover Your Nature
+                  </span>
                 </div>
-              ))}
-            </div>
-          ) : collections.length > 0 ? (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-              {collections.map((col) => {
-                const IconComponent = iconMap[col.icon || ''] || Layers;
-                return (
+                <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C2C2C] leading-tight">
+                  What is your unique <em className="italic">Dosha</em>?
+                </h2>
+                <p className="mt-5 text-[#6B6B60] text-base leading-relaxed max-w-lg">
+                  In Ayurveda, your &lsquo;Dosha&rsquo; is your unique mind-body type.
+                  Knowing your Vata, Pitta, or Kapha profile is the first step
+                  toward personalized healing and lasting energy.
+                </p>
+                <div className="mt-8 flex flex-wrap items-center gap-4">
                   <Link
-                    key={col.collection_id}
-                    href={`/collections/${col.slug}`}
-                    className="group relative overflow-hidden rounded-2xl border border-light-border bg-white p-5 sm:p-8 text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+                    href="/about"
+                    className="inline-flex items-center gap-2.5 rounded-full bg-[#3B5D3B] px-7 py-3.5 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:bg-[#2D4A2D] hover:-translate-y-0.5 hover:shadow-xl"
                   >
-                    <div className={`absolute inset-0 bg-gradient-to-br ${col.color_gradient || 'from-burgundy/10 to-cream'} opacity-0 group-hover:opacity-100 transition-opacity`} />
-                    <div className="relative">
-                      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-cream-dark">
-                        <IconComponent className="h-7 w-7 text-burgundy" />
-                      </div>
-                      <h3 className="font-serif text-xl font-semibold text-charcoal">{col.name}</h3>
-                      <p className="mt-1 text-sm text-warm-gray">{col.description || `${col.product_count || 0} products`}</p>
-                      {/* Preview thumbnails */}
-                      {col.preview_products && col.preview_products.length > 0 && (
-                        <div className="mt-4 flex justify-center -space-x-2">
-                          {col.preview_products.slice(0, 4).map((pp, i) => (
-                            pp.thumbnail_url ? (
-                              <img key={i} src={pp.thumbnail_url} alt="" className="h-8 w-8 rounded-full border-2 border-white object-cover" />
-                            ) : (
-                              <div key={i} className="h-8 w-8 rounded-full border-2 border-white bg-cream-dark" />
-                            )
-                          ))}
-                        </div>
-                      )}
-                      <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-burgundy">
-                        Explore <ArrowRight className="h-3 w-3" />
-                      </span>
-                    </div>
+                    Start Assessment
+                    <ArrowRight className="h-4 w-4" />
                   </Link>
-                );
-              })}
-            </div>
-          ) : (
-            /* Fallback: static collections */
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-              {fallbackCollections.map((collection) => (
-                <Link
-                  key={collection.title}
-                  href={collection.href}
-                  className="group relative overflow-hidden rounded-2xl border border-light-border bg-white p-5 sm:p-8 text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
-                >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${collection.color} opacity-0 group-hover:opacity-100 transition-opacity`} />
-                  <div className="relative">
-                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-cream-dark">
-                      <collection.icon className="h-7 w-7 text-burgundy" />
+                  <span className="text-xs text-[#8B7A3D] font-medium">Takes only 3 minutes</span>
+                </div>
+              </div>
+              {/* Right — Image + Testimonial */}
+              <div className="relative hidden lg:block min-h-[420px]">
+                <img src="/dosha-woman.png" alt="Woman enjoying herbal tea" className="absolute inset-0 w-full h-full object-cover" />
+                <div className="absolute bottom-8 right-8 left-8 max-w-xs ml-auto">
+                  <div className="rounded-xl bg-white/95 backdrop-blur-md p-5 shadow-xl">
+                    <p className="text-sm text-[#2C2C2C] italic leading-relaxed font-serif">
+                      &ldquo;This assessment changed how I view my
+                      energy cycles entirely. It&apos;s more than a
+                      quiz; it&apos;s a mirror.&rdquo;
+                    </p>
+                    <div className="mt-3 flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-full bg-[#3B5D3B]/10 flex items-center justify-center">
+                        <span className="text-sm font-bold text-[#3B5D3B]">A</span>
+                      </div>
+                      <span className="text-[11px] font-bold tracking-widest text-[#6B6B60] uppercase">Amanda K.</span>
                     </div>
-                    <h3 className="font-serif text-xl font-semibold text-charcoal">{collection.title}</h3>
-                    <p className="mt-1 text-sm text-warm-gray">{collection.subtitle}</p>
-                    <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-burgundy">
-                      Explore <ArrowRight className="h-3 w-3" />
-                    </span>
                   </div>
-                </Link>
-              ))}
+                </div>
+              </div>
             </div>
-          )}
-        </div>
+          </div>
+        </AnimateOnScroll>
       </section>
 
-      {/* ─── FEATURED PRODUCTS ─── */}
-      {featuredLoading ? (
-        <section className="py-20 px-4 bg-white">
-          <div className="mx-auto max-w-7xl">
-            <div className="text-center mb-12">
-              <h2 className="font-serif text-3xl sm:text-4xl font-bold text-wine-gold">
-                Featured Products
-              </h2>
-              <p className="mt-2 text-warm-gray">Handpicked selections just for you</p>
-            </div>
-            <SkeletonProductGrid count={4} />
-          </div>
-        </section>
-      ) : featuredProducts.length > 0 ? (
-        <section className="py-10 sm:py-16 lg:py-20 px-4 bg-white">
-          <div className="mx-auto max-w-7xl">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-12 gap-3">
+      {/* ═══ 3. APOTHECARY STAPLES ═══ */}
+      <section className="py-12 sm:py-20 lg:py-24 px-4 bg-white">
+        <div className="mx-auto max-w-7xl">
+          <AnimateOnScroll animation="fadeUp">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 sm:mb-14 gap-3">
               <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="h-5 w-5 text-wine-gold" />
-                  <span className="text-xs sm:text-sm uppercase tracking-[0.2em] text-wine-gold font-medium">Curated for You</span>
-                </div>
-                <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-wine-gold">
-                  Featured Products
+                <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C2C2C]">
+                  Apothecary Staples
                 </h2>
-                <p className="mt-1 sm:mt-2 text-sm sm:text-base text-warm-gray">Handpicked selections from our finest collection</p>
+                <p className="mt-2 text-[#6B6B60] text-base">
+                  Our most sought-after clinical formulations, trusted by practitioners worldwide.
+                </p>
               </div>
-              <Link
-                href="/products"
-                className="hidden sm:inline-flex items-center gap-2 text-sm font-medium text-burgundy hover:text-burgundy-dark transition-colors"
-              >
-                View All <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
-              {featuredProducts.slice(0, 12).map(product => (
-                <ProductCard key={product.product_id} product={product} />
-              ))}
-            </div>
-
-            <div className="mt-8 text-center sm:hidden">
-              <Link href="/products" className="inline-flex items-center gap-2 text-sm font-medium text-burgundy">
+              <Link href="/products" className="hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-[#3B5D3B] hover:text-[#2D4A2D] transition-colors">
                 View All Products <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
-          </div>
-        </section>
-      ) : null}
+          </AnimateOnScroll>
 
-      {/* ─── OUR STORY ─── */}
-      <section className="py-10 sm:py-16 lg:py-20 px-4 bg-white">
-        <div className="mx-auto max-w-7xl">
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12 items-center">
-            <div>
-              <p className="text-xs sm:text-sm uppercase tracking-[0.2em] text-wine-gold font-medium mb-2 sm:mb-3">Our Heritage</p>
-              <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-wine-gold leading-tight">
-                Our Story
-              </h2>
-              <p className="mt-4 sm:mt-6 text-sm sm:text-base text-warm-gray leading-relaxed">
-                At KSP Wines, we believe every bottle tells a story. From sun-drenched hillside
-                vineyards to lush coastal estates, we source and select only the finest grapes
-                to craft wines of exceptional character and depth.
-              </p>
-              <p className="mt-3 sm:mt-4 text-sm sm:text-base text-warm-gray leading-relaxed">
-                With over a decade of winemaking expertise, our artisans blend time-honored European
-                techniques with bold, modern innovation — producing wines that are not just beverages,
-                but experiences to be savored.
-              </p>
-              <Link
-                href="/about"
-                className="mt-6 inline-flex items-center gap-2 font-serif text-sm font-semibold text-burgundy hover:text-burgundy-dark transition-colors"
-              >
-                Read More <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-            <div className="relative">
-              <div className="rounded-2xl bg-gradient-to-br from-cream-dark to-cream overflow-hidden border border-light-border">
-                <div className="flex h-full items-center justify-center">
-                  <div className="relative flex justify-center py-0 px-0">
-                    <img src="/Our-story.webp" alt="Our Story" className="w-full max-w-5xl rounded-2xl shadow-lg object-contain transition duration-300 ease-in-out hover:scale-[1.02] hover:shadow-2xl" />
-                  </div>
-
-                </div>
+          <AnimateOnScroll animation="fadeUp" delay={0.15}>
+            {productsLoading ? (
+              <SkeletonProductGrid count={4} />
+            ) : allProducts.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+                {allProducts.slice(0, 4).map(product => (
+                  <ProductCard key={product.product_id} product={product} />
+                ))}
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── BEST SELLERS ─── */}
-      <section className="py-10 sm:py-16 lg:py-20 px-4">
-        <div className="mx-auto max-w-7xl">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-12 gap-3">
-            <div>
-              <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-wine-gold">
-                Best Sellers
-              </h2>
-              <p className="mt-1 sm:mt-2 text-sm sm:text-base text-warm-gray">Our most popular wines, loved by customers</p>
-            </div>
-            <Link
-              href="/products"
-              className="hidden sm:inline-flex items-center gap-2 text-sm font-medium text-burgundy hover:text-burgundy-dark transition-colors"
-            >
-              View All <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-
-          {loading ? (
-            <SkeletonProductGrid count={4} />
-          ) : bestSellers.length > 0 ? (
-            <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
-              {bestSellers.slice(0, 4).map(product => (
-                <ProductCard key={product.product_id} product={product} />
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-2xl border border-light-border bg-white py-16 text-center">
-              <span className="text-5xl block mb-4">🍷</span>
-              <p className="font-serif text-xl text-charcoal">Products coming soon</p>
-              <p className="mt-2 text-sm text-warm-gray">Add products via the admin panel</p>
-            </div>
-          )}
+            ) : (
+              <div className="rounded-2xl border border-light-border bg-cream py-16 text-center">
+                <span className="text-5xl block mb-4">🌿</span>
+                <p className="font-serif text-xl text-charcoal">Formulations coming soon</p>
+                <p className="mt-2 text-sm text-warm-gray">Add products via the admin panel</p>
+              </div>
+            )}
+          </AnimateOnScroll>
 
           <div className="mt-8 text-center sm:hidden">
-            <Link href="/products" className="inline-flex items-center gap-2 text-sm font-medium text-burgundy">
+            <Link href="/products" className="inline-flex items-center gap-2 text-sm font-semibold text-[#3B5D3B]">
               View All Products <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
       </section>
 
-      {/* ─── AWARDS & CERTIFICATIONS ─── */}
-      <section className="py-10 sm:py-16 lg:py-20 px-4 bg-white">
-        <div className="mx-auto max-w-7xl text-center">
-          <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-wine-gold">
-            Awards & Certifications
-          </h2>
-          <p className="mt-2 sm:mt-3 text-sm sm:text-base text-warm-gray">Recognition of our commitment to quality</p>
-
-          <div className="mt-8 sm:mt-12 grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-3">
-            {[
-              { icon: Award, title: 'Gold Medal 2024', subtitle: 'International Wine Challenge', detail: 'VinoViet Classic Red' },
-              { icon: Star, title: 'Best Vietnamese Wine', subtitle: 'Asia Wine Awards 2024', detail: 'Exceptional Quality' },
-              { icon: Award, title: 'Sustainability Award', subtitle: 'Green Vineyards Initiative', detail: 'Eco-Friendly Production' },
-            ].map((award, i) => (
-              <div key={i} className="rounded-2xl border border-light-border bg-cream/50 p-5 sm:p-8 transition-all hover:shadow-md">
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-wine-gold/20">
-                  <award.icon className="h-6 w-6 text-wine-gold" />
+      {/* ═══ 4. TRUST & SCIENCE ═══ */}
+      <section className="py-12 sm:py-20 lg:py-24 px-4 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-1/3 h-full opacity-[0.04] pointer-events-none">
+          <svg viewBox="0 0 200 600" fill="#3B5D3B" className="w-full h-full">
+            <path d="M100 0C120 80 200 120 200 200C200 320 100 360 100 600C100 360 0 320 0 200C0 120 80 80 100 0Z" />
+          </svg>
+        </div>
+        <div className="mx-auto max-w-7xl relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+            {/* Left — Image Collage */}
+            <AnimateOnScroll animation="fadeLeft" duration={0.9}>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4">
+                  <div className="rounded-2xl overflow-hidden shadow-lg">
+                    <img src="/trust-lab.png" alt="Lab testing" className="w-full h-48 sm:h-56 object-cover" />
+                  </div>
+                  <div className="rounded-2xl bg-[#3B5D3B] p-6 text-white">
+                    <p className="text-3xl font-bold">100%</p>
+                    <p className="text-xs font-bold tracking-widest uppercase mt-1 text-[#C9B87A]">Purity Lab-Tested</p>
+                  </div>
                 </div>
-                <h3 className="font-serif text-lg font-semibold text-charcoal">{award.title}</h3>
-                <p className="mt-1 text-sm text-warm-gray">{award.subtitle}</p>
-                <p className="mt-2 text-xs text-burgundy font-medium">{award.detail}</p>
+                <div className="space-y-4 pt-8">
+                  <div className="rounded-2xl bg-white border border-[#E0DCCF] p-6 text-center">
+                    <Stethoscope className="h-6 w-6 mx-auto text-[#8B7A3D] mb-2" />
+                    <p className="text-3xl font-bold text-[#2C2C2C]">50k+</p>
+                    <p className="text-[10px] font-bold tracking-widest uppercase mt-1 text-[#8B7A3D]">Lives Healed</p>
+                  </div>
+                  <div className="rounded-2xl overflow-hidden shadow-lg">
+                    <img src="/trust-healing.png" alt="Healing space" className="w-full h-48 sm:h-56 object-cover" />
+                  </div>
+                </div>
               </div>
+            </AnimateOnScroll>
+
+            {/* Right — Text */}
+            <div>
+              <AnimateOnScroll animation="fadeRight" delay={0.1}>
+                <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#3B5D3B] leading-tight italic">
+                  Rooted in Nature, Verified by Science
+                </h2>
+                <p className="mt-5 text-[#6B6B60] text-base leading-relaxed">
+                  We don&apos;t just believe in tradition; we measure its success. Every
+                  Vedashi formula undergoes rigorous multi-stage clinical trials
+                  and third-party purity testing.
+                </p>
+              </AnimateOnScroll>
+
+              <div className="mt-10 space-y-8">
+                {[
+                  { icon: FlaskConical, title: 'Clinical Transparency', desc: 'Full access to batch-specific lab results via QR codes on every bottle.' },
+                  { icon: Leaf, title: 'Ethical Sourcing', desc: 'Fair-trade partnerships with tribal farmers across the Himalayan belt.' },
+                  { icon: ShieldCheck, title: 'Physician Formulated', desc: 'Direct oversight by our board of certified MDs and Ayurvedic Vaidyas.' },
+                ].map((item, i) => (
+                  <AnimateOnScroll key={i} animation="fadeRight" delay={0.2 + i * 0.1}>
+                    <div className="flex gap-4 items-start">
+                      <div className="flex-shrink-0 h-10 w-10 rounded-full bg-[#3B5D3B]/10 flex items-center justify-center">
+                        <item.icon className="h-5 w-5 text-[#3B5D3B]" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-[#2C2C2C] text-base">{item.title}</h3>
+                        <p className="mt-1 text-sm text-[#6B6B60] leading-relaxed">{item.desc}</p>
+                      </div>
+                    </div>
+                  </AnimateOnScroll>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ 5. HEALING SERVICES ═══ */}
+      <section className="py-12 sm:py-20 lg:py-24 px-4 bg-white">
+        <div className="mx-auto max-w-7xl text-center">
+          <AnimateOnScroll animation="fadeUp">
+            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C2C2C]">
+              The Path to <em className="italic text-[#3B5D3B]">Prakriti</em>
+            </h2>
+            <p className="mt-3 text-[#6B6B60] text-base max-w-2xl mx-auto italic font-serif">
+              Beyond products, we offer a comprehensive healing ecosystem to restore your natural harmony.
+            </p>
+          </AnimateOnScroll>
+
+          <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {[
+              { icon: Heart, title: 'Panchakarma', desc: 'Five-fold detoxification therapy for complete cellular renewal.', color: 'bg-[#F5F2E8]' },
+              { icon: Salad, title: 'Dietary Guidance', desc: 'Personalized nutrition plans aligned with your unique Prakriti.', color: 'bg-[#E8F0E8]' },
+              { icon: Beaker, title: 'Herbal Therapy', desc: 'Custom-compounded remedies from our private botanical garden.', color: 'bg-[#F0F0E4]' },
+              { icon: CalendarCheck, title: 'Lifestyle Coaching', desc: 'Daily routines (Dinacharya) to harmonize with cosmic cycles.', color: 'bg-[#F5EFE4]' },
+            ].map((service, i) => (
+              <AnimateOnScroll key={i} animation="fadeUp" delay={i * 0.1}>
+                <div className={`${service.color} rounded-2xl p-8 text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group`}>
+                  <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm group-hover:shadow-md transition-shadow">
+                    <service.icon className="h-6 w-6 text-[#3B5D3B]" />
+                  </div>
+                  <h3 className="font-serif text-lg font-bold text-[#2C2C2C]">{service.title}</h3>
+                  <p className="mt-2 text-sm text-[#6B6B60] leading-relaxed">{service.desc}</p>
+                </div>
+              </AnimateOnScroll>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ─── TESTIMONIALS ─── */}
-      <section className="py-10 sm:py-16 lg:py-20 px-4">
-        <div className="mx-auto max-w-7xl">
-          <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-wine-gold text-center">
-            What Our Customers Say
-          </h2>
-          <p className="mt-2 sm:mt-3 text-sm sm:text-base text-warm-gray text-center">Hear from wine lovers who trust KSP Wines</p>
+      {/* ═══ 6. TESTIMONIALS ═══ */}
+      <section className="py-12 sm:py-20 lg:py-24 px-4">
+        <AnimateOnScroll animation="fadeUp" className="mx-auto max-w-4xl text-center">
+          <div className="flex justify-center gap-1 mb-6">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Star key={i} className="h-5 w-5 fill-[#8B7A3D] text-[#8B7A3D]" />
+            ))}
+          </div>
+          <blockquote className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-[#3B5D3B] leading-snug italic">
+            &ldquo;Vedashi hasn&apos;t just improved my health; it has fundamentally changed
+            how I relate to my body and the seasons.&rdquo;
+          </blockquote>
+          <div className="mt-8 flex flex-col items-center gap-3">
+            <div className="h-16 w-16 rounded-full bg-[#3B5D3B]/10 flex items-center justify-center border-2 border-[#3B5D3B]/20">
+              <span className="text-xl font-bold text-[#3B5D3B] font-serif">S</span>
+            </div>
+            <p className="text-[11px] font-bold tracking-[0.2em] text-[#6B6B60] uppercase">
+              Wellness Consultant, Madrid
+            </p>
+          </div>
+        </AnimateOnScroll>
 
-          <div className="mt-8 sm:mt-12 grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-3">
+        <AnimateOnScroll animation="fadeUp" delay={0.2} className="mx-auto max-w-4xl">
+          <div className="mt-14 grid grid-cols-1 sm:grid-cols-3 gap-6">
             {[
-              {
-                name: 'Emily Carter',
-                role: 'Wine Enthusiast',
-                text: 'KSP Wines delivers an extraordinary tasting experience. Every sip reveals new layers of complexity and refinement.',
-                rating: 5,
-              },
-              {
-                name: 'James Whitfield',
-                role: 'Restaurant Owner',
-                text: 'Consistently outstanding quality at a fair price. KSP Wines is the go-to choice for my restaurant\'s wine list.',
-                rating: 5,
-              },
-              {
-                name: 'Sofia Martínez',
-                role: 'Sommelier',
-                text: 'A hidden gem in the wine world. International-caliber quality with a distinctive character that stands apart.',
-                rating: 5,
-              },
+              { name: 'Priya M.', role: 'Yoga Instructor', text: 'The Ashwagandha Gold has transformed my energy levels. I feel balanced throughout the day without any crashes.', rating: 5 },
+              { name: 'David L.', role: 'Naturopath', text: 'Finally, an Ayurvedic brand that combines authentic formulations with modern clinical rigor. My patients love it.', rating: 5 },
+              { name: 'Aisha R.', role: 'Wellness Coach', text: 'The Triphala Detox has become a staple in my daily routine. Gentle yet effective — exactly what Ayurveda should be.', rating: 5 },
             ].map((testimonial, i) => (
-              <div
-                key={i}
-                className="rounded-2xl border border-light-border bg-white p-6 transition-all hover:shadow-md"
-              >
-                <div className="flex gap-1 mb-4">
+              <div key={i} className="rounded-2xl border border-[#E0DCCF] bg-white p-6 text-left transition-all hover:shadow-md">
+                <div className="flex gap-0.5 mb-3">
                   {Array.from({ length: testimonial.rating }).map((_, j) => (
-                    <Star key={j} className="h-4 w-4 fill-wine-gold text-wine-gold" />
+                    <Star key={j} className="h-3.5 w-3.5 fill-[#8B7A3D] text-[#8B7A3D]" />
                   ))}
                 </div>
-                <p className="text-sm text-warm-gray leading-relaxed italic">
-                  &ldquo;{testimonial.text}&rdquo;
-                </p>
+                <p className="text-sm text-[#6B6B60] leading-relaxed">&ldquo;{testimonial.text}&rdquo;</p>
                 <div className="mt-4 flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-cream-dark flex items-center justify-center font-serif text-burgundy font-bold">
+                  <div className="h-9 w-9 rounded-full bg-[#3B5D3B]/10 flex items-center justify-center font-serif text-[#3B5D3B] font-bold text-sm">
                     {testimonial.name.charAt(0)}
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-charcoal">{testimonial.name}</p>
-                    <p className="text-xs text-warm-gray">{testimonial.role}</p>
+                    <p className="text-sm font-semibold text-[#2C2C2C]">{testimonial.name}</p>
+                    <p className="text-xs text-[#6B6B60]">{testimonial.role}</p>
                   </div>
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </AnimateOnScroll>
       </section>
 
-      {/* ─── NEWSLETTER ─── */}
-      <section className="py-10 sm:py-16 lg:py-20 px-4 wine-gradient">
-        <div className="mx-auto max-w-2xl text-center">
-          <Mail className="mx-auto h-7 w-7 sm:h-8 sm:w-8 text-wine-gold mb-3 sm:mb-4" />
-          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-white">
-            Join Our Newsletter
-          </h2>
-          <p className="mt-2 sm:mt-3 text-cream-dark/80 text-xs sm:text-sm">
-            Stay updated on new releases and exclusive offers
-          </p>
-          <form className="mt-8 flex flex-col sm:flex-row gap-3 justify-center" onSubmit={e => e.preventDefault()}>
-            <input
-              type="email"
-              placeholder="Your email address..."
-              className="flex-1 rounded-lg bg-white/10 border border-white/20 px-5 py-3 text-sm text-white placeholder-white/50 focus:border-wine-gold focus:outline-none backdrop-blur-sm"
-            />
-            <button
-              type="submit"
-              className="rounded-lg bg-wine-gold px-8 py-3 text-sm font-semibold text-charcoal hover:bg-wine-gold-light transition-colors"
-            >
-              Subscribe
-            </button>
-          </form>
-        </div>
+      {/* ═══ 7. NEWSLETTER ═══ */}
+      <section className="py-12 sm:py-20 lg:py-24 px-4">
+        <AnimateOnScroll animation="scaleUp" className="mx-auto max-w-4xl">
+          <div className="rounded-3xl bg-[#3B5D3B] px-8 sm:px-16 py-14 sm:py-20 text-center relative overflow-hidden">
+            <div className="absolute -top-10 -left-10 w-40 h-40 opacity-10 pointer-events-none">
+              <svg viewBox="0 0 200 200" fill="white">
+                <path d="M100 0C120 60 200 80 200 140C200 180 160 200 100 200C40 200 0 180 0 140C0 80 80 60 100 0Z" />
+              </svg>
+            </div>
+            <div className="absolute -bottom-10 -right-10 w-40 h-40 opacity-10 pointer-events-none rotate-180">
+              <svg viewBox="0 0 200 200" fill="white">
+                <path d="M100 0C120 60 200 80 200 140C200 180 160 200 100 200C40 200 0 180 0 140C0 80 80 60 100 0Z" />
+              </svg>
+            </div>
+            <h2 className="relative z-10 font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
+              Join the <em className="italic text-[#C9B87A]">Healed</em>.
+            </h2>
+            <p className="relative z-10 mt-4 text-[#C9B87A]/80 text-sm sm:text-base max-w-lg mx-auto">
+              Receive weekly Ayurvedic insights, seasonal recipes, and early access to physician-curated kits.
+            </p>
+            <div className="relative z-10 mt-8 flex flex-wrap justify-center gap-4">
+              <Link href="/login" className="rounded-lg border-2 border-white/30 bg-white/10 px-8 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/20 hover:-translate-y-0.5">Login</Link>
+              <Link href="/login" className="rounded-lg bg-[#C9B87A] px-8 py-3 text-sm font-semibold text-[#2C2C2C] transition-all hover:bg-[#D4C38A] hover:-translate-y-0.5 shadow-lg">Sign Up</Link>
+            </div>
+            <p className="relative z-10 mt-6 text-[10px] text-white/40 tracking-wide">We respect your peace. Unsubscribe at any time.</p>
+          </div>
+        </AnimateOnScroll>
       </section>
     </div>
   );

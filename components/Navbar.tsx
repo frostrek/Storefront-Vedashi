@@ -39,27 +39,25 @@ interface HeaderConfig {
 }
 
 const DEFAULT_CONFIG: HeaderConfig = {
-  branding: { logo_url: '', logo_alt: 'KSP Wines' },
+  branding: { logo_url: '', logo_alt: 'Vedashi' },
   colors: {
     navbar_bg: '#ffffff',
     navbar_text: '#374151',
-    navbar_hover: '#4b0f1a',
-    strip_bg: '#4b0f1a',
-    strip_text: '#C6A75E',
-    strip_accent: '#FFD700',
-    cart_badge_bg: '#4b0f1a',
+    navbar_hover: '#3B5D3B',
+    strip_bg: '#3B5D3B',
+    strip_text: '#E8DCAF',
+    strip_accent: '#C9B87A',
+    cart_badge_bg: '#3B5D3B',
   },
   nav_links: [
     { label: 'Home', url: '/', enabled: true },
     { label: 'Shop', url: '/products', enabled: true },
-    { label: 'About Us', url: '/about', enabled: true },
-    { label: 'Contact', url: '/contact', enabled: true },
-    { label: 'Blog', url: '/blog', enabled: true },
-    { label: 'Help', url: '/help-center', enabled: true },
+    { label: 'Dosha Assessment', url: '/about', enabled: true },
+    { label: 'About', url: '/about', enabled: true },
   ],
   strip: {
     enabled: true,
-    center_message: '✦ Thank You for Choosing Us ✦',
+    center_message: '✦ Ancient Wisdom for Modern Wellness ✦',
     hotline: '090 202 5806',
     show_track_orders: true,
     show_categories: true,
@@ -137,7 +135,15 @@ export default function Navbar() {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={branding.logo_url} alt={branding.logo_alt} className="h-14 sm:h-16 md:h-20 w-auto object-contain" />
               ) : (
-                <img src="/KSP-Wines-logo.png" alt={branding.logo_alt} className="h-14 sm:h-16 md:h-20 w-auto" />
+                <span className="flex items-center gap-2">
+                  <svg width="28" height="28" viewBox="0 0 32 32" fill="none" className="text-[#3B5D3B]">
+                    <path d="M16 2C16 2 8 8 8 16C8 20.4 11.6 24 16 24C20.4 24 24 20.4 24 16C24 8 16 2 16 2Z" fill="currentColor" opacity="0.2" />
+                    <path d="M16 4C16 4 10 9 10 16C10 19.3 12.7 22 16 22C19.3 22 22 19.3 22 16C22 9 16 4 16 4Z" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                    <path d="M16 8V18" stroke="currentColor" strokeWidth="1.2" />
+                    <path d="M13 12C13 12 14.5 14 16 14C17.5 14 19 12 19 12" stroke="currentColor" strokeWidth="1" fill="none" />
+                  </svg>
+                  <span className="font-serif text-xl sm:text-2xl font-bold tracking-wide" style={{ color: '#3B5D3B' }}>Vedashi</span>
+                </span>
               )}
             </Link>
 
@@ -353,7 +359,7 @@ export default function Navbar() {
 
             {/* Mobile Search */}
             <div className="mb-3">
-              <SearchAutocomplete className="w-full" onClose={() => setMobileOpen(false)} placeholder="Search wines…" />
+              <SearchAutocomplete className="w-full" onClose={() => setMobileOpen(false)} placeholder="Search remedies…" />
             </div>
 
             {/* Main links (from config, filtered to enabled) */}

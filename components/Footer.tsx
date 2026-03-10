@@ -96,7 +96,15 @@ export default function Footer() {
                         <Link href="/" className="flex items-center gap-2">
                             {company?.logo_url
                                 ? <img src={company.logo_url} alt="Logo" className="h-20 w-auto" />
-                                : <img src="/KSP-Wines-logo.png" alt="KSP Wines" className="h-20 w-auto" />
+                                : <span className="flex items-center gap-2">
+                                    <svg width="24" height="24" viewBox="0 0 32 32" fill="none" className="text-[#3B5D3B]">
+                                        <path d="M16 2C16 2 8 8 8 16C8 20.4 11.6 24 16 24C20.4 24 24 20.4 24 16C24 8 16 2 16 2Z" fill="currentColor" opacity="0.2" />
+                                        <path d="M16 4C16 4 10 9 10 16C10 19.3 12.7 22 16 22C19.3 22 22 19.3 22 16C22 9 16 4 16 4Z" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                                        <path d="M16 8V18" stroke="currentColor" strokeWidth="1.2" />
+                                        <path d="M13 12C13 12 14.5 14 16 14C17.5 14 19 12 19 12" stroke="currentColor" strokeWidth="1" fill="none" />
+                                    </svg>
+                                    <span className="font-serif text-xl font-bold tracking-wide text-[#3B5D3B]">Vedashi</span>
+                                </span>
                             }
                         </Link>
 
@@ -107,7 +115,7 @@ export default function Footer() {
                         )}
 
                         <p className="mt-2 text-sm text-warm-gray leading-relaxed">
-                            {company?.description || 'Experience the unique terroir of Vietnam, bottled with passion and tradition.'}
+                            {company?.description || 'Vedashi blends ancient Ayurvedic wisdom with modern clinical precision to bring you authentic wellness solutions for the contemporary soul.'}
                         </p>
 
                         {/* Social icons */}
@@ -194,7 +202,7 @@ export default function Footer() {
                 {/* ── Bottom bar ── */}
                 <div className="mt-10 border-t border-light-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
                     <p className="text-xs text-warm-gray">
-                        {company?.copyright || `© ${new Date().getFullYear()} KSP Wines. All rights reserved.`}
+                        {company?.copyright || `© ${new Date().getFullYear()} Vedashi Wellness. All rights reserved.`}
                     </p>
                     {legal.length > 0 && (
                         <div className="flex flex-wrap justify-center gap-x-4 gap-y-1">
