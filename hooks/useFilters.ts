@@ -1,0 +1,173 @@
+'use client';
+
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { useCallback, useMemo } from 'react';
+import { FILTER_CONFIGS } from '@/lib/filterConfig';
+
+export interface FilterState {
+    search: string;
+    category: string;
+    sub_category: string;
+    brands: string[];
+    country: string;
+    ratings: string[];
+    priceRange: [number, number];
+    alcoholRange: [number, number];
+    inStock: boolean;
+    bestSellers: boolean;
+    newArrivals: boolean;
+    sort: string;
+}
+
+const DEFAULTS: FilterState = {
+    search: '',
+    category: '',
+    sub_category: '',
+    brands: [],
+    country: '',
+    ratings: [],
+    priceRange: [0, Infinity],
+    alcoholRange: [0, 100],
+    inStock: false,
+    bestSellers: false,
+    newArrivals: false,
+    sort: '',
+};
+
+function parseArray(val: string | null): string[] {
+    if (!val) return [];
+    return val.split(',').filter(Boolean);
+}
+
+function parseRange(val: string | null, fallback: [number, number]): [number, number] {
+    if (!val) return fallback;
+    const parts = val.split('-').map(Number);
+    if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+        return [parts[0], parts[1]];
+    }
+    return fallback;
+}
+
+export function useFilters() {
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
+    // Read current state from URL
+    const filters: FilterState = useMemo(() => ({
+        search: searchParams.get('search') || DEFAULTS.search,
+        category: searchParams.get('category') || DEFAULTS.category,
+        sub_category: searchParams.get('sub_category') || DEFAULTS.sub_category,
+        brands: parseArray(searchParams.get('brand')),
+        country: searchParams.get('country') || DEFAULTS.country,
+        ratings: parseArray(searchParams.get('rating')),
+        priceRange: parseRange(searchParams.get('price'), DEFAULTS.priceRange),
+        alcoholRange: parseRange(searchParams.get('alcohol'), DEFAULTS.alcoholRange),
+        inStock: searchParams.get('inStock') === 'true',
+        bestSellers: searchParams.get('bestSellers') === 'true',
+        newArrivals: searchParams.get('newArrivals') === 'true',
+        sort: searchParams.get('sort') || DEFAULTS.sort,
+    }), [searchParams]);
+
+    // Push updates to URL (shallow — no full reload)
+    const setParam = useCallback((updates: Record<string, string | null>) => {
+        const params = new URLSearchParams(searchParams.toString());
+        Object.entries(updates).forEach(([key, value]) => {
+            if (value === null || value === '' || value === 'false') {
+                params.delete(key);
+            } else {
+                params.set(key, value);
+            }
+        });
+        // Reset page on filter  change
+        params.delete('page');
+        const qs = params.toString();
+        router.replace(`${pathname}${qs ? '?' + qs : ''}`, { scroll: false });
+    }, [searchParams, router, pathname]);
+
+    // Setter  helpers
+    const setSearch = useCallback((val: string) => setParam({ search: val || null }), [setParam]);
+    const setCategory = useCallback((val: string) => setParam({ category: val || null }), [setParam]);
+    const setSubCategory = useCallback((val: string) => setParam({ sub_category: val || null }), [setParam]);
+    const setBrands = useCallback((val: string[]) => setParam({ brand: val.length ? val.join(',') : null }), [setParam]);
+    const setCountry = useCallback((val: string) => setParam({ country: val || null }), [setParam]);
+    const setRatings = useCallback((val: string[]) => setParam({ rating: val.length ? val.join(',') : null }), [setParam]);
+    const setPriceRange = useCallback((val: [number, number], maxPriceInStore?: number) => {
+        const pMax = maxPriceInStore ?? Infinity;
+        const isDefault = val[0] === 0 && (val[1] === pMax || val[1] === Infinity);
+        setParam({ price: isDefault ? null : `${val[0]}-${val[1]}` });
+    }, [setParam]);
+    const setAlcoholRange = useCallback((val: [number, number]) => {
+        const alcConfig = FILTER_CONFIGS.find(f => f.key === 'alcohol');
+        const isDefault = val[0] === (alcConfig?.min ?? 0) && val[1] === (alcConfig?.max ?? 60);
+        setParam({ alcohol: isDefault ? null : `${val[0]}-${val[1]}` });
+    }, [setParam]);
+    const setInStock = useCallback((val: boolean) => setParam({ inStock: val ? 'true' : null }), [setParam]);
+    const setBestSellers = useCallback((val: boolean) => setParam({ bestSellers: val ? 'true' : null }), [setParam]);
+    const setNewArrivals = useCallback((val: boolean) => setParam({ newArrivals: val ? 'true' : null }), [setParam]);
+    const setSort = useCallback((val: string) => setParam({ sort: val || null }), [setParam]);
+
+    const clearAll = useCallback(() => {
+        router.replace(pathname, { scroll: false });
+    }, [router, pathname]);
+
+    // Remove a single chip
+    const removeFilter = useCallback((key: string, value: string) => {
+        switch (key) {
+            case 'brand': setBrands(filters.brands.filter(b => b !== value)); break;
+            case 'country': setCountry(''); break;
+            case 'rating': setRatings(filters.ratings.filter(r => r !== value)); break;
+            case 'category': setParam({ category: null, sub_category: null }); break;
+            case 'sub_category': setSubCategory(''); break;
+            case 'search': setSearch(''); break;
+            case 'price': setPriceRange(DEFAULTS.priceRange); break;
+            case 'alcohol': setAlcoholRange(DEFAULTS.alcoholRange); break;
+            case 'inStock': setInStock(false); break;
+            case 'bestSellers': setBestSellers(false); break;
+            case 'newArrivals': setNewArrivals(false); break;
+            case 'sort': setSort(''); break;
+        }
+    }, [filters, setBrands, setCountry, setRatings, setCategory, setSubCategory, setSearch, setPriceRange, setAlcoholRange, setInStock, setBestSellers, setNewArrivals, setSort]);
+
+    // Build chips from active filters
+    const activeChips = useMemo(() => {
+        const chips: { key: string; label: string; value: string }[] = [];
+        if (filters.search) chips.push({ key: 'search', label: 'Search', value: filters.search });
+        if (filters.category) chips.push({ key: 'category', label: 'Category', value: filters.category });
+        if (filters.sub_category) chips.push({ key: 'sub_category', label: 'Subcategory', value: filters.sub_category });
+        filters.brands.forEach(b => chips.push({ key: 'brand', label: 'Brand', value: b }));
+        if (filters.country) chips.push({ key: 'country', label: 'Country', value: filters.country });
+        filters.ratings.forEach(r => chips.push({ key: 'rating', label: 'Rating', value: r }));
+        const pMax = filters.priceRange[1] === Infinity ? 'Max' : `$${filters.priceRange[1]}`;
+        if (filters.priceRange[0] !== 0 || filters.priceRange[1] !== Infinity) {
+            chips.push({ key: 'price', label: 'Price', value: `$${filters.priceRange[0]} – ${pMax}` });
+        }
+        const alcConfig = FILTER_CONFIGS.find(f => f.key === 'alcohol');
+        if (filters.alcoholRange[0] !== (alcConfig?.min ?? 0) || filters.alcoholRange[1] !== (alcConfig?.max ?? 100)) {
+            chips.push({ key: 'alcohol', label: 'Alcohol', value: `${filters.alcoholRange[0]}% – ${filters.alcoholRange[1]}%` });
+        }
+        if (filters.inStock) chips.push({ key: 'inStock', label: 'Status', value: 'In Stock' });
+        if (filters.bestSellers) chips.push({ key: 'bestSellers', label: 'Collection', value: 'Best Sellers' });
+        if (filters.newArrivals) chips.push({ key: 'newArrivals', label: 'Collection', value: 'New Arrivals' });
+        return chips;
+    }, [filters]);
+
+    return {
+        filters,
+        activeChips,
+        setSearch,
+        setCategory,
+        setSubCategory,
+        setBrands,
+        setCountry,
+        setRatings,
+        setPriceRange,
+        setAlcoholRange,
+        setInStock,
+        setBestSellers,
+        setNewArrivals,
+        setSort,
+        removeFilter,
+        clearAll,
+    };
+}

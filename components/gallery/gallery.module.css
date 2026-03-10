@@ -1,0 +1,506 @@
+/* ═══════════════════════════════════════════════
+   Product Image Gallery — Premium Design System
+   Amazon-style gallery with glass morphism,
+   smooth transitions, and rich visual feedback.
+   ═══════════════════════════════════════════════ */
+
+/* ─── Layout ─── */
+
+.galleryContainer {
+    display: grid;
+    grid-template-columns: 88px 1fr;
+    gap: 16px;
+    width: 100%;
+    position: relative;
+}
+
+@media (max-width: 768px) {
+    .galleryContainer {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+}
+
+/* ─── Thumbnail Strip ─── */
+
+.thumbStrip {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 560px;
+    overflow-y: auto;
+    padding-right: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(128, 0, 32, 0.12) transparent;
+}
+
+.thumbStrip::-webkit-scrollbar {
+    width: 3px;
+}
+
+.thumbStrip::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.thumbStrip::-webkit-scrollbar-thumb {
+    background: rgba(128, 0, 32, 0.15);
+    border-radius: 3px;
+}
+
+@media (max-width: 768px) {
+    .thumbStrip {
+        flex-direction: row;
+        max-height: none;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding-right: 0;
+        padding-bottom: 6px;
+        order: 2;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory;
+        gap: 8px;
+    }
+}
+
+.thumbBtn {
+    flex-shrink: 0;
+    width: 78px;
+    height: 78px;
+    border-radius: 12px;
+    border: 2px solid #eee;
+    background: #fff;
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 5px;
+    scroll-snap-align: start;
+    position: relative;
+}
+
+.thumbBtn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    border: 2px solid transparent;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+}
+
+.thumbBtn:hover {
+    border-color: rgba(128, 0, 32, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(128, 0, 32, 0.08);
+}
+
+.thumbBtn.active {
+    border-color: #800020;
+    box-shadow: 0 0 0 3px rgba(128, 0, 32, 0.1), 0 4px 16px rgba(128, 0, 32, 0.12);
+    transform: translateY(-1px);
+}
+
+.thumbBtn.active::after {
+    border-color: rgba(128, 0, 32, 0.15);
+}
+
+.thumbImg {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+    transition: transform 0.2s ease;
+}
+
+.thumbBtn:hover .thumbImg {
+    transform: scale(1.05);
+}
+
+/* ─── Preview + Zoom Row ─── */
+
+.previewZoomRow {
+    position: relative;
+    width: 100%;
+}
+
+/* ─── Main Preview ─── */
+
+.mainPreviewWrapper {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 16px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    background: linear-gradient(135deg, #ffffff 0%, #faf9f7 50%, #f7f5f2 100%);
+    overflow: hidden;
+    cursor: crosshair;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 8px 30px rgba(0, 0, 0, 0.04);
+    transition: box-shadow 0.3s ease;
+}
+
+.mainPreviewWrapper:hover {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 12px 40px rgba(0, 0, 0, 0.08);
+}
+
+@media (max-width: 1200px) {
+    .mainPreviewWrapper {
+        cursor: pointer;
+    }
+}
+
+@media (max-width: 768px) {
+    .mainPreviewWrapper {
+        order: 1;
+        cursor: pointer;
+        border-radius: 12px;
+    }
+}
+
+.mainImage {
+    max-width: 88%;
+    max-height: 88%;
+    object-fit: contain;
+    transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+    -webkit-user-drag: none;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.06));
+    position: relative;
+    z-index: 1;
+}
+
+.mainImage.loading {
+    opacity: 0;
+    transform: scale(0.97);
+}
+
+.mainImage.loaded {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* ─── Skeleton / Blurhash Placeholder ─── */
+
+.skeleton {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg,
+            #f5f3f0 30%,
+            #faf9f7 50%,
+            #f5f3f0 70%);
+    background-size: 200% 100%;
+    animation: shimmer 1.8s infinite ease-in-out;
+    border-radius: 16px;
+    z-index: 2;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.blurhashPlaceholder {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    filter: blur(20px);
+    transform: scale(1.1);
+    transition: opacity 0.6s ease;
+    border-radius: 16px;
+}
+
+/* ─── Amazon-Style Hover Zoom Panel (Desktop Only) ─── */
+
+.zoomPanel {
+    position: absolute;
+    top: 0;
+    left: calc(100% + 16px);
+    width: 100%;
+    aspect-ratio: 1;
+    border: 2px solid #7b1e1e;
+    border-radius: 16px;
+    background-color: #fff;
+    background-repeat: no-repeat;
+    box-shadow:
+        0 0 0 1px rgba(123, 30, 30, 0.08),
+        0 8px 24px rgba(123, 30, 30, 0.10),
+        0 24px 64px rgba(0, 0, 0, 0.10);
+    z-index: 100;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    overflow: hidden;
+}
+
+/* Hide zoom panel on mobile/tablet */
+@media (max-width: 1200px) {
+    .zoomPanel {
+        display: none;
+    }
+}
+
+/* ─── Lightbox ─── */
+
+.lightboxOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(10, 5, 5, 0.94);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: lightboxFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+}
+
+@keyframes lightboxFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.lightboxContent {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: lightboxZoomIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes lightboxZoomIn {
+    from {
+        transform: scale(0.92);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.lightboxImage {
+    max-width: 90vw;
+    max-height: 85vh;
+    object-fit: contain;
+    border-radius: 8px;
+    user-select: none;
+    -webkit-user-drag: none;
+    touch-action: pinch-zoom;
+    filter: drop-shadow(0 8px 40px rgba(0, 0, 0, 0.3));
+}
+
+.lightboxClose {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 10001;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+}
+
+.lightboxClose:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    transform: scale(1.05);
+}
+
+.lightboxNav {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 10001;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+}
+
+.lightboxNav:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    transform: translateY(-50%) scale(1.08);
+}
+
+.lightboxPrev {
+    left: 24px;
+}
+
+.lightboxNext {
+    right: 24px;
+}
+
+.lightboxCounter {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    z-index: 10001;
+}
+
+/* ─── Thumbnail Strip in Lightbox ─── */
+
+.lightboxThumbs {
+    position: fixed;
+    bottom: 56px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 10001;
+    padding: 6px 10px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.lightboxThumbBtn {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background: rgba(255, 255, 255, 0.06);
+    cursor: pointer;
+    overflow: hidden;
+    padding: 3px;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.lightboxThumbBtn:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.lightboxThumbBtn.active {
+    border-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.15);
+}
+
+.lightboxThumbImg {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 5px;
+}
+
+/* ─── Fallback ─── */
+
+.fallbackContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #faf9f7 0%, #f3f1ee 100%);
+    border-radius: 20px;
+    gap: 12px;
+}
+
+.fallbackImage {
+    max-width: 50%;
+    max-height: 50%;
+    object-fit: contain;
+    opacity: 0.4;
+    filter: grayscale(30%);
+}
+
+.fallbackText {
+    font-size: 13px;
+    color: #999;
+    font-style: italic;
+}
+
+/* ─── Image Counter Badge ─── */
+
+.imageCounter {
+    position: absolute;
+    bottom: 14px;
+    left: 14px;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 20px;
+    z-index: 5;
+    letter-spacing: 0.5px;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* ─── Expand icon on hover ─── */
+
+.expandIcon {
+    position: absolute;
+    bottom: 14px;
+    right: 14px;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.55);
+    color: rgba(255, 255, 255, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 5;
+    pointer-events: none;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.mainPreviewWrapper:hover .expandIcon {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* ─── Single Image (no thumbnails) ─── */
+
+.singleImageLayout {
+    grid-template-columns: 1fr;
+}
