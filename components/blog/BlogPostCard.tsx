@@ -25,6 +25,7 @@ export default function BlogPostCard({ post, featured = false }: BlogPostCardPro
                         src={post.cover_image}
                         alt={post.title}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        onError={(e) => { e.currentTarget.src = '/trust-lab.png'; }}
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-burgundy/10 to-wine-gold/10">
