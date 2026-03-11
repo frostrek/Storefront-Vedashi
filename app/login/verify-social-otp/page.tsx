@@ -6,8 +6,8 @@ import toast from 'react-hot-toast';
 import { Mail, RefreshCw, ArrowLeft, ShieldCheck } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-const TOKEN_KEY = 'ksp_wines_token';
-const USER_KEY = 'ksp_wines_user';
+const TOKEN_KEY = 'vedashi_token';
+const USER_KEY = 'vedashi_user';
 
 interface SocialOTPData {
     customer_id: string;

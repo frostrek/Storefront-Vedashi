@@ -78,7 +78,7 @@ export default function Footer() {
                             <input
                                 type="email"
                                 placeholder="Your email address"
-                                className="flex-1 sm:w-64 rounded-lg border border-light-border px-3 py-2 text-sm focus:outline-none focus:border-wine-gold bg-white"
+                                className="flex-1 sm:w-64 rounded-lg border border-light-border px-3 py-2 text-sm focus:outline-none focus:border-vedic-gold bg-white"
                             />
                             <button
                                 type="submit"
@@ -113,7 +113,7 @@ export default function Footer() {
                         </Link>
 
                         {company?.tagline && (
-                            <p className="mt-2 text-xs font-semibold uppercase tracking-widest text-wine-gold">
+                            <p className="mt-2 text-xs font-semibold uppercase tracking-widest text-vedic-gold">
                                 {company.tagline}
                             </p>
                         )}
@@ -135,7 +135,7 @@ export default function Footer() {
                                             target={url !== '#' ? '_blank' : undefined}
                                             rel="noopener noreferrer"
                                             title={s.platform}
-                                            className="text-wine-gold hover:text-burgundy transition-colors"
+                                            className="text-vedic-gold hover:text-herbal-green transition-colors"
                                         >
                                             <Icon className="h-4 w-4" />
                                         </a>
@@ -149,13 +149,13 @@ export default function Footer() {
                             <ul className="mt-5 space-y-2 text-xs text-warm-gray">
                                 {contact.address && (
                                     <li className="flex items-start gap-2">
-                                        <MapPin className="h-3.5 w-3.5 mt-0.5 text-wine-gold flex-shrink-0" />
+                                        <MapPin className="h-3.5 w-3.5 mt-0.5 text-vedic-gold flex-shrink-0" />
                                         {contact.address}
                                     </li>
                                 )}
                                 {contact.phone && (
                                     <li className="flex items-center gap-2">
-                                        <Phone className="h-3.5 w-3.5 text-wine-gold flex-shrink-0" />
+                                        <Phone className="h-3.5 w-3.5 text-vedic-gold flex-shrink-0" />
                                         <a href={`tel:${contact.phone}`} className="hover:text-burgundy transition-colors">
                                             {contact.phone}
                                         </a>
@@ -163,7 +163,7 @@ export default function Footer() {
                                 )}
                                 {contact.email && (
                                     <li className="flex items-center gap-2">
-                                        <Mail className="h-3.5 w-3.5 text-wine-gold flex-shrink-0" />
+                                        <Mail className="h-3.5 w-3.5 text-vedic-gold flex-shrink-0" />
                                         <a href={`mailto:${contact.email}`} className="hover:text-burgundy transition-colors">
                                             {contact.email}
                                         </a>
@@ -171,7 +171,7 @@ export default function Footer() {
                                 )}
                                 {contact.hours && (
                                     <li className="flex items-center gap-2">
-                                        <Clock className="h-3.5 w-3.5 text-wine-gold flex-shrink-0" />
+                                        <Clock className="h-3.5 w-3.5 text-vedic-gold flex-shrink-0" />
                                         {contact.hours}
                                     </li>
                                 )}
@@ -182,7 +182,7 @@ export default function Footer() {
                     {/* Dynamic nav columns from CMS */}
                     {columns.map((col, ci) => (
                         <div key={ci}>
-                            <h4 className="font-serif text-sm font-semibold text-wine-gold mb-4">
+                            <h4 className="font-serif text-sm font-semibold text-vedic-gold mb-4">
                                 {col.column_title}
                             </h4>
                             <ul className="space-y-2">

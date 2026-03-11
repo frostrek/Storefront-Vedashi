@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import {
-    ShieldCheck, User, Wine, Smartphone, ArrowLeft,
+    ShieldCheck, User, Smartphone, ArrowLeft,
     Eye, EyeOff, Mail, Lock, Check, Leaf
 } from 'lucide-react';
 import SocialLoginButtons from '@/components/SocialLoginButtons';
@@ -107,7 +107,7 @@ function LoginContent() {
                 <div className="relative flex h-24 w-24 items-center justify-center">
                     <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#4a7c4a] border-r-[#4a7c4a]/50 animate-spin" />
                     <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#4a7c4a]/20 animate-pulse">
-                        <Wine className="h-8 w-8 text-[#8dbf8d]" />
+                        <Leaf className="h-8 w-8 text-[#8dbf8d]" />
                     </div>
                 </div>
                 <div className="mt-8 flex flex-col items-center space-y-2">
@@ -210,7 +210,7 @@ function LoginContent() {
                         let userName = form.email.split('@')[0];
                         let userId = '';
                         try {
-                            const stored = localStorage.getItem('ksp_wines_user');
+                            const stored = localStorage.getItem('vedashi_user');
                             if (stored) {
                                 const userData = JSON.parse(stored);
                                 userName = userData.name || userName;

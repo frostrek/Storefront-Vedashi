@@ -16,7 +16,7 @@ interface SearchAutocompleteProps {
 
 export default function SearchAutocomplete({
     onClose,
-    placeholder = 'Search wines…',
+    placeholder = 'Search products…',
     className = '',
 }: SearchAutocompleteProps) {
     const router = useRouter();

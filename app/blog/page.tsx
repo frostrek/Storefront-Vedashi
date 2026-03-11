@@ -93,7 +93,7 @@ export default function BlogPage() {
                                 <p className="text-warm-gray text-lg">No wisdom found matching your search.</p>
                                 <button 
                                     onClick={() => { setSearchTerm(''); setActiveCategory('All'); }}
-                                    className="mt-4 text-wine-gold hover:text-wine-gold-light underline underline-offset-4"
+                                    className="mt-4 text-vedic-gold hover:text-vedic-gold-light underline underline-offset-4"
                                 >
                                     Clear filters
                                 </button>

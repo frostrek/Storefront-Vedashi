@@ -35,7 +35,7 @@ export default function CartPage() {
                 <div className="text-center">
                     <ShoppingCart className="mx-auto h-16 w-16 text-warm-gray/40 mb-4" />
                     <h1 className="font-serif text-2xl font-bold text-charcoal">Your Cart is Empty</h1>
-                    <p className="mt-2 text-warm-gray">Explore our wines and add something you like</p>
+                    <p className="mt-2 text-warm-gray">Explore our collection and add something you like</p>
                     <Link
                         href="/products"
                         className="mt-6 inline-flex items-center gap-2 rounded-lg bg-burgundy px-8 py-3 text-sm font-semibold text-white hover:bg-burgundy-dark transition-colors"
@@ -111,7 +111,7 @@ export default function CartPage() {
                                                 {item.image_url ? (
                                                     <img src={item.image_url} alt={item.product_name || ''} className="h-full w-full object-cover rounded-lg" />
                                                 ) : (
-                                                    <span className="text-4xl">🍷</span>
+                                                    <span className="text-4xl">🌿</span>
                                                 )}
                                             </Link>
 
@@ -196,7 +196,7 @@ export default function CartPage() {
                                                     {item.image_url ? (
                                                         <img src={item.image_url} alt={item.product_name || ''} className="h-full w-full object-cover rounded-lg" />
                                                     ) : (
-                                                        <span className="text-3xl">🍷</span>
+                                                        <span className="text-3xl">🌿</span>
                                                     )}
                                                 </Link>
 
@@ -256,7 +256,7 @@ export default function CartPage() {
                                                 {item.image_url ? (
                                                     <img src={item.image_url} alt="" className="h-full w-full object-cover rounded-lg" />
                                                 ) : (
-                                                    <span className="text-lg">🍷</span>
+                                                    <span className="text-lg">🌿</span>
                                                 )}
                                             </div>
                                             <div className="flex-1 min-w-0">

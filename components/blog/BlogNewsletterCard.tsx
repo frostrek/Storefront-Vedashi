@@ -22,7 +22,7 @@ export default function BlogNewsletterCard() {
                     type="email"
                     placeholder="your@email.com"
                     required
-                    className="w-full bg-white text-charcoal rounded-full px-6 py-3.5 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-wine-gold/50 shadow-inner"
+                    className="w-full bg-white text-charcoal rounded-full px-6 py-3.5 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-vedic-gold/50 shadow-inner"
                 />
                 
                 <button

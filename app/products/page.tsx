@@ -383,7 +383,7 @@ function ProductsContent() {
             <div className="border-b border-light-border bg-white">
                 <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-5 sm:py-8">
                     <div>
-                        <h1 className="font-serif text-2xl sm:text-3xl font-bold text-wine-gold tracking-tight">
+                        <h1 className="font-serif text-2xl sm:text-3xl font-bold text-vedic-gold tracking-tight">
                             Shop Formulations
                         </h1>
                         <p className="mt-0.5 text-sm text-warm-gray">

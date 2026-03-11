@@ -113,7 +113,7 @@ function SearchPageContent() {
                             type="text"
                             value={searchInput}
                             onChange={e => setSearchInput(e.target.value)}
-                            placeholder="Search wines, brands, categories…"
+                            placeholder="Search products, brands, categories…"
                             className="
                 w-full pl-12 pr-12 py-3.5 rounded-full
                 bg-gray-50 border border-gray-200
@@ -286,7 +286,7 @@ function SearchPageContent() {
                             No results found
                         </h2>
                         <p className="text-gray-500 text-center max-w-md mb-6">
-                            We couldn&apos;t find any wines matching &ldquo;{q}&rdquo;. Try adjusting your search
+                            We couldn&apos;t find any products matching &ldquo;{q}&rdquo;. Try adjusting your search
                             or browse our categories.
                         </p>
                         <div className="flex gap-3">
@@ -298,7 +298,7 @@ function SearchPageContent() {
                   transition-colors
                 "
                             >
-                                Browse All Wines
+                                Browse All Products
                             </button>
                         </div>
                     </div>
@@ -312,7 +312,7 @@ function SearchPageContent() {
                             Search Our Collection
                         </h2>
                         <p className="text-gray-500 text-center max-w-md">
-                            Enter a search term above to find wines by name, brand, category, or description.
+                            Enter a search term above to find products by name, brand, category, or description.
                         </p>
                     </div>
                 )}

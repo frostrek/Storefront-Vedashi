@@ -5,11 +5,11 @@
 @theme {
   --color-cream: #FAF8F0;
   --color-cream-dark: #EDE8D0;
-  --color-burgundy: #3B5D3B;
-  --color-burgundy-dark: #2D4A2D;
-  --color-burgundy-light: #4A7A4A;
-  --color-wine-gold: #8B7A3D;
-  --color-wine-gold-light: #A89250;
+  --color-herbal-green: #3B5D3B;
+  --color-herbal-green-dark: #2D4A2D;
+  --color-herbal-green-light: #4A7A4A;
+  --color-vedic-gold: #8B7A3D;
+  --color-vedic-gold-light: #A89250;
   --color-charcoal: #2C2C2C;
   --color-warm-gray: #6B6B60;
   --color-light-border: #D4CFC0;
@@ -46,21 +46,20 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #8B7A3D;
+  background: var(--color-vedic-gold);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3B5D3B;
+  background: var(--color-herbal-green);
 }
 
 /* Focus */
 *:focus-visible {
-  outline: 2px solid #3B5D3B;
+  outline: 2px solid var(--color-herbal-green);
   outline-offset: 2px;
 }
 
-/* Selection */
 ::selection {
   background-color: #3B5D3B;
   color: white;
@@ -228,13 +227,13 @@ body {
   background: rgba(250, 248, 240, 0.9);
 }
 
-/* Ayurveda gradient (replaces wine-gradient) */
-.wine-gradient {
-  background: linear-gradient(135deg, #3B5D3B 0%, #2D4A2D 50%, #1F331F 100%);
+/* Ayurveda gradient */
+.herbal-gradient {
+  background: linear-gradient(135deg, #3B5D3B 0%, #2D4A2D 50%, #172B17 100%);
 }
 
-/* Olive gold gradient (replaces gold-gradient) */
-.gold-gradient {
+/* Vedic gold gradient */
+.vedic-gold-gradient {
   background: linear-gradient(135deg, #8B7A3D 0%, #A89250 50%, #8B7A3D 100%);
 }
 
