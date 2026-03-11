@@ -6,7 +6,7 @@ import { getProducts, getCategories, formatVND, getFilterOptions, getBestSellers
 import { FilteredProduct, FilterMeta } from '@/types';
 import ProductCard from '@/components/ProductCard';
 import { SkeletonProductGrid } from '@/components/Skeleton';
-import { SlidersHorizontal, Search, X, Wine, Loader2 } from 'lucide-react';
+import { SlidersHorizontal, Search, X, Leaf, Loader2 } from 'lucide-react';
 import { useFilters } from '@/hooks/useFilters';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 import { FILTER_CONFIGS, SORT_OPTIONS } from '@/lib/filterConfig';
@@ -32,7 +32,7 @@ function ProductsContent() {
         setCountry,
         setRatings,
         setPriceRange,
-        setAlcoholRange,
+
         setInStock,
         setBestSellers,
         setNewArrivals,
@@ -82,7 +82,7 @@ function ProductsContent() {
 
     // Build query params (reusable)
     const buildParams = useCallback((page: number) => {
-        const alcConfig = FILTER_CONFIGS.find(f => f.key === 'alcohol');
+
         const params: Record<string, unknown> = {
             page,
             limit: ITEMS_PER_PAGE,
@@ -96,10 +96,7 @@ function ProductsContent() {
         if (filters.priceRange[0] !== 0) params.min_price = filters.priceRange[0];
         if (filters.priceRange[1] !== Infinity) params.max_price = filters.priceRange[1];
 
-        const aMin = alcConfig?.min ?? 0;
-        const aMax = alcConfig?.max ?? 100;
-        if (filters.alcoholRange[0] !== aMin) params.min_abv = filters.alcoholRange[0];
-        if (filters.alcoholRange[1] !== aMax) params.max_abv = filters.alcoholRange[1];
+
 
         if (filters.country) params.country = filters.country;
 
@@ -327,17 +324,7 @@ function ProductsContent() {
                 />
             </FilterSection>
 
-            {/* Alcohol % Range */}
-            <FilterSection title="Alcohol %" defaultOpen={false}>
-                <RangeSlider
-                    min={FILTER_CONFIGS.find(f => f.key === 'alcohol')?.min ?? 0}
-                    max={FILTER_CONFIGS.find(f => f.key === 'alcohol')?.max ?? 100}
-                    step={FILTER_CONFIGS.find(f => f.key === 'alcohol')?.step ?? 1}
-                    value={filters.alcoholRange}
-                    onChange={setAlcoholRange}
-                    formatLabel={v => `${v}%`}
-                />
-            </FilterSection>
+
 
             {/* Country — single-select dropdown (always shown) */}
             <CountryDropdown
@@ -397,10 +384,10 @@ function ProductsContent() {
                 <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-5 sm:py-8">
                     <div>
                         <h1 className="font-serif text-2xl sm:text-3xl font-bold text-wine-gold tracking-tight">
-                            Shop Wines
+                            Shop Formulations
                         </h1>
                         <p className="mt-0.5 text-sm text-warm-gray">
-                            Explore our curated collection of fine wines
+                            Explore our curated collection of Ayurvedic formulations
                         </p>
                     </div>
                 </div>
@@ -428,7 +415,7 @@ function ProductsContent() {
                             <h2 className="font-serif text-base font-semibold text-charcoal mb-1">Filters</h2>
                             <p className="text-xs text-warm-gray mb-4 flex items-center gap-2">
                                 <span className={`transition-opacity ${loading ? 'opacity-50' : 'opacity-100'}`}>
-                                    {totalCount} wine{totalCount !== 1 ? 's' : ''} found
+                                    {totalCount} formulation{totalCount !== 1 ? 's' : ''} found
                                 </span>
                                 {loading && <Loader2 className="h-3 w-3 animate-spin text-burgundy" />}
                             </p>
@@ -469,7 +456,7 @@ function ProductsContent() {
                             <p className="text-sm text-warm-gray flex items-center gap-2">
                                 <span className={`transition-opacity ${loading ? 'opacity-50' : 'opacity-100'}`}>
                                     Showing <span className="font-semibold text-charcoal">{products.length}</span> of{' '}
-                                    <span className="font-semibold text-charcoal">{totalCount}</span> wines
+                                    <span className="font-semibold text-charcoal">{totalCount}</span> formulations
                                 </span>
                                 {(loading || loadingMore) && <Loader2 className="h-4 w-4 animate-spin text-burgundy" />}
                             </p>
@@ -517,14 +504,14 @@ function ProductsContent() {
                                 {/* End of results indicator */}
                                 {!hasMore && products.length > ITEMS_PER_PAGE && (
                                     <div className="mt-12 text-center">
-                                        <p className="text-sm text-warm-gray">You&apos;ve seen all {totalCount} wines</p>
+                                        <p className="text-sm text-warm-gray">You&apos;ve seen all {totalCount} formulations</p>
                                     </div>
                                 )}
                             </>
                         ) : (
                             <div className="rounded-xl border border-light-border bg-white py-20 text-center shadow-sm">
-                                <Wine className="h-12 w-12 mx-auto text-warm-gray/30 mb-4" />
-                                <p className="font-serif text-xl text-charcoal">No wines found</p>
+                                <Leaf className="h-12 w-12 mx-auto text-warm-gray/30 mb-4" />
+                                <p className="font-serif text-xl text-charcoal">No formulations found</p>
                                 <p className="mt-2 text-sm text-warm-gray">Try adjusting your filters or search</p>
                                 {activeChips.length > 0 && (
                                     <button

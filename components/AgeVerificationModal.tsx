@@ -22,7 +22,7 @@ All product descriptions, images, and pricing on our website are provided for in
 All orders placed through our website are subject to acceptance and availability. We reserve the right to refuse or cancel any order. Payment must be made in full at the time of purchase unless otherwise agreed. Prices are listed in USD and are subject to change without notice.
 
 5. SHIPPING & DELIVERY
-Alcoholic beverages can only be shipped to addresses within jurisdictions where such shipments are permitted by law. A valid signature from an adult of legal drinking age is required at the time of delivery. We are not responsible for delays caused by shipping carriers.
+Some products may have shipping restrictions based on your location. A valid signature may be required at the time of delivery. We are not responsible for delays caused by shipping carriers.
 
 6. RETURN & REFUND POLICY
 Due to the nature of our products, returns are accepted only for damaged, defective, or incorrectly shipped items. Please contact our support team within 48 hours of delivery to report any issues. Refunds will be processed within 7–10 business days.

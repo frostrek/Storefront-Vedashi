@@ -389,15 +389,7 @@ function ProductDetailContent({ params }: Props) {
                                     <span className="text-burgundy/80 font-semibold">{product.country_of_origin}</span>
                                 </span>
                             )}
-                            <span className="flex items-center gap-1.5">
-                                <span className="text-warm-gray/60 font-medium">Alcohol:</span>
-                                <span className="text-burgundy/80 font-semibold">
-                                    {(() => {
-                                        const abv = product.alcohol_percentage ?? selectedVariant?.alcohol_percentage ?? null;
-                                        return abv != null ? `${abv}% ABV` : '—';
-                                    })()}
-                                </span>
-                            </span>
+
                         </div>
 
                         {/* PRICE */}

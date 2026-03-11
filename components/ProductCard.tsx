@@ -176,9 +176,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                         </p>
                     )}
 
-                    <p className="mt-1 text-[10px] sm:text-[11px] font-medium text-neutral-400 tracking-wide">
-                        {product.alcohol_percentage != null ? product.alcohol_percentage : '0'}% ABV
-                    </p>
+
 
                     <div className="mt-2 sm:mt-3 flex items-center gap-1 sm:gap-2 flex-wrap">
                         <p className="text-base sm:text-xl font-serif font-bold text-[#6b0f1a] tracking-tight">
