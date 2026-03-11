@@ -1,0 +1,4 @@
+﻿components/blog/BlogCard.tsx(20,31): error TS1127: Invalid character.
+components/blog/BlogCard.tsx(20,32): error TS1134: Variable declaration expected.
+components/blog/BlogCard.tsx(84,1): error TS1005: '}' expected.
+components/blog/BlogCard.tsx(84,1): error TS1160: Unterminated template literal.
