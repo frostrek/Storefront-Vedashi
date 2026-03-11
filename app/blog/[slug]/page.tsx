@@ -157,10 +157,15 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
                     </div>
                 </div>
 
-                {/* Cover Image */}
-                {post.cover_image && (
+                {/* Hero Image – use featured_image first (same source as the card thumbnail) */}
+                {(post.featured_image || post.cover_image) && (
                     <div className="rounded-2xl overflow-hidden mb-8 border border-light-border">
-                        <img src={post.cover_image} alt={post.title} className="w-full h-auto" />
+                        <img 
+                            src={post.featured_image || post.cover_image!} 
+                            alt={post.title} 
+                            className="w-full h-auto" 
+                            onError={(e) => { e.currentTarget.src = '/hero-ayurveda.png'; }}
+                        />
                     </div>
                 )}
 

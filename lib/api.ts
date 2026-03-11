@@ -1334,6 +1334,13 @@ export interface BlogPost {
     meta_title?: string;
     meta_description?: string;
     share_urls?: Record<string, string>;
+    featured_image?: string;
+    display_order?: number;
+    is_trending?: boolean;
+    is_editor_pick?: boolean;
+    content_type?: string;
+    difficulty_level?: string;
+    compliance_checked?: boolean;
 }
 
 export interface BlogCategory {
