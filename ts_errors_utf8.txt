@@ -1,0 +1,2 @@
+﻿app/account/[[...tab]]/page.tsx(721,81): error TS2339: Property 'images' does not exist on type '{ product_id: string; product_name: string; }'.
+app/account/[[...tab]]/page.tsx(721,112): error TS2339: Property 'thumbnail_url' does not exist on type '{ product_id: string; product_name: string; }'.
