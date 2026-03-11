@@ -106,6 +106,7 @@ export default function SocialLoginButtons({ onLoadingChange, disabled }: Social
                 <button
                     key={key}
                     type="button"
+                    data-social={label.toLowerCase()}
                     onClick={() => handleSocialLogin(key)}
                     disabled={disabled || !isReady || !!loadingProvider}
                     className={`w-full flex items-center justify-center gap-3 rounded-lg border px-4 py-3 text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${bg}`}

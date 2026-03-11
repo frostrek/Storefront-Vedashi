@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -13,6 +14,7 @@ interface BannerData {
 }
 
 export default function PromoBanner() {
+    const pathname = usePathname();
     const [banner, setBanner] = useState<BannerData | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -34,7 +36,7 @@ export default function PromoBanner() {
         fetchBanner();
     }, []);
 
-    if (loading || !banner) return null;
+    if (loading || !banner || pathname === '/login' || pathname === '/signup') return null;
 
     let contentClass = 'text-center font-bold tracking-[0.2em]';
 

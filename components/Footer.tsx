@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Facebook, Instagram, Twitter, Youtube, Linkedin, Globe, Mail, Phone, MapPin, Clock } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -34,6 +35,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 // ─── Component ────────────────────────────────────────────────────
 export default function Footer() {
+    const pathname = usePathname();
     const [data, setData] = useState<FooterData | null>(null);
 
     useEffect(() => {
@@ -51,6 +53,8 @@ export default function Footer() {
     const legal = data?.legal ?? [];
     const newsletter = data?.newsletter;
     const bottomBar = data?.bottom_bar;
+
+    if (pathname === '/login') return null;
 
     return (
         <footer className="border-t border-light-border bg-cream">

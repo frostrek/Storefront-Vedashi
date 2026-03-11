@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { ShoppingCart, User, Menu, X, Heart, ChevronDown, Search, ArrowRight } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
@@ -68,6 +68,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export default function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const { totalItems, loading: cartLoading } = useCart();
@@ -120,6 +121,8 @@ export default function Navbar() {
   const parentCategories = categories.filter(c => !c.parent_id);
   const { colors, nav_links, strip, branding } = config;
   const visibleLinks = nav_links.filter(l => l.enabled);
+
+  if (pathname === '/login') return null;
 
   return (
     <header className="w-full sticky top-0 z-[100]">
