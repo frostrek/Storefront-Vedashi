@@ -40,10 +40,10 @@ export default function ContactPage() {
             {/* Hero */}
             <section className="border-b border-light-border bg-white">
                 <div className="mx-auto max-w-7xl px-4 py-16 text-center">
-                    <p className="text-sm uppercase tracking-[0.2em] text-wine-gold font-medium mb-3">Get in Touch</p>
-                    <h1 className="font-serif text-4xl sm:text-5xl font-bold text-charcoal">Contact Us</h1>
-                    <p className="mt-3 text-warm-gray max-w-xl mx-auto">
-                        We&apos;d love to hear from you. Send us a message or visit us at our tasting room.
+                    <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#3B5D3B] mb-3">Get in Touch</p>
+                    <h1 className="font-serif text-4xl sm:text-5xl font-bold text-[#2C2C2C]">Contact Us</h1>
+                    <p className="mt-3 text-[#6B6B60] max-w-xl mx-auto">
+                        We&apos;d love to hear from you. Send us a message or visit our wellness center.
                     </p>
                 </div>
             </section>
@@ -107,7 +107,7 @@ export default function ContactPage() {
                             <button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className="flex items-center gap-2 rounded-lg bg-burgundy px-8 py-3 text-sm font-semibold text-white hover:bg-burgundy-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex items-center gap-2 rounded-lg bg-[#3B5D3B] px-8 py-3 text-sm font-semibold text-white hover:bg-[#2D4A2D] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#3B5D3B]/20"
                             >
                                 <Send className={`h-4 w-4 ${isSubmitting ? 'animate-pulse' : ''}`} />
                                 {isSubmitting ? 'Sending...' : 'Send Message'}
@@ -118,14 +118,14 @@ export default function ContactPage() {
                     {/* Contact Info */}
                     <div className="space-y-6">
                         {[
-                            { icon: MapPin, title: 'Visit Us', lines: ['123 Wine Boulevard', 'District 1, Ho Chi Minh City', 'Vietnam'] },
-                            { icon: Phone, title: 'Call Us', lines: ['+84 (0) 28 1234 5678', '+84 (0) 90 123 4567'] },
-                            { icon: Mail, title: 'Email Us', lines: ['info@kspwines.com', 'orders@kspwines.com'] },
-                            { icon: Clock, title: 'Opening Hours', lines: ['Mon — Fri: 9:00 AM – 6:00 PM', 'Sat: 10:00 AM – 4:00 PM', 'Sun: Closed'] },
+                            { icon: MapPin, title: 'Visit Us', lines: ['Vatika Sector 21', 'MG Road, Gurgaon, Haryana 122002', 'India'] },
+                            { icon: Phone, title: 'Call Us', lines: ['+91 124 456 7890', '+91 987 654 3210'] },
+                            { icon: Mail, title: 'Email Us', lines: ['care@vedashi.com', 'orders@vedashi.com'] },
+                            { icon: Clock, title: 'Opening Hours', lines: ['Mon — Fri: 9:00 AM – 7:00 PM', 'Sat: 10:00 AM – 5:00 PM', 'Sun: Closed'] },
                         ].map((info, i) => (
                             <div key={i} className="flex gap-4 rounded-xl border border-light-border bg-white p-5">
-                                <div className="flex-shrink-0 flex h-10 w-10 items-center justify-center rounded-lg bg-burgundy/10">
-                                    <info.icon className="h-5 w-5 text-burgundy" />
+                                <div className="flex-shrink-0 flex h-10 w-10 items-center justify-center rounded-lg bg-[#3B5D3B]/10">
+                                    <info.icon className="h-5 w-5 text-[#3B5D3B]" />
                                 </div>
                                 <div>
                                     <h3 className="font-serif text-sm font-semibold text-charcoal">{info.title}</h3>
@@ -140,11 +140,11 @@ export default function ContactPage() {
 
                 {/* Map placeholder */}
                 <div className="mt-12 rounded-2xl border border-light-border bg-white overflow-hidden">
-                    <div className="h-64 bg-cream-dark flex items-center justify-center">
+                    <div className="h-64 bg-[#F5F2E8] flex items-center justify-center">
                         <div className="text-center">
-                            <MapPin className="mx-auto h-8 w-8 text-burgundy mb-2" />
-                            <p className="font-serif text-lg text-charcoal">KSP Wines Tasting Room</p>
-                            <p className="text-sm text-warm-gray">123 Wine Boulevard, District 1, HCMC</p>
+                            <MapPin className="mx-auto h-8 w-8 text-[#3B5D3B] mb-2" />
+                            <p className="font-serif text-lg text-[#2C2C2C]">Vedashi Wellness Center</p>
+                            <p className="text-sm text-[#6B6B60]">Vatika Sector 21, MG Road, Gurgaon</p>
                         </div>
                     </div>
                 </div>

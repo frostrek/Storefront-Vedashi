@@ -2,18 +2,18 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-const STORAGE_KEY = 'ksp_age_verified';
+const STORAGE_KEY = 'vedashi_age_verified';
 
 const TERMS_CONTENT = `
-TERMS & CONDITIONS — KSP Wines
+TERMS & CONDITIONS — Vedashi
 
-Last updated: February 2026
+Last updated: March 2026
 
 1. AGE REQUIREMENT
-You must be at least 18 years of age (or the legal drinking age in your jurisdiction, whichever is higher) to purchase alcoholic beverages from KSP Wines. By agreeing to these Terms & Conditions and confirming your age, you certify that you meet the minimum age requirement.
+Certain products may have an age requirement. By agreeing to these Terms & Conditions and confirming your age, you certify that you meet any minimum age requirement for the specific items in your order.
 
 2. ACCEPTANCE OF TERMS
-By accessing or using the KSP Wines website and services, you agree to be bound by these Terms & Conditions. If you do not agree, you must not use our website or services.
+By accessing or using the Vedashi website and services, you agree to be bound by these Terms & Conditions. If you do not agree, you must not use our website or services.
 
 3. PRODUCT INFORMATION
 All product descriptions, images, and pricing on our website are provided for informational purposes only. While we strive for accuracy, we do not warrant that product descriptions or other content are error-free. Colors, flavors, and other characteristics may vary from batch to batch.
@@ -28,16 +28,16 @@ Alcoholic beverages can only be shipped to addresses within jurisdictions where 
 Due to the nature of our products, returns are accepted only for damaged, defective, or incorrectly shipped items. Please contact our support team within 48 hours of delivery to report any issues. Refunds will be processed within 7–10 business days.
 
 7. RESPONSIBLE DRINKING
-KSP Wines promotes responsible drinking. We encourage our customers to enjoy our wines in moderation. If you or someone you know has a drinking problem, please seek help from a qualified professional.
+Vedashi promotes responsible wellness. We encourage our customers to use our wellness formulations as directed. If you or someone you know has questions about usage, please consult a practitioner.
 
 8. PRIVACY POLICY
 Your personal information is collected, stored, and processed in accordance with our Privacy Policy. We do not sell or share your personal information with third parties for marketing purposes without your explicit consent.
 
 9. INTELLECTUAL PROPERTY
-All content on the KSP Wines website, including logos, text, images, and design elements, is the property of KSP Wines and is protected by intellectual property laws. Unauthorized use, reproduction, or distribution is strictly prohibited.
+All content on the Vedashi website, including logos, text, images, and design elements, is the property of Vedashi and is protected by intellectual property laws. Unauthorized use, reproduction, or distribution is strictly prohibited.
 
 10. LIMITATION OF LIABILITY
-KSP Wines shall not be held liable for any indirect, incidental, special, or consequential damages arising from the use of our products or services. Our total liability shall not exceed the purchase price of the product(s) in question.
+Vedashi shall not be held liable for any indirect, incidental, special, or consequential damages arising from the use of our products or services. Our total liability shall not exceed the purchase price of the product(s) in question.
 
 11. GOVERNING LAW
 These Terms & Conditions shall be governed by and construed in accordance with the laws of the applicable jurisdiction, without regard to its conflict of law provisions.
@@ -47,8 +47,8 @@ We reserve the right to modify these Terms & Conditions at any time. Changes wil
 
 13. CONTACT
 For questions regarding these Terms & Conditions, please contact us at:
-Email: support@kspwines.com
-Phone: +1 (800) 555-WINE
+Email: care@vedashi.com
+Phone: +91 124 456 7890
 `.trim();
 
 export default function AgeVerificationModal() {
@@ -110,6 +110,8 @@ export default function AgeVerificationModal() {
     }, [isVisible, showTerms]);
 
     const handleTermsScroll = useCallback(() => {
+        const BURGUNDY = [59, 93, 59] as [number, number, number];
+        const GOLD = [181, 149, 47] as [number, number, number];
         const el = termsRef.current;
         if (!el) return;
         const threshold = 30;
@@ -158,28 +160,25 @@ export default function AgeVerificationModal() {
         >
             {/* Main Modal */}
             <div
-                className={`relative w-full max-w-md rounded-2xl border border-[#d4af37]/30 shadow-2xl ${isExiting ? 'animate-scale-out' : 'animate-scale-in'}`}
+                className={`relative w-full max-w-md rounded-2xl border border-[#B5952F]/30 shadow-2xl ${isExiting ? 'animate-scale-out' : 'animate-scale-in'}`}
                 style={{
                     background: 'linear-gradient(145deg, #1a1714 0%, #231f1b 50%, #1a1714 100%)',
                 }}
             >
                 {/* Decorative top border */}
-                <div
-                    className="absolute top-0 left-0 right-0 h-1 rounded-t-2xl"
-                    style={{ background: 'linear-gradient(90deg, transparent, #d4af37, transparent)' }}
-                />
+                <div className="flex-shrink-0 h-1.5 w-full rounded-t-2xl" style={{ background: 'linear-gradient(90deg, #3B5D3B, #B5952F)' }} />
 
                 <div className="p-8 sm:p-10">
-                    {/* Wine Icon */}
+                    {/* Ayurvedic Icon */}
                     <div className="flex justify-center mb-5">
                         <div
                             className="flex items-center justify-center w-20 h-20 rounded-full"
                             style={{
-                                background: 'radial-gradient(circle, rgba(212,175,55,0.15) 0%, transparent 70%)',
-                                border: '2px solid rgba(212,175,55,0.25)',
+                                background: 'radial-gradient(circle, rgba(59,93,59,0.15) 0%, transparent 70%)',
+                                border: '2px solid rgba(59,93,59,0.25)',
                             }}
                         >
-                            <span className="text-4xl" role="img" aria-label="Wine glass">🍷</span>
+                            <span className="text-4xl" role="img" aria-label="Herb">🌿</span>
                         </div>
                     </div>
 
@@ -187,7 +186,7 @@ export default function AgeVerificationModal() {
                     <h2
                         id="age-modal-title"
                         className="text-center text-2xl sm:text-3xl font-bold mb-3"
-                        style={{ fontFamily: 'var(--font-serif)', color: '#d4af37' }}
+                        style={{ fontFamily: 'var(--font-serif)', color: '#B5952F' }}
                     >
                         Age Verification
                     </h2>
@@ -204,7 +203,7 @@ export default function AgeVerificationModal() {
                     {/* Checkbox */}
                     <label
                         className={`flex items-start gap-3 mb-8 p-4 rounded-xl transition-all duration-300 ${checkboxEnabled
-                            ? 'cursor-pointer border border-[#d4af37]/30 bg-[#d4af37]/5 hover:bg-[#d4af37]/10'
+                            ? 'cursor-pointer border border-[#B5952F]/30 bg-[#B5952F]/5 hover:bg-[#B5952F]/10'
                             : 'cursor-not-allowed border border-gray-700/50 bg-white/[0.02]'
                             }`}
                     >
@@ -213,7 +212,7 @@ export default function AgeVerificationModal() {
                             checked={isChecked}
                             disabled={!checkboxEnabled}
                             onChange={(e) => setIsChecked(e.target.checked)}
-                            className="mt-0.5 w-5 h-5 rounded accent-[#d4af37] flex-shrink-0 disabled:opacity-40"
+                            className="mt-0.5 w-5 h-5 rounded accent-[#B5952F] flex-shrink-0 disabled:opacity-40"
                             aria-label="I agree to the Terms and Conditions"
                         />
                         <span className={`text-sm leading-relaxed ${checkboxEnabled ? 'text-gray-300' : 'text-gray-500'}`}>
@@ -225,8 +224,8 @@ export default function AgeVerificationModal() {
                                     e.stopPropagation();
                                     openTerms();
                                 }}
-                                className="underline font-semibold transition-colors hover:text-[#d4af37] focus:text-[#d4af37]"
-                                style={{ color: '#d4af37' }}
+                                className="underline font-semibold transition-colors hover:text-[#B5952F] focus:text-[#B5952F]"
+                                style={{ color: '#B5952F' }}
                             >
                                 Terms &amp; Conditions
                             </button>
@@ -253,10 +252,10 @@ export default function AgeVerificationModal() {
                             className="flex-1 py-3.5 rounded-xl text-sm font-bold transition-all duration-300 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none"
                             style={{
                                 background: isChecked
-                                    ? 'linear-gradient(135deg, #d4af37 0%, #b5952f 100%)'
+                                    ? 'linear-gradient(135deg, #3B5D3B 0%, #B5952F 100%)'
                                     : 'rgba(100,90,70,0.3)',
                                 color: isChecked ? '#1a1714' : '#7a7067',
-                                boxShadow: isChecked ? '0 4px 20px rgba(212,175,55,0.3)' : 'none',
+                                boxShadow: isChecked ? '0 4px 20px rgba(59,93,59,0.3)' : 'none',
                             }}
                         >
                             Yes, I&apos;m 18+
@@ -275,7 +274,7 @@ export default function AgeVerificationModal() {
                     aria-label="Terms and Conditions"
                 >
                     <div
-                        className={`relative w-full max-w-lg max-h-[85vh] flex flex-col rounded-2xl border border-[#d4af37]/20 shadow-2xl ${isTermsExiting ? 'animate-scale-out' : 'animate-scale-in'}`}
+                        className={`relative w-full max-w-lg max-h-[85vh] flex flex-col rounded-2xl border border-[#B5952F]/20 shadow-2xl ${isTermsExiting ? 'animate-scale-out' : 'animate-scale-in'}`}
                         style={{
                             background: 'linear-gradient(145deg, #1e1b17 0%, #262220 50%, #1e1b17 100%)',
                         }}
@@ -284,7 +283,7 @@ export default function AgeVerificationModal() {
                         <div className="flex items-center justify-between p-5 sm:p-6 border-b border-gray-700/50 flex-shrink-0">
                             <h3
                                 className="text-lg sm:text-xl font-bold"
-                                style={{ fontFamily: 'var(--font-serif)', color: '#d4af37' }}
+                                style={{ fontFamily: 'var(--font-serif)', color: '#B5952F' }}
                             >
                                 Terms &amp; Conditions
                             </h3>
@@ -315,7 +314,7 @@ export default function AgeVerificationModal() {
                                         <h4
                                             key={i}
                                             className="text-base font-bold mb-1"
-                                            style={{ color: '#d4af37' }}
+                                            style={{ color: '#B5952F' }}
                                         >
                                             {paragraph}
                                         </h4>
@@ -332,7 +331,7 @@ export default function AgeVerificationModal() {
                                     const [title, ...rest] = paragraph.split('\n');
                                     return (
                                         <div key={i} className="mb-5">
-                                            <h5 className="text-sm font-bold mb-1.5" style={{ color: '#d4af37' }}>
+                                            <h5 className="text-sm font-bold mb-1.5" style={{ color: '#B5952F' }}>
                                                 {title}
                                             </h5>
                                             <p className="text-sm leading-relaxed">{rest.join(' ')}</p>

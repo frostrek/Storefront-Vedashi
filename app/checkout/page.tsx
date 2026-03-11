@@ -77,7 +77,7 @@ function CheckoutContent() {
     useEffect(() => {
         if (isBuyNow) {
             try {
-                const stored = sessionStorage.getItem('ksp_buy_now_item');
+                const stored = sessionStorage.getItem('vedashi_buy_now_item');
                 if (stored) {
                     setBuyNowItem(JSON.parse(stored));
                 } else {
@@ -153,7 +153,7 @@ function CheckoutContent() {
     if (isBuyNow && !buyNowItem && !orderPlaced) {
         return (
             <div className="min-h-screen bg-cream flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-burgundy" />
+                <Loader2 className="h-8 w-8 animate-spin text-[#3B5D3B]" />
             </div>
         );
     }
@@ -177,7 +177,7 @@ function CheckoutContent() {
                 key: razorpay_key_id,
                 amount,
                 currency,
-                name: 'KSP Wines',
+                name: 'Vedashi',
                 description: `Order #${platformOrderId.slice(0, 8)}`,
                 order_id: razorpay_order_id,
                 prefill: {
@@ -186,7 +186,7 @@ function CheckoutContent() {
                     contact: '',
                 },
                 theme: {
-                    color: '#722F37',
+                    color: '#3B5D3B',
                     backdrop_color: 'rgba(0,0,0,0.6)',
                 },
                 modal: {
@@ -218,7 +218,7 @@ function CheckoutContent() {
                                 await clearCart(true);
                                 removeCoupon();
                             }
-                            sessionStorage.removeItem('ksp_buy_now_item');
+                            sessionStorage.removeItem('vedashi_buy_now_item');
                             setOrderPlaced(true);
                             setStep(3);
                             setPaymentFailed(false);
@@ -357,7 +357,7 @@ function CheckoutContent() {
                         await clearCart(true);
                         removeCoupon();
                     }
-                    sessionStorage.removeItem('ksp_buy_now_item');
+                    sessionStorage.removeItem('vedashi_buy_now_item');
                     setOrderPlaced(true);
                     setStep(3);
                     toast.success('Order placed successfully!');
@@ -440,11 +440,11 @@ function CheckoutContent() {
                 <div className="mx-auto max-w-4xl flex items-center justify-center gap-3 sm:gap-6 md:gap-8 px-4 flex-wrap">
                     {['Cart', 'Address', 'Payment', 'Confirmation'].map((s, i) => (
                         <div key={s} className="flex items-center gap-2">
-                            <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${i <= step ? 'bg-burgundy text-white' : 'bg-cream-dark text-warm-gray'
+                            <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${i <= step ? 'bg-[#3B5D3B] text-white' : 'bg-[#F5F2E8] text-[#6B6B60]'
                                 }`}>
                                 {i + 1}
                             </div>
-                            <span className={`text-sm font-medium hidden sm:inline ${i <= step ? 'text-burgundy' : 'text-warm-gray'}`}>
+                            <span className={`text-sm font-medium hidden sm:inline ${i <= step ? 'text-[#3B5D3B]' : 'text-[#6B6B60]'}`}>
                                 {s}
                             </span>
                         </div>
@@ -472,8 +472,8 @@ function CheckoutContent() {
                                         <label
                                             key={addr.address_id}
                                             className={`flex items-start gap-3 rounded-xl border p-4 cursor-pointer transition-colors ${selectedAddressId === addr.address_id && !useNewAddress
-                                                ? 'border-burgundy bg-burgundy/5'
-                                                : 'border-light-border hover:border-burgundy/50'
+                                                ? 'border-[#3B5D3B] bg-[#3B5D3B]/5'
+                                                : 'border-light-border hover:border-[#3B5D3B]/50'
                                                 }`}
                                         >
                                             <input
@@ -481,10 +481,10 @@ function CheckoutContent() {
                                                 name="address"
                                                 checked={selectedAddressId === addr.address_id && !useNewAddress}
                                                 onChange={() => { setSelectedAddressId(addr.address_id); setUseNewAddress(false); }}
-                                                className="mt-1 accent-burgundy"
+                                                className="mt-1 accent-[#3B5D3B]"
                                             />
                                             <div>
-                                                {addr.label && <span className="text-xs font-bold text-burgundy uppercase">{addr.label}</span>}
+                                                {addr.label && <span className="text-xs font-bold text-[#3B5D3B] uppercase">{addr.label}</span>}
                                                 <p className="text-sm text-charcoal">{addr.address_line1}</p>
                                                 {addr.address_line2 && <p className="text-sm text-warm-gray">{addr.address_line2}</p>}
                                                 <p className="text-sm text-warm-gray">{addr.city}, {addr.state} {addr.pincode}</p>
@@ -505,65 +505,65 @@ function CheckoutContent() {
 
                         {/* New Address Form */}
                         {useNewAddress && (
-                            <div className="rounded-xl border border-light-border bg-white p-6">
+                            <div className="rounded-xl border border-light-border bg-white p-6 shadow-sm">
                                 <div className="grid gap-4 sm:grid-cols-2">
                                     <div className="sm:col-span-2">
-                                        <label className="block text-sm font-medium text-charcoal mb-1">Address Line 1 *</label>
+                                        <label className="block text-sm font-medium text-[#2C2C2C] mb-1">Address Line 1 *</label>
                                         <input
                                             type="text"
                                             value={newAddress.address_line1}
                                             onChange={e => setNewAddress({ ...newAddress, address_line1: e.target.value })}
-                                            className="w-full rounded-lg border border-light-border px-4 py-2.5 text-sm focus:border-burgundy focus:outline-none"
+                                            className="w-full rounded-lg border border-light-border px-4 py-2.5 text-sm focus:border-[#3B5D3B] focus:outline-none"
                                             placeholder="Street address"
                                         />
                                     </div>
                                     <div className="sm:col-span-2">
-                                        <label className="block text-sm font-medium text-charcoal mb-1">Address Line 2</label>
+                                        <label className="block text-sm font-medium text-[#2C2C2C] mb-1">Address Line 2</label>
                                         <input
                                             type="text"
                                             value={newAddress.address_line2}
                                             onChange={e => setNewAddress({ ...newAddress, address_line2: e.target.value })}
-                                            className="w-full rounded-lg border border-light-border px-4 py-2.5 text-sm focus:border-burgundy focus:outline-none"
+                                            className="w-full rounded-lg border border-light-border px-4 py-2.5 text-sm focus:border-[#3B5D3B] focus:outline-none"
                                             placeholder="Apartment, suite, etc."
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-charcoal mb-1">City *</label>
+                                        <label className="block text-sm font-medium text-[#2C2C2C] mb-1">City *</label>
                                         <input
                                             type="text"
                                             value={newAddress.city}
                                             onChange={e => setNewAddress({ ...newAddress, city: e.target.value })}
-                                            className="w-full rounded-lg border border-light-border px-4 py-2.5 text-sm focus:border-burgundy focus:outline-none"
+                                            className="w-full rounded-lg border border-light-border px-4 py-2.5 text-sm focus:border-[#3B5D3B] focus:outline-none"
                                             placeholder="City"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-charcoal mb-1">State *</label>
+                                        <label className="block text-sm font-medium text-[#2C2C2C] mb-1">State *</label>
                                         <input
                                             type="text"
                                             value={newAddress.state}
                                             onChange={e => setNewAddress({ ...newAddress, state: e.target.value })}
-                                            className="w-full rounded-lg border border-light-border px-4 py-2.5 text-sm focus:border-burgundy focus:outline-none"
+                                            className="w-full rounded-lg border border-light-border px-4 py-2.5 text-sm focus:border-[#3B5D3B] focus:outline-none"
                                             placeholder="State"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-charcoal mb-1">Pincode *</label>
+                                        <label className="block text-sm font-medium text-[#2C2C2C] mb-1">Pincode *</label>
                                         <input
                                             type="text"
                                             value={newAddress.pincode}
                                             onChange={e => setNewAddress({ ...newAddress, pincode: e.target.value })}
-                                            className="w-full rounded-lg border border-light-border px-4 py-2.5 text-sm focus:border-burgundy focus:outline-none"
+                                            className="w-full rounded-lg border border-light-border px-4 py-2.5 text-sm focus:border-[#3B5D3B] focus:outline-none"
                                             placeholder="Pincode"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-charcoal mb-1">Phone</label>
+                                        <label className="block text-sm font-medium text-[#2C2C2C] mb-1">Phone</label>
                                         <input
                                             type="tel"
                                             value={newAddress.phone}
                                             onChange={e => setNewAddress({ ...newAddress, phone: e.target.value })}
-                                            className="w-full rounded-lg border border-light-border px-4 py-2.5 text-sm focus:border-burgundy focus:outline-none"
+                                            className="w-full rounded-lg border border-light-border px-4 py-2.5 text-sm focus:border-[#3B5D3B] focus:outline-none"
                                             placeholder="Phone number"
                                         />
                                     </div>
@@ -573,7 +573,7 @@ function CheckoutContent() {
 
                         <button
                             onClick={() => setStep(2)}
-                            className="mt-6 w-full rounded-lg bg-burgundy py-3 text-sm font-semibold text-white hover:bg-burgundy-dark transition-colors"
+                            className="mt-6 w-full rounded-lg bg-[#3B5D3B] py-3 text-sm font-semibold text-white hover:bg-[#2D4A2D] transition-colors shadow-lg shadow-[#3B5D3B]/20"
                         >
                             Continue to Payment
                         </button>
@@ -729,8 +729,8 @@ function CheckoutContent() {
 
                             {/* Terms */}
                             <div className="mt-6 mb-4 p-4 rounded-lg bg-cream border border-light-border">
-                                <p className="text-xs text-warm-gray leading-relaxed text-center">
-                                    By placing your order, you confirm that you are of legal drinking age in your state and agree to our Terms & Conditions, Privacy Policy, Refund Policy, and applicable state alcohol laws. Valid government ID verification will be required at delivery.
+                                <p className="text-xs text-[#6B6B60] leading-relaxed text-center">
+                                    By placing your order, you agree to our Terms & Conditions, Privacy Policy, and Refund Policy. For specific Ayurvedic formulations, please consult with a practitioner if you have underlying health conditions. Valid government ID may be required for age-restricted items.
                                 </p>
                             </div>
 
@@ -745,7 +745,7 @@ function CheckoutContent() {
                                 <button
                                     onClick={handlePlaceOrder}
                                     disabled={placing || paymentProcessing}
-                                    className="flex-1 rounded-lg bg-burgundy py-3 text-sm font-semibold text-white hover:bg-burgundy-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    className="flex-1 rounded-lg bg-[#3B5D3B] py-3 text-sm font-semibold text-white hover:bg-[#2D4A2D] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-[#3B5D3B]/20"
                                 >
                                     {placing || paymentProcessing ? (
                                         <><Loader2 className="h-4 w-4 animate-spin" /> Processing...</>
@@ -768,9 +768,9 @@ function CheckoutContent() {
                         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-cream-dark">
                             <span className="font-serif text-2xl font-bold text-burgundy">18+</span>
                         </div>
-                        <h2 className="text-center font-serif text-2xl font-bold text-charcoal mb-2">Age Verification Required</h2>
-                        <p className="text-center text-sm text-warm-gray mb-6">
-                            You must be at least 18 years old to purchase alcohol. Please enter your date of birth to continue checkout.
+                        <h2 className="text-center font-serif text-2xl font-bold text-[#2C2C2C] mb-2">Verification Required</h2>
+                        <p className="text-center text-sm text-[#6B6B60] mb-6">
+                            Certain Ayurvedic formulations require age verification. Please enter your date of birth to continue checkout.
                         </p>
 
                         <div className="space-y-4">

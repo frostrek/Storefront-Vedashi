@@ -112,7 +112,7 @@ export default function ReviewCard({ review }: ReviewCardProps) {
                 <div className="mt-4 ml-4 bg-neutral-50 p-4 rounded-md border-l-2 border-[#C5A46D]">
                     <div className="flex items-center gap-2 mb-1">
                         <CornerDownRight size={14} className="text-[#C5A46D]" />
-                        <span className="text-xs font-semibold text-neutral-800">KSP Wines Response</span>
+                        <span className="text-xs font-semibold text-neutral-800">Vedashi Response</span>
                         {review.admin_reply_at && (
                             <span className="text-xs text-neutral-400 font-medium ml-1">
                                 {new Date(review.admin_reply_at).toLocaleDateString('en-US', {

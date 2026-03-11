@@ -143,7 +143,7 @@ export default function VerifySocialOTPPage() {
                 // Clean up sessionStorage
                 sessionStorage.removeItem('social_otp_data');
 
-                toast.success('Email verified! Welcome to KSP Wines.');
+                toast.success('Email verified! Welcome to Vedashi.');
 
                 // Full page reload → AuthContext reads from localStorage → user is logged in
                 console.log('[OTP Debug] 🚀 Redirecting to /account NOW...');
@@ -214,7 +214,7 @@ export default function VerifySocialOTPPage() {
                 {/* Card */}
                 <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
                     {/* Header */}
-                    <div className="bg-gradient-to-r from-burgundy to-burgundy/80 px-6 py-8 text-center">
+                    <div className="bg-[#3B5D3B] px-6 py-8 text-center">
                         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/20 backdrop-blur mb-4">
                             <ShieldCheck className="h-8 w-8 text-white" />
                         </div>
@@ -258,7 +258,7 @@ export default function VerifySocialOTPPage() {
                         <button
                             onClick={verifyOTP}
                             disabled={otp.some(d => d === '') || isVerifying}
-                            className="w-full py-3 rounded-lg bg-burgundy text-white font-semibold text-sm hover:bg-burgundy/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="w-full py-3 rounded-lg bg-[#3B5D3B] text-white font-semibold text-sm hover:bg-[#2D4A2D] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                             {isVerifying ? (
                                 <>
@@ -281,7 +281,7 @@ export default function VerifySocialOTPPage() {
                             <button
                                 onClick={resendOTP}
                                 disabled={isResending || cooldown > 0}
-                                className="inline-flex items-center gap-1.5 text-sm font-medium text-burgundy hover:text-burgundy/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="inline-flex items-center gap-1.5 text-sm font-medium text-[#3B5D3B] hover:text-[#2D4A2D] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <RefreshCw className={`h-3.5 w-3.5 ${isResending ? 'animate-spin' : ''}`} />
                                 {cooldown > 0

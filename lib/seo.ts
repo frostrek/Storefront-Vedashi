@@ -63,8 +63,8 @@ export interface CategorySeoInput {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const SITE_NAME = 'KSP Wines';
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://kspwines.com';
+const SITE_NAME = 'Vedashi';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.com';
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-default.jpg`;
 
 // ─── Sanitization ─────────────────────────────────────────────────────────────
@@ -92,19 +92,19 @@ function productFallbackDescription(p: ProductSeoInput): string {
     const parts = [`Buy ${p.product_name}`];
     if (p.brand) parts[0] += ` by ${p.brand}`;
     parts[0] += '.';
-    if (p.category) parts.push(`Premium imported ${p.category}.`);
+    if (p.category) parts.push(`Premium authentic ${p.category}.`);
     parts.push('Fast delivery and secure checkout.');
     return sanitizeMetaText(parts.join(' '), 160);
 }
 
 function categoryFallbackTitle(c: CategorySeoInput): string {
-    return sanitizeMetaText(`Buy ${c.name} Online | Premium Imported Spirits`, 60);
+    return sanitizeMetaText(`Buy ${c.name} Online | Premium Ayurvedic Wellness`, 60);
 }
 
 function categoryFallbackDescription(c: CategorySeoInput): string {
     return sanitizeMetaText(
         c.description ||
-        `Explore our collection of premium ${c.name}. Discover world-class spirits, wines, and liquors with competitive pricing and fast shipping.`,
+        `Explore our collection of premium ${c.name}. Discover clinically tested Ayurvedic remedies and natural wellness solutions.`,
         160
     );
 }
@@ -188,14 +188,14 @@ export function buildCategoryMeta(category: CategorySeoInput): Metadata {
 /** Build Next.js Metadata for the product listing page */
 export function buildPLPMeta(hasFilters = false): Metadata {
     return {
-        title: 'Shop Premium Wines & Spirits | KSP Wines',
-        description: 'Browse our curated collection of premium wines, spirits, and liquors. Filter by category, brand, price, and more. Fast delivery across India.',
+        title: 'Shop Premium Ayurvedic Wellness | Vedashi',
+        description: 'Browse our curated collection of premium Ayurvedic remedies and wellness formulations. Filter by category, benefit, and more. Fast delivery across India.',
         robots: hasFilters
             ? { index: false, follow: true }   // noindex filtered pages
             : { index: true, follow: true },
         openGraph: {
-            title: 'Shop Premium Wines & Spirits | KSP Wines',
-            description: 'Browse our curated collection of premium wines, spirits, and liquors.',
+            title: 'Shop Premium Ayurvedic Wellness | Vedashi',
+            description: 'Browse our curated collection of premium Ayurvedic remedies and wellness formulations.',
             siteName: SITE_NAME,
             type: 'website',
         },
@@ -292,7 +292,7 @@ export function generateBlogPostingJsonLd(post: any): Record<string, unknown> {
         dateModified: post.updated_at || post.published_at || new Date().toISOString(),
         author: {
             '@type': 'Person',
-            name: post.author_name || 'KSP Wines Editorial',
+            name: post.author_name || 'Vedashi Editorial',
             url: post.author_avatar || undefined
         },
         publisher: {

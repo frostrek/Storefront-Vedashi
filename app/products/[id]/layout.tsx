@@ -8,7 +8,7 @@ import type { Metadata } from 'next';
 import { buildProductMeta, generateProductJsonLd, generateBreadcrumbJsonLd } from '@/lib/seo';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://kspwines.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.com';
 
 /** Server-side fetch of product data for metadata (no auth needed) */
 async function fetchProductForMeta(id: string) {
@@ -34,8 +34,8 @@ export async function generateMetadata({
 
     if (!product) {
         return {
-            title: 'Product Not Found | KSP Wines',
-            description: 'The product you are looking for could not be found.',
+            title: 'Product Not Found | Vedashi',
+            description: 'The formulation you are looking for could not be found.',
         };
     }
 

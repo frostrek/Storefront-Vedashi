@@ -15,8 +15,8 @@ interface ExportOrdersModalProps {
 }
 
 // ─── Colour palette (matches the storefront burgundy/gold theme) ───────────
-const BURGUNDY = [107, 39, 55] as [number, number, number];
-const GOLD = [212, 168, 71] as [number, number, number];
+const BURGUNDY = [59, 93, 59] as [number, number, number];
+const GOLD = [181, 149, 47] as [number, number, number];
 const CREAM = [250, 246, 240] as [number, number, number];
 const CREAM_DARK = [245, 240, 233] as [number, number, number];
 const LIGHT_GRAY = [240, 240, 240] as [number, number, number];
@@ -174,7 +174,7 @@ export default function ExportOrdersModal({
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(22);
             doc.setTextColor(255, 255, 255);
-            doc.text('KSP Wines', ML, 17);
+            doc.text('Vedashi', ML, 17);
 
             doc.setFontSize(11);
             doc.setFont('helvetica', 'normal');
@@ -223,7 +223,7 @@ export default function ExportOrdersModal({
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(8);
                     doc.setTextColor(255, 255, 255);
-                    doc.text('KSP Wines  —  Order Export', ML, 7);
+                    doc.text('Vedashi  —  Order Export', ML, 7);
                     if (uEmail) doc.text(uEmail, PW - MR, 7, { align: 'right' });
 
                     currentY = 16;
@@ -528,14 +528,14 @@ export default function ExportOrdersModal({
                 doc.setFontSize(7.5);
                 doc.setFont('helvetica', 'normal');
                 doc.setTextColor(...MID_GRAY);
-                doc.text('KSP Wines  •  Confidential', ML, PH - 6);
+                doc.text('Vedashi  •  Confidential', ML, PH - 6);
                 doc.text(`Page ${p} of ${totalPages}`, PW - MR, PH - 6, { align: 'right' });
                 doc.setDrawColor(...LIGHT_GRAY);
                 doc.setLineWidth(0.3);
                 doc.line(ML, PH - 9, PW - MR, PH - 9);
             }
 
-            doc.save(`KSP_Orders_Export_${new Date().toISOString().slice(0, 10)}.pdf`);
+            doc.save(`Vedashi_Orders_Export_${new Date().toISOString().slice(0, 10)}.pdf`);
             toast.success('Successfully exported orders as PDF');
             onClose();
 
@@ -553,13 +553,13 @@ export default function ExportOrdersModal({
 
             <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl bg-white shadow-2xl overflow-hidden" style={{ animation: 'slideUp 0.35s ease-out' }}>
                 {/* Header Stripe */}
-                <div className="flex-shrink-0 h-1.5 w-full" style={{ background: 'linear-gradient(90deg, #6B2737, #D4A847)' }} />
+                <div className="flex-shrink-0 h-1.5 w-full" style={{ background: 'linear-gradient(90deg, #3B5D3B, #B5952F)' }} />
 
                 {/* Overlay Header */}
                 <div className="flex-shrink-0 flex items-center justify-between px-6 py-5 border-b border-light-border bg-white">
                     <div className="flex items-center gap-3">
                         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cream-dark">
-                            <FileText className="h-6 w-6 text-burgundy" />
+                            <FileText className="h-6 w-6 text-[#3B5D3B]" />
                         </div>
                         <div>
                             <h2 className="font-serif text-xl font-bold text-charcoal">Export Orders</h2>
@@ -582,8 +582,8 @@ export default function ExportOrdersModal({
                         <h3 className="text-xs font-bold text-warm-gray tracking-wider uppercase mb-3">Format</h3>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="rounded-xl border-2 border-burgundy bg-burgundy/5 p-4 flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-sm">
-                                <FileText className="h-5 w-5 text-burgundy" />
-                                <span className="font-semibold text-burgundy">PDF Document</span>
+                                <FileText className="h-5 w-5 text-[#3B5D3B]" />
+                                <span className="font-semibold text-[#3B5D3B]">PDF Document</span>
                             </div>
                             <div className="rounded-xl border border-light-border bg-white p-4 flex items-center justify-center gap-2 opacity-50 cursor-not-allowed">
                                 <span className="font-medium text-warm-gray">CSV / Excel (Coming Soon)</span>
@@ -697,7 +697,7 @@ export default function ExportOrdersModal({
                         onClick={handleExport}
                         disabled={isExporting || orders.length === 0}
                         className="rounded-xl flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                        style={{ backgroundColor: '#6B2737' }}
+                        style={{ backgroundColor: '#3B5D3B' }}
                     >
                         {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
                         {isExporting ? 'Generating PDF...' : 'Download Export'}

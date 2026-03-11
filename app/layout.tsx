@@ -71,7 +71,7 @@ export default async function RootLayout({
     const data = await res.json();
     if (data?.maintenance?.enabled) {
       isMaintenance = true;
-      maintenanceMessage = data.maintenance.message || "The KSP Wines experience is currently undergoing routine maintenance.";
+      maintenanceMessage = data.maintenance.message || "The Vedashi experience is currently undergoing routine maintenance.";
     }
   } catch (error) {
     // Ignore network errors here; the app will naturally fail on API calls if backend is down
