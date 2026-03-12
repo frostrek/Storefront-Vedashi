@@ -77,6 +77,15 @@ export default function Navbar() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [showCartReminder, setShowCartReminder] = useState(false);
   const [config, setConfig] = useState<HeaderConfig>(DEFAULT_CONFIG);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleWishlistClick = () => {
     if (isAuthenticated) {
@@ -125,10 +134,15 @@ export default function Navbar() {
   if (pathname === '/login') return null;
 
   return (
-    <header className="w-full sticky top-0 z-[100]">
+    <header className={`w-full sticky top-0 z-[100] transition-all duration-500 ${scrolled ? 'shadow-lg' : ''}`}>
 
       {/* ═══════════════ MAIN NAVBAR ═══════════════ */}
-      <div style={{ backgroundColor: colors.navbar_bg }} className="border-b border-gray-200 shadow-sm">
+      <div
+        className={`border-b transition-all duration-500 ${scrolled
+            ? 'bg-white/80 backdrop-blur-xl border-[#3B5D3B]/10 shadow-[0_2px_20px_rgba(59,93,59,0.08)]'
+            : 'bg-white border-gray-200 shadow-sm'
+          }`}
+      >
         <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
           <div className="flex h-16 items-center justify-between">
 

@@ -96,7 +96,7 @@ function ProductsContent() {
         if (filters.priceRange[0] !== 0) params.min_price = filters.priceRange[0];
         if (filters.priceRange[1] !== Infinity) params.max_price = filters.priceRange[1];
 
-
+        // Removed alcohol range filters because they are not applicable to Ayurvedic products
 
         if (filters.country) params.country = filters.country;
 
@@ -324,7 +324,7 @@ function ProductsContent() {
                 />
             </FilterSection>
 
-
+            {/* Alcohol % Range removed */}
 
             {/* Country — single-select dropdown (always shown) */}
             <CountryDropdown
@@ -384,10 +384,10 @@ function ProductsContent() {
                 <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-5 sm:py-8">
                     <div>
                         <h1 className="font-serif text-2xl sm:text-3xl font-bold text-wine-gold tracking-tight">
-                            Shop Formulations
+                            Shop Ayurvedic Wellness
                         </h1>
                         <p className="mt-0.5 text-sm text-warm-gray">
-                            Explore our curated collection of Ayurvedic formulations
+                            Explore our curated collection of authentic Ayurvedic products
                         </p>
                     </div>
                 </div>
@@ -415,7 +415,7 @@ function ProductsContent() {
                             <h2 className="font-serif text-base font-semibold text-charcoal mb-1">Filters</h2>
                             <p className="text-xs text-warm-gray mb-4 flex items-center gap-2">
                                 <span className={`transition-opacity ${loading ? 'opacity-50' : 'opacity-100'}`}>
-                                    {totalCount} formulation{totalCount !== 1 ? 's' : ''} found
+                                    {totalCount} product{totalCount !== 1 ? 's' : ''} found
                                 </span>
                                 {loading && <Loader2 className="h-3 w-3 animate-spin text-burgundy" />}
                             </p>
@@ -456,7 +456,7 @@ function ProductsContent() {
                             <p className="text-sm text-warm-gray flex items-center gap-2">
                                 <span className={`transition-opacity ${loading ? 'opacity-50' : 'opacity-100'}`}>
                                     Showing <span className="font-semibold text-charcoal">{products.length}</span> of{' '}
-                                    <span className="font-semibold text-charcoal">{totalCount}</span> formulations
+                                    <span className="font-semibold text-charcoal">{totalCount}</span> products
                                 </span>
                                 {(loading || loadingMore) && <Loader2 className="h-4 w-4 animate-spin text-burgundy" />}
                             </p>
@@ -504,14 +504,14 @@ function ProductsContent() {
                                 {/* End of results indicator */}
                                 {!hasMore && products.length > ITEMS_PER_PAGE && (
                                     <div className="mt-12 text-center">
-                                        <p className="text-sm text-warm-gray">You&apos;ve seen all {totalCount} formulations</p>
+                                        <p className="text-sm text-warm-gray">You&apos;ve seen all {totalCount} products</p>
                                     </div>
                                 )}
                             </>
                         ) : (
                             <div className="rounded-xl border border-light-border bg-white py-20 text-center shadow-sm">
-                                <Leaf className="h-12 w-12 mx-auto text-warm-gray/30 mb-4" />
-                                <p className="font-serif text-xl text-charcoal">No formulations found</p>
+                                <Search className="h-12 w-12 mx-auto text-warm-gray/30 mb-4" />
+                                <p className="font-serif text-xl text-charcoal">No products found</p>
                                 <p className="mt-2 text-sm text-warm-gray">Try adjusting your filters or search</p>
                                 {activeChips.length > 0 && (
                                     <button

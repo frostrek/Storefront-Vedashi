@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* === Vedashi — Premium Ayurvedic Wellness Theme === */
+/* === Vedashi â€” Premium Ayurvedic Wellness Theme === */
 
 @theme {
   --color-cream: #FAF8F0;
@@ -24,7 +24,6 @@
 
 html {
   scroll-behavior: smooth;
-  overflow-x: hidden;
 }
 
 body {
@@ -380,4 +379,552 @@ body {
 
 .animate-blink {
   animation: blinkText 1.5s ease-in-out infinite;
+}
+
+/* ============================================
+   CART PAGE — Light Ayurvedic Theme
+   ============================================ */
+
+.cart-leaf-bg {
+  position: relative;
+  min-height: 100vh;
+  background-color: #F5F4F0;
+  color: #4A4A4A;
+  overflow: hidden;
+}
+
+.cart-noise-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.06;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  mix-blend-mode: multiply;
+}
+
+.cart-leaf-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(#6B8F5E 1px, transparent 1px);
+  background-size: 20px 20px;
+  opacity: 0.05;
+  z-index: 0;
+}
+
+.cart-leaf-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Ambient glow orbs for depth (disabled for light theme) */
+.cart-leaf-accent-left, .cart-leaf-accent-right {
+  display: none;
+}
+
+/* --- Step Indicator (Light Theme) --- */
+.cart-step-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 28px 16px;
+}
+
+.cart-step-item {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.cart-step-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+  transition: all 0.4s ease;
+  border: 1px solid #D4CFC0;
+  background: white;
+  color: #8B7A3D;
+}
+
+.cart-step-circle.active {
+  background: #2D3B2D;
+  color: white;
+  border-color: #2D3B2D;
+  box-shadow: 0 4px 12px rgba(45, 59, 45, 0.2);
+}
+
+.cart-step-circle.completed {
+  background: #2D3B2D;
+  color: white;
+  border-color: #2D3B2D;
+}
+
+.cart-step-label {
+  display: block;
+  margin-top: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #8B7A3D;
+  text-align: center;
+}
+
+.cart-step-label.active {
+  color: #1A1A1A;
+}
+
+.cart-step-line {
+  width: 60px;
+  height: 1px;
+  background: #D4CFC0;
+  margin: 0 12px;
+  margin-bottom: 24px;
+  transition: all 0.4s ease;
+}
+
+.cart-step-line.completed {
+  background: #2D3B2D;
+  height: 2px;
+}
+
+@media (max-width: 640px) {
+  .cart-step-line {
+    width: 24px;
+    margin: 0 8px;
+    margin-bottom: 20px;
+  }
+  .cart-step-circle {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+}
+
+/* --- Cart Item Cards (Light Theme) --- */
+.cart-item-card {
+  background: #FFFFFF;
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid #E8E4DC;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.cart-item-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border-color: #D4CFC0;
+}
+
+/* Product image */
+.cart-item-img {
+  width: 96px;
+  height: 96px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #F8F7F4;
+  border: 1px solid #E8E4DC;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cart-item-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cart-item-title {
+  color: #1A1A1A;
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+/* --- Quantity Controls (Light Theme) --- */
+.cart-qty-control {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 20px;
+  border: 1px solid #E8E4DC;
+  background: #FFFFFF;
+  padding: 4px;
+}
+
+.cart-qty-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #6B8F5E;
+  color: #FFFFFF;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cart-qty-btn:hover {
+  background: #5A7A4E;
+}
+
+.cart-qty-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cart-qty-value {
+  width: 36px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1A1A1A;
+}
+
+/* Remove button */
+.cart-remove-btn {
+  background: none;
+  border: none;
+  color: #C0392B;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cart-remove-btn:hover {
+  background: rgba(192, 57, 43, 0.08);
+}
+
+/* --- Ritual Summary Sidebar (Stays Dark) --- */
+.ritual-summary {
+  background: #2D3B2D;
+  border-radius: 20px;
+  padding: 32px 28px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 12px 32px rgba(45, 59, 45, 0.15);
+}
+
+.ritual-summary::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 0l.83.83v58.34h-58.34l-.83-.83L54.627 0zM27 0l27 27v33H21L-6 33V0h33zM0 0l27 27v33H0V0z' fill='%233B4A3B' fill-opacity='0.2' fill-rule='evenodd'/%3E%3C/svg%3E");
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.ritual-summary-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+}
+
+.ritual-summary-badge {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  margin-left: auto;
+}
+
+.ritual-summary-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+}
+
+.ritual-summary-item-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.ritual-summary-item-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ritual-summary-item-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.4;
+}
+
+.ritual-summary-item-qty {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.ritual-summary-item-price {
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+}
+
+.ritual-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  padding: 6px 0;
+}
+
+.ritual-summary-row .label {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.ritual-summary-row .value {
+  color: white;
+  font-weight: 500;
+}
+
+.ritual-summary-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 16px 0;
+}
+
+.ritual-summary-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24px;
+}
+
+.ritual-summary-total-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.ritual-summary-total-value {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: white;
+}
+
+/* --- Checkout CTA --- */
+.cart-checkout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 16px 24px;
+  border-radius: 12px;
+  border: none;
+  background: #6B8F5E;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 24px;
+}
+
+.cart-checkout-btn:hover {
+  background: #5A7A4E;
+  transform: translateY(-1px);
+}
+
+.cart-checkout-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.cart-checkout-btn-secondary {
+  background: #2D3B2D;
+}
+.cart-checkout-btn-secondary:hover {
+  background: #1F291F;
+}
+
+/* --- Coupon Input --- */
+.ritual-coupon-input {
+  display: flex;
+  gap: 8px;
+  background: white;
+  border-radius: 8px;
+  padding: 4px;
+  margin-top: 12px;
+}
+
+.ritual-coupon-input input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #1A1A1A;
+}
+
+.ritual-coupon-input input:focus {
+  outline: none;
+}
+
+.ritual-coupon-input input::placeholder {
+  color: #9CA3AF;
+}
+
+.ritual-coupon-apply-btn {
+  background: #F5F4F0;
+  color: #1A1A1A;
+  border: 1px solid #E8E4DC;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ritual-coupon-apply-btn:hover {
+  background: #E8E4DC;
+}
+
+/* Applied coupon */
+.ritual-coupon-applied {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-top: 12px;
+}
+
+.ritual-coupon-applied .coupon-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: white;
+  font-weight: 500;
+}
+
+.ritual-coupon-applied .coupon-remove {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.ritual-coupon-applied .coupon-remove:hover {
+  color: white;
+}
+
+/* --- Section Titles --- */
+.cart-saved-section-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1A1A1A;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.cart-page-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: #1A1A1A;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+/* --- Advisor Card --- */
+.cart-advisor-card {
+  background: #FFFFFF;
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid #E8E4DC;
+  margin-top: 20px;
+}
+
+.cart-advisor-card .icon-wrapper {
+  width: 40px;
+  height: 40px;
+  background: #F5F4F0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2D3B2D;
+}
+
+.cart-advisor-card .text-content {
+  flex: 1;
+}
+
+.cart-advisor-card .title {
+  color: #1A1A1A;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.cart-advisor-card .subtitle {
+  color: #4A4A4A;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.cart-advisor-card .action {
+  color: #1A1A1A;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.cart-advisor-card .action:hover {
+  text-decoration: underline;
 }
