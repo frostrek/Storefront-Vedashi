@@ -90,11 +90,11 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
         : 1;
 
     return (
-        <section className="mt-16 border-t border-neutral-100 pt-10">
+        <section className="pt-10">
             {/* Section header */}
-            <div className="flex items-center gap-3 mb-8">
-                <MessageSquare className="h-6 w-6 text-[#C5A46D]" />
-                <h2 className="font-serif text-2xl font-bold text-neutral-800">Customer Reviews</h2>
+            <div className="mb-12 max-w-2xl">
+                <h2 className="font-serif text-3xl font-bold text-gray-900 mb-3">Community Experiences</h2>
+                <p className="text-[15px] text-gray-500">Stories of restoration and balance from our collective.</p>
             </div>
 
             {loading ? (
@@ -106,9 +106,9 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
             ) : (
                 <div className="grid gap-10 lg:grid-cols-[320px_1fr]">
                     {/* ── Left: Summary ── */}
-                    <div className="lg:sticky lg:top-24 self-start space-y-5">
-                        <div className="rounded-xl border border-neutral-100 bg-gradient-to-br from-[#faf8f5] to-[#f5f0ea] p-6 text-center">
-                            <p className="text-4xl font-bold text-neutral-800 font-serif">
+                    <div className="lg:sticky lg:top-24 self-start space-y-6">
+                        <div className="rounded-2xl border border-gray-100 bg-white p-8 text-center shadow-sm">
+                            <p className="text-5xl font-bold text-gray-900 font-serif">
                                 {(summary?.average_rating ?? 0).toFixed(1)}
                             </p>
                             <StarRating
@@ -128,16 +128,16 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
                                     const count = summary.distribution[star] ?? 0;
                                     const pct = (count / maxDistribution) * 100;
                                     return (
-                                        <div key={star} className="flex items-center gap-2 text-sm">
-                                            <span className="w-3 text-right text-neutral-500 font-medium">{star}</span>
+                                        <div key={star} className="flex items-center gap-3 text-sm">
+                                            <span className="w-3 text-right text-gray-500 font-medium">{star}</span>
                                             <StarRating value={star} size="sm" className="flex-shrink-0" />
-                                            <div className="flex-1 h-2 bg-neutral-100 rounded-full overflow-hidden">
+                                            <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
                                                 <div
-                                                    className="h-full rounded-full bg-[#C5A46D] transition-all duration-500"
+                                                    className="h-full rounded-full bg-[#3d5c3a] transition-all duration-500"
                                                     style={{ width: `${pct}%` }}
                                                 />
                                             </div>
-                                            <span className="w-6 text-right text-xs text-neutral-400">{count}</span>
+                                            <span className="w-8 text-right text-xs font-semibold text-gray-400">{count}</span>
                                         </div>
                                     );
                                 })}
@@ -149,14 +149,14 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
                     <div>
                         {/* Sort */}
                         {reviews.length > 0 && (
-                            <div className="flex items-center justify-between mb-6">
-                                <p className="text-sm text-neutral-500">
-                                    Showing {reviews.length} review{reviews.length !== 1 ? 's' : ''}
+                            <div className="flex items-center justify-between mb-8">
+                                <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
+                                    {reviews.length} Review{reviews.length !== 1 ? 's' : ''}
                                 </p>
                                 <select
                                     value={sort}
                                     onChange={e => setSort(e.target.value)}
-                                    className="rounded-lg border border-neutral-200 px-3 py-1.5 text-sm text-neutral-600 focus:outline-none focus:border-[#C5A46D]/40"
+                                    className="rounded-full border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 focus:outline-none focus:border-[#3d5c3a] focus:ring-1 focus:ring-[#3d5c3a] bg-white cursor-pointer hover:bg-gray-50 transition-colors"
                                 >
                                     {SORT_OPTIONS.map(o => (
                                         <option key={o.value} value={o.value}>{o.label}</option>

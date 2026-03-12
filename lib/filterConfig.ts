@@ -84,11 +84,13 @@ export const FILTER_CONFIGS: FilterConfig[] = [
 
 /** Sort options (mapped to backend sort values) */
 export const SORT_OPTIONS = [
-    { label: 'Default', value: '' },
+    { label: 'Featured', value: '' },
     { label: 'Price: Low to High', value: 'price_asc' },
     { label: 'Price: High to Low', value: 'price_desc' },
-
     { label: 'Newest First', value: 'newest' },
+    { label: 'Best Selling', value: 'best_selling' },
+    { label: 'Highest Rated', value: 'rating_desc' },
+    { label: 'Highest Discount', value: 'discount_desc' },
     { label: 'Name: A–Z', value: 'name_asc' },
     { label: 'Name: Z–A', value: 'name_desc' },
 ];

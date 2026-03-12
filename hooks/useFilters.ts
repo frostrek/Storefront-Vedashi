@@ -17,6 +17,8 @@ export interface FilterState {
     bestSellers: boolean;
     newArrivals: boolean;
     sort: string;
+    discountMin: number | null;
+    attributes: Record<string, string[]>;
 }
 
 const DEFAULTS: FilterState = {
@@ -32,6 +34,8 @@ const DEFAULTS: FilterState = {
     bestSellers: false,
     newArrivals: false,
     sort: '',
+    discountMin: null,
+    attributes: {},
 };
 
 function parseArray(val: string | null): string[] {
@@ -54,20 +58,32 @@ export function useFilters() {
     const pathname = usePathname();
 
     // Read current state from URL
-    const filters: FilterState = useMemo(() => ({
-        search: searchParams.get('search') || DEFAULTS.search,
-        category: searchParams.get('category') || DEFAULTS.category,
-        sub_category: searchParams.get('sub_category') || DEFAULTS.sub_category,
-        brands: parseArray(searchParams.get('brand')),
-        country: searchParams.get('country') || DEFAULTS.country,
-        ratings: parseArray(searchParams.get('rating')),
-        priceRange: parseRange(searchParams.get('price'), DEFAULTS.priceRange),
-        alcoholRange: parseRange(searchParams.get('alcohol'), DEFAULTS.alcoholRange),
-        inStock: searchParams.get('inStock') === 'true',
-        bestSellers: searchParams.get('bestSellers') === 'true',
-        newArrivals: searchParams.get('newArrivals') === 'true',
-        sort: searchParams.get('sort') || DEFAULTS.sort,
-    }), [searchParams]);
+    const filters: FilterState = useMemo(() => {
+        const attributes: Record<string, string[]> = {};
+        searchParams.forEach((val, key) => {
+            if (key.startsWith('attr_')) {
+                const attrKey = key.replace('attr_', '');
+                attributes[attrKey] = val.split(',').filter(Boolean);
+            }
+        });
+
+        return {
+            search: searchParams.get('search') || DEFAULTS.search,
+            category: searchParams.get('category') || DEFAULTS.category,
+            sub_category: searchParams.get('sub_category') || DEFAULTS.sub_category,
+            brands: parseArray(searchParams.get('brand')),
+            country: searchParams.get('country') || DEFAULTS.country,
+            ratings: parseArray(searchParams.get('rating')),
+            priceRange: parseRange(searchParams.get('price'), DEFAULTS.priceRange),
+            alcoholRange: parseRange(searchParams.get('alcohol'), DEFAULTS.alcoholRange),
+            inStock: searchParams.get('inStock') === 'true',
+            bestSellers: searchParams.get('bestSellers') === 'true',
+            newArrivals: searchParams.get('newArrivals') === 'true',
+            sort: searchParams.get('sort') || DEFAULTS.sort,
+            discountMin: searchParams.get('discount_min') ? Number(searchParams.get('discount_min')) : null,
+            attributes,
+        };
+    }, [searchParams]);
 
     // Push updates to URL (shallow — no full reload)
     const setParam = useCallback((updates: Record<string, string | null>) => {
@@ -106,6 +122,8 @@ export function useFilters() {
     const setBestSellers = useCallback((val: boolean) => setParam({ bestSellers: val ? 'true' : null }), [setParam]);
     const setNewArrivals = useCallback((val: boolean) => setParam({ newArrivals: val ? 'true' : null }), [setParam]);
     const setSort = useCallback((val: string) => setParam({ sort: val || null }), [setParam]);
+    const setDiscountMin = useCallback((val: number | null) => setParam({ discount_min: val ? String(val) : null }), [setParam]);
+    const setAttribute = useCallback((key: string, val: string[]) => setParam({ [`attr_${key}`]: val.length ? val.join(',') : null }), [setParam]);
 
     const clearAll = useCallback(() => {
         router.replace(pathname, { scroll: false });
@@ -113,6 +131,13 @@ export function useFilters() {
 
     // Remove a single chip
     const removeFilter = useCallback((key: string, value: string) => {
+        if (key.startsWith('attr_')) {
+            const attrKey = key.replace('attr_', '');
+            const current = filters.attributes[attrKey] || [];
+            setAttribute(attrKey, current.filter(v => v !== value));
+            return;
+        }
+
         switch (key) {
             case 'brand': setBrands(filters.brands.filter(b => b !== value)); break;
             case 'country': setCountry(''); break;
@@ -125,9 +150,10 @@ export function useFilters() {
             case 'inStock': setInStock(false); break;
             case 'bestSellers': setBestSellers(false); break;
             case 'newArrivals': setNewArrivals(false); break;
+            case 'discount_min': setDiscountMin(null); break;
             case 'sort': setSort(''); break;
         }
-    }, [filters, setBrands, setCountry, setRatings, setCategory, setSubCategory, setSearch, setPriceRange, setAlcoholRange, setInStock, setBestSellers, setNewArrivals, setSort]);
+    }, [filters, setBrands, setCountry, setRatings, setCategory, setSubCategory, setSearch, setPriceRange, setAlcoholRange, setInStock, setBestSellers, setNewArrivals, setSort, setDiscountMin, setAttribute, setParam]);
 
     // Build chips from active filters
     const activeChips = useMemo(() => {
@@ -149,6 +175,12 @@ export function useFilters() {
         if (filters.inStock) chips.push({ key: 'inStock', label: 'Status', value: 'In Stock' });
         if (filters.bestSellers) chips.push({ key: 'bestSellers', label: 'Collection', value: 'Best Sellers' });
         if (filters.newArrivals) chips.push({ key: 'newArrivals', label: 'Collection', value: 'New Arrivals' });
+        if (filters.discountMin) chips.push({ key: 'discount_min', label: 'Discount', value: `${filters.discountMin}% & above` });
+        
+        Object.entries(filters.attributes).forEach(([key, values]) => {
+            values.forEach(v => chips.push({ key: `attr_${key}`, label: key.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()), value: v }));
+        });
+
         return chips;
     }, [filters]);
 
@@ -167,6 +199,8 @@ export function useFilters() {
         setBestSellers,
         setNewArrivals,
         setSort,
+        setDiscountMin,
+        setAttribute,
         removeFilter,
         clearAll,
     };

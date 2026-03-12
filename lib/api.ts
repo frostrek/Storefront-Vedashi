@@ -218,7 +218,14 @@ export interface FilterParams {
     min_rating?: number;
     availability?: string;  // 'in_stock' | 'out_of_stock' | 'all'
     category?: string;
+    sub_category?: string;
     brand?: string;
+    discount_min?: number;
+    featured?: boolean;
+    trending?: boolean;
+    editor_pick?: boolean;
+    on_sale?: boolean;
+    attributes?: Record<string, string[]>;
 }
 
 export async function getFilteredProducts(
@@ -237,7 +244,21 @@ export async function getFilteredProducts(
         if (params.min_rating != null) sp.set('min_rating', String(params.min_rating));
         if (params.availability) sp.set('availability', params.availability);
         if (params.category) sp.set('category', params.category);
+        if (params.sub_category) sp.set('sub_category', params.sub_category);
         if (params.brand) sp.set('brand', params.brand);
+        if (params.discount_min != null) sp.set('discount_min', String(params.discount_min));
+        if (params.featured) sp.set('featured', 'true');
+        if (params.trending) sp.set('trending', 'true');
+        if (params.editor_pick) sp.set('editor_pick', 'true');
+        if (params.on_sale) sp.set('on_sale', 'true');
+
+        if (params.attributes) {
+            Object.entries(params.attributes).forEach(([key, values]) => {
+                if (values && values.length > 0) {
+                    sp.set(`attr_${key}`, values.join(','));
+                }
+            });
+        }
 
         const qs = sp.toString();
         const url = `${API_URL}/api/products/filter${qs ? '?' + qs : ''}`;
@@ -376,11 +397,13 @@ export async function getNewArrivals(params?: {
 }
 
 /** Fetch all products once and extract unique brands & countries for filter options */
-export async function getFilterOptions(): Promise<{ brands: string[]; countries: string[]; maxPrice: number }> {
+export async function getFilterOptions(): Promise<{ brands: string[]; countries: string[]; maxPrice: number; categories: any[]; attributes: any[] }> {
     try {
-        const [{ data: products }, { data: maxPriceProd }] = await Promise.all([
+        const [{ data: products }, { data: maxPriceProd }, catRes, attrRes] = await Promise.all([
             getFilteredProducts({ limit: 500 }),
-            getFilteredProducts({ limit: 1, sort: 'price_desc' })
+            getFilteredProducts({ limit: 1, sort: 'price_desc' }),
+            fetch(`${API_URL}/api/categories?tree=true`).then(res => res.json()).catch(() => ({ data: [] })),
+            fetch(`${API_URL}/api/filter-attributes`).then(res => res.json()).catch(() => ({ data: [] }))
         ]);
 
         const brandSet = new Set<string>();
@@ -403,11 +426,13 @@ export async function getFilterOptions(): Promise<{ brands: string[]; countries:
         return {
             brands: Array.from(brandSet).sort(),
             countries: Array.from(countrySet).sort(),
-            maxPrice: roundedMax
+            maxPrice: roundedMax,
+            categories: catRes?.data || [],
+            attributes: attrRes?.data || []
         };
     } catch (err) {
         console.error('[API] Failed to fetch filter options:', err);
-        return { brands: [], countries: [], maxPrice: 500 };
+        return { brands: [], countries: [], maxPrice: 500, categories: [], attributes: [] };
     }
 }
 
