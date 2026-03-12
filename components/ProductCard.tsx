@@ -61,7 +61,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
     const originalPrice = product.original_price ?? displayPrice;
     const discountPercent = product.discount_percentage ?? 0;
 
-    const imageSrc = product.images?.[0] || '/card-drink.webp';
+    const imageSrc = product.images?.[0] || '/herbal_placeholder.png';
     const isExternal = imageSrc.startsWith('http');
     const isBase64 = imageSrc.startsWith('data:');
     const productUrl = `/product/${product.slug || product.product_id}`;

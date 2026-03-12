@@ -126,8 +126,8 @@ export default function HomePage() {
                 ))}
               </div>
             ) : (
-              <div className="rounded-2xl border border-light-border bg-cream py-16 text-center">
-                <span className="text-5xl block mb-4">🌿</span>
+              <div className="rounded-2xl border border-light-border bg-[#F5F2E8] py-16 text-center">
+                <img src="/herbal_placeholder.png" alt="Coming Soon" className="h-20 w-20 mx-auto mb-4 opacity-40 mix-blend-multiply" />
                 <p className="font-serif text-xl text-charcoal">Formulations coming soon</p>
                 <p className="mt-2 text-sm text-warm-gray">Add products via the admin panel</p>
               </div>
