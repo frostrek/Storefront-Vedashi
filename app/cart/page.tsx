@@ -2,12 +2,43 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
-import { Minus, Plus, X, ShoppingCart, ArrowLeft, Loader2, Ticket, Bookmark } from 'lucide-react';
+import { Minus, Plus, X, ShoppingCart, ArrowLeft, Loader2, Ticket, Bookmark, ArrowRight, Leaf, MapPin, Search } from 'lucide-react';
 import { formatVND } from '@/lib/api';
 import toast from 'react-hot-toast';
+
+/* ─── Step Indicator ─────────────────────────────────────────── */
+
+const STEPS = ['BAG', 'SHIPPING', 'PAYMENT', 'REVIEW'] as const;
+
+function StepIndicator({ currentStep = 0 }: { currentStep?: number }) {
+    return (
+        <div className="cart-step-bar">
+            {STEPS.map((step, i) => (
+                <div key={step} className="cart-step-item">
+                    <div className="flex flex-col items-center">
+                        <div
+                            className={`cart-step-circle ${i === currentStep ? 'active' : i < currentStep ? 'completed' : ''}`}
+                        >
+                            {i < currentStep ? '✓' : i + 1}
+                        </div>
+                        <span className={`cart-step-label ${i <= currentStep ? 'active' : ''}`}>
+                            {step}
+                        </span>
+                    </div>
+                    {i < STEPS.length - 1 && (
+                        <div className={`cart-step-line ${i < currentStep ? 'completed' : ''}`} />
+                    )}
+                </div>
+            ))}
+        </div>
+    );
+}
+
+/* ─── Main Cart Page ─────────────────────────────────────────── */
 
 export default function CartPage() {
     const {
@@ -17,218 +48,176 @@ export default function CartPage() {
     } = useCart();
     const { isAuthenticated } = useAuth();
     const router = useRouter();
+    const [itemToRemove, setItemToRemove] = useState<string | null>(null);
     const [couponInput, setCouponInput] = useState('');
     const [applyingCoupon, setApplyingCoupon] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
 
-    // Loading state
+    // Shipping estimation state
+    const [shippingCountry, setShippingCountry] = useState('India');
+    const [shippingZip, setShippingZip] = useState('');
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
     if (loading && items.length === 0) {
         return (
-            <div className="min-h-screen bg-cream flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-burgundy" />
+            <div className="cart-leaf-bg flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-[#6B8F5E]" />
             </div>
         );
     }
 
     if (items.length === 0 && savedItems.length === 0) {
         return (
-            <div className="min-h-screen bg-cream flex items-center justify-center">
-                <div className="text-center">
-                    <ShoppingCart className="mx-auto h-16 w-16 text-warm-gray/40 mb-4" />
-                    <h1 className="font-serif text-2xl font-bold text-charcoal">Your Cart is Empty</h1>
-                    <p className="mt-2 text-warm-gray">Explore our collection and add something you like</p>
+            <div className="cart-leaf-bg flex items-center justify-center">
+                <div className="cart-noise-overlay" aria-hidden="true" />
+                <div className="text-center relative z-10 px-4 py-20">
+                    <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-white border border-[#E8E4DC]">
+                        <ShoppingCart className="h-10 w-10 text-[#8B7A3D]" />
+                    </div>
+                    <h1 className="cart-page-title justify-center">Your Healing Bundle is Empty</h1>
+                    <p className="mt-3 max-w-md mx-auto text-[#4A4A4A] text-sm">
+                        Explore our sacred collection and add authentic Ayurvedic products to your wellness journey
+                    </p>
                     <Link
                         href="/products"
-                        className="mt-6 inline-flex items-center gap-2 rounded-lg bg-burgundy px-8 py-3 text-sm font-semibold text-white hover:bg-burgundy-dark transition-colors"
+                        className="cart-checkout-btn inline-flex mt-8"
+                        style={{ width: 'auto', display: 'inline-flex' }}
                     >
-                        Continue Shopping
+                        Explore Sacred Shop
+                        <ArrowRight className="h-4 w-4" />
                     </Link>
                 </div>
             </div>
         );
     }
 
-    // Compute price breakdown
     const totalMRP = items.reduce((sum, item) => sum + (item.original_price ?? item.price ?? 0) * item.quantity, 0);
     const saleDiscount = totalMRP - items.reduce((sum, item) => sum + (item.price ?? 0) * item.quantity, 0);
-
-    // Total taxes are not exposed directly in CartContext at the top level, but it can be derived if not available
-    // or we can sum it up from the items:
     const totalTaxes = items.reduce((sum, item) => sum + ((item as any).pricing?.tax_amount ?? 0), 0);
-
-    const deliveryFee = couponType === 'free_shipping' ? 0 : (totalPrice > 50 ? 0 : 5);
-
-    // Use the backend's grandTotal directly since that includes taxes. If there's a coupon, 
-    // the backend will handle it, but since applying coupon happens client-side for delivery sometimes:
+    const deliveryFee = couponType === 'free_shipping' ? 0 : (totalPrice > 50 ? 0 : 15); // Default $15 standard
     const grandTotal = totalPrice - couponDiscount + deliveryFee;
 
     return (
-        <div className="min-h-screen bg-cream">
+        <div className="cart-leaf-bg min-h-screen">
+            <div className="cart-noise-overlay" aria-hidden="true" />
+
             {/* Step Indicator */}
-            <div className="border-b border-light-border bg-white py-6">
-                <div className="mx-auto max-w-4xl flex items-center justify-center gap-3 sm:gap-6 md:gap-8 px-4 flex-wrap">
-                    {['Cart', 'Address', 'Payment', 'Confirmation'].map((step, i) => (
-                        <div key={step} className="flex items-center gap-2">
-                            <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${i === 0 ? 'bg-burgundy text-white' : 'bg-cream-dark text-warm-gray'
-                                }`}>
-                                {i + 1}
-                            </div>
-                            <span className={`text-sm font-medium hidden sm:inline ${i === 0 ? 'text-burgundy' : 'text-warm-gray'}`}>
-                                {step}
-                            </span>
-                        </div>
-                    ))}
+            <div className="border-b border-[#D4CFC0] bg-[#FFFFFF] sticky top-0 z-20 shadow-sm">
+                <div className="mx-auto max-w-5xl">
+                    <StepIndicator currentStep={0} />
                 </div>
             </div>
 
-            <div className="mx-auto max-w-7xl px-4 py-6 sm:py-10">
-                <h1 className="font-serif text-2xl sm:text-3xl font-bold text-charcoal mb-6 sm:mb-8">Your Cart</h1>
+            {/* Main Content */}
+            <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12 relative z-10">
+                {/* Back Link */}
+                <Link href="/products" className="inline-flex items-center gap-2 text-sm font-semibold text-[#6B8F5E] hover:text-[#5A7A4E] mb-6 transition-colors uppercase tracking-wider">
+                    <ArrowLeft className="h-4 w-4" /> Continue Shopping
+                </Link>
 
-                {error && (
-                    <div className="mb-4 rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
-                        {error}
-                    </div>
-                )}
-
-                <div className="lg:grid lg:grid-cols-[1fr_380px] lg:gap-8">
-                    {/* Left Column: Cart Items + Saved Items */}
-                    <div className="flex flex-col gap-12">
+                <div className="lg:grid lg:grid-cols-[1fr_400px] lg:gap-10">
+                    {/* Left Column: Cart Items & Widgets */}
+                    <div className="flex flex-col gap-8">
                         {/* Cart Items */}
                         <div className="space-y-4">
+                            {error && (
+                                <div className="mb-2 rounded-xl p-4 text-sm flex items-center gap-2 bg-red-50 border border-red-200 text-red-600">
+                                    <span>⚠</span> {error}
+                                </div>
+                            )}
+
                             {items.length === 0 ? (
-                                <div className="rounded-xl border border-dashed border-light-border p-8 text-center bg-white/50">
-                                    <p className="text-warm-gray font-medium">Your active cart is empty.</p>
+                                <div className="cart-item-card text-center py-10">
+                                    <p className="text-[#4A4A4A] font-medium">Your active cart is empty.</p>
                                 </div>
                             ) : (
                                 items.map(item => {
                                     const price = item.price ?? 0;
+                                    const unitPrice = item.original_price ?? price;
                                     return (
-                                        <div
-                                            key={item.cart_item_id}
-                                            className="flex flex-wrap sm:flex-nowrap items-start sm:items-center gap-3 sm:gap-4 rounded-xl border border-light-border bg-white p-4 sm:p-6 transition-all hover:shadow-sm"
-                                        >
+                                        <div key={item.cart_item_id} className="cart-item-card flex flex-col sm:flex-row gap-6">
                                             {/* Image */}
-                                            <Link href={`/product/${(item as any).slug || item.product_id || item.product?.product_id || ''}`} className="h-20 w-20 sm:h-24 sm:w-24 flex-shrink-0 rounded-lg bg-cream-dark flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity">
+                                            <Link href={`/product/${(item as any).slug || item.product_id || item.product?.product_id || ''}`} className="cart-item-img flex-shrink-0">
                                                 {item.image_url ? (
-                                                    <img src={item.image_url} alt={item.product_name || ''} className="h-full w-full object-cover rounded-lg" />
+                                                    <img src={item.image_url} alt={item.product_name || ''} />
                                                 ) : (
-                                                    <span className="text-4xl">🌿</span>
+                                                    <span className="text-3xl">🌿</span>
                                                 )}
                                             </Link>
 
-                                            {/* Info */}
-                                            <div className="flex-1 min-w-0">
-                                                <Link href={`/product/${(item as any).slug || item.product_id || item.product?.product_id || ''}`} className="hover:text-burgundy transition-colors">
-                                                    <h3 className="font-serif text-base font-semibold text-charcoal truncate">
-                                                        {item.product_name || 'Product'}
-                                                    </h3>
-                                                </Link>
-                                                {item.size_label && (
-                                                    <p className="text-xs text-warm-gray mt-0.5">{item.size_label}</p>
-                                                )}
-                                                {item.sku && (
-                                                    <p className="text-xs text-warm-gray mt-0.5">SKU: {item.sku}</p>
-                                                )}
-                                                <p className="mt-1 font-serif text-lg font-bold text-burgundy">
-                                                    {formatVND(price)}
-                                                </p>
-                                            </div>
+                                            <div className="flex-1 flex flex-col justify-between">
+                                                <div className="flex justify-between items-start">
+                                                    <div>
+                                                        <Link href={`/product/${(item as any).slug || item.product_id || item.product?.product_id || ''}`}>
+                                                            <h3 className="cart-item-title text-lg font-bold">{item.product_name || 'Product'}</h3>
+                                                        </Link>
+                                                        {item.size_label && (
+                                                            <p className="text-xs mt-1 text-[#6B6B60] uppercase tracking-wider font-semibold">{item.size_label}</p>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <div className="font-serif text-lg font-bold text-[#1A1A1A]">
+                                                            {formatVND(price * item.quantity)}
+                                                        </div>
+                                                        <div className="text-xs text-[#8B7A3D] mt-1">{formatVND(price)} each</div>
+                                                    </div>
+                                                </div>
 
-                                            {/* Quantity */}
-                                            <div className="flex items-center rounded-lg border border-light-border ml-auto sm:ml-0">
-                                                <button
-                                                    onClick={() => updateQuantity(item.cart_item_id, item.quantity - 1)}
-                                                    disabled={loading}
-                                                    className="px-2.5 py-1.5 text-warm-gray hover:text-charcoal disabled:opacity-50"
-                                                >
-                                                    <Minus className="h-3 w-3" />
-                                                </button>
-                                                <span className="w-8 text-center text-sm font-medium text-charcoal">{item.quantity}</span>
-                                                <button
-                                                    onClick={() => updateQuantity(item.cart_item_id, item.quantity + 1)}
-                                                    disabled={loading}
-                                                    className="px-2.5 py-1.5 text-warm-gray hover:text-charcoal disabled:opacity-50"
-                                                >
-                                                    <Plus className="h-3 w-3" />
-                                                </button>
-                                            </div>
+                                                <div className="flex items-center justify-between mt-4">
+                                                    {/* Quantity */}
+                                                    <div className="cart-qty-control">
+                                                        <button onClick={() => updateQuantity(item.cart_item_id, item.quantity - 1)} disabled={loading} className="cart-qty-btn">
+                                                            <Minus className="h-3 w-3" />
+                                                        </button>
+                                                        <span className="cart-qty-value">{item.quantity}</span>
+                                                        <button onClick={() => updateQuantity(item.cart_item_id, item.quantity + 1)} disabled={loading} className="cart-qty-btn">
+                                                            <Plus className="h-3 w-3" />
+                                                        </button>
+                                                    </div>
 
-                                            {/* Actions */}
-                                            <div className="flex flex-col gap-2 items-end justify-center ml-2">
-                                                <button
-                                                    onClick={() => { removeItem(item.cart_item_id); toast.success('Removed from cart'); }}
-                                                    disabled={loading}
-                                                    className="p-2.5 text-warm-gray hover:text-red-500 hover:bg-red-50 rounded-full transition-colors disabled:opacity-50"
-                                                    title="Remove item"
-                                                >
-                                                    <X className="h-5 w-5" />
-                                                </button>
-                                                <button
-                                                    onClick={() => { saveForLater(item.cart_item_id); toast.success('Saved for later'); }}
-                                                    disabled={loading}
-                                                    className="p-2.5 text-warm-gray hover:text-burgundy hover:bg-burgundy/5 rounded-full transition-colors disabled:opacity-50"
-                                                    title="Save for later"
-                                                >
-                                                    <Bookmark className="h-4 w-4" />
-                                                </button>
+                                                    <div className="flex items-center gap-2">
+                                                        <button onClick={() => { saveForLater(item.cart_item_id); toast.success('Saved for later'); }} disabled={loading} className="text-[#8B7A3D] text-[13px] font-semibold hover:underline px-2">
+                                                            Save for Later
+                                                        </button>
+                                                        <button onClick={() => setItemToRemove(item.cart_item_id)} disabled={loading} className="cart-remove-btn">
+                                                            <X className="h-3.5 w-3.5" /> Remove
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     );
-                                }))}
+                                })
+                            )}
                         </div>
 
                         {/* Saved for Later Section */}
                         {savedItems.length > 0 && (
-                            <div>
-                                <h2 className="font-serif text-2xl font-bold text-charcoal mb-6 border-b border-light-border pb-4 flex items-center gap-2">
-                                    <Bookmark className="h-6 w-6 text-burgundy" />
+                            <div className="mt-4">
+                                <h3 className="cart-saved-section-title">
+                                    <Bookmark className="h-5 w-5 text-[#8B7A3D]" />
                                     Saved for Later ({savedItems.length})
-                                </h2>
+                                </h3>
                                 <div className="space-y-4">
                                     {savedItems.map(item => {
                                         const price = item.price ?? 0;
                                         return (
-                                            <div
-                                                key={item.cart_item_id}
-                                                className="flex items-center gap-4 rounded-xl border border-light-border bg-white p-4 sm:p-6 transition-all hover:shadow-sm opacity-80 hover:opacity-100"
-                                            >
-                                                {/* Image */}
-                                                <Link href={`/product/${(item as any).slug || item.product_id || item.product?.product_id || ''}`} className="h-16 w-16 sm:h-20 sm:w-20 flex-shrink-0 rounded-lg bg-cream-dark flex items-center justify-center cursor-pointer">
-                                                    {item.image_url ? (
-                                                        <img src={item.image_url} alt={item.product_name || ''} className="h-full w-full object-cover rounded-lg" />
-                                                    ) : (
-                                                        <span className="text-3xl">🌿</span>
-                                                    )}
+                                            <div key={item.cart_item_id} className="cart-item-card flex items-center gap-4 bg-[#FAFAFA] opacity-80 hover:opacity-100">
+                                                <Link href={`/product/${(item as any).slug || item.product_id || item.product?.product_id || ''}`} className="cart-item-img w-16 h-16 rounded-lg flex-shrink-0">
+                                                    {item.image_url ? <img src={item.image_url} alt="" /> : <span className="text-xl">🌿</span>}
                                                 </Link>
-
-                                                {/* Info */}
-                                                <div className="flex-1 min-w-0">
-                                                    <Link href={`/product/${(item as any).slug || item.product_id || item.product?.product_id || ''}`} className="hover:text-burgundy transition-colors">
-                                                        <h3 className="font-serif text-base font-semibold text-charcoal truncate">
-                                                            {item.product_name || 'Product'}
-                                                        </h3>
-                                                    </Link>
-                                                    {item.size_label && (
-                                                        <p className="text-xs text-warm-gray mt-0.5">{item.size_label}</p>
-                                                    )}
-                                                    <p className="mt-1 font-serif text-lg font-bold text-warm-gray">
-                                                        {formatVND(price)}
-                                                    </p>
+                                                <div className="flex-1">
+                                                    <h3 className="text-sm font-bold text-[#1A1A1A]">{item.product_name || 'Product'}</h3>
+                                                    <p className="font-serif text-[#4A4A4A] mt-1">{formatVND(price)}</p>
                                                 </div>
-
-                                                {/* Actions */}
-                                                <div className="flex flex-col gap-2 items-end">
-                                                    <button
-                                                        onClick={() => { moveToCart(item.cart_item_id); toast.success('Moved to cart'); }}
-                                                        disabled={loading}
-                                                        className="px-4 py-2 text-sm font-semibold rounded-lg bg-burgundy/10 text-burgundy hover:bg-burgundy hover:text-white transition-colors disabled:opacity-50 whitespace-nowrap"
-                                                    >
-                                                        Move to Cart
+                                                <div className="flex flex-col items-end gap-2">
+                                                    <button onClick={() => { moveToCart(item.cart_item_id); toast.success('Moved to cart'); }} disabled={loading} className="bg-[#6B8F5E] text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-[#5A7A4E]">
+                                                        Move to Bag
                                                     </button>
-                                                    <button
-                                                        onClick={() => { removeItem(item.cart_item_id); toast.success('Removed saved item'); }}
-                                                        disabled={loading}
-                                                        className="px-4 py-2 text-sm font-medium text-warm-gray hover:text-red-500 transition-colors disabled:opacity-50"
-                                                    >
+                                                    <button onClick={() => setItemToRemove(item.cart_item_id)} disabled={loading} className="text-[#C0392B] text-[11px] uppercase tracking-wider font-semibold hover:underline">
                                                         Remove
                                                     </button>
                                                 </div>
@@ -238,93 +227,31 @@ export default function CartPage() {
                                 </div>
                             </div>
                         )}
-                    </div>
 
-                    {/* Order Summary */}
-                    <div className="mt-8 lg:mt-0">
-                        <div className="sticky top-24 rounded-xl border border-light-border bg-white p-6">
-                            <h2 className="font-serif text-lg font-bold text-charcoal mb-4">Order Summary</h2>
-
-                            {/* Item list */}
-                            <div className="space-y-3 text-sm border-b border-light-border pb-4 mb-4">
-                                {items.map(item => {
-                                    const price = item.price ?? 0;
-                                    const lineTotal = price * item.quantity;
-                                    return (
-                                        <div key={item.cart_item_id} className="flex items-start gap-3">
-                                            <div className="h-12 w-12 flex-shrink-0 rounded-lg bg-cream-dark flex items-center justify-center">
-                                                {item.image_url ? (
-                                                    <img src={item.image_url} alt="" className="h-full w-full object-cover rounded-lg" />
-                                                ) : (
-                                                    <span className="text-lg">🌿</span>
-                                                )}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-charcoal font-medium truncate">{item.product_name || 'Product'}</p>
-                                                <p className="text-xs text-warm-gray">
-                                                    {formatVND(price)} × {item.quantity}
-                                                </p>
-                                            </div>
-                                            <p className="text-charcoal font-medium">{formatVND(lineTotal)}</p>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-
-                            {/* Price breakdown */}
-                            <div className="space-y-2.5 text-sm">
-                                <div className="flex justify-between">
-                                    <span className="text-warm-gray">Total MRP</span>
-                                    <span className="text-charcoal">{formatVND(totalMRP)}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-warm-gray">Discount on MRP</span>
-                                    <span className={saleDiscount > 0 ? 'text-green-600 font-medium' : 'text-charcoal'}>
-                                        {saleDiscount > 0 ? `-${formatVND(saleDiscount)}` : formatVND(0)}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-warm-gray">Coupon Discount</span>
-                                    <span className={couponDiscount > 0 ? 'text-green-600 font-medium' : 'text-charcoal'}>
-                                        {couponDiscount > 0 ? `-${formatVND(couponDiscount)}` : formatVND(0)}
-                                    </span>
-                                </div>
-                                {totalTaxes > 0 && (
-                                    <div className="flex justify-between">
-                                        <span className="text-warm-gray">Taxes (VAT & Excise)</span>
-                                        <span className="text-charcoal">{formatVND(totalTaxes)}</span>
+                        {/* Promo and Shipping Widgets */}
+                        {items.length > 0 && (
+                            <div className="grid sm:grid-cols-2 gap-4">
+                                <div className="cart-item-card p-6 border-t-4 border-t-[#8B7A3D]">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <Ticket className="h-5 w-5 text-[#8B7A3D]" />
+                                        <h4 className="font-serif text-lg font-bold text-[#1A1A1A]">Promo Offering</h4>
                                     </div>
-                                )}
-                                <div className="flex justify-between">
-                                    <span className="text-warm-gray">Delivery Fee</span>
-                                    <span className={deliveryFee === 0 ? 'text-green-600 font-medium' : 'text-charcoal'}>
-                                        {deliveryFee === 0 ? 'FREE' : formatVND(deliveryFee)}
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Coupon Input Section */}
-                            <div className="mt-4 border-t border-light-border pt-4">
-                                {couponCode ? (
-                                    <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-4 py-2.5">
-                                        <div className="flex items-center gap-2">
-                                            <Ticket className="h-4 w-4 text-green-600" />
-                                            <span className="text-sm font-medium text-green-700">{couponCode}</span>
-                                            <span className="text-xs text-green-600">(-{formatVND(couponDiscount)})</span>
+                                    <p className="text-[13px] text-[#6B6B60] mb-4">Have a sacred promo code? Enter it below.</p>
+                                    {couponCode ? (
+                                        <div className="ritual-coupon-applied">
+                                            <div className="coupon-info text-[#1A1A1A] font-semibold text-sm">
+                                                {couponCode} <span className="text-[#6B8F5E]">(-{formatVND(couponDiscount)})</span>
+                                            </div>
+                                            <button onClick={() => { removeCoupon(); toast.success('Coupon removed'); }} className="text-[#C0392B] text-xs font-semibold uppercase hover:underline">Remove</button>
                                         </div>
-                                        <button onClick={() => { removeCoupon(); toast.success('Coupon removed'); }} className="text-xs text-red-500 hover:text-red-700 font-medium">
-                                            Remove
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <div>
+                                    ) : (
                                         <div className="flex gap-2">
                                             <input
                                                 type="text"
-                                                placeholder="Enter coupon code"
+                                                placeholder="Enter code"
                                                 value={couponInput}
                                                 onChange={e => setCouponInput(e.target.value.toUpperCase())}
-                                                className="flex-1 rounded-lg border border-light-border px-3 py-2 text-sm font-mono uppercase focus:border-burgundy focus:outline-none"
+                                                className="flex-1 rounded-lg border border-[#D4CFC0] px-4 py-2 text-sm focus:border-[#8B7A3D] focus:outline-none bg-[#F5F4F0] font-mono uppercase"
                                             />
                                             <button
                                                 onClick={async () => {
@@ -335,51 +262,193 @@ export default function CartPage() {
                                                     setApplyingCoupon(false);
                                                 }}
                                                 disabled={applyingCoupon || !couponInput.trim()}
-                                                className="rounded-lg bg-burgundy px-4 py-2 text-sm font-semibold text-white hover:bg-burgundy-dark transition-colors disabled:opacity-50 flex items-center gap-1"
+                                                className="bg-[#2D3B2D] text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-[#1F291F] transition-colors disabled:opacity-50 tracking-wide"
                                             >
-                                                {applyingCoupon ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Apply'}
+                                                {applyingCoupon ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Apply'}
                                             </button>
                                         </div>
-                                        {couponError && (
-                                            <p className="mt-1.5 text-xs text-red-500">{couponError}</p>
-                                        )}
+                                    )}
+                                    {couponError && <p className="mt-2 text-xs text-[#C0392B]">{couponError}</p>}
+                                </div>
+
+                                <div className="cart-item-card p-6 border-t-4 border-t-[#6B8F5E]">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <MapPin className="h-5 w-5 text-[#6B8F5E]" />
+                                        <h4 className="font-serif text-lg font-bold text-[#1A1A1A]">Shipping Sanctuary</h4>
                                     </div>
-                                )}
+                                    <p className="text-[13px] text-[#6B6B60] mb-4">Estimate delivery to your location.</p>
+                                    <div className="space-y-3">
+                                        <select
+                                            value={shippingCountry}
+                                            onChange={(e) => setShippingCountry(e.target.value)}
+                                            className="w-full rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-[#F5F4F0]"
+                                        >
+                                            <option value="India">India</option>
+                                            <option value="USA">United States</option>
+                                            <option value="UK">United Kingdom</option>
+                                        </select>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                placeholder="Zip / Postal Code"
+                                                value={shippingZip}
+                                                onChange={(e) => setShippingZip(e.target.value)}
+                                                className="flex-1 rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-[#F5F4F0]"
+                                            />
+                                            <button className="bg-[#E8E4DC] text-[#1A1A1A] px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-[#D4CFC0] transition-colors tracking-wide">
+                                                Update
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        
+                    </div>
+
+                    {/* ─── Ritual Summary Sidebar ─── */}
+                    <div className="mt-8 lg:mt-0">
+                        <div className="sticky top-28">
+                            <div className="ritual-summary">
+                                <div className="ritual-summary-title">
+                                    <div className="w-8 h-8 rounded-full bg-[rgba(255,255,255,0.1)] flex items-center justify-center mr-2">
+                                        <Leaf className="w-4 h-4 text-white" />
+                                    </div>
+                                    Investment Summary
+                                    <span className="ritual-summary-badge">{totalItems} Item{totalItems !== 1 ? 's' : ''}</span>
+                                </div>
+                                <p className="text-[10px] uppercase tracking-[2px] text-[rgba(255,255,255,0.5)] mb-4 -mt-2">Preparing your path to healing</p>
+
+                                <div className="space-y-1 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                    {items.map(item => {
+                                        const price = item.price ?? 0;
+                                        const lineTotal = price * item.quantity;
+                                        return (
+                                            <div key={item.cart_item_id} className="ritual-summary-item pb-3 border-b border-[rgba(255,255,255,0.1)] last:border-0 last:pb-0">
+                                                <div className="ritual-summary-item-img">
+                                                    {item.image_url ? (
+                                                        <img src={item.image_url} alt="" />
+                                                    ) : (
+                                                        <span className="flex items-center justify-center h-full text-sm text-[#1A1A1A]">🌿</span>
+                                                    )}
+                                                </div>
+                                                <div className="ritual-summary-item-name">
+                                                    {item.product_name || 'Product'}
+                                                    <div className="ritual-summary-item-qty mt-0.5">Qty: {item.quantity}</div>
+                                                </div>
+                                                <span className="ritual-summary-item-price">{formatVND(lineTotal)}</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                <div className="ritual-summary-divider" />
+
+                                <div className="space-y-2">
+                                    <div className="ritual-summary-row">
+                                        <span className="label">Bundle Subtotal</span>
+                                        <span className="value">{formatVND(totalMRP)}</span>
+                                    </div>
+                                    {saleDiscount > 0 && (
+                                        <div className="ritual-summary-row">
+                                            <span className="label">Vedic Discount</span>
+                                            <span className="value !text-[#86EFAC]">- {formatVND(saleDiscount)}</span>
+                                        </div>
+                                    )}
+                                    {couponDiscount > 0 && (
+                                        <div className="ritual-summary-row">
+                                            <span className="label">Promo Discount</span>
+                                            <span className="value !text-[#86EFAC]">- {formatVND(couponDiscount)}</span>
+                                        </div>
+                                    )}
+                                    <div className="ritual-summary-row">
+                                        <span className="label">Vedic Shipping <span className="text-[9px] uppercase tracking-wider opacity-70 ml-1">(Standard)</span></span>
+                                        <span className="value">{deliveryFee === 0 ? 'FREE' : formatVND(deliveryFee)}</span>
+                                    </div>
+                                    {totalTaxes > 0 && (
+                                        <div className="ritual-summary-row">
+                                            <span className="label">Ayurvedic Levy (Tax)</span>
+                                            <span className="value">{formatVND(totalTaxes)}</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="ritual-summary-total">
+                                    <div>
+                                        <div className="ritual-summary-total-label">Total Investment</div>
+                                        <div className="ritual-summary-total-value mt-1">{formatVND(grandTotal)}</div>
+                                    </div>
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.05)]">
+                                        <Leaf className="h-5 w-5 text-white opacity-80" />
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={() => {
+                                        if (!isAuthenticated) {
+                                            toast('Please sign in to proceed to checkout', { icon: '🔐' });
+                                            router.push('/login?redirect=/cart');
+                                        } else {
+                                            router.push('/checkout');
+                                        }
+                                    }}
+                                    className="cart-checkout-btn block w-full text-center hover:bg-[#8B7A3D]"
+                                >
+                                    {isAuthenticated ? 'Confirm & Complete Ritual' : 'Sign In to Checkout'}
+                                </button>
+                                
+                                <div className="mt-5 flex items-center justify-center gap-4 text-[9px] text-[rgba(255,255,255,0.5)] font-bold tracking-[1.5px] uppercase">
+                                    <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full border border-[rgba(255,255,255,0.5)] flex items-center justify-center"><div className="w-0.5 h-0.5 bg-white rounded-full"></div></div> Secure Transaction</span>
+                                    <span>•</span>
+                                    <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full border border-[rgba(255,255,255,0.5)] flex items-center justify-center"><div className="w-0.5 h-0.5 bg-white rounded-full"></div></div> Fast Processing</span>
+                                </div>
                             </div>
 
-                            {/* Grand Total */}
-                            <div className="mt-4 border-t border-light-border pt-4 flex justify-between">
-                                <span className="font-serif text-lg font-bold text-burgundy">Grand Total</span>
-                                <span className="font-serif text-lg font-bold text-burgundy">{formatVND(grandTotal)}</span>
-                            </div>
-
-                            <button
-                                onClick={() => {
-                                    if (!isAuthenticated) {
-                                        toast('Please sign in to proceed to checkout', { icon: '🔐' });
-                                        router.push('/login?redirect=/cart');
-                                    } else {
-                                        router.push('/checkout');
-                                    }
-                                }}
-                                className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-burgundy py-3 text-sm font-semibold text-white transition-all hover:bg-burgundy-dark"
-                            >
-                                {isAuthenticated ? 'Proceed to Checkout' : 'Sign In to Checkout'}
-                            </button>
+                            <Link href="/help-center/support" className="cart-advisor-card cursor-pointer flex">
+                                <div className="icon-wrapper border border-[#D4CFC0]">
+                                    <Leaf className="w-5 h-5" />
+                                </div>
+                                <div className="text-content">
+                                    <p className="title">Need Guidance?</p>
+                                    <p className="subtitle">Our Vedic advisors are available to assist with your transaction.</p>
+                                </div>
+                                <span className="action">Contact Support</span>
+                            </Link>
                         </div>
                     </div>
                 </div>
-
-                {/* Continue Shopping */}
-                <div className="mt-8">
-                    <Link
-                        href="/products"
-                        className="inline-flex items-center gap-2 rounded-lg border border-light-border px-4 py-2.5 text-sm font-medium text-charcoal hover:bg-white transition-colors"
-                    >
-                        <ArrowLeft className="h-4 w-4" /> Continue Shopping
-                    </Link>
-                </div>
             </div>
+
+            {/* Custom Remove Confirmation Modal via Portal */}
+            {isMounted && itemToRemove && createPortal(
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                        <div className="p-6">
+                            <h3 className="font-serif text-xl font-bold text-[#1A1A1A] mb-2">Remove Item</h3>
+                            <p className="text-[#4A4A4A] text-sm">Are you sure you want to remove this item from your ritual bundle?</p>
+                        </div>
+                        <div className="bg-[#F5F4F0] px-6 py-4 flex items-center justify-end gap-3 rounded-b-xl border-t border-[#E8E4DC]">
+                            <button
+                                onClick={() => setItemToRemove(null)}
+                                className="px-4 py-2 rounded-lg text-sm font-semibold text-[#4A4A4A] hover:bg-black/5 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => {
+                                    removeItem(itemToRemove);
+                                    setItemToRemove(null);
+                                    toast.success('Removed item');
+                                }}
+                                className="px-4 py-2 rounded-lg text-sm font-semibold bg-[#C0392B] text-white hover:bg-[#A93226] transition-colors shadow-sm"
+                            >
+                                Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
         </div>
     );
 }

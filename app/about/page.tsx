@@ -6,7 +6,13 @@ import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
 
 export default function AboutPage() {
     return (
-        <div className="min-h-screen bg-cream">
+        <div className="min-h-screen bg-cream relative">
+            {/* Ayurvedic Botanical Texture Background */}
+            <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.10]" style={{
+                backgroundImage: `url("/ayurvedic-texture.png")`,
+                backgroundSize: '400px 400px',
+                backgroundRepeat: 'repeat'
+            }} />
 
             {/* ═══════════════════════════════════════════════════════════
           HERO — "Crafting a Legacy of Balance"
@@ -247,8 +253,23 @@ export default function AboutPage() {
             {/* ═══════════════════════════════════════════════════════════
           VALUES — "Sourced by Nature, Verified by Science"
       ═══════════════════════════════════════════════════════════ */}
-            <section className="py-16 sm:py-24 lg:py-28 px-4 bg-[#F5F2E8]">
-                <div className="mx-auto max-w-7xl">
+            <section className="py-16 sm:py-24 lg:py-28 px-4 bg-[#F5F2E8] relative overflow-hidden">
+                {/* Realistic Leaf Watermarks */}
+                <img
+                    src="/leaf-watermark.png"
+                    alt=""
+                    aria-hidden="true"
+                    className="absolute top-[-8%] right-[-10%] w-[300px] sm:w-[450px] pointer-events-none opacity-[0.07] rotate-[30deg] transform-gpu animate-float select-none"
+                    style={{ animationDuration: '9s', filter: 'blur(0.5px)' }}
+                />
+                <img
+                    src="/leaf-watermark.png"
+                    alt=""
+                    aria-hidden="true"
+                    className="absolute bottom-[-8%] left-[-10%] w-[250px] sm:w-[380px] pointer-events-none opacity-[0.05] -rotate-[40deg] transform-gpu animate-float select-none"
+                    style={{ animationDuration: '11s', animationDelay: '3s', filter: 'blur(0.5px)', transform: 'scaleX(-1) rotate(-40deg)' }}
+                />
+                <div className="mx-auto max-w-7xl relative z-10">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
                         <AnimateOnScroll animation="fadeLeft" duration={0.9}>
                             <div>

@@ -37,6 +37,7 @@ interface UserInfo {
     is_age_verified?: boolean;
     is_email_verified?: boolean;
     is_mobile_verified?: boolean;
+    phone?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -56,6 +57,7 @@ function toUserInfo(customer: Record<string, unknown>): UserInfo {
         is_age_verified: !!(customer.is_age_verified),
         is_email_verified: !!(customer.is_email_verified),
         is_mobile_verified: !!(customer.is_mobile_verified),
+        phone: (customer.phone ?? customer.mobile_phone ?? '') as string,
     };
 }
 

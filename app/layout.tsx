@@ -4,7 +4,7 @@ import Script from "next/script";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import AgeVerificationModal from "@/components/AgeVerificationModal";
+
 import PromoBanner from "@/components/PromoBanner";
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";

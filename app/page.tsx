@@ -31,7 +31,13 @@ export default function HomePage() {
   const productsLoading = featuredLoading && loading;
 
   return (
-    <div className="bg-cream">
+    <div className="bg-cream relative">
+      {/* Ayurvedic Botanical Texture Background */}
+      <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.10]" style={{
+        backgroundImage: `url("/ayurvedic-texture.png")`,
+        backgroundSize: '400px 400px',
+        backgroundRepeat: 'repeat'
+      }} />
       {/* ═══ 1. HERO ═══ */}
       <HeroSection />
 
@@ -137,12 +143,29 @@ export default function HomePage() {
       </section>
 
       {/* ═══ 4. TRUST & SCIENCE ═══ */}
-      <section className="py-12 sm:py-20 lg:py-24 px-4 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-1/3 h-full opacity-[0.04] pointer-events-none">
-          <svg viewBox="0 0 200 600" fill="#3B5D3B" className="w-full h-full">
-            <path d="M100 0C120 80 200 120 200 200C200 320 100 360 100 600C100 360 0 320 0 200C0 120 80 80 100 0Z" />
-          </svg>
-        </div>
+      <section className="py-12 sm:py-20 lg:py-24 px-4 relative overflow-hidden bg-cream">
+        {/* Realistic Botanical Leaf Watermarks */}
+        <img
+          src="/leaf-watermark.png"
+          alt=""
+          aria-hidden="true"
+          className="absolute top-[-5%] right-[-8%] w-[350px] sm:w-[500px] lg:w-[650px] pointer-events-none opacity-[0.08] rotate-[25deg] transform-gpu animate-float select-none"
+          style={{ animationDuration: '8s', filter: 'blur(0.5px)' }}
+        />
+        <img
+          src="/leaf-watermark.png"
+          alt=""
+          aria-hidden="true"
+          className="absolute bottom-[-10%] left-[-12%] w-[280px] sm:w-[400px] lg:w-[500px] pointer-events-none opacity-[0.06] -rotate-[50deg] transform-gpu animate-float select-none"
+          style={{ animationDuration: '10s', animationDelay: '2s', filter: 'blur(0.5px)', transform: 'scaleX(-1) rotate(-50deg)' }}
+        />
+        <img
+          src="/leaf-watermark.png"
+          alt=""
+          aria-hidden="true"
+          className="absolute top-[40%] left-[50%] w-[150px] sm:w-[200px] pointer-events-none opacity-[0.04] rotate-[140deg] transform-gpu animate-float select-none"
+          style={{ animationDuration: '12s', animationDelay: '1s', filter: 'blur(1px)' }}
+        />
         <div className="mx-auto max-w-7xl relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
             {/* Left — Image Collage */}

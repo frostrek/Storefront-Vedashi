@@ -6,13 +6,13 @@ import { Search, X, Loader2 } from 'lucide-react';
 import { searchAutocomplete, type SearchSuggestion } from '@/lib/api';
 
 interface SearchAutocompleteProps {
-    /** Called when the search overlay should close (e.g. mobile) */
+    /** Called when the sea rch overlay should close (e.g. mobile) */
     onClose?: () => void;
     /** Placeholder text */
     placeholder?: string;
-    /** Additional wrapper classes */
+    /** Additional wrap per classes */
     className?: string;
-}
+} 
 
 export default function SearchAutocomplete({
     onClose,
