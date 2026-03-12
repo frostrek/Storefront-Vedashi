@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
 import Script from "next/script";
-import "./globals.css";
+import "../globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -16,6 +16,10 @@ import CookieBanner from "@/components/CookieBanner";
 import DynamicScriptLoader from "@/components/DynamicScriptLoader";
 import MaintenancePage from "@/components/MaintenancePage";
 import { generateOrganizationJsonLd, generateWebSiteJsonLd } from "@/lib/seo";
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages, setRequestLocale } from 'next-intl/server';
+import { routing } from '@/i18n/routing';
+import { notFound } from 'next/navigation';
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -56,17 +60,36 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
+// Generate static params for all locales
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
+}
+
+export default async function LocaleLayout({
   children,
+  params,
 }: {
   children: React.ReactNode;
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = await params;
+
+  // Validate locale
+  if (!routing.locales.includes(locale as any)) {
+    notFound();
+  }
+
+  // Enable static rendering
+  setRequestLocale(locale);
+
+  // Load messages for the current locale
+  const messages = await getMessages();
+
   // Check global maintenance status
   let isMaintenance = false;
   let maintenanceMessage = "";
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-    // Revalidate every 10 seconds to keep the maintenance status fresh without hammering the backend
     const res = await fetch(`${apiUrl}/health`, { next: { revalidate: 10 } });
     const data = await res.json();
     if (data?.maintenance?.enabled) {
@@ -74,12 +97,12 @@ export default async function RootLayout({
       maintenanceMessage = data.maintenance.message || "The Vedashi experience is currently undergoing routine maintenance.";
     }
   } catch (error) {
-    // Ignore network errors here; the app will naturally fail on API calls if backend is down
+    // Ignore network errors here
   }
 
   if (isMaintenance) {
     return (
-      <html lang="en" className={`${playfair.variable} ${inter.variable}`} suppressHydrationWarning>
+      <html lang={locale} className={`${playfair.variable} ${inter.variable}`} suppressHydrationWarning>
         <body className="min-h-screen bg-[#1A1814]">
           <MaintenancePage message={maintenanceMessage} />
         </body>
@@ -88,7 +111,7 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="en" className={`${playfair.variable} ${inter.variable}`} suppressHydrationWarning>
+    <html lang={locale} className={`${playfair.variable} ${inter.variable}`} suppressHydrationWarning>
       <body className="min-h-screen flex flex-col" suppressHydrationWarning>
         {/* Global Structured Data */}
         <script
@@ -108,36 +131,36 @@ export default async function RootLayout({
             src="https://checkout.razorpay.com/v1/checkout.js"
             strategy="lazyOnload"
           />
-          <CookieConsentProvider>
-            <DynamicScriptLoader />
-            <AuthProvider>
-              <CartProvider>
-                <WishlistProvider>
-                  <Toaster
-                    position="bottom-right"
-                    toastOptions={{
-                      style: {
-                        background: '#2D2926',
-                        color: '#FAF7F2',
-                        borderRadius: '12px',
-                        fontSize: '14px',
-                      },
-                      success: {
-                        iconTheme: { primary: '#722F37', secondary: '#FAF7F2' },
-                      },
-                    }}
-                  />
-                  {/* AgeVerificationModal disabled for Ayurvedic wellness site */}
-                  {/* <AgeVerificationModal /> */}
-                  <Navbar />
-                  <PromoBanner />
-                  <main className="flex-1">{children}</main>
-                  <Footer />
-                  <CookieBanner />
-                </WishlistProvider>
-              </CartProvider>
-            </AuthProvider>
-          </CookieConsentProvider>
+          <NextIntlClientProvider messages={messages}>
+            <CookieConsentProvider>
+              <DynamicScriptLoader />
+              <AuthProvider>
+                <CartProvider>
+                  <WishlistProvider>
+                    <Toaster
+                      position="bottom-right"
+                      toastOptions={{
+                        style: {
+                          background: '#2D2926',
+                          color: '#FAF7F2',
+                          borderRadius: '12px',
+                          fontSize: '14px',
+                        },
+                        success: {
+                          iconTheme: { primary: '#722F37', secondary: '#FAF7F2' },
+                        },
+                      }}
+                    />
+                    <Navbar />
+                    <PromoBanner />
+                    <main className="flex-1">{children}</main>
+                    <Footer />
+                    <CookieBanner />
+                  </WishlistProvider>
+                </CartProvider>
+              </AuthProvider>
+            </CookieConsentProvider>
+          </NextIntlClientProvider>
         </ClerkProvider>
       </body>
     </html>
