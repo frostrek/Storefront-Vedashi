@@ -512,7 +512,7 @@ function ProductsContent() {
                             </>
                         ) : (
                             <div className="rounded-xl border border-light-border bg-white py-20 text-center shadow-sm">
-                                <Leaf className="h-12 w-12 mx-auto text-warm-gray/30 mb-4" />
+                                <img src="/herbal_placeholder.png" alt="No products" className="h-24 w-24 mx-auto mb-4 opacity-20 mix-blend-multiply" />
                                 <p className="font-serif text-xl text-charcoal">No formulations found</p>
                                 <p className="mt-2 text-sm text-warm-gray">Try adjusting your filters or search</p>
                                 {activeChips.length > 0 && (
