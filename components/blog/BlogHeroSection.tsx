@@ -70,7 +70,7 @@ export default function BlogHeroSection({ featuredPost }: BlogHeroSectionProps) 
                         <div className="flex flex-col sm:flex-row sm:items-center gap-6">
                             <Link 
                                 href={`/blog/${featuredPost.slug}`}
-                                className="inline-flex items-center justify-center px-8 py-4 rounded-full bg-burgundy hover:bg-burgundy-dark text-white font-medium transition-colors duration-300 shadow-lg shadow-burgundy/20"
+                                className="inline-flex items-center justify-center px-8 py-4 rounded-full bg-herbal-green hover:bg-herbal-green-dark text-white font-medium transition-colors duration-300 shadow-lg shadow-herbal-green/20"
                             >
                                 Read Article
                                 <svg className="ml-2 w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
