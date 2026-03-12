@@ -10,13 +10,14 @@ import {
     updateAddress as apiUpdateAddress, deleteAddress as apiDeleteAddress,
     getCustomerProfile, updateCustomerProfile, deactivateAccount,
     uploadProfileImage, getProfileImage, removeProfileImage, getOrderById,
-    cancelOrder as apiCancelOrder, formatVND, downloadInvoice, getBestSellers
+    cancelOrder as apiCancelOrder, formatVND, downloadInvoice, getBestSellers,
+    getMyEnquiries, replyToEnquiry
 } from '@/lib/api';
 import { Order, Address } from '@/types';
 import {
     Package, MapPin, Heart, LogOut, User, Plus, Pencil, Trash2,
     Loader2, ShieldOff, Camera, X, Check, Star, Phone, Calendar, Mail,
-    CheckCircle2, Smartphone, AlertCircle, Shield, FileText
+    CheckCircle2, Smartphone, AlertCircle, Shield, FileText, MessageSquare, Send, Clock, User2, MessageCircle
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import toast from 'react-hot-toast';
@@ -26,9 +27,9 @@ import NotificationPreferences from '@/components/account/NotificationPreference
 import ExportOrdersModal from '@/components/account/ExportOrdersModal';
 import { BadgeCheck, BellRing, Download, ChevronRight, Search, ShoppingCart, LayoutGrid, List } from 'lucide-react';
 
-type Tab = 'overview' | 'orders' | 'wishlist' | 'addresses' | 'profile' | 'privacy';
+type Tab = 'overview' | 'orders' | 'wishlist' | 'addresses' | 'profile' | 'privacy' | 'support';
 
-const VALID_TABS: Tab[] = ['overview', 'orders', 'wishlist', 'addresses', 'profile', 'privacy'];
+const VALID_TABS: Tab[] = ['overview', 'orders', 'wishlist', 'addresses', 'profile', 'privacy', 'support'];
 
 export default function AccountPage() {
     const router = useRouter();
@@ -149,6 +150,13 @@ export default function AccountPage() {
     // Notification preferences state
     const [showNotificationOverlay, setShowNotificationOverlay] = useState(false);
 
+    // Support Enquiries state
+    const [enquiries, setEnquiries] = useState<any[]>([]);
+    const [enquiriesLoading, setEnquiriesLoading] = useState(false);
+    const [selectedEnquiry, setSelectedEnquiry] = useState<any>(null);
+    const [enquiryReplyText, setEnquiryReplyText] = useState('');
+    const [isSendingEnquiryReply, setIsSendingEnquiryReply] = useState(false);
+
     // Export orders modal state
     const [showExportModal, setShowExportModal] = useState(false);
 
@@ -238,16 +246,67 @@ export default function AccountPage() {
         }
     }, [user?.id]);
 
+    // ── Fetch enquiries ──────────────────────────────────────────────
+    const fetchEnquiries = useCallback(async () => {
+        setEnquiriesLoading(true);
+        try {
+            const data = await getMyEnquiries();
+            setEnquiries(data || []);
+        } catch (err) {
+            console.error('Failed to fetch enquiries:', err);
+        } finally {
+            setEnquiriesLoading(false);
+        }
+    }, []);
+
+    // Effect to sync selected enquiry with fresh data from enquiries list
+    useEffect(() => {
+        if (selectedEnquiry && enquiries.length > 0) {
+            const updated = enquiries.find((e: any) => e.feedback_id === selectedEnquiry.feedback_id);
+            // Only update if something actually changed (to prevent unnecessary re-renders)
+            if (updated && (updated.status !== selectedEnquiry.status || updated.replies?.length !== selectedEnquiry.replies?.length)) {
+                setSelectedEnquiry(updated);
+            }
+        }
+    }, [enquiries, selectedEnquiry?.feedback_id, selectedEnquiry?.status, selectedEnquiry?.replies?.length]);
+
+    const handleSendEnquiryReply = async () => {
+        if (!selectedEnquiry || !enquiryReplyText.trim()) return;
+
+        setIsSendingEnquiryReply(true);
+        const loadingToast = toast.loading('Sending your message...');
+
+        try {
+            const res = await replyToEnquiry(selectedEnquiry.feedback_id, enquiryReplyText);
+            if (res.success) {
+                toast.success('Message sent successfully', { id: loadingToast });
+                setEnquiryReplyText('');
+                // Fetch fresh data
+                const freshData = await getMyEnquiries();
+                setEnquiries(freshData || []);
+                const updated = freshData.find((e: any) => e.feedback_id === selectedEnquiry.feedback_id);
+                if (updated) setSelectedEnquiry(updated);
+            } else {
+                toast.error(res.message || 'Failed to send message', { id: loadingToast });
+            }
+        } catch (error) {
+            toast.error('Network error', { id: loadingToast });
+        } finally {
+            setIsSendingEnquiryReply(false);
+        }
+    };
+
     useEffect(() => {
         if (!user?.id) return;
         if (activeTab === 'orders') fetchOrders();
         if (activeTab === 'addresses') fetchAddresses();
+        if (activeTab === 'support') fetchEnquiries();
         if (activeTab === 'profile') {
             fetchOrders(); // for order count
             fetchProfile();
             fetchProfileImage();
         }
-    }, [activeTab, user?.id, fetchOrders, fetchAddresses, fetchProfile, fetchProfileImage]);
+    }, [activeTab, user?.id, fetchOrders, fetchAddresses, fetchProfile, fetchProfileImage, fetchEnquiries]);
 
     // ── Profile save handler ─────────────────────────────────────────
     const handleProfileSave = async () => {
@@ -463,6 +522,7 @@ export default function AccountPage() {
     const identityAccessTabs = [
         { id: 'profile', label: 'Personal Profile', icon: User },
         { id: 'addresses', label: 'Delivery Rituals', icon: MapPin, count: addresses.length },
+        { id: 'support', label: 'Support & Enquiries', icon: MessageSquare, count: enquiries.length },
         { id: 'privacy', label: 'Privacy Sanctuary', icon: Shield },
     ];
 
@@ -2021,6 +2081,271 @@ export default function AccountPage() {
 
                                     </div>
                                 </div>
+                            </div>
+                        )}
+
+                        {/* ═══════════════════ SUPPORT & ENQUIRIES TAB ═══════════════════ */}
+                        {activeTab === 'support' && (
+                            <div className="flex flex-col gap-6 w-full max-w-[1100px] mx-auto animate-fadeIn pb-12">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-4">
+                                        <div className="h-12 w-12 rounded-xl bg-white border border-[#E8E1D5] flex items-center justify-center shadow-sm">
+                                            <MessageSquare className="h-6 w-6 text-[#36453A]" />
+                                        </div>
+                                        <div>
+                                            <h1 className="font-serif text-3xl font-bold text-[#36453A]">Support & Enquiries</h1>
+                                            <p className="text-sm text-warm-gray">View and manage your support tickets and enquiries</p>
+                                        </div>
+                                    </div>
+                                    {selectedEnquiry && (
+                                        <button
+                                            onClick={() => setSelectedEnquiry(null)}
+                                            className="px-4 py-2 bg-white border border-[#E8E1D5] rounded-xl text-sm font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors"
+                                        >
+                                            Back to List
+                                        </button>
+                                    )}
+                                </div>
+
+                                {selectedEnquiry ? (
+                                    /* ENQUIRY DETAIL VIEW */
+                                    <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8 animate-fadeIn">
+                                        {/* Main Conversation Area */}
+                                        <div className="space-y-6">
+                                            {/* Original Issue Card */}
+                                            <div className="bg-white rounded-3xl border border-[#E8E1D5] shadow-sm overflow-hidden">
+                                                <div className="p-6 md:p-8 bg-[#36453A]/5 border-b border-[#E8E1D5]">
+                                                    <div className="flex items-start justify-between gap-4 mb-4">
+                                                        <div>
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <span className="text-[10px] uppercase font-bold tracking-widest text-[#36453A]/60">{selectedEnquiry.type || 'Inquiry'}</span>
+                                                                <span className="h-1 w-1 rounded-full bg-[#E8E1D5]"></span>
+                                                                <span className="text-[10px] font-bold text-warm-gray uppercase tracking-widest">{new Date(selectedEnquiry.created_at).toLocaleDateString()}</span>
+                                                            </div>
+                                                            <h2 className="font-serif text-2xl font-bold text-[#36453A] capitalize">{selectedEnquiry.subject || 'No Subject'}</h2>
+                                                        </div>
+                                                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${selectedEnquiry.status === 'resolved' ? 'bg-green-100 text-green-700' : 'bg-[#D4A847]/20 text-[#B38720]'
+                                                            }`}>
+                                                            {selectedEnquiry.status || 'Pending'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="prose prose-sm max-w-none text-[#36453A] leading-relaxed">
+                                                        <p className="whitespace-pre-wrap">{selectedEnquiry.message}</p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Replies History */}
+                                                <div className="p-6 md:p-8 space-y-8">
+                                                    <div className="space-y-8 relative">
+                                                        {/* Vertical Timeline Line */}
+                                                        <div className="absolute left-[19px] top-4 bottom-4 w-0.5 bg-[#E8E1D5] hidden md:block"></div>
+
+                                                        {(!selectedEnquiry.replies || selectedEnquiry.replies.length === 0) ? (
+                                                            <div className="text-center py-10">
+                                                                <div className="h-16 w-16 rounded-full bg-[#F8F5F0] flex items-center justify-center mx-auto mb-4 border border-[#E8E1D5]">
+                                                                    <Clock className="h-8 w-8 text-warm-gray" />
+                                                                </div>
+                                                                <p className="text-sm font-bold text-[#36453A]">Awaiting Admin Response</p>
+                                                                <p className="text-xs text-warm-gray mt-1 max-w-[240px] mx-auto leading-relaxed">Our support team has received your enquiry and will respond within 24-48 hours.</p>
+                                                            </div>
+                                                        ) : (
+                                                            selectedEnquiry.replies.map((reply: any, idx: number) => (
+                                                                <div key={idx} className={`relative flex flex-col md:flex-row gap-4 items-start ${reply.author_type === 'admin' ? 'justify-start' : 'justify-end md:flex-row-reverse'}`}>
+                                                                    {/* Avatar or Icon */}
+                                                                    <div className={`h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0 z-10 border-2 border-white shadow-sm ${reply.author_type === 'admin' ? 'bg-[#36453A] text-white' : 'bg-[#D4A847] text-white'}`}>
+                                                                        {reply.author_type === 'admin' ? <Shield className="h-5 w-5" /> : <User2 className="h-5 w-5" />}
+                                                                    </div>
+
+                                                                    <div className={`flex-1 w-full p-5 rounded-2xl border ${reply.author_type === 'admin'
+                                                                        ? 'bg-[#F8F5F0] border-[#E8E1D5] rounded-tl-none'
+                                                                        : 'bg-white border-[#E8E1D5] rounded-tr-none'
+                                                                        }`}>
+                                                                        <div className="flex items-center justify-between gap-4 mb-2">
+                                                                            <span className="text-[10px] font-bold text-[#36453A] uppercase tracking-widest">
+                                                                                {reply.author_type === 'admin' ? 'Support Specialist' : 'You'}
+                                                                            </span>
+                                                                            <span className="text-[10px] font-medium text-warm-gray">
+                                                                                {new Date(reply.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div className="text-sm text-[#36453A] leading-relaxed whitespace-pre-wrap">
+                                                                            {reply.message}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ))
+                                                        )}
+                                                    </div>
+
+                                                    {/* User Reply Box (Continuous Chatting) */}
+                                                    {selectedEnquiry.status !== 'resolved' && selectedEnquiry.status !== 'dismissed' && (
+                                                        <div className="mt-8 pt-8 border-t border-[#F8F5F0]">
+                                                            <div className="relative">
+                                                                <textarea
+                                                                    value={enquiryReplyText}
+                                                                    onChange={(e) => setEnquiryReplyText(e.target.value)}
+                                                                    placeholder="Type your message here..."
+                                                                    className="w-full min-h-[120px] p-5 bg-[#F8F5F0] border border-[#E8E1D5] rounded-2xl text-sm focus:outline-none focus:border-[#D4A847]/40 transition-all resize-none placeholder:text-warm-gray/60"
+                                                                />
+                                                                <div className="absolute bottom-4 right-4 flex items-center gap-3">
+                                                                    <button
+                                                                        onClick={handleSendEnquiryReply}
+                                                                        disabled={isSendingEnquiryReply || !enquiryReplyText.trim()}
+                                                                        className="bg-[#36453A] text-white p-3 rounded-xl hover:bg-[#2A362D] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md group"
+                                                                    >
+                                                                        <Send className={`h-5 w-5 transition-transform ${isSendingEnquiryReply ? 'animate-pulse' : 'group-hover:translate-x-0.5 group-hover:-translate-y-0.5'}`} />
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                            <p className="text-[10px] text-warm-gray mt-3 px-1 italic">Our team usually responds within 24-48 hours. Thank you for your patience.</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Quick Actions Card */}
+                                            <div className="bg-[#36453A] rounded-3xl p-8 text-white relative overflow-hidden shadow-lg">
+                                                <div className="absolute top-0 right-0 p-6 opacity-10">
+                                                    <MessageCircle className="h-20 w-20" />
+                                                </div>
+                                                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                                                    <div>
+                                                        <h3 className="font-serif text-2xl font-bold text-[#D4A847] mb-2">Need to add more info?</h3>
+                                                        <p className="text-sm text-white/80 max-w-md">Our support team is here to help. You'll receive an email notification as soon as we reply.</p>
+                                                    </div>
+                                                    <button 
+                                                        onClick={() => router.push('/contact')}
+                                                        className="bg-[#D4A847] text-[#36453A] px-8 py-3 rounded-xl text-sm font-bold shadow-md hover:bg-[#B38720] transition-colors whitespace-nowrap"
+                                                    >
+                                                        Submit New Enquiry
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Sidebar Info Area */}
+                                        <div className="space-y-6">
+                                            <div className="bg-white rounded-3xl border border-[#E8E1D5] p-6 shadow-sm">
+                                                <h3 className="font-serif text-lg font-bold text-[#36453A] mb-4">Ticket Insight</h3>
+                                                <div className="space-y-4">
+                                                    <div className="flex justify-between items-center text-xs pb-3 border-b border-[#F8F5F0]">
+                                                        <span className="text-warm-gray font-medium">Ticket ID</span>
+                                                        <span className="font-bold text-[#36453A] uppercase">#{selectedEnquiry.feedback_id.slice(0, 8)}</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center text-xs pb-3 border-b border-[#F8F5F0]">
+                                                        <span className="text-warm-gray font-medium">Requested On</span>
+                                                        <span className="font-bold text-[#36453A]">{new Date(selectedEnquiry.created_at).toLocaleDateString()}</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center text-xs pb-3 border-b border-[#F8F5F0]">
+                                                        <span className="text-warm-gray font-medium">Priority Range</span>
+                                                        <span className="font-bold text-amber-600">Standard</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center text-xs">
+                                                        <span className="text-warm-gray font-medium">Category</span>
+                                                        <span className="font-bold text-[#36453A] capitalize">{selectedEnquiry.type || 'General'}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-white rounded-3xl border border-[#E8E1D5] p-6 shadow-sm">
+                                                <h3 className="font-serif text-lg font-bold text-[#36453A] mb-4">Support Philosophy</h3>
+                                                <p className="text-[11px] leading-relaxed text-warm-gray mb-4">
+                                                    At Vedashi, we treat every enquiry with the same mindfulness as our product crafting. Thank you for your patience as we provide a soulful solution.
+                                                </p>
+                                                <button 
+                                                    onClick={() => router.push('/help-center')}
+                                                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-[#E8E1D5] text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors"
+                                                >
+                                                    <FileText className="h-3.5 w-3.5" /> View Help Center
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    /* ENQUIRY LIST VIEW */
+                                    <div className="bg-white rounded-3xl border border-[#E8E1D5] shadow-sm overflow-hidden animate-fadeIn">
+                                        <div className="p-6 md:p-8 border-b border-[#E8E1D5] flex items-center justify-between bg-[#36453A]/5">
+                                            <div>
+                                                <h2 className="font-serif text-xl font-bold text-[#36453A]">Harmony Support History</h2>
+                                                <p className="text-xs text-warm-gray mt-1">Timeline of your past interactions and resolutions</p>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <div className="relative group hidden sm:block">
+                                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-warm-gray" />
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Search enquiries..."
+                                                        className="bg-white border border-[#E8E1D5] rounded-full pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-[#36453A]/40 transition-all w-48"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="divide-y divide-[#F8F5F0]">
+                                            {enquiriesLoading ? (
+                                                <div className="py-20 flex flex-col items-center justify-center">
+                                                    <Loader2 className="h-10 w-10 animate-spin text-[#36453A] mb-4" />
+                                                    <p className="text-sm font-medium text-warm-gray uppercase tracking-widest">Recalling your history...</p>
+                                                </div>
+                                            ) : enquiries.length === 0 ? (
+                                                <div className="py-20 text-center">
+                                                    <div className="h-20 w-20 rounded-full bg-[#F8F5F0] flex items-center justify-center mx-auto mb-6 border border-[#E8E1D5]">
+                                                        <MessageSquare className="h-10 w-10 text-warm-gray/40" />
+                                                    </div>
+                                                    <h3 className="font-serif text-2xl font-bold text-[#36453A] mb-2">No Past Enquiries</h3>
+                                                    <p className="text-sm text-warm-gray max-w-xs mx-auto mb-8">Your path has been smooth! If you ever need help, our support team is just a message away.</p>
+                                                    <button 
+                                                        onClick={() => router.push('/contact')}
+                                                        className="bg-[#36453A] text-white px-8 py-3 rounded-xl text-sm font-bold shadow-md hover:bg-[#2A362D] transition-colors"
+                                                    >
+                                                        Create New Ticket
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                enquiries.map((enquiry) => (
+                                                    <div
+                                                        key={enquiry.feedback_id}
+                                                        onClick={() => setSelectedEnquiry(enquiry)}
+                                                        className="p-6 transition-all hover:bg-[#F8F5F0] cursor-pointer group"
+                                                    >
+                                                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-center gap-3 mb-2">
+                                                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${enquiry.status === 'resolved' ? 'bg-green-100 text-green-700' : 'bg-[#D4A847]/20 text-[#B38720]'
+                                                                        }`}>
+                                                                        {enquiry.status || 'Pending'}
+                                                                    </span>
+                                                                    <span className="text-[10px] font-bold text-warm-gray uppercase tracking-widest">
+                                                                        {new Date(enquiry.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                                    </span>
+                                                                </div>
+                                                                <h3 className="font-serif text-lg font-bold text-[#36453A] group-hover:text-black transition-colors truncate capitalize">
+                                                                    {enquiry.subject || 'Standard Enquiry'}
+                                                                </h3>
+                                                                <p className="text-sm text-warm-gray truncate mt-1">
+                                                                    {enquiry.message}
+                                                                </p>
+                                                            </div>
+
+                                                            <div className="flex items-center gap-6 flex-shrink-0">
+                                                                <div className="text-center hidden md:block">
+                                                                    <p className="font-serif text-xl font-bold text-[#36453A]">{enquiry.replies?.length || 0}</p>
+                                                                    <p className="text-[10px] font-bold text-warm-gray uppercase tracking-widest">Responses</p>
+                                                                </div>
+                                                                <div className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${enquiry.replies?.some((r: any) => r.type === 'admin')
+                                                                    ? 'bg-amber-100 text-amber-600'
+                                                                    : 'bg-[#F8F5F0] text-warm-gray group-hover:bg-[#36453A] group-hover:text-white'
+                                                                    }`}>
+                                                                    <ChevronRight className="h-5 w-5" />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 

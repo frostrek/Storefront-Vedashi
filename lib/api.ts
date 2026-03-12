@@ -811,6 +811,8 @@ export async function directCheckout(data: {
     items: Array<{ product_id: string; variant_id?: string | null; quantity: number; unit_price?: number }>;
     shipping_address_id?: string;
     shipping_address?: Record<string, string>;
+    billing_address_id?: string;
+    billing_address?: Record<string, string>;
     payment_method?: string;
     order_notes?: string;
     coupon_code?: string;
@@ -828,8 +830,87 @@ export async function directCheckout(data: {
     }
 }
 
+/**
+ * Global Postal Code Lookup 
+ * Strategy:
+ * 1. Zippopotam (Primary - as requested)
+ * 2. Indian Pincode API (Fallback for India)
+ * 3. Nominatim (Global Fallback for maximum reliability)
+ */
+export const lookupPostalCode = async (pincode: string, countryCode?: string) => {
+    if (!pincode || !countryCode) return { success: false };
+    const cCode = countryCode.toUpperCase();
+
+    try {
+        // 1. Try Zippopotam (User Requested)
+        const zipRes = await fetch(`https://api.zippopotam.us/${cCode.toLowerCase()}/${pincode}`);
+        if (zipRes.ok) {
+            const data = await zipRes.json();
+            if (data.places && data.places.length > 0) {
+                const place = data.places[0];
+                return {
+                    city: place['place name'],
+                    state: place['state'],
+                    country: data['country'],
+                    success: true
+                };
+            }
+        }
+
+        // 2. Fallback specifically for India (IN)
+        if (cCode === 'IN') {
+            const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+            if (res.ok) {
+                const json = await res.json();
+                if (json[0]?.Status === 'Success' && json[0]?.PostOffice?.length > 0) {
+                    const po = json[0].PostOffice[0];
+                    return {
+                        city: po.District || po.Name,
+                        state: po.State,
+                        country: 'India',
+                        success: true
+                    };
+                }
+            }
+        }
+
+        // 3. Nominatim Global Fallback (Robust, covers KR, AE, etc.)
+        const nominatimUrl = `https://nominatim.openstreetmap.org/search?postalcode=${pincode}&countrycodes=${cCode.toLowerCase()}&format=json&addressdetails=1&accept-language=en`;
+        const nRes = await fetch(nominatimUrl, {
+            headers: { 'User-Agent': 'Vedashi-Storefront-App' }
+        });
+        if (nRes.ok) {
+            const nJson = await nRes.json();
+            if (nJson.length > 0) {
+                const addr = nJson[0].address;
+                return {
+                    city: addr.city || addr.town || addr.village || addr.suburb || addr.city_district || addr.county || '',
+                    state: addr.state || addr.region || addr.province || '',
+                    country: addr.country || '',
+                    success: true
+                };
+            }
+        }
+
+        return { success: false, message: 'Postal code not found' };
+    } catch (error) {
+        console.error('Postal code lookup error:', error);
+        return { success: false, message: 'Error fetching location data' };
+    }
+};
+
 /** Cart-based checkout (requires backend cart_id + customer_id). */
-export async function checkoutOrder(data: { cart_id: string; customer_id: string; shipping_address_id?: string; coupon_code?: string; order_notes?: string }) {
+export async function checkoutOrder(data: { 
+    cart_id: string; 
+    customer_id: string; 
+    shipping_address_id?: string; 
+    shipping_address?: Record<string, string>;
+    billing_address_id?: string; 
+    billing_address?: Record<string, string>;
+    coupon_code?: string; 
+    order_notes?: string;
+    payment_method?: string;
+}) {
     try {
         const res = await authFetch(`${API_URL}/api/orders/checkout`, {
             method: 'POST',
@@ -1659,6 +1740,25 @@ export async function rateArticle(data: { article_type: 'help' | 'kb'; article_i
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
         });
-        return res.json();
+        return (await res.json());
+    } catch { return { success: false, message: 'Network error' }; }
+}
+
+export async function getMyEnquiries() {
+    try {
+        const res = await authFetch(`${API_URL}/api/customer-enquiry/my`);
+        const json = await res.json();
+        return json.success ? json.data : [];
+    } catch { return []; }
+}
+
+export async function replyToEnquiry(id: string, message: string) {
+    try {
+        const res = await authFetch(`${API_URL}/api/customer-enquiry/my/${id}/reply`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ body: message }),
+        });
+        return (await res.json());
     } catch { return { success: false, message: 'Network error' }; }
 }
