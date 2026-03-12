@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import Image from 'next/image';
 import { Heart, ShoppingCart, Eye, X, Check, AlertTriangle, Loader2, Plus, Minus } from 'lucide-react';
 import { Product } from '@/types';
@@ -10,6 +10,7 @@ import { getRatingSummary, getProductDetails, formatVND } from '@/lib/api';
 import StarRating from '@/components/reviews/StarRating';
 import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslations } from 'next-intl';
 
 const BLUR_DATA_URL =
     'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjhmNWYyIi8+PC9zdmc+';
@@ -24,6 +25,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
     const { isInWishlist, toggleItem } = useWishlist();
     const { addItem, updateQuantity, items, loading: cartLoading } = useCart();
     const wishlisted = isInWishlist(product.product_id);
+    const t = useTranslations('Product');
 
     const [avgRating, setAvgRating] = useState(0);
     const [totalReviews, setTotalReviews] = useState(0);
@@ -49,7 +51,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
         e.preventDefault();
         e.stopPropagation();
         toggleItem(product);
-        toast.success(wishlisted ? 'Removed from wishlist' : 'Added to wishlist');
+        toast.success(wishlisted ? t('removedFromWishlist') : t('addedToWishlist'));
     };
 
     // Determine if product has variants from the product data
@@ -97,7 +99,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                 setQuantity(existing ? existing.quantity : 1);
             }
         } catch {
-            toast.error('Could not load variant options');
+            toast.error(t('couldNotLoad'));
         } finally {
             setLoadingVariants(false);
         }
@@ -124,17 +126,17 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
             if (existing) {
                 if (quantity !== existing.quantity) {
                     await updateQuantity(existing.cart_item_id, quantity);
-                    toast.success('Cart updated successfully!');
+                    toast.success(t('cartUpdated'));
                 } else {
-                    toast.success('Cart is already up to date.');
+                    toast.success(t('cartUpToDate'));
                 }
             } else {
                 await addItem(product.product_id, variantIdToUse, quantity);
-                toast.success(`${product.product_name} added to cart!`);
+                toast.success(t('addedToCart', { name: product.product_name }));
             }
             setShowCartModal(false);
         } catch {
-            toast.error('Failed to update cart');
+            toast.error(t('failedToUpdate'));
         } finally {
             setAddingToCart(false);
         }
@@ -228,7 +230,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                             )}
                             {product.is_new_arrival && !isComingSoon && (
                                 <span className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-[9px] font-bold tracking-wider text-white uppercase">
-                                    New
+                                    {t('new')}
                                 </span>
                             )}
                         </div>
@@ -242,7 +244,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                                         className="w-full flex items-center justify-center gap-2 bg-[#3d5c3a]/95 backdrop-blur-sm py-3 text-sm font-bold text-white hover:bg-[#3d5c3a] transition-colors cursor-pointer"
                                     >
                                         <Eye className="h-4 w-4" />
-                                        Preview Options
+                                        {t('previewOptions')}
                                     </button>
                                 ) : (
                                     <button
@@ -251,7 +253,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                                         className="w-full flex items-center justify-center gap-2 bg-[#3d5c3a]/95 backdrop-blur-sm py-3 text-sm font-bold text-white hover:bg-[#3d5c3a] transition-colors cursor-pointer disabled:opacity-70"
                                     >
                                         <ShoppingCart className="h-4 w-4" />
-                                        Add to Cart
+                                        {t('addToCart')}
                                     </button>
                                 )}
                             </div>
@@ -292,7 +294,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                                         {formatVND(originalPrice)}
                                     </p>
                                     <span className="bg-red-50 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded border border-red-100">
-                                        {discountPercent}% OFF
+                                        {discountPercent}% {t('off')}
                                     </span>
                                 </>
                             )}
@@ -332,7 +334,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                                                 {formatVND(hasVariants ? selectedVariant.original_price : originalPrice)}
                                             </span>
                                             <span className="text-[10px] font-bold text-white bg-red-500 px-1.5 py-0.5 rounded shadow-sm">
-                                                {hasVariants ? selectedVariant.discount_percentage : discountPercent}% OFF
+                                                {hasVariants ? selectedVariant.discount_percentage : discountPercent}% {t('off')}
                                             </span>
                                         </>
                                     )}
@@ -403,7 +405,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                                                                 <p className={`text-sm font-semibold transition-colors duration-300 ${isSelected ? 'text-[#3d5c3a]' : 'text-gray-900'}`}>{label}</p>
                                                                 {isOut && (
                                                                     <p className="text-[10px] text-red-500 font-semibold mt-0.5 flex items-center gap-1">
-                                                                        <AlertTriangle className="h-3 w-3" /> Out of Stock
+                                                                        <AlertTriangle className="h-3 w-3" /> {t('outOfStock')}
                                                                     </p>
                                                                 )}
                                                             </div>
@@ -421,14 +423,14 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                                         </div>
                                     </div>
                                 ) : (
-                                    <p className="text-sm text-gray-400 text-center py-6">No options available.</p>
+                                    <p className="text-sm text-gray-400 text-center py-6">{t('noOptionsAvailable')}</p>
                                 )
                             ) : null}
 
                             {/* Quantity Selector */}
                             <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 mt-auto">
                                 <div className="flex items-center justify-between">
-                                    <p className="text-[13px] font-bold text-gray-800">Quantity</p>
+                                    <p className="text-[13px] font-bold text-gray-800">{t('quantity')}</p>
                                     <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-0.5 shadow-sm">
                                         <button
                                             onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -455,7 +457,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                                 </div>
                                 {((hasVariants && selectedVariant && quantity >= (selectedVariant.stock_quantity ?? 99)) ||
                                     (!hasVariants && quantity >= ((product as any).stock_quantity ?? 99))) && (
-                                    <p className="text-[10px] text-red-500 font-semibold mt-1.5 text-right">Max stock reached.</p>
+                                    <p className="text-[10px] text-red-500 font-semibold mt-1.5 text-right">{t('maxStockReached')}</p>
                                 )}
                             </div>
                         </div>
@@ -472,10 +474,10 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                                 ) : (
                                     <ShoppingCart className={`h-4 w-4 ${addingToCart ? 'animate-bounce' : ''}`} />
                                 )}
-                                {addingToCart ? 'Processing...' : (
+                                {addingToCart ? t('processing') : (
                                     items.some(i => hasVariants ? i.variant_id === selectedVariant?.variant_id : i.product_id === product.product_id)
-                                        ? `Update Cart - ${formatVND((hasVariants ? (selectedVariant?.price ?? 0) : displayPrice) * quantity)}`
-                                        : `Add to Cart - ${formatVND((hasVariants ? (selectedVariant?.price ?? 0) : displayPrice) * quantity)}`
+                                        ? `${t('updateCart')} - ${formatVND((hasVariants ? (selectedVariant?.price ?? 0) : displayPrice) * quantity)}`
+                                        : `${t('addToCart')} - ${formatVND((hasVariants ? (selectedVariant?.price ?? 0) : displayPrice) * quantity)}`
                                 )}
                             </button>
                             <Link
@@ -483,7 +485,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                                 onClick={() => setShowCartModal(false)}
                                 className="w-full py-1.5 text-[11px] font-semibold text-gray-500 text-center hover:text-[#3d5c3a] transition-colors"
                             >
-                                View Full Details
+                                {t('viewFullDetails')}
                             </Link>
                         </div>
                     </div>

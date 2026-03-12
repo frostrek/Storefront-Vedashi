@@ -6,10 +6,12 @@ import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import {
     checkoutOrder, directCheckout, getAddresses, formatVND,
-    createPaymentOrder, verifyPayment,
+    createPaymentOrder, verifyPayment, lookupPostalCode,
 } from '@/lib/api';
 import { Address } from '@/types';
-import { CheckCircle, Loader2, MapPin, CreditCard, Banknote, ShieldCheck, AlertTriangle, ArrowLeft, Leaf, ChevronRight, Lock, Ticket } from 'lucide-react';
+import { COUNTRIES } from '@/lib/countries';
+import Select from 'react-select';
+import { CheckCircle, Loader2, MapPin, CreditCard, Banknote, ShieldCheck, AlertTriangle, ArrowLeft, Leaf, ChevronRight, Lock, Ticket, Globe, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
@@ -87,8 +89,58 @@ function CheckoutContent() {
 
     // New address form fields
     const [newAddress, setNewAddress] = useState({
-        address_line1: '', address_line2: '', city: '', state: '', pincode: '', phone: '',
+        address_line1: '', address_line2: '', city: '', state: '', pincode: '', phone: '', country: 'India', country_code: 'IN'
     });
+
+    // Billing address fields
+    const [selectedBillingAddressId, setSelectedBillingAddressId] = useState<string | null>(null);
+    const [useNewBillingAddress, setUseNewBillingAddress] = useState(false);
+    const [newBillingAddress, setNewBillingAddress] = useState({
+        address_line1: '', address_line2: '', city: '', state: '', pincode: '', country: 'India', country_code: 'IN'
+    });
+
+    // Validation state
+    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+    const [isLookupLoading, setIsLookupLoading] = useState(false);
+
+    // Track manual edits to prevent auto-fill overwrite
+    const [manualEdits, setManualEdits] = useState({
+        shipping_city: false,
+        shipping_state: false,
+        billing_city: false,
+        billing_state: false
+    });
+
+    const countryOptions = COUNTRIES.map(c => ({
+        value: c.code,
+        label: `${c.flag} ${c.name}`,
+        name: c.name
+    }));
+
+    const customSelectStyles = {
+        control: (provided: any, state: any) => ({
+            ...provided,
+            borderRadius: '8px',
+            borderColor: state.isFocused ? '#6B8F5E' : '#D4CFC0',
+            boxShadow: 'none',
+            '&:hover': {
+                borderColor: '#6B8F5E',
+            },
+            backgroundColor: 'white',
+            paddingLeft: '34px',
+            minHeight: '44px',
+            fontSize: '14px',
+        }),
+        option: (provided: any, state: any) => ({
+            ...provided,
+            backgroundColor: state.isSelected ? '#6B8F5E' : state.isFocused ? '#DFE5D9' : 'white',
+            color: state.isSelected ? 'white' : '#1A1A1A',
+            '&:active': {
+                backgroundColor: '#6B8F5E',
+            },
+            fontSize: '14px',
+        }),
+    };
 
     // Buy Now
     const [buyNowItem, setBuyNowItem] = useState<BuyNowItem | null>(null);
@@ -152,6 +204,95 @@ function CheckoutContent() {
             router.push('/cart');
         }
     }, [items.length, orderPlaced, router, isBuyNow]);
+
+    // Clear pincode errors immediately on change
+    useEffect(() => {
+        if (newAddress.pincode.length < 4) {
+            setFormErrors(prev => {
+                const newErrs = { ...prev };
+                delete newErrs.pincode;
+                return newErrs;
+            });
+        }
+    }, [newAddress.pincode]);
+
+    useEffect(() => {
+        if (newBillingAddress.pincode.length < 4) {
+            setFormErrors(prev => {
+                const newErrs = { ...prev };
+                delete newErrs.billing_pincode;
+                return newErrs;
+            });
+        }
+    }, [newBillingAddress.pincode]);
+
+    // Global Postal Code Auto-Fill (Shipping)
+    useEffect(() => {
+        if (newAddress.pincode.length >= 4 && useNewAddress) {
+            // Clear error while typing/debouncing
+            setFormErrors(prev => {
+                const newErrs = { ...prev };
+                delete newErrs.pincode;
+                return newErrs;
+            });
+
+            const timer = setTimeout(async () => {
+                setIsLookupLoading(true);
+                const res = await lookupPostalCode(newAddress.pincode, newAddress.country_code);
+                if (res.success && res.city && res.state) {
+                    setNewAddress(prev => ({
+                        ...prev,
+                        city: manualEdits.shipping_city ? prev.city : (res.city || prev.city),
+                        state: manualEdits.shipping_state ? prev.state : (res.state || prev.state),
+                        country: res.country || prev.country
+                    }));
+                    setFormErrors(prev => {
+                        const newErrs = { ...prev };
+                        delete newErrs.pincode;
+                        return newErrs;
+                    });
+                } else if (!res.success && res.message) {
+                    setFormErrors(prev => ({ ...prev, pincode: res.message }));
+                }
+                setIsLookupLoading(false);
+            }, 300);
+            return () => clearTimeout(timer);
+        }
+    }, [newAddress.pincode, newAddress.country_code, useNewAddress, manualEdits.shipping_city, manualEdits.shipping_state]);
+
+    // Global Postal Code Auto-Fill (Billing)
+    useEffect(() => {
+        if (newBillingAddress.pincode.length >= 4 && useNewBillingAddress) {
+            // Clear error while typing/debouncing
+            setFormErrors(prev => {
+                const newErrs = { ...prev };
+                delete newErrs.billing_pincode;
+                return newErrs;
+            });
+
+            const timer = setTimeout(async () => {
+                setIsLookupLoading(true);
+                const res = await lookupPostalCode(newBillingAddress.pincode, newBillingAddress.country_code);
+                if (res.success && res.city && res.state) {
+                    setNewBillingAddress(prev => ({
+                        ...prev,
+                        city: manualEdits.billing_city ? prev.city : (res.city || prev.city),
+                        state: manualEdits.billing_state ? prev.state : (res.state || prev.state),
+                        country: res.country || prev.country
+                    }));
+                    setFormErrors(prev => {
+                        const newErrs = { ...prev };
+                        delete newErrs.billing_pincode;
+                        return newErrs;
+                    });
+                } else if (!res.success && res.message) {
+                    setFormErrors(prev => ({ ...prev, billing_pincode: res.message }));
+                }
+                setIsLookupLoading(false);
+            }, 300);
+            return () => clearTimeout(timer);
+        }
+    }, [newBillingAddress.pincode, newBillingAddress.country_code, useNewBillingAddress, manualEdits.billing_city, manualEdits.billing_state]);
 
     if (!isBuyNow && items.length === 0 && !orderPlaced) return null;
 
@@ -280,6 +421,8 @@ function CheckoutContent() {
                     items: [{ product_id: buyNowItem.product_id, variant_id: buyNowItem.variant_id, quantity: buyNowItem.quantity, unit_price: buyNowItem.unit_price }],
                     shipping_address_id: useNewAddress ? undefined : selectedAddressId || undefined,
                     shipping_address: useNewAddress ? newAddress as unknown as Record<string, string> : undefined,
+                    billing_address_id: billingSameAsShipping ? (useNewAddress ? undefined : selectedAddressId || undefined) : (useNewBillingAddress ? undefined : selectedBillingAddressId || undefined),
+                    billing_address: !billingSameAsShipping && useNewBillingAddress ? newBillingAddress as unknown as Record<string, string> : (billingSameAsShipping && useNewAddress ? newAddress as unknown as Record<string, string> : undefined),
                     payment_method: paymentMethod,
                     order_notes: orderNotes.trim() || undefined,
                 });
@@ -288,6 +431,9 @@ function CheckoutContent() {
                     cart_id: cartId,
                     customer_id: user.id,
                     shipping_address_id: useNewAddress ? undefined : selectedAddressId || undefined,
+                    shipping_address: useNewAddress ? newAddress as unknown as Record<string, string> : undefined,
+                    billing_address_id: billingSameAsShipping ? (useNewAddress ? undefined : selectedAddressId || undefined) : (useNewBillingAddress ? undefined : selectedBillingAddressId || undefined),
+                    billing_address: !billingSameAsShipping && useNewBillingAddress ? newBillingAddress as unknown as Record<string, string> : (billingSameAsShipping && useNewAddress ? newAddress as unknown as Record<string, string> : undefined),
                     coupon_code: couponCode || undefined,
                     order_notes: orderNotes.trim() || undefined,
                     payment_method: paymentMethod,
@@ -299,6 +445,7 @@ function CheckoutContent() {
                     customer_email: user?.email || contactEmail || undefined,
                     items: checkoutItems.map(item => ({ product_id: (item as any).product_id || '', variant_id: (item as any).variant_id, quantity: item.quantity, unit_price: Number((item as any).price || (item as any).unit_price) || 0 })),
                     shipping_address: useNewAddress ? newAddress as unknown as Record<string, string> : undefined,
+                    billing_address: !billingSameAsShipping && useNewBillingAddress ? newBillingAddress as unknown as Record<string, string> : (billingSameAsShipping && useNewAddress ? newAddress as unknown as Record<string, string> : undefined),
                     payment_method: paymentMethod,
                     coupon_code: couponCode || undefined,
                     order_notes: orderNotes.trim() || undefined,
@@ -326,21 +473,61 @@ function CheckoutContent() {
         }
     };
 
+    /* ─── Validation Helper ──────────────────────────────────── */
+
+    const validateAddress = (addr: any, prefix: string = '') => {
+        const errors: Record<string, string> = {};
+        if (!addr.address_line1 || addr.address_line1.length < 5) {
+            errors[`${prefix}address_line1`] = 'Address Line 1 is required (min 5 characters)';
+        }
+        if (!addr.city) errors[`${prefix}city`] = 'City is required';
+        if (!addr.state) errors[`${prefix}state`] = 'State/Region is required';
+        if (!addr.pincode) errors[`${prefix}pincode`] = 'Postal Code is required';
+        
+        if (addr.phone && !/^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/.test(addr.phone)) {
+            errors[`${prefix}phone`] = 'Please enter a valid phone format';
+        }
+
+        return errors;
+    };
+
     /* ─── Move to Next Steps Handlers ────────────────────────── */
 
     const goToPayment = () => {
-        if (useNewAddress && (!newAddress.address_line1 || !newAddress.city || !newAddress.state || !newAddress.pincode)) {
-            toast.error('Please fill in all required address fields');
-            return;
-        } else if (!useNewAddress && !selectedAddressId) {
+        setFormErrors({});
+        
+        if (useNewAddress) {
+            const errors = validateAddress(newAddress);
+            if (Object.keys(errors).length > 0) {
+                setFormErrors(errors);
+                toast.error('Please fix address validation errors');
+                return;
+            }
+        } else if (!selectedAddressId) {
             toast.error('Please select a shipping address');
             return;
         }
+
         setStep(2);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const goToReview = () => {
+        setFormErrors({});
+
+        if (!billingSameAsShipping) {
+            if (useNewBillingAddress) {
+                const errors = validateAddress(newBillingAddress, 'billing_');
+                if (Object.keys(errors).length > 0) {
+                    setFormErrors(errors);
+                    toast.error('Please fix billing address validation errors');
+                    return;
+                }
+            } else if (!selectedBillingAddressId && savedAddresses.length > 0) {
+                toast.error('Please select a billing address');
+                return;
+            }
+        }
         setStep(3);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -385,6 +572,13 @@ function CheckoutContent() {
     const getSelectedAddressText = () => {
         if (useNewAddress) return `${newAddress.address_line1}, ${newAddress.city}, ${newAddress.state} ${newAddress.pincode}`;
         const addr = savedAddresses.find(a => a.address_id === selectedAddressId);
+        return addr ? `${addr.address_line1}, ${addr.city}, ${addr.state} ${addr.pincode}` : '';
+    };
+
+    const getSelectedBillingAddressText = () => {
+        if (billingSameAsShipping) return getSelectedAddressText();
+        if (useNewBillingAddress) return `${newBillingAddress.address_line1}, ${newBillingAddress.city}, ${newBillingAddress.state} ${newBillingAddress.pincode}`;
+        const addr = savedAddresses.find(a => a.address_id === selectedBillingAddressId);
         return addr ? `${addr.address_line1}, ${addr.city}, ${addr.state} ${addr.pincode}` : '';
     };
 
@@ -462,30 +656,58 @@ function CheckoutContent() {
                                     )}
 
                                     {useNewAddress && (
-                                        <div className="bg-[#F5F4F0] rounded-xl p-4 border border-[#D4CFC0] grid gap-4 sm:grid-cols-2 mt-4">
+                                        <div className="bg-[#F5F4F0] rounded-xl p-6 border border-[#D4CFC0] grid gap-5 sm:grid-cols-2 mt-4">
+                                            <div className="sm:col-span-2">
+                                                <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Country *</label>
+                                                <div className="relative">
+                                                    <Select
+                                                        options={countryOptions}
+                                                        value={countryOptions.find(opt => opt.value === newAddress.country_code)}
+                                                        onChange={(opt: any) => {
+                                                            if (opt) {
+                                                                setNewAddress({ ...newAddress, country_code: opt.value, country: opt.name });
+                                                                // Reset manual edits when country changes to allow fresh auto-fill
+                                                                setManualEdits(prev => ({ ...prev, shipping_city: false, shipping_state: false }));
+                                                            }
+                                                        }}
+                                                        styles={customSelectStyles}
+                                                        classNamePrefix="react-select"
+                                                        placeholder="Search country..."
+                                                    />
+                                                    <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8B7A3D] z-10 pointer-events-none" />
+                                                </div>
+                                            </div>
                                             <div className="sm:col-span-2">
                                                 <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Address Line 1 *</label>
-                                                <input type="text" value={newAddress.address_line1} onChange={e => setNewAddress({ ...newAddress, address_line1: e.target.value })} className="w-full rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white" placeholder="Street address" />
+                                                <input type="text" value={newAddress.address_line1} onChange={e => setNewAddress({ ...newAddress, address_line1: e.target.value })} className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.address_line1 ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Street address" />
+                                                {formErrors.address_line1 && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.address_line1}</p>}
                                             </div>
                                             <div className="sm:col-span-2">
                                                 <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Address Line 2</label>
                                                 <input type="text" value={newAddress.address_line2} onChange={e => setNewAddress({ ...newAddress, address_line2: e.target.value })} className="w-full rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white" placeholder="Apartment, suite, etc." />
                                             </div>
                                             <div>
+                                                <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Pincode *</label>
+                                                <div className="relative">
+                                                    <input type="text" value={newAddress.pincode} onChange={e => setNewAddress({ ...newAddress, pincode: e.target.value })} className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.pincode ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Pincode" />
+                                                    {isLookupLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-[#6B8F5E]" />}
+                                                </div>
+                                                {formErrors.pincode && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.pincode}</p>}
+                                            </div>
+                                            <div>
                                                 <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">City *</label>
-                                                <input type="text" value={newAddress.city} onChange={e => setNewAddress({ ...newAddress, city: e.target.value })} className="w-full rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white" placeholder="City" />
+                                                <input type="text" value={newAddress.city} onChange={e => { setNewAddress({ ...newAddress, city: e.target.value }); setManualEdits(prev => ({ ...prev, shipping_city: true })); }} className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.city ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="City" />
+                                                {formErrors.city && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.city}</p>}
                                             </div>
                                             <div>
                                                 <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">State *</label>
-                                                <input type="text" value={newAddress.state} onChange={e => setNewAddress({ ...newAddress, state: e.target.value })} className="w-full rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white" placeholder="State" />
-                                            </div>
-                                            <div>
-                                                <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Pincode *</label>
-                                                <input type="text" value={newAddress.pincode} onChange={e => setNewAddress({ ...newAddress, pincode: e.target.value })} className="w-full rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white" placeholder="Pincode" />
+                                                <input type="text" value={newAddress.state} onChange={e => { setNewAddress({ ...newAddress, state: e.target.value }); setManualEdits(prev => ({ ...prev, shipping_state: true })); }} className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.state ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="State" />
+                                                {formErrors.state && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.state}</p>}
                                             </div>
                                             <div>
                                                 <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Mobile Phone (optional)</label>
-                                                <input type="tel" value={newAddress.phone} onChange={e => setNewAddress({ ...newAddress, phone: e.target.value })} className="w-full rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white" placeholder="Secondary Phone" />
+                                                <input type="tel" value={newAddress.phone} onChange={e => setNewAddress({ ...newAddress, phone: e.target.value })} className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.phone ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Secondary Phone" />
+                                                {formErrors.phone && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.phone}</p>}
                                             </div>
                                         </div>
                                     )}
@@ -572,8 +794,83 @@ function CheckoutContent() {
                                         </label>
 
                                         {!billingSameAsShipping && (
-                                            <div className="mt-4 p-4 bg-[#F5F4F0] rounded-xl text-center text-sm text-[#6B6B60] border border-[#D4CFC0] border-dashed">
-                                                (Billing form would expand here. Utilizing mock state for UI reference.)
+                                            <div className="mt-4 space-y-4">
+                                                {savedAddresses.length > 0 && (
+                                                    <div className="space-y-3">
+                                                        {savedAddresses.map(addr => (
+                                                            <label key={`billing-${addr.address_id}`} className={`flex items-start gap-4 rounded-xl border p-4 cursor-pointer transition-colors ${selectedBillingAddressId === addr.address_id && !useNewBillingAddress ? 'border-[#6B8F5E] bg-[#DFE5D9] border-2 shadow-sm' : 'border-[#D4CFC0] bg-white hover:border-[#CEDBCE]'}`}>
+                                                                <input type="radio" name="billing-address" checked={selectedBillingAddressId === addr.address_id && !useNewBillingAddress} onChange={() => { setSelectedBillingAddressId(addr.address_id); setUseNewBillingAddress(false); }} className="mt-1 w-4 h-4 accent-[#6B8F5E]" />
+                                                                <div className="flex-1 text-left">
+                                                                    <div className="flex items-center justify-between mb-1">
+                                                                        <span className="font-bold text-[#1A1A1A] text-sm">{addr.label || 'Saved Address'}</span>
+                                                                    </div>
+                                                                    <p className="text-xs text-[#4A4A4A]">{addr.address_line1}, {addr.city}, {addr.state} {addr.pincode}</p>
+                                                                </div>
+                                                            </label>
+                                                        ))}
+                                                        <button onClick={() => setUseNewBillingAddress(true)} className={`mt-2 flex items-center gap-2 text-xs font-semibold transition-colors ${useNewBillingAddress ? 'text-[#6B8F5E]' : 'text-[#8B7A3D] hover:text-[#6B8F5E]'}`}>
+                                                            <MapPin className="h-3.5 w-3.5" /> Use a different billing address
+                                                        </button>
+                                                    </div>
+                                                )}
+
+                                                {(useNewBillingAddress || savedAddresses.length === 0) && (
+                                                    <div className="bg-[#F5F4F0] rounded-xl p-4 border border-[#D4CFC0] grid gap-4 sm:grid-cols-2">
+                                                        <div className="sm:col-span-2">
+                                                            <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Country *</label>
+                                                            <div className="relative">
+                                                                <Select
+                                                                    options={countryOptions}
+                                                                    value={countryOptions.find(opt => opt.value === newBillingAddress.country_code)}
+                                                                    onChange={(opt: any) => {
+                                                                        if (opt) {
+                                                                            setNewBillingAddress({ ...newBillingAddress, country_code: opt.value, country: opt.name });
+                                                                            setManualEdits(prev => ({ ...prev, billing_city: false, billing_state: false }));
+                                                                        }
+                                                                    }}
+                                                                    styles={{
+                                                                        ...customSelectStyles,
+                                                                        control: (provided: any, state: any) => ({
+                                                                            ...provided,
+                                                                            borderRadius: '8px',
+                                                                            borderColor: state.isFocused ? '#6B8F5E' : '#D4CFC0',
+                                                                            boxShadow: 'none',
+                                                                            '&:hover': { borderColor: '#6B8F5E' },
+                                                                            backgroundColor: 'white',
+                                                                            minHeight: '38px',
+                                                                            fontSize: '13px',
+                                                                        })
+                                                                    }}
+                                                                    classNamePrefix="react-select"
+                                                                    placeholder="Search..."
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div className="sm:col-span-2">
+                                                            <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Address Line 1 *</label>
+                                                            <input type="text" value={newBillingAddress.address_line1} onChange={e => setNewBillingAddress({ ...newBillingAddress, address_line1: e.target.value })} className={`w-full rounded-lg border px-4 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.billing_address_line1 ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Street address" />
+                                                            {formErrors.billing_address_line1 && <p className="text-[9px] text-red-500 mt-0.5 font-bold">{formErrors.billing_address_line1}</p>}
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Pincode *</label>
+                                                            <div className="relative">
+                                                                <input type="text" value={newBillingAddress.pincode} onChange={e => setNewBillingAddress({ ...newBillingAddress, pincode: e.target.value })} className={`w-full rounded-lg border px-4 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.billing_pincode ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Pincode" />
+                                                                {isLookupLoading && <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 animate-spin text-[#6B8F5E]" />}
+                                                            </div>
+                                                            {formErrors.billing_pincode && <p className="text-[9px] text-red-500 mt-0.5 font-bold">{formErrors.billing_pincode}</p>}
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">City *</label>
+                                                            <input type="text" value={newBillingAddress.city} onChange={e => { setNewBillingAddress({ ...newBillingAddress, city: e.target.value }); setManualEdits(prev => ({ ...prev, billing_city: true })); }} className={`w-full rounded-lg border px-4 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.billing_city ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="City" />
+                                                            {formErrors.billing_city && <p className="text-[9px] text-red-500 mt-0.5 font-bold">{formErrors.billing_city}</p>}
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">State *</label>
+                                                            <input type="text" value={newBillingAddress.state} onChange={e => { setNewBillingAddress({ ...newBillingAddress, state: e.target.value }); setManualEdits(prev => ({ ...prev, billing_state: true })); }} className={`w-full rounded-lg border px-4 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.billing_state ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="State" />
+                                                            {formErrors.billing_state && <p className="text-[9px] text-red-500 mt-0.5 font-bold">{formErrors.billing_state}</p>}
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
                                     </div>
@@ -620,7 +917,12 @@ function CheckoutContent() {
                                                 <><Banknote className="w-5 h-5 text-[#6B8F5E]" /> <span className="font-bold text-[#4A4A4A]">Cash on Delivery</span></>
                                             )}
                                         </div>
-                                        <p className="text-xs text-[#6B6B60] mt-2">Billing address: {billingSameAsShipping ? 'Same as shipping' : 'Different'}</p>
+                                        <div className="mt-3 pt-2 border-t border-[#D4CFC0]/50">
+                                            <p className="text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Billing Address</p>
+                                            <p className="text-xs text-[#4A4A4A] leading-tight">
+                                                {billingSameAsShipping ? 'Same as shipping' : getSelectedBillingAddressText()}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
 

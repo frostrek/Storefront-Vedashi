@@ -253,6 +253,7 @@ export interface WishlistItem {
 export interface Order {
     order_id: string;
     customer_id?: string;
+    billing_address_id?: string;
     customer_name?: string;
     customer_email?: string;
     // Legacy fields (kept for backward compat)

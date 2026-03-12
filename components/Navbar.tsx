@@ -1,7 +1,6 @@
 'use client';
 
-import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
+import { Link, useRouter, usePathname } from '@/i18n/navigation';
 import { useState, useEffect } from 'react';
 import { ShoppingCart, User, Menu, X, Heart, ChevronDown, Search, ArrowRight, Leaf, Sparkles } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
@@ -10,6 +9,8 @@ import { useAuth } from '@/context/AuthContext';
 import { getCategories } from '@/lib/api';
 import toast from 'react-hot-toast';
 import SearchAutocomplete from './SearchAutocomplete';
+import LanguageSwitcher from './LanguageSwitcher';
+import { useTranslations } from 'next-intl';
 
 interface Category {
   category_id: string;
@@ -64,6 +65,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
+  const t = useTranslations('Navbar');
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const { totalItems, loading: cartLoading } = useCart();
@@ -87,7 +89,7 @@ export default function Navbar() {
     if (isAuthenticated) {
       router.push('/account/wishlist');
     } else {
-      toast('Please sign in to view your wishlist');
+      toast(t('wishlistSignIn'));
       router.push('/login');
     }
   };
@@ -238,19 +240,18 @@ export default function Navbar() {
                     >
                       <X className="h-4 w-4" />
                     </button>
-
                     <div className="relative z-10 p-6">
                       <div className="flex items-start gap-4">
                         <div className="w-12 h-12 rounded-2xl bg-[#4A5D23]/10 flex items-center justify-center flex-shrink-0 animate-pulse text-[#4A5D23]">
                           <Leaf className="h-6 w-6" />
                         </div>
-                        <div>
+                        <div className="pr-2">
                           <div className="flex items-center gap-2 mb-1">
-                            <h4 className="text-base font-serif font-bold text-[#1a2408]">Cart Reminder</h4>
+                            <h4 className="text-base font-serif font-bold text-[#1a2408]">{t('itemsInCart')}</h4>
                             <Sparkles className="h-3 w-3 text-[#c8a84e]" />
                           </div>
                           <p className="text-xs text-[#5B4A31] leading-relaxed mb-4 font-medium italic">
-                            You previously left {totalItems} {totalItems === 1 ? 'item' : 'items'} in your basket. Secure your wellness scroll soon.
+                            {t('cartReminderText', { count: totalItems })}
                           </p>
                           <Link
                             href="/cart"
@@ -258,7 +259,7 @@ export default function Navbar() {
                             className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white px-5 py-2.5 rounded-xl transition-all shadow-xl hover:-translate-y-0.5 active:translate-y-0"
                             style={{ backgroundColor: '#4A5D23' }}
                           >
-                            Go to Cart <ArrowRight className="h-3.5 w-3.5" />
+                            {t('goToCart')} <ArrowRight className="h-3.5 w-3.5" />
                           </Link>
                         </div>
                       </div>
@@ -266,6 +267,8 @@ export default function Navbar() {
                   </div>
                 )}
               </div>
+
+              <LanguageSwitcher />
 
               <Link href="/account" className="relative p-2 group">
                 <User className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
@@ -296,7 +299,7 @@ export default function Navbar() {
                     onMouseEnter={e => (e.currentTarget.style.color = colors.strip_accent)}
                     onMouseLeave={e => (e.currentTarget.style.color = colors.strip_text)}
                   >
-                    Track Orders
+                    {t('trackOrders')}
                   </Link>
                 )}
 
@@ -311,7 +314,7 @@ export default function Navbar() {
                       className="flex items-center gap-1 font-medium cursor-pointer transition-colors duration-200"
                       style={{ color: colors.strip_text }}
                     >
-                      Categories
+                      {t('categories')}
                       <ChevronDown className="h-3 w-3 transition-transform duration-200 group-hover:rotate-180" />
                     </button>
                     <div className="absolute top-9 left-0 min-w-[280px] bg-white text-gray-800 shadow-2xl rounded-b-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[200] border-t-[3px]" style={{ borderColor: colors.strip_text }}>
@@ -372,7 +375,7 @@ export default function Navbar() {
               <div className="flex items-center gap-1.5 font-medium" style={{ color: colors.strip_text }}>
                 <span className="text-sm">✆</span>
                 <span>
-                  Hotline:{' '}
+                  {t('hotline')}:{' '}
                   <span className="font-semibold" style={{ color: colors.strip_accent }}>{strip.hotline}</span>
                 </span>
               </div>
@@ -427,7 +430,7 @@ export default function Navbar() {
                   (e.currentTarget as HTMLElement).style.color = colors.navbar_text;
                 }}
               >
-                Track Orders
+                {t('trackOrders')}
               </Link>
             )}
 
@@ -435,7 +438,7 @@ export default function Navbar() {
             <div className="border-t border-gray-100 my-2" />
 
             {/* Categories */}
-            <p className="px-3 text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1">Categories</p>
+            <p className="px-3 text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1">{t('categories')}</p>
             {parentCategories.map(parent => (
               <div key={parent.category_id} className="flex flex-col">
                 <Link
@@ -473,7 +476,7 @@ export default function Navbar() {
             {/* Hotline */}
             <div className="border-t border-gray-100 my-2" />
             <p className="px-3 text-xs" style={{ color: colors.strip_text }}>
-              ✆ Hotline: <span className="font-semibold" style={{ color: colors.navbar_hover }}>{strip.hotline}</span>
+              ✆ {t('hotline')}: <span className="font-semibold" style={{ color: colors.navbar_hover }}>{strip.hotline}</span>
             </p>
           </nav>
         </div>
