@@ -414,9 +414,11 @@ function ProductsContent() {
                         <div className="sticky top-6 rounded-xl border border-light-border bg-white px-5 py-4 shadow-sm">
                             <h2 className="font-serif text-base font-semibold text-charcoal mb-1">Filters</h2>
                             <p className="text-xs text-warm-gray mb-4 flex items-center gap-2">
-                                <span className={`transition-opacity ${loading ? 'opacity-50' : 'opacity-100'}`}>
-                                    {totalCount} formulation{totalCount !== 1 ? 's' : ''} found
-                                </span>
+                                {!loading && (
+                                    <span className="transition-opacity opacity-100">
+                                        {totalCount} formulation{totalCount !== 1 ? 's' : ''} found
+                                    </span>
+                                )}
                                 {loading && <Loader2 className="h-3 w-3 animate-spin text-burgundy" />}
                             </p>
                             {sidebarContent}
