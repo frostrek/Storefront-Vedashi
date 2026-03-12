@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { ShoppingCart, User, Menu, X, Heart, ChevronDown, Search, ArrowRight } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, Heart, ChevronDown, Search, ArrowRight, Leaf, Sparkles } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useAuth } from '@/context/AuthContext';
@@ -222,30 +222,45 @@ export default function Navbar() {
 
                 {/* Cart Reminder Popup */}
                 {showCartReminder && (
-                  <div className="absolute top-full right-0 mt-3 w-72 bg-white rounded-xl shadow-2xl border border-gray-100 p-4 z-50 animate-in slide-in-from-top-4 fade-in duration-300">
+                  <div className="absolute top-full right-0 mt-3 w-80 bg-white rounded-[30px] shadow-2xl border border-[#4A5D23]/10 overflow-hidden z-[110] animate-in slide-in-from-top-4 fade-in duration-300">
+                    {/* Background Texture */}
+                    <div 
+                      className="absolute inset-0 z-0 opacity-[0.08] pointer-events-none"
+                      style={{ 
+                        backgroundImage: "url('/ayurvedic-texture.png')",
+                        backgroundSize: '200px'
+                      }}
+                    ></div>
+                    
                     <button
                       onClick={() => setShowCartReminder(false)}
-                      className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-gray-600 transition-colors rounded-full hover:bg-gray-100"
+                      className="absolute top-3 right-3 p-2 text-[#5B4A31]/40 hover:text-[#4A5D23] transition-all hover:bg-[#4A5D23]/5 rounded-full z-10"
                     >
                       <X className="h-4 w-4" />
                     </button>
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${colors.navbar_hover}18` }}>
-                        <ShoppingCart className="h-5 w-5" style={{ color: colors.strip_text }} />
-                      </div>
-                      <div className="pr-4">
-                        <h4 className="text-sm font-bold text-gray-900 mb-1">Items left in cart</h4>
-                        <p className="text-xs text-gray-600 leading-relaxed mb-3">
-                          You previously left {totalItems} {totalItems === 1 ? 'item' : 'items'} in your cart. Checkout fast before they go out of stock!
-                        </p>
-                        <Link
-                          href="/cart"
-                          onClick={() => setShowCartReminder(false)}
-                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-white px-4 py-2 rounded-lg transition-all shadow-sm hover:shadow-md"
-                          style={{ backgroundColor: colors.navbar_hover }}
-                        >
-                          Go to Cart <ArrowRight className="h-3 w-3" />
-                        </Link>
+
+                    <div className="relative z-10 p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-[#4A5D23]/10 flex items-center justify-center flex-shrink-0 animate-pulse text-[#4A5D23]">
+                          <Leaf className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="text-base font-serif font-bold text-[#1a2408]">Cart Reminder</h4>
+                            <Sparkles className="h-3 w-3 text-[#c8a84e]" />
+                          </div>
+                          <p className="text-xs text-[#5B4A31] leading-relaxed mb-4 font-medium italic">
+                            You previously left {totalItems} {totalItems === 1 ? 'item' : 'items'} in your basket. Secure your wellness scroll soon.
+                          </p>
+                          <Link
+                            href="/cart"
+                            onClick={() => setShowCartReminder(false)}
+                            className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white px-5 py-2.5 rounded-xl transition-all shadow-xl hover:-translate-y-0.5 active:translate-y-0"
+                            style={{ backgroundColor: '#4A5D23' }}
+                          >
+                            Go to Cart <ArrowRight className="h-3.5 w-3.5" />
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   </div>

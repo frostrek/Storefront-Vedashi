@@ -72,33 +72,51 @@ export default function HelpCenterPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-[#FAF7F2]">
+        <div className="min-h-screen bg-[#FDFBF7]">
             {/* Hero Section */}
-            <section className="relative bg-gradient-to-br from-[#4b0f1a] via-[#722F37] to-[#4b0f1a] py-20 px-6">
-                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyelwySDI0di0yaDF6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-50"></div>
-                <div className="max-w-3xl mx-auto text-center relative z-10">
-                    <h1 className="text-4xl md:text-5xl font-serif font-bold text-white mb-4">
-                        How can we help you?
+            <section className="relative py-24 px-6 overflow-hidden">
+                {/* Ayurvedic Texture Background */}
+                <div 
+                    className="absolute inset-0 z-0 opacity-40 bg-repeat bg-center"
+                    style={{ 
+                        backgroundImage: "url('/ayurvedic-texture.png')",
+                        backgroundSize: '400px',
+                        filter: 'sepia(0.2) contrast(1.1)'
+                    }}
+                ></div>
+                
+                {/* Decorative Elements */}
+                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-[#4A5D23]/10 to-transparent z-0"></div>
+                
+                <div className="max-w-4xl mx-auto text-center relative z-10">
+                    <span className="inline-block px-4 py-1.5 rounded-full bg-[#4A5D23]/10 text-[#2D3A15] text-xs font-bold tracking-widest uppercase mb-6">
+                        Vedic Support
+                    </span>
+                    <h1 className="text-4xl md:text-6xl font-serif font-bold text-[#1a2408] mb-6 leading-tight">
+                        How can we <span className="text-[#4A5D23]">help you?</span>
                     </h1>
-                    <p className="text-[#C6A75E] text-lg mb-8">
-                        Search our help center or browse categories below
+                    <p className="text-[#5B4A31] text-lg mb-10 max-w-2xl mx-auto leading-relaxed">
+                        Find guidance, answers, and support for your Ayurvedic journey.
                     </p>
-                    <div className="relative max-w-xl mx-auto">
-                        <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                            placeholder="Search for help articles, FAQs, guides..."
-                            className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/95 text-gray-900 placeholder-gray-500 text-base focus:outline-none focus:ring-2 focus:ring-[#C6A75E] shadow-xl"
-                        />
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                        <button
-                            onClick={handleSearch}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#4b0f1a] text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-[#3a0b14] transition-colors"
-                        >
-                            Search
-                        </button>
+                    <div className="relative max-w-2xl mx-auto group">
+                        <div className="absolute -inset-1 bg-gradient-to-r from-[#4A5D23]/20 to-[#8B4513]/20 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                                placeholder="Search for help articles, FAQs, guides..."
+                                className="w-full pl-14 pr-32 py-5 rounded-2xl bg-white/90 backdrop-blur-sm text-gray-900 placeholder-gray-400 text-lg border border-[#4A5D23]/10 focus:outline-none focus:ring-2 focus:ring-[#4A5D23] shadow-2xl transition-all"
+                            />
+                            <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-6 w-6 text-[#4A5D23]" />
+                            <button
+                                onClick={handleSearch}
+                                className="absolute right-2.5 top-1/2 -translate-y-1/2 bg-[#4A5D23] text-white px-8 py-3 rounded-xl text-base font-semibold hover:bg-[#3a491b] transition-all shadow-lg active:scale-95"
+                            >
+                                Search
+                            </button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -106,11 +124,12 @@ export default function HelpCenterPage() {
             {/* Search Results */}
             {(searchResults.length > 0 || searching) && (
                 <section className="max-w-4xl mx-auto px-6 py-8">
-                    <h2 className="text-xl font-bold text-gray-900 mb-4">
-                        {searching ? 'Searching...' : `${searchResults.length} result${searchResults.length !== 1 ? 's' : ''} found`}
+                    <h2 className="text-xl font-bold text-[#1a2408] mb-6 flex items-center gap-2">
+                        <div className="w-2 h-8 bg-[#4A5D23] rounded-full"></div>
+                        {searching ? 'Finding answers...' : `${searchResults.length} result${searchResults.length !== 1 ? 's' : ''} found`}
                     </h2>
                     {!searching && (
-                        <div className="space-y-3">
+                        <div className="grid gap-4">
                             {searchResults.map((item, i) => (
                                 <Link
                                     key={i}
@@ -121,18 +140,23 @@ export default function HelpCenterPage() {
                                                 ? `/help-center/${item.slug || ''}`
                                                 : `/help-center/knowledge-base/${item.slug || ''}`
                                     }
-                                    className="block bg-white rounded-xl p-4 border border-gray-100 hover:border-[#C6A75E]/30 hover:shadow-md transition-all"
+                                    className="block bg-white/60 backdrop-blur-sm rounded-2xl p-5 border border-[#4A5D23]/5 hover:border-[#4A5D23]/30 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 group"
                                 >
-                                    <div className="flex items-start gap-3">
-                                        <span className="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-[#4b0f1a]/10 text-[#4b0f1a] whitespace-nowrap mt-0.5">
-                                            {item._type === 'faq' ? 'FAQ' : item._type === 'help' ? 'Help' : 'Guide'}
-                                        </span>
+                                    <div className="flex items-start gap-4">
+                                        <div className="bg-[#4A5D23]/10 p-2 rounded-lg group-hover:bg-[#4A5D23] transition-colors">
+                                            <FileText className="h-5 w-5 text-[#4A5D23] group-hover:text-white" />
+                                        </div>
                                         <div>
-                                            <h3 className="font-semibold text-gray-900 text-sm">
-                                                {item.question || item.title}
-                                            </h3>
-                                            <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-                                                {item.answer || item.excerpt || item.content?.substring(0, 120) + '...'}
+                                            <div className="flex items-center gap-3 mb-1">
+                                                <h3 className="font-bold text-[#1a2408] group-hover:text-[#4A5D23] transition-colors">
+                                                    {item.question || item.title}
+                                                </h3>
+                                                <span className="text-[10px] uppercase tracking-widest font-black px-2 py-0.5 rounded-md bg-[#4A5D23]/10 text-[#4A5D23]">
+                                                    {item._type === 'faq' ? 'FAQ' : item._type === 'help' ? 'Help' : 'Guide'}
+                                                </span>
+                                            </div>
+                                            <p className="text-sm text-[#5B4A31] line-clamp-2">
+                                                {item.answer || item.excerpt || item.content?.substring(0, 150) + '...'}
                                             </p>
                                         </div>
                                     </div>
@@ -144,26 +168,40 @@ export default function HelpCenterPage() {
             )}
 
             {/* Quick-access Cards */}
-            <section className="max-w-5xl mx-auto px-6 -mt-8 relative z-10">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <section className="max-w-6xl mx-auto px-6 -mt-10 relative z-10 mb-20">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {sections.map((section) => {
                         const Icon = section.icon;
+                        const herbalColors = [
+                            { bg: '#E8EDDF', text: '#4A5D23' },
+                            { bg: '#F2E8CF', text: '#8B4513' },
+                            { bg: '#E9F5F2', text: '#2E5A50' },
+                            { bg: '#F9F1E7', text: '#A67C52' }
+                        ];
+                        const colorIdx = sections.indexOf(section) % herbalColors.length;
+                        const theme = herbalColors[colorIdx];
+
                         return (
                             <Link
                                 key={section.title}
                                 href={section.href}
-                                className="group bg-white rounded-2xl p-6 border border-gray-100 hover:border-[#C6A75E]/30 shadow-sm hover:shadow-lg transition-all duration-300"
+                                className="group relative bg-white rounded-3xl p-8 border border-[#4A5D23]/5 hover:border-[#4A5D23]/20 shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden"
                             >
+                                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#4A5D23]/5 to-transparent rounded-bl-[100px] -mr-4 -mt-4 group-hover:w-32 group-hover:h-32 transition-all duration-500"></div>
+                                
                                 <div
-                                    className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110"
-                                    style={{ backgroundColor: section.color + '15' }}
+                                    className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-all duration-500 group-hover:rotate-6 group-hover:scale-110 shadow-inner"
+                                    style={{ backgroundColor: theme.bg }}
                                 >
-                                    <Icon className="h-6 w-6" style={{ color: section.color }} />
+                                    <Icon className="h-8 w-8" style={{ color: theme.text }} />
                                 </div>
-                                <h3 className="font-bold text-gray-900 mb-1">{section.title}</h3>
-                                <p className="text-sm text-gray-500 leading-relaxed">{section.desc}</p>
-                                <div className="flex items-center gap-1 mt-3 text-xs font-semibold text-[#722F37] group-hover:gap-2 transition-all">
-                                    Explore <ChevronRight className="h-3 w-3" />
+                                <h3 className="text-xl font-bold text-[#1a2408] mb-3">{section.title}</h3>
+                                <p className="text-sm text-[#5B4A31] leading-relaxed mb-6">{section.desc}</p>
+                                <div 
+                                    className="inline-flex items-center gap-2 text-sm font-bold tracking-wide transition-all duration-300 group-hover:gap-3"
+                                    style={{ color: theme.text }}
+                                >
+                                    Explore More <ChevronRight className="h-4 w-4" />
                                 </div>
                             </Link>
                         );
@@ -173,57 +211,71 @@ export default function HelpCenterPage() {
 
             {/* Popular FAQs */}
             {popularFaqs.length > 0 && (
-                <section className="max-w-4xl mx-auto px-6 py-16">
-                    <h2 className="text-2xl font-serif font-bold text-gray-900 mb-6">Popular Questions</h2>
-                    <div className="space-y-3">
+                <section className="max-w-5xl mx-auto px-6 py-20 bg-[#FDFBF7] rounded-[50px] mb-20 border border-[#4A5D23]/5">
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl md:text-4xl font-serif font-bold text-[#1a2408] mb-4">Common Questions</h2>
+                        <div className="w-24 h-1 bg-[#4A5D23] mx-auto rounded-full opacity-30"></div>
+                    </div>
+                    <div className="grid md:grid-cols-1 gap-4 max-w-3xl mx-auto">
                         {popularFaqs.map((faq: any) => (
                             <Link
                                 key={faq.faq_id}
                                 href="/help-center/faq"
-                                className="flex items-center justify-between bg-white rounded-xl p-4 border border-gray-100 hover:border-[#C6A75E]/30 hover:shadow-sm transition-all group"
+                                className="flex items-center justify-between bg-white rounded-2xl p-6 border border-[#4A5D23]/5 hover:border-[#4A5D23]/20 hover:shadow-md transition-all group"
                             >
-                                <div className="flex items-center gap-3">
-                                    <HelpCircle className="h-4 w-4 text-[#722F37] flex-shrink-0" />
-                                    <span className="text-sm font-medium text-gray-800">{faq.question}</span>
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-full bg-[#4A5D23]/5 flex items-center justify-center group-hover:bg-[#4A5D23] transition-colors">
+                                        <HelpCircle className="h-5 w-5 text-[#4A5D23] group-hover:text-white" />
+                                    </div>
+                                    <span className="text-base font-semibold text-[#1a2408]">{faq.question}</span>
                                 </div>
-                                <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-[#722F37] transition-colors" />
+                                <div className="p-2 rounded-lg bg-gray-50 group-hover:bg-[#4A5D23]/10 transition-colors">
+                                    <ChevronRight className="h-5 w-5 text-[#4A5D23]" />
+                                </div>
                             </Link>
                         ))}
                     </div>
-                    <div className="text-center mt-6">
+                    <div className="text-center mt-10">
                         <Link
                             href="/help-center/faq"
-                            className="text-sm font-semibold text-[#722F37] hover:text-[#4b0f1a] transition-colors"
+                            className="inline-flex items-center gap-2 py-3 px-8 rounded-full border-2 border-[#4A5D23] text-[#4A5D23] font-bold hover:bg-[#4A5D23] hover:text-white transition-all"
                         >
-                            View all FAQs →
+                            View all FAQs
                         </Link>
                     </div>
                 </section>
             )}
 
             {/* Contact CTA */}
-            <section className="max-w-4xl mx-auto px-6 pb-16">
-                <div className="bg-gradient-to-r from-[#4b0f1a] to-[#722F37] rounded-2xl p-8 md:p-12 text-center">
-                    <h2 className="text-2xl font-serif font-bold text-white mb-3">
-                        Still need help?
-                    </h2>
-                    <p className="text-[#C6A75E] mb-6 text-sm">
-                        Our support team is here to assist you. Submit a ticket and we&apos;ll get back to you soon.
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                        <Link
-                            href="/help-center/support"
-                            className="inline-flex items-center justify-center gap-2 bg-white text-[#4b0f1a] px-6 py-3 rounded-xl font-semibold text-sm hover:bg-[#C6A75E] hover:text-white transition-colors"
-                        >
-                            <MessageSquare className="h-4 w-4" />
-                            Submit a Ticket
-                        </Link>
-                        <Link
-                            href="/contact"
-                            className="inline-flex items-center justify-center gap-2 border border-white/30 text-white px-6 py-3 rounded-xl font-semibold text-sm hover:bg-white/10 transition-colors"
-                        >
-                            Contact Us
-                        </Link>
+            <section className="max-w-5xl mx-auto px-6 pb-24">
+                <div className="relative overflow-hidden bg-[#1a2408] rounded-[40px] p-10 md:p-16 text-center">
+                    {/* Background Pattern */}
+                    <div className="absolute inset-0 opacity-10 pointer-events-none">
+                        <div className="absolute inset-0 bg-[url('/ayurvedic-texture.png')] bg-repeat opacity-20"></div>
+                    </div>
+                    
+                    <div className="relative z-10">
+                        <h2 className="text-3xl md:text-5xl font-serif font-bold text-[#F2E8CF] mb-4">
+                            Didn&apos;t find what you need?
+                        </h2>
+                        <p className="text-[#A6BF8F] mb-10 text-lg max-w-xl mx-auto font-medium">
+                            Our Ayurvedic experts and support team are just a message away.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-5 justify-center">
+                            <Link
+                                href="/help-center/support"
+                                className="inline-flex items-center justify-center gap-3 bg-[#4A5D23] text-white px-10 py-5 rounded-2xl font-bold text-lg hover:bg-[#3a491b] hover:shadow-2xl hover:-translate-y-1 transition-all"
+                            >
+                                <MessageSquare className="h-6 w-6" />
+                                Submit a Ticket
+                            </Link>
+                            <Link
+                                href="/contact"
+                                className="inline-flex items-center justify-center gap-3 border-2 border-[#F2E8CF]/30 text-[#F2E8CF] px-10 py-5 rounded-2xl font-bold text-lg hover:bg-[#F2E8CF]/10 transition-all"
+                            >
+                                Contact Us
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </section>

@@ -17,7 +17,7 @@ export default function NotFound() {
 
             {/* Content */}
             <div className="relative z-10 flex flex-col items-center text-center animate-fade-in-up mt-[-60px]">
-                {/* Spilled wine glass image — Replace with Zen/Ayurvedic placeholder or keep for now but change alt */}
+                {/* Ayurvedic Symbol */}
                 <div className="relative w-48 h-48 md:w-64 md:h-64 -mb-8">
                     <div className="w-full h-full flex items-center justify-center bg-[#F5F2E8] rounded-full">
                         <Leaf className="w-24 h-24 text-[#3B5D3B]" />

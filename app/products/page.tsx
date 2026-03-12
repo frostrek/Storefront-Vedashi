@@ -432,16 +432,11 @@ function ProductsContent() {
     return (
         <div className="min-h-screen bg-[#FAF7F2]">
             {/* ═══════ HERO SECTION ═══════ */}
-            <section className="relative overflow-hidden bg-gradient-to-br from-[#3d5c3a] via-[#4a6b47] to-[#5a7a57] py-12 md:py-16 px-6">
-                <div className="absolute inset-0 opacity-[0.06]">
-                    <svg className="absolute top-0 right-0 h-full w-1/2" viewBox="0 0 400 500" fill="none">
-                        <path d="M250 50 C300 100, 350 200, 300 300 C250 400, 150 450, 100 400 C50 350, 80 250, 150 200 C220 150, 200 0, 250 50Z" stroke="white" strokeWidth="1.5" fill="none" />
-                        <path d="M280 100 C330 150, 370 250, 320 340 C270 430, 170 470, 130 420" stroke="white" strokeWidth="1" fill="none" />
-                    </svg>
-                    <svg className="absolute bottom-0 left-0 h-3/4 w-1/3" viewBox="0 0 300 400" fill="none">
-                        <path d="M50 350 C0 300, 20 200, 80 150 C140 100, 200 120, 180 200 C160 280, 100 320, 50 350Z" stroke="white" strokeWidth="1.5" fill="none" />
-                    </svg>
-                </div>
+            <section 
+                className="relative overflow-hidden py-12 md:py-16 px-6 bg-cover bg-center"
+                style={{ backgroundImage: "url('/ayurvedic-texture.png')" }}
+            >
+                <div className="absolute inset-0 bg-black/20" /> {/* Subtle overlay for text readability if needed */}
 
                 <div className="max-w-xl mx-auto text-center relative z-10">
                     <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 mb-4">

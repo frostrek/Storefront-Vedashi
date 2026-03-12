@@ -73,23 +73,19 @@ export default function CustomerEnquiryPage() {
     /* ═══════ SUCCESS STATE ═══════ */
     if (submitted) {
         return (
-            <div className="min-h-screen bg-[#FAF7F2] flex items-center justify-center px-6">
-                <div className="text-center max-w-md">
-                    <div className="w-20 h-20 rounded-full bg-[#3d5c3a]/10 flex items-center justify-center mx-auto mb-6">
-                        <CheckCircle className="h-10 w-10 text-[#3d5c3a]" />
+            <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center px-6">
+                <div className="text-center bg-white rounded-[60px] p-16 border border-[#4A5D23]/5 shadow-2xl max-w-lg w-full">
+                    <div className="w-24 h-24 rounded-[30px] bg-[#4A5D23]/10 flex items-center justify-center mx-auto mb-10">
+                        <CheckCircle className="h-10 w-10 text-[#4A5D23]" />
                     </div>
-                    <h2 className="text-2xl font-serif font-bold text-gray-900 mb-3">Thank you for your enquiry!</h2>
-                    <p className="text-sm text-gray-500 mb-2">Your message has been received and our wellness team will review it shortly.</p>
-                    <p className="text-xs text-gray-400 mb-8 flex items-center justify-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        Avg. response time: ~4 hours
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <h2 className="text-3xl font-serif font-bold text-[#1a2408] mb-4">Message Sent!</h2>
+                    <p className="text-[#5B4A31] mb-10 font-medium">Your inquiry has been received. Our wellness guards will review your scroll shortly.</p>
+                    <div className="flex flex-col gap-4">
                         <Link
                             href="/help-center"
-                            className="inline-flex items-center justify-center gap-2 bg-[#3d5c3a] text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-[#2d4a2a] transition-colors"
+                            className="inline-flex items-center justify-center gap-3 bg-[#4A5D23] text-white px-10 py-5 rounded-[20px] font-black uppercase tracking-widest text-sm hover:bg-[#3a491b] transition-all shadow-xl"
                         >
-                            Back to Help Center
+                            Return to Help Hub
                         </Link>
                         <button
                             onClick={() => {
@@ -97,9 +93,9 @@ export default function CustomerEnquiryPage() {
                                 setForm({ name: '', email: '', type: 'suggestion', subject: '', message: '', rating: 0 });
                                 setErrors({});
                             }}
-                            className="inline-flex items-center justify-center gap-2 border border-gray-200 text-gray-700 px-6 py-3 rounded-xl text-sm font-bold hover:border-[#3d5c3a]/30 transition-colors cursor-pointer"
+                            className="inline-flex items-center justify-center gap-3 border border-[#4A5D23]/10 text-[#5B4A31] px-10 py-5 rounded-[20px] font-black uppercase tracking-widest text-sm hover:bg-gray-50 transition-all cursor-pointer"
                         >
-                            Submit Another
+                            Another Inquiry
                         </button>
                     </div>
                 </div>
@@ -108,56 +104,45 @@ export default function CustomerEnquiryPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#FAF7F2]">
+        <div className="min-h-screen bg-[#FDFBF7]">
             {/* ═══════ HERO SECTION ═══════ */}
-            <section className="relative overflow-hidden bg-gradient-to-br from-[#3d5c3a] via-[#4a6b47] to-[#5a7a57] py-16 md:py-20 px-6">
-                {/* Botanical SVG background */}
-                <div className="absolute inset-0 opacity-[0.06]">
-                    <svg className="absolute top-0 right-0 h-full w-1/2" viewBox="0 0 400 500" fill="none">
-                        <path d="M250 50 C300 100, 350 200, 300 300 C250 400, 150 450, 100 400 C50 350, 80 250, 150 200 C220 150, 200 0, 250 50Z" stroke="white" strokeWidth="1.5" fill="none" />
-                        <path d="M280 100 C330 150, 370 250, 320 340 C270 430, 170 470, 130 420" stroke="white" strokeWidth="1" fill="none" />
-                    </svg>
-                    <svg className="absolute bottom-0 left-0 h-3/4 w-1/3" viewBox="0 0 300 400" fill="none">
-                        <path d="M50 350 C0 300, 20 200, 80 150 C140 100, 200 120, 180 200 C160 280, 100 320, 50 350Z" stroke="white" strokeWidth="1.5" fill="none" />
-                    </svg>
-                </div>
+            <section className="relative overflow-hidden py-24 px-6 border-b border-[#4A5D23]/10">
+                {/* Ayurvedic Texture Background */}
+                <div 
+                    className="absolute inset-0 z-0 opacity-20 bg-repeat bg-center"
+                    style={{ 
+                        backgroundImage: "url('/ayurvedic-texture.png')",
+                        backgroundSize: '400px',
+                        filter: 'sepia(0.2) contrast(1.1)'
+                    }}
+                ></div>
 
                 <div className="max-w-xl mx-auto text-center relative z-10">
-                    <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 mb-5">
-                        <Sparkles className="h-3.5 w-3.5 text-[#c8d8a0]" />
-                        <span className="text-xs font-semibold tracking-widest uppercase text-white/90">Direct Support</span>
+                    <div className="inline-flex items-center gap-3 bg-[#4A5D23]/10 backdrop-blur-sm border border-[#4A5D23]/10 rounded-full px-5 py-2 mb-8">
+                        <Sparkles className="h-4 w-4 text-[#4A5D23]" />
+                        <span className="text-[10px] font-black tracking-[0.2em] uppercase text-[#4A5D23]">Sacred Support</span>
                     </div>
 
-                    <h1 className="text-3xl md:text-4xl font-serif font-bold text-white mb-3 leading-tight">
-                        Customer Enquiry
+                    <h1 className="text-4xl md:text-6xl font-serif font-bold text-[#1a2408] mb-6 leading-tight">
+                        Customer Inquiry
                     </h1>
 
-                    <p className="text-white/70 text-sm max-w-md mx-auto">
-                        We&apos;re here to help you flourish. Send us a message and our dedicated team will get back to you within 24 hours.
+                    <p className="text-[#5B4A31]/60 text-lg font-medium max-w-md mx-auto italic">
+                        Share your thoughts or seek guidance. We are here to help you flourish.
                     </p>
                 </div>
             </section>
 
             {/* ═══════ FORM SECTION ═══════ */}
-            <div className="max-w-2xl mx-auto px-6 -mt-6 relative z-20 pb-16">
-                <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden">
-                    <div className="p-7 md:p-9">
-                        {/* Form header */}
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="w-9 h-9 rounded-xl bg-[#3d5c3a]/8 border border-[#3d5c3a]/10 flex items-center justify-center">
-                                <Mail className="h-4 w-4 text-[#3d5c3a]" />
-                            </div>
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">General Support Enquiry</span>
-                        </div>
-                        <h2 className="text-xl md:text-2xl font-serif font-bold text-gray-900 mb-1">Send us a Message</h2>
-                        <p className="text-sm text-gray-500 mb-8">Fill out the form below and our wellness guides will assist you. We typically respond within 24 hours during business days.</p>
-
-                        {/* ── Enquiry Type ── */}
-                        <div className="mb-7">
-                            <label className="block text-sm font-bold text-gray-900 mb-3">
-                                Enquiry Type <span className="text-red-400">*</span>
+            <div className="max-w-3xl mx-auto px-6 -mt-12 relative z-20 pb-24">
+                <form onSubmit={handleSubmit} className="bg-white rounded-[60px] border border-[#4A5D23]/5 shadow-[0_32px_64px_-16px_rgba(74,93,35,0.08)] overflow-hidden">
+                    <div className="p-10 md:p-16">
+                        {/* ── Inquiry Type ── */}
+                        <div className="mb-12">
+                            <label className="block text-xs font-black uppercase tracking-[0.2em] text-[#1a2408] mb-6">
+                                Inquiry Type <span className="text-red-400">*</span>
                             </label>
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                                 {TYPES.map((t) => {
                                     const active = form.type === t.value;
                                     return (
@@ -165,94 +150,95 @@ export default function CustomerEnquiryPage() {
                                             key={t.value}
                                             type="button"
                                             onClick={() => setForm({ ...form, type: t.value })}
-                                            className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all cursor-pointer ${active
-                                                ? 'bg-[#3d5c3a] text-white border-[#3d5c3a] shadow-sm'
-                                                : 'bg-white text-gray-600 border-gray-150 hover:border-[#3d5c3a]/30'
+                                            className={`flex flex-col items-center gap-4 p-6 rounded-[32px] border-2 transition-all cursor-pointer group ${active
+                                                ? 'bg-[#4A5D23] text-white border-[#4A5D23] shadow-xl shadow-[#4A5D23]/20'
+                                                : 'bg-[#FDFBF7] text-[#5B4A31] border-transparent hover:border-[#4A5D23]/20 hover:bg-white'
                                                 }`}
                                         >
-                                            <t.Icon className={`h-5 w-5 ${active ? 'text-white' : 'text-gray-400'}`} />
-                                            <span className="text-xs font-bold">{t.label}</span>
+                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${active ? 'bg-white/20' : 'bg-white shadow-sm group-hover:bg-[#4A5D23]/10'}`}>
+                                                <t.Icon className={`h-6 w-6 ${active ? 'text-white' : 'text-[#4A5D23]'}`} />
+                                            </div>
+                                            <span className="text-xs font-black uppercase tracking-widest">{t.label}</span>
                                         </button>
                                     );
                                 })}
                             </div>
-                            <p className="text-xs text-gray-400 mt-2">Selecting the correct category helps us route your inquiry to the right specialist.</p>
                         </div>
 
                         {/* ── Name + Email ── */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                             <div>
-                                <label className="flex items-center gap-1.5 text-sm font-bold text-gray-900 mb-2">
-                                    <User className="h-3.5 w-3.5 text-gray-400" />
+                                <label className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-[#1a2408] mb-4">
+                                    <User className="h-4 w-4 text-[#4A5D23]" />
                                     Full Name <span className="text-red-400">*</span>
                                 </label>
                                 <input
                                     type="text"
                                     value={form.name}
                                     onChange={(e) => { setForm({ ...form, name: e.target.value }); clearField('name'); }}
-                                    placeholder="e.g. Rowan Green"
-                                    className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#3d5c3a]/30 focus:border-[#3d5c3a] ${errors.name ? 'border-red-300 bg-red-50/50' : 'border-gray-200'}`}
+                                    placeholder="Your full name"
+                                    className={`w-full px-6 py-4 rounded-[20px] bg-[#FDFBF7] border-2 text-base font-medium focus:outline-none focus:ring-4 focus:ring-[#4A5D23]/5 focus:border-[#4A5D23] transition-all placeholder-[#5B4A31]/20 ${errors.name ? 'border-red-200' : 'border-transparent'}`}
                                 />
-                                {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
+                                {errors.name && <p className="text-xs text-red-500 font-bold mt-2 uppercase tracking-wide">{errors.name}</p>}
                             </div>
                             <div>
-                                <label className="flex items-center gap-1.5 text-sm font-bold text-gray-900 mb-2">
-                                    <Mail className="h-3.5 w-3.5 text-gray-400" />
-                                    Email Address <span className="text-red-400">*</span>
+                                <label className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-[#1a2408] mb-4">
+                                    <Mail className="h-4 w-4 text-[#4A5D23]" />
+                                    Email <span className="text-red-400">*</span>
                                 </label>
                                 <input
                                     type="email"
                                     value={form.email}
                                     onChange={(e) => { setForm({ ...form, email: e.target.value }); clearField('email'); }}
-                                    placeholder="name@example.com"
-                                    className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#3d5c3a]/30 focus:border-[#3d5c3a] ${errors.email ? 'border-red-300 bg-red-50/50' : 'border-gray-200'}`}
+                                    placeholder="your@email.com"
+                                    className={`w-full px-6 py-4 rounded-[20px] bg-[#FDFBF7] border-2 text-base font-medium focus:outline-none focus:ring-4 focus:ring-[#4A5D23]/5 focus:border-[#4A5D23] transition-all placeholder-[#5B4A31]/20 ${errors.email ? 'border-red-200' : 'border-transparent'}`}
                                 />
-                                {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
+                                {errors.email && <p className="text-xs text-red-500 font-bold mt-2 uppercase tracking-wide">{errors.email}</p>}
                             </div>
                         </div>
 
                         {/* ── Subject ── */}
-                        <div className="mb-5">
-                            <label className="flex items-center gap-1.5 text-sm font-bold text-gray-900 mb-2">
-                                <FileText className="h-3.5 w-3.5 text-gray-400" />
+                        <div className="mb-8">
+                            <label className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-[#1a2408] mb-4">
+                                <FileText className="h-4 w-4 text-[#4A5D23]" />
                                 Subject <span className="text-red-400">*</span>
                             </label>
                             <input
                                 type="text"
                                 value={form.subject}
                                 onChange={(e) => { setForm({ ...form, subject: e.target.value }); clearField('subject'); }}
-                                placeholder="How can we help you today?"
-                                className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#3d5c3a]/30 focus:border-[#3d5c3a] ${errors.subject ? 'border-red-300 bg-red-50/50' : 'border-gray-200'}`}
+                                placeholder="What's on your mind?"
+                                className={`w-full px-6 py-4 rounded-[20px] bg-[#FDFBF7] border-2 text-base font-medium focus:outline-none focus:ring-4 focus:ring-[#4A5D23]/5 focus:border-[#4A5D23] transition-all placeholder-[#5B4A31]/20 ${errors.subject ? 'border-red-200' : 'border-transparent'}`}
                             />
-                            {errors.subject && <p className="text-xs text-red-500 mt-1">{errors.subject}</p>}
+                            {errors.subject && <p className="text-xs text-red-500 font-bold mt-2 uppercase tracking-wide">{errors.subject}</p>}
                         </div>
 
                         {/* ── Message ── */}
-                        <div className="mb-6">
-                            <label className="flex items-center gap-1.5 text-sm font-bold text-gray-900 mb-2">
-                                <MessageCircle className="h-3.5 w-3.5 text-gray-400" />
+                        <div className="mb-10">
+                            <label className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-[#1a2408] mb-4">
+                                <MessageCircle className="h-4 w-4 text-[#4A5D23]" />
                                 Message <span className="text-red-400">*</span>
                             </label>
                             <textarea
                                 value={form.message}
                                 onChange={(e) => { setForm({ ...form, message: e.target.value }); clearField('message'); }}
-                                placeholder="Please provide as much detail as possible so we can better assist you..."
-                                rows={5}
+                                placeholder="Describe your inquiry in detail..."
+                                rows={6}
                                 maxLength={5000}
-                                className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#3d5c3a]/30 focus:border-[#3d5c3a] resize-none leading-relaxed ${errors.message ? 'border-red-300 bg-red-50/50' : 'border-gray-200'}`}
+                                className={`w-full px-6 py-4 rounded-[30px] bg-[#FDFBF7] border-2 text-base font-medium focus:outline-none focus:ring-4 focus:ring-[#4A5D23]/5 focus:border-[#4A5D23] transition-all placeholder-[#5B4A31]/20 resize-none leading-relaxed ${errors.message ? 'border-red-200' : 'border-transparent'}`}
                             />
-                            <div className="flex justify-between mt-1.5">
-                                {errors.message ? <p className="text-xs text-red-500">{errors.message}</p> : <span />}
-                                <span className="text-xs text-gray-400">{form.message.length} / 5000</span>
+                            <div className="flex justify-between mt-3">
+                                {errors.message ? <p className="text-xs text-red-500 font-bold uppercase tracking-wide">{errors.message}</p> : <span />}
+                                <span className="text-[10px] font-black text-[#5B4A31]/20 tracking-widest">{form.message.length} / 5000</span>
                             </div>
                         </div>
 
-                        {/* ── Rating (optional) ── */}
-                        <div className="mb-6">
-                            <label className="block text-sm font-bold text-gray-900 mb-2">
-                                Overall Experience <span className="text-gray-400 font-normal text-xs">(optional)</span>
+                        {/* ── Rating ── */}
+                        <div className="mb-12">
+                            <label className="block text-[10px] font-black uppercase tracking-widest text-[#1a2408] mb-4">
+                                Experience <span className="text-[#5B4A31]/30 font-bold italic normal-case ml-2">(optional)</span>
                             </label>
-                            <div className="flex gap-1">
+                            <div className="flex gap-2">
                                 {[1, 2, 3, 4, 5].map((star) => (
                                     <button
                                         key={star}
@@ -260,82 +246,81 @@ export default function CustomerEnquiryPage() {
                                         onClick={() => setForm({ ...form, rating: form.rating === star ? 0 : star })}
                                         onMouseEnter={() => setHoverRating(star)}
                                         onMouseLeave={() => setHoverRating(0)}
-                                        className="p-1 transition-transform hover:scale-110 cursor-pointer"
+                                        className="p-1 transition-all hover:scale-125 cursor-pointer"
                                     >
                                         <Star
-                                            className={`h-7 w-7 transition-colors ${(hoverRating || form.rating) >= star
+                                            className={`h-10 w-10 transition-colors ${(hoverRating || form.rating) >= star
                                                 ? 'text-[#c8a84e] fill-[#c8a84e]'
-                                                : 'text-gray-200'
+                                                : 'text-gray-100 fill-gray-100'
                                                 }`}
                                         />
                                     </button>
                                 ))}
                                 {form.rating > 0 && (
-                                    <span className="text-xs text-gray-400 self-center ml-2">{form.rating}/5</span>
+                                    <span className="text-sm font-black text-[#c8a84e] self-center ml-4">{form.rating}/5</span>
                                 )}
                             </div>
                         </div>
 
-                        {/* ── Privacy checkbox ── */}
-                        <label className="flex items-start gap-3 mb-6 cursor-pointer group">
-                            <input type="checkbox" required className="mt-0.5 accent-[#3d5c3a] w-4 h-4 cursor-pointer" />
-                            <span className="text-xs text-gray-500 leading-relaxed">
+                        <label className="flex items-start gap-4 mb-10 cursor-pointer group">
+                            <div className="relative flex items-center mt-1">
+                                <input type="checkbox" required className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border-2 border-[#4A5D23]/20 checked:bg-[#4A5D23] transition-all" />
+                                <CheckCircle className="absolute h-5 w-5 text-white opacity-0 peer-checked:opacity-100 p-1 pointer-events-none" />
+                            </div>
+                            <span className="text-xs text-[#5B4A31]/60 font-medium leading-relaxed group-hover:text-[#5B4A31] transition-colors">
                                 I agree to the{' '}
-                                <Link href="/privacy-policy" className="underline text-[#3d5c3a] hover:text-[#2d4a2a]">Privacy Policy</Link>.
-                                {' '}By submitting this form, you consent to our team contacting you via the provided email regarding your enquiry.
+                                <Link href="/privacy-policy" className="font-bold text-[#4A5D23] hover:underline">Privacy Policy</Link>.
+                                {' '}Your data is safe with us and will only be used to respond to your inquiry.
                             </span>
                         </label>
-                    </div>
 
-                    {/* ── Submit footer ── */}
-                    <div className="px-7 md:px-9 py-5 bg-gray-50/80 border-t border-gray-100">
                         <button
                             type="submit"
                             disabled={submitting}
-                            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#3d5c3a] text-white px-8 py-3.5 rounded-xl font-bold text-sm hover:bg-[#2d4a2a] transition-colors disabled:opacity-50 cursor-pointer shadow-sm"
+                            className="w-full inline-flex items-center justify-center gap-4 bg-[#4A5D23] text-white px-10 py-6 rounded-[24px] font-black uppercase tracking-[0.2em] text-sm hover:bg-[#3a491b] transition-all disabled:opacity-50 cursor-pointer shadow-2xl shadow-[#4A5D23]/20 hover:-translate-y-1"
                         >
-                            <Send className="h-4 w-4" />
-                            {submitting ? 'Sending...' : 'Send Enquiry'}
+                            {submitting ? 'Sending Scroll...' : 'Send Inquiry'}
+                            <Send className="h-5 w-5" />
                         </button>
-                        <p className="text-xs text-gray-400 mt-3 flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            Avg. response time: ~4 hours
-                        </p>
+                        
+                        <div className="flex items-center justify-center gap-3 mt-6 text-[10px] font-black text-[#5B4A31]/30 uppercase tracking-[0.2em]">
+                            <Clock className="h-4 w-4" />
+                            Avg. response: ~4 hours
+                        </div>
                     </div>
                 </form>
             </div>
 
             {/* ═══════ TRUST BADGES ═══════ */}
-            <section className="bg-white border-t border-gray-100 py-12 px-6">
-                <div className="max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
+            <section className="bg-white/50 py-24 px-6 border-t border-[#4A5D23]/5">
+                <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12">
                     {[
-                        { Icon: Zap, title: 'Fast Response', desc: 'Most inquiries answered in under 12 hours.' },
-                        { Icon: Users, title: 'Human Experts', desc: 'Talk to real people, never chatbots.' },
-                        { Icon: ShieldCheck, title: 'Safe & Secure', desc: 'Your privacy is our utmost priority.' },
+                        { Icon: Zap, title: 'Speed of Nature', desc: 'Inquiries answered swiftly, typically within a few sun cycles.' },
+                        { Icon: Users, title: 'Human Wisdom', desc: 'Talk to real wellness experts, never artificial constructs.' },
+                        { Icon: ShieldCheck, title: 'Secure Roots', desc: 'Your information is protected with the highest level of care.' },
                     ].map((badge) => (
-                        <div key={badge.title} className="flex flex-col items-center">
-                            <div className="w-12 h-12 rounded-full bg-[#3d5c3a]/8 border border-[#3d5c3a]/10 flex items-center justify-center mb-3">
-                                <badge.Icon className="h-5 w-5 text-[#3d5c3a]" />
+                        <div key={badge.title} className="text-center group">
+                            <div className="w-20 h-20 rounded-[30px] bg-white shadow-lg border border-[#4A5D23]/5 flex items-center justify-center mx-auto mb-8 transition-transform group-hover:-translate-y-2 duration-300">
+                                <badge.Icon className="h-10 w-10 text-[#4A5D23]" />
                             </div>
-                            <h3 className="text-sm font-bold text-gray-900 mb-1">{badge.title}</h3>
-                            <p className="text-xs text-gray-400">{badge.desc}</p>
+                            <h3 className="text-xl font-serif font-bold text-[#1a2408] mb-3">{badge.title}</h3>
+                            <p className="text-sm text-[#5B4A31]/60 font-medium leading-relaxed">{badge.desc}</p>
                         </div>
                     ))}
                 </div>
             </section>
 
             {/* ═══════ FOOTER NAV ═══════ */}
-            <div className="max-w-3xl mx-auto px-6 py-8">
-                <div className="flex items-center justify-center">
-                    <Link
-                        href="/help-center"
-                        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#3d5c3a] transition-colors"
-                    >
-                        <ChevronLeft className="h-4 w-4" />
-                        Back to Help Center
-                    </Link>
-                </div>
+            <div className="py-12 flex justify-center">
+                <Link
+                    href="/help-center"
+                    className="inline-flex items-center gap-3 text-xs font-black uppercase tracking-widest text-[#5B4A31]/40 hover:text-[#4A5D23] transition-all group"
+                >
+                    <ChevronLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+                    Back to Help Hub
+                </Link>
             </div>
         </div>
     );
 }
+
