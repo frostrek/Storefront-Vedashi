@@ -228,8 +228,6 @@ export default function CartPage() {
                             </div>
                         )}
 
-
-
                         {/* Promo and Shipping Widgets */}
                         {items.length > 0 && (
                             <div className="grid sm:grid-cols-2 gap-4">

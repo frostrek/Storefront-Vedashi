@@ -41,9 +41,9 @@ interface UserInfo {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://ecommerce-backend-h23p.onrender.com';
-const USER_KEY = 'ksp_wines_user';
-const TOKEN_KEY = 'ksp_wines_token';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const USER_KEY = 'vedashi_user';
+const TOKEN_KEY = 'vedashi_token';
 
 /** Map backend customer shape → frontend UserInfo */
 function toUserInfo(customer: Record<string, unknown>): UserInfo {

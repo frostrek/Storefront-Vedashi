@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useSession, useClerk } from '@clerk/nextjs';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
-import { Wine } from 'lucide-react';
+import { Leaf } from 'lucide-react';
 
 /**
  * SSO Complete Page — Step 2 of 2
@@ -99,7 +99,7 @@ export default function SSOCompletePage() {
             <div className="relative flex h-24 w-24 items-center justify-center">
                 <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-burgundy border-r-burgundy/50 animate-spin" />
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-burgundy/10 animate-pulse">
-                    <Wine className="h-8 w-8 text-burgundy" />
+                    <Leaf className="h-8 w-8 text-herbal-green" />
                 </div>
             </div>
             <div className="mt-8 flex flex-col items-center space-y-2">

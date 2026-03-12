@@ -1,4 +1,4 @@
-import { Wine } from 'lucide-react';
+import { Leaf } from 'lucide-react';
 
 export default function MaintenancePage({ message }: { message?: string }) {
     return (
@@ -33,7 +33,7 @@ export default function MaintenancePage({ message }: { message?: string }) {
                         }}
                     />
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <Wine style={{ width: '36px', height: '36px', color: '#D4AF37' }} />
+                        <Leaf style={{ width: '36px', height: '36px', color: '#D4AF37' }} />
                     </div>
                     {/* Pulse ring */}
                     <div
@@ -81,7 +81,7 @@ export default function MaintenancePage({ message }: { message?: string }) {
                         lineHeight: 1.7,
                         fontWeight: 300,
                     }}>
-                        {message || "Our systems are currently undergoing scheduled maintenance to improve your experience. We appreciate your patience and will be back with fine wines shortly."}
+                        {message || "Our systems are currently undergoing scheduled maintenance to improve your experience. We appreciate your patience and will be back with ayurvedic wellness products shortly."}
                     </p>
                 </div>
 
@@ -115,7 +115,7 @@ export default function MaintenancePage({ message }: { message?: string }) {
                         letterSpacing: '0.15em',
                         fontWeight: 500,
                     }}>
-                        KSP Global Wines
+                        Vedashi Premium Wellness
                     </p>
                 </div>
             </div>

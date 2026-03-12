@@ -106,12 +106,12 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                     {/* Wishlist */}
                     <button
                         onClick={handleToggleWishlist}
-                        className="absolute top-2 right-2 sm:top-4 sm:right-4 rounded-full bg-white/85 stroke-wine-gold backdrop-blur-md p-1.5 sm:p-2 shadow-md transition hover:scale-110"
+                        className="absolute top-2 right-2 sm:top-4 sm:right-4 rounded-full bg-white/85 stroke-vedic-gold backdrop-blur-md p-1.5 sm:p-2 shadow-md transition hover:scale-110"
                     >
                         <Heart
                             className={`h-3.5 w-3.5 sm:h-4 sm:w-4 transition ${wishlisted
                                 ? 'fill-[#6b0f1a] text-[#6b0f1a]'
-                                : 'text-wine-gold'
+                                : 'text-vedic-gold'
                                 }`}
                         />
                     </button>
@@ -253,7 +253,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
 //                 {/* Image */}
 //                 <div className="relative aspect-square bg-gradient-to-br from-cream to-cream-dark p-6">
 //                     <div className="flex h-full items-center justify-center">
-//                         <span className="text-7xl transition-transform duration-300 group-hover:scale-110">🍷</span>
+//                         <span className="text-7xl transition-transform duration-300 group-hover:scale-110">🌿</span>
 //                     </div>
 
 //                     {/* Wishlist Button */}

@@ -40,7 +40,7 @@ export default function BlogCategoryPage({ params }: { params: Promise<{ slug: s
         <div className="min-h-screen bg-cream">
             {/* Category Header */}
             <section className="relative py-14 md:py-20">
-                <div className="absolute inset-0 wine-gradient opacity-95" />
+                <div className="absolute inset-0 herbal-gradient opacity-95" />
                 <div className="relative max-w-6xl mx-auto px-4 text-center">
                     <nav className="flex items-center justify-center gap-2 text-sm text-white/60 mb-4">
                         <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>

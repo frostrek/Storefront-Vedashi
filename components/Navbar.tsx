@@ -49,18 +49,13 @@ const DEFAULT_CONFIG: HeaderConfig = {
     strip_accent: '#C9B87A',
     cart_badge_bg: '#3B5D3B',
   },
-  nav_links: [
-    { label: 'Home', url: '/', enabled: true },
-    { label: 'Shop', url: '/products', enabled: true },
-    { label: 'Dosha Assessment', url: '/about', enabled: true },
-    { label: 'About', url: '/about', enabled: true },
-  ],
+  nav_links: [],
   strip: {
-    enabled: true,
-    center_message: '✦ Ancient Wisdom for Modern Wellness ✦',
-    hotline: '090 202 5806',
-    show_track_orders: true,
-    show_categories: true,
+    enabled: false,
+    center_message: '',
+    hotline: '',
+    show_track_orders: false,
+    show_categories: false,
   },
 };
 
@@ -76,8 +71,9 @@ export default function Navbar() {
   const { isAuthenticated } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [showCartReminder, setShowCartReminder] = useState(false);
-  const [config, setConfig] = useState<HeaderConfig>(DEFAULT_CONFIG);
   const [scrolled, setScrolled] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [config, setConfig] = useState<HeaderConfig>(DEFAULT_CONFIG);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -105,7 +101,8 @@ export default function Navbar() {
           setConfig(prev => ({ ...DEFAULT_CONFIG, ...data.data }));
         }
       })
-      .catch(() => { /* stay with defaults */ });
+      .catch(() => { /* stay with defaults */ })
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -276,7 +273,7 @@ export default function Navbar() {
 
               {/* LEFT */}
               <div className="flex items-center gap-5">
-                {strip.show_track_orders && (
+                {strip.show_track_orders && !loading && (
                   <Link
                     href="/account"
                     className="font-medium transition-colors duration-200"
@@ -293,7 +290,7 @@ export default function Navbar() {
                 )}
 
                 {/* Categories with Mega Dropdown */}
-                {strip.show_categories && (
+                {strip.show_categories && !loading && (
                   <div className="relative group flex items-center h-9">
                     <button
                       className="flex items-center gap-1 font-medium cursor-pointer transition-colors duration-200"

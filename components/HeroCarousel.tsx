@@ -259,7 +259,7 @@ export default function HeroCarousel() {
                                     goTo(targetIndex);
                                 }}
                                 className={`rounded-full transition-all duration-300 ${isActive
-                                    ? 'bg-wine-gold w-6 h-2'
+                                    ? 'bg-vedic-gold w-6 h-2'
                                     : 'bg-white/40 hover:bg-white/70 w-2 h-2'
                                     }`}
                             />
