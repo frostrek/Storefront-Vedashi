@@ -13,7 +13,7 @@ import { useCurrency } from '@/context/CurrencyContext';
 import { Address } from '@/types';
 import { COUNTRIES } from '@/lib/countries';
 import Select from 'react-select';
-import { CheckCircle, Loader2, MapPin, CreditCard, Banknote, ShieldCheck, AlertTriangle, ArrowLeft, Leaf, ChevronRight, Lock, Ticket, Globe } from 'lucide-react';
+import { CheckCircle, Loader2, MapPin, CreditCard, Banknote, ShieldCheck, AlertTriangle, ArrowLeft, Leaf, ChevronRight, Lock, Ticket, Globe, Info } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
@@ -155,6 +155,9 @@ function CheckoutContent() {
     // Loyalty UI
     const [wallet, setWallet] = useState<any>(null);
     const [redeemPoints, setRedeemPoints] = useState<string>('');
+
+    // Tax Tooltip UI
+    const [showTaxTooltip, setShowTaxTooltip] = useState(false);
 
 
     useEffect(() => {
@@ -1035,8 +1038,36 @@ function CheckoutContent() {
                                         <span className="value">{shippingCost === 0 ? 'FREE' : formatPrice(shippingCost)}</span>
                                     </div>
                                     {totalTaxes > 0 && (
-                                        <div className="ritual-summary-row">
-                                            <span className="label">Federal Tax</span>
+                                        <div className="ritual-summary-row relative">
+                                            <span className="label flex items-center gap-1.5">
+                                                Federal Tax
+                                                <div className="relative group inline-block">
+                                                    <button
+                                                        type="button"
+                                                        className="text-[rgba(255,255,255,0.4)] hover:text-white transition-colors focus:outline-none"
+                                                        onMouseEnter={() => setShowTaxTooltip(true)}
+                                                        onMouseLeave={() => setShowTaxTooltip(false)}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setShowTaxTooltip(!showTaxTooltip);
+                                                        }}
+                                                        aria-label="Tax information"
+                                                    >
+                                                        <Info size={14} className="cursor-help" />
+                                                    </button>
+                                                    
+                                                    {/* Tooltip */}
+                                                    <div 
+                                                        className={`absolute bottom-full left-0 mb-3 w-56 p-3 bg-[#1A1B16] text-white text-[11px] leading-relaxed rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] border border-[rgba(255,255,255,0.1)] transition-all duration-300 pointer-events-none z-50 ${showTaxTooltip ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-2 scale-95 md:group-hover:opacity-100 md:group-hover:translate-y-0 md:group-hover:scale-100'}`}
+                                                        style={{ left: '-10px' }}
+                                                    >
+                                                        <div className="relative z-10">
+                                                            Taxes are calculated based on your shipping address and applicable government regulations.
+                                                        </div>
+                                                        <div className="absolute top-[98%] left-[18px] border-[6px] border-transparent border-t-[#1A1B16]" />
+                                                    </div>
+                                                </div>
+                                            </span>
                                             <span className="value">{formatPrice(totalTaxes)}</span>
                                         </div>
                                     )}
