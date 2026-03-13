@@ -26,14 +26,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  async rewrites() {
-    return [
-      {
-        source: '/product/:slug',
-        destination: '/products/:slug',
-      },
-    ];
-  },
 };
 
 export default withNextIntl(nextConfig);

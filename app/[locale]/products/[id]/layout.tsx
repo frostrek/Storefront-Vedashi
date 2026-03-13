@@ -106,7 +106,7 @@ async function ProductJsonLd({ paramsPromise }: { paramsPromise: Promise<{ id: s
     if (product.category) {
         breadcrumbItems.push({ name: product.category, url: `${SITE_URL}/products?category=${encodeURIComponent(product.category)}` });
     }
-    breadcrumbItems.push({ name: product.product_name, url: `${SITE_URL}/product/${product.slug || product.product_id}` });
+    breadcrumbItems.push({ name: product.product_name, url: `${SITE_URL}/products/${product.slug || product.product_id}` });
 
     const breadcrumbJsonLd = generateBreadcrumbJsonLd(breadcrumbItems);
 

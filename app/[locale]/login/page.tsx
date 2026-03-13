@@ -391,14 +391,9 @@ function LoginContent() {
             {/* ── Left Column ── */}
             <div className="relative z-10 flex-1 flex flex-col h-full lg:pr-8">
                 {/* ── Top Navbar ── */}
-                <nav className="flex items-center justify-between px-8 py-6 flex-shrink-0">
+                <nav className="flex items-center justify-between px-6 py-2 flex-shrink-0">
                     <a href="/">
-                        <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-lg bg-white/15 backdrop-blur-sm flex items-center justify-center border border-white/20">
-                                <Leaf className="w-4 h-4 text-white" />
-                            </div>
-                            <span className="text-white font-serif text-lg font-semibold tracking-wide">VEDASHI</span>
-                        </div>
+                        <img src="/vedashi-logo.png" alt="Vedashi" className="h-14 sm:h-16 md:h-20 w-auto object-contain brightness-0 invert" />
                     </a>
                     <div className="flex items-center gap-4">
                         {/* Intentionally removed the 'Don't have an account' text and 'Sign Up' button */}
@@ -528,15 +523,10 @@ function LoginContent() {
 
                                 {/* Password */}
                                 <div className="mb-3">
-                                    <div className="flex items-center justify-between mb-2">
+                                    <div className="mb-2">
                                         <label className="block text-xs font-semibold text-[#3d3d3d] uppercase tracking-wider">
                                             Password
                                         </label>
-                                        {!isRegister && (
-                                            <Link href="/forgot-password" className="text-xs font-semibold text-[#2d5a2d] hover:underline transition-colors cursor-pointer">
-                                                Forgot Password?
-                                            </Link>
-                                        )}
                                     </div>
                                     <div className="relative">
                                         <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ab09a]" />
@@ -558,6 +548,13 @@ function LoginContent() {
                                             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                         </button>
                                     </div>
+                                    {!isRegister && (
+                                        <div className="flex justify-end mt-1.5">
+                                            <Link href="/forgot-password" className="text-xs font-semibold text-[#2d5a2d] hover:underline transition-colors cursor-pointer">
+                                                Forgot Password?
+                                            </Link>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Terms checkbox */}

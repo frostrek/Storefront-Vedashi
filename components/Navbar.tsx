@@ -19,6 +19,7 @@ interface Category {
 }
 
 interface HeaderConfig {
+  settings?: { use_backend_navbar: boolean; };
   branding: { logo_url: string; logo_alt: string; };
   colors: {
     navbar_bg: string;
@@ -50,7 +51,14 @@ const DEFAULT_CONFIG: HeaderConfig = {
     strip_accent: '#C9B87A',
     cart_badge_bg: '#3B5D3B',
   },
-  nav_links: [],
+  nav_links: [
+    { label: 'Home', url: '/', enabled: true },
+    { label: 'Shop', url: '/products', enabled: true },
+    { label: 'About Us', url: '/about', enabled: true },
+    { label: 'Contact', url: '/contact', enabled: true },
+    { label: 'Blog', url: '/blog', enabled: true },
+    { label: 'Help', url: '/help-center', enabled: true },
+  ],
   strip: {
     enabled: false,
     center_message: '',
@@ -100,7 +108,13 @@ export default function Navbar() {
       .then(r => r.json())
       .then(data => {
         if (data.success && data.data) {
-          setConfig(prev => ({ ...DEFAULT_CONFIG, ...data.data }));
+          if (data.data.settings?.use_backend_navbar === false) {
+            // Revert/Keep default hardcoded config
+            setConfig(DEFAULT_CONFIG);
+          } else {
+            // Overlay backend config on defaults
+            setConfig(prev => ({ ...DEFAULT_CONFIG, ...data.data }));
+          }
         }
       })
       .catch(() => { /* stay with defaults */ })
@@ -138,33 +152,27 @@ export default function Navbar() {
       {/* ═══════════════ MAIN NAVBAR ═══════════════ */}
       <div
         className={`border-b transition-all duration-500 ${scrolled
-            ? 'bg-white/80 backdrop-blur-xl border-[#3B5D3B]/10 shadow-[0_2px_20px_rgba(59,93,59,0.08)]'
-            : 'bg-white border-gray-200 shadow-sm'
+          ? 'bg-white/80 backdrop-blur-xl border-[#3B5D3B]/10 shadow-[0_2px_20px_rgba(59,93,59,0.08)]'
+          : 'bg-white border-gray-200 shadow-sm'
           }`}
       >
         <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
-          <div className="flex h-16 items-center justify-between">
+          <div className="flex h-16 items-center justify-between relative">
 
             {/* Logo */}
-            <Link href="/" className="flex-shrink-0 flex items-center gap-2">
-              {branding.logo_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={branding.logo_url} alt={branding.logo_alt} className="h-14 sm:h-16 md:h-20 w-auto object-contain" />
-              ) : (
-                <span className="flex items-center gap-2">
-                  <svg width="28" height="28" viewBox="0 0 32 32" fill="none" className="text-[#3B5D3B]">
-                    <path d="M16 2C16 2 8 8 8 16C8 20.4 11.6 24 16 24C20.4 24 24 20.4 24 16C24 8 16 2 16 2Z" fill="currentColor" opacity="0.2" />
-                    <path d="M16 4C16 4 10 9 10 16C10 19.3 12.7 22 16 22C19.3 22 22 19.3 22 16C22 9 16 4 16 4Z" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                    <path d="M16 8V18" stroke="currentColor" strokeWidth="1.2" />
-                    <path d="M13 12C13 12 14.5 14 16 14C17.5 14 19 12 19 12" stroke="currentColor" strokeWidth="1" fill="none" />
-                  </svg>
-                  <span className="font-serif text-xl sm:text-2xl font-bold tracking-wide" style={{ color: '#3B5D3B' }}>Vedashi</span>
-                </span>
-              )}
-            </Link>
+            <div className="flex-1 flex items-center justify-start">
+              <Link href="/" className="flex-shrink-0 flex items-center gap-2">
+                {branding.logo_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={branding.logo_url} alt={branding.logo_alt} className="h-14 sm:h-16 md:h-20 w-auto object-contain" />
+                ) : (
+                  <img src="/vedashi-logo.png" alt="Vedashi" className="h-14 sm:h-16 md:h-20 w-auto object-contain" />
+                )}
+              </Link>
+            </div>
 
             {/* Center Nav Links */}
-            <nav className="hidden md:flex items-center gap-8">
+            <nav className="hidden md:flex flex-shrink-0 items-center justify-center gap-8 mx-4">
               {visibleLinks.map(link => (
                 <Link
                   key={link.label}
@@ -180,7 +188,7 @@ export default function Navbar() {
             </nav>
 
             {/* Right Icons + Search */}
-            <div className="flex items-center gap-1 sm:gap-2 relative">
+            <div className="flex-1 flex items-center justify-end gap-1 sm:gap-2 relative">
               {/* Desktop Search */}
               <div className="hidden md:block relative">
                 {searchOpen ? (

@@ -140,15 +140,25 @@ export default async function LocaleLayout({
                     <Toaster
                       position="bottom-right"
                       toastOptions={{
+                        duration: 3500,
+                        className: 'modern-toast',
                         style: {
-                          background: '#2D2926',
-                          color: '#FAF7F2',
-                          borderRadius: '12px',
-                          fontSize: '14px',
+                          background: 'rgba(255, 255, 255, 0.95)',
+                          backdropFilter: 'blur(12px)',
+                          color: '#2D2926',
+                          borderRadius: '14px',
+                          fontSize: '13px',
+                          fontWeight: '600',
+                          padding: '8px 16px',
+                          boxShadow: '0 8px 30px rgba(0, 0, 0, 0.08)',
+                          border: '1px solid rgba(255, 255, 255, 0.5)',
                         },
                         success: {
-                          iconTheme: { primary: '#722F37', secondary: '#FAF7F2' },
+                          iconTheme: { primary: '#3d5c3a', secondary: '#fff' },
                         },
+                        error: {
+                          iconTheme: { primary: '#ef4444', secondary: '#fff' },
+                        }
                       }}
                     />
                     <Navbar />

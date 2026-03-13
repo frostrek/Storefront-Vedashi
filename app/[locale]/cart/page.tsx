@@ -140,7 +140,7 @@ export default function CartPage() {
                                     return (
                                         <div key={item.cart_item_id} className="cart-item-card flex flex-col sm:flex-row gap-6">
                                             {/* Image */}
-                                            <Link href={`/product/${(item as any).slug || item.product_id || item.product?.product_id || ''}`} className="cart-item-img flex-shrink-0">
+                                            <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img flex-shrink-0">
                                                 {item.image_url ? (
                                                     <img src={item.image_url} alt={item.product_name || ''} />
                                                 ) : (
@@ -151,7 +151,7 @@ export default function CartPage() {
                                             <div className="flex-1 flex flex-col justify-between">
                                                 <div className="flex justify-between items-start">
                                                     <div>
-                                                        <Link href={`/product/${(item as any).slug || item.product_id || item.product?.product_id || ''}`}>
+                                                        <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
                                                             <h3 className="cart-item-title text-lg font-bold">{item.product_name || 'Product'}</h3>
                                                         </Link>
                                                         {item.size_label && (
@@ -206,11 +206,13 @@ export default function CartPage() {
                                         const price = item.price ?? 0;
                                         return (
                                             <div key={item.cart_item_id} className="cart-item-card flex items-center gap-4 bg-[#FAFAFA] opacity-80 hover:opacity-100">
-                                                <Link href={`/product/${(item as any).slug || item.product_id || item.product?.product_id || ''}`} className="cart-item-img w-16 h-16 rounded-lg flex-shrink-0">
+                                                <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img w-16 h-16 rounded-lg flex-shrink-0">
                                                     {item.image_url ? <img src={item.image_url} alt="" /> : <span className="text-xl">🌿</span>}
                                                 </Link>
                                                 <div className="flex-1">
-                                                    <h3 className="text-sm font-bold text-[#1A1A1A]">{item.product_name || 'Product'}</h3>
+                                                    <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
+                                                        <h3 className="text-sm font-bold text-[#1A1A1A] hover:text-[#3d5c3a] transition-colors">{item.product_name || 'Product'}</h3>
+                                                    </Link>
                                                     <p className="font-serif text-[#4A4A4A] mt-1">{formatVND(price)}</p>
                                                 </div>
                                                 <div className="flex flex-col items-end gap-2">

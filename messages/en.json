@@ -140,6 +140,7 @@
   },
   "Product": {
     "addToCart": "Add to Cart",
+    "addedToBag": "Added to Bag",
     "updateCart": "Update Cart",
     "buyNow": "Buy It Now",
     "previewOptions": "Preview Options",

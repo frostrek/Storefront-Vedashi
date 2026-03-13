@@ -7,16 +7,16 @@
 /* ─── Layout ─── */
 
 .galleryContainer {
-    display: grid;
-    grid-template-columns: 88px 1fr;
-    gap: 16px;
     width: 100%;
     position: relative;
+    display: flex;
+    flex-direction: column;
 }
 
 @media (max-width: 768px) {
     .galleryContainer {
-        grid-template-columns: 1fr;
+        display: flex;
+        flex-direction: column;
         gap: 10px;
     }
 }
@@ -26,12 +26,37 @@
 .thumbStrip {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    max-height: 560px;
+    gap: 12px;
+    max-height: 100%;
     overflow-y: auto;
-    padding-right: 4px;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(128, 0, 32, 0.12) transparent;
+    padding: 8px;
+    scrollbar-width: none;
+    position: absolute;
+    top: 0;
+    left: -100px; /* Move outside the frame to the left */
+    z-index: 10;
+    width: 84px;
+    background: rgba(255, 255, 255, 0.6); /* Slightly more opaque */
+    backdrop-filter: blur(8px);
+    border-radius: 16px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+@media (max-width: 1400px) {
+    .thumbStrip {
+        left: -90px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .thumbStrip {
+        left: 0; /* Fallback to overlay if space is tight */
+        background: rgba(255, 255, 255, 0.4);
+    }
+}
+
+.thumbStrip::-webkit-scrollbar {
+    display: none;
 }
 
 .thumbStrip::-webkit-scrollbar {
@@ -49,32 +74,34 @@
 
 @media (max-width: 768px) {
     .thumbStrip {
+        position: static;
         flex-direction: row;
+        width: 100%;
         max-height: none;
         overflow-x: auto;
         overflow-y: hidden;
-        padding-right: 0;
-        padding-bottom: 6px;
+        padding: 4px 0 10px;
         order: 2;
         -webkit-overflow-scrolling: touch;
         scroll-snap-type: x mandatory;
-        gap: 8px;
+        gap: 10px;
     }
 }
 
 .thumbBtn {
     flex-shrink: 0;
-    width: 78px;
-    height: 78px;
+    width: 68px;
+    height: 68px;
     border-radius: 12px;
-    border: 2px solid #eee;
-    background: #fff;
+    border: 1px solid rgba(61, 92, 58, 0.1);
+    background: rgba(255, 255, 255, 0.85);
     cursor: pointer;
     overflow: hidden;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    padding: 5px;
+    padding: 3px;
     scroll-snap-align: start;
     position: relative;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
 }
 
 .thumbBtn::after {
@@ -497,8 +524,7 @@
     transform: scale(1);
 }
 
-/* ─── Single Image (no thumbnails) ─── */
-
+/* ─── Single Image ─── */
 .singleImageLayout {
-    grid-template-columns: 1fr;
+    /* Maintained for consistent component logic */
 }

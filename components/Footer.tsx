@@ -72,13 +72,7 @@ export default function Footer() {
                     {/* Brand column */}
                     <div>
                         <Link href="/" className="flex items-center gap-2 mb-4 group">
-                            <svg width="28" height="28" viewBox="0 0 32 32" fill="none" className="text-[#3B5D3B]">
-                                <path d="M16 2C16 2 8 8 8 16C8 20.4 11.6 24 16 24C20.4 24 24 20.4 24 16C24 8 16 2 16 2Z" fill="currentColor" opacity="0.15" />
-                                <path d="M16 4C16 4 10 9 10 16C10 19.3 12.7 22 16 22C19.3 22 22 19.3 22 16C22 9 16 4 16 4Z" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                                <path d="M16 8V18" stroke="currentColor" strokeWidth="1.2" />
-                                <path d="M13 12C13 12 14.5 14 16 14C17.5 14 19 12 19 12" stroke="currentColor" strokeWidth="1" fill="none" />
-                            </svg>
-                            <span className="font-serif text-2xl font-bold tracking-wide text-[#3B5D3B]">Vedashi</span>
+                            <img src="/vedashi-logo.png" alt="Vedashi" className="h-16 w-auto object-contain" />
                         </Link>
                         <p className="text-sm leading-relaxed text-[#6b6b6b] max-w-[260px]">
                             {t('brandDescription')}

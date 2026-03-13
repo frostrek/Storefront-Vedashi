@@ -116,7 +116,7 @@ export function buildProductMeta(product: ProductSeoInput): Metadata {
     const seo = product.seo;
     const title = seo?.meta_title || productFallbackTitle(product);
     const description = seo?.meta_description || productFallbackDescription(product);
-    const canonical = seo?.canonical_url || `${SITE_URL}/product/${product.slug || product.product_id}`;
+    const canonical = seo?.canonical_url || `${SITE_URL}/products/${product.slug || product.product_id}`;
     const ogImage = seo?.og_image || product.thumbnail_url || DEFAULT_OG_IMAGE;
     const keywords = seo?.meta_keywords || [product.product_name, product.brand, product.category, SITE_NAME].filter(Boolean).join(', ');
 
@@ -223,7 +223,7 @@ export function generateProductJsonLd(product: ProductSeoInput): Record<string, 
         description: product.description || productFallbackDescription(product),
         sku,
         image: Array.from(imageSet),
-        url: `${SITE_URL}/product/${product.slug || product.product_id}`,
+        url: `${SITE_URL}/products/${product.slug || product.product_id}`,
         offers: {
             '@type': 'Offer',
             price: price,
@@ -231,7 +231,7 @@ export function generateProductJsonLd(product: ProductSeoInput): Record<string, 
             availability: inStock
                 ? 'https://schema.org/InStock'
                 : 'https://schema.org/OutOfStock',
-            url: `${SITE_URL}/product/${product.slug || product.product_id}`,
+            url: `${SITE_URL}/products/${product.slug || product.product_id}`,
         },
     };
 

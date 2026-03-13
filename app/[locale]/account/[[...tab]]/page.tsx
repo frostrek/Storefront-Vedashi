@@ -873,7 +873,7 @@ export default function AccountPage() {
 
                                             <div className="space-y-4">
                                                 {wishlistItems.slice(0, 4).map((item: any) => (
-                                                    <div key={item.product_id} className="flex gap-4 group cursor-pointer" onClick={() => router.push(`/product/${item.slug || item.product_id}`)}>
+                                                    <div key={item.product_id} className="flex gap-4 group cursor-pointer" onClick={() => router.push(`/products/${item.slug || item.product_id}`)}>
                                                         <div className="h-16 w-16 bg-[#F8F5F0] rounded-xl border border-[#E8E1D5] flex items-center justify-center p-2 flex-shrink-0 overflow-hidden">
                                                             {item.primary_image_url ? (
                                                                 // eslint-disable-next-line @next/next/no-img-element
@@ -1520,7 +1520,7 @@ export default function AccountPage() {
                                                     </div>
 
                                                     {/* Product Image */}
-                                                    <div className="aspect-[4/5] w-full rounded-2xl overflow-hidden bg-[#F8F5F0] mb-5 relative cursor-pointer" onClick={() => router.push(`/product/${product.slug || product.product_id}`)}>
+                                                    <div className="aspect-[4/5] w-full rounded-2xl overflow-hidden bg-[#F8F5F0] mb-5 relative cursor-pointer" onClick={() => router.push(`/products/${product.slug || product.product_id}`)}>
                                                         {product.images && product.images[0] ? (
                                                             // eslint-disable-next-line @next/next/no-img-element
                                                             <img src={product.images[0]} alt={product.product_name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
@@ -1532,7 +1532,7 @@ export default function AccountPage() {
                                                     {/* Details */}
                                                     <div className="flex flex-col flex-1 px-1">
                                                         <div className="flex items-start justify-between gap-3 mb-1">
-                                                            <h3 className="font-serif text-base font-bold text-[#36453A] leading-snug cursor-pointer hover:underline" onClick={() => router.push(`/product/${product.slug || product.product_id}`)}>
+                                                            <h3 className="font-serif text-base font-bold text-[#36453A] leading-snug cursor-pointer hover:underline" onClick={() => router.push(`/products/${product.slug || product.product_id}`)}>
                                                                 {product.product_name}
                                                             </h3>
                                                             <span className="font-bold text-[#36453A] whitespace-nowrap">${product.price}</span>
@@ -1613,7 +1613,7 @@ export default function AccountPage() {
 
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                                             {recommendedProducts.map(product => (
-                                                <div key={product.product_id} className="group relative flex flex-col rounded-[20px] bg-white transition-all hover:shadow-md cursor-pointer overflow-hidden p-2" onClick={() => router.push(`/product/${product.slug || product.product_id}`)}>
+                                                <div key={product.product_id} className="group relative flex flex-col rounded-[20px] bg-white transition-all hover:shadow-md cursor-pointer overflow-hidden p-2" onClick={() => router.push(`/products/${product.slug || product.product_id}`)}>
                                                     {/* Product Image Box */}
                                                     <div className="aspect-[4/5] w-full rounded-[14px] overflow-hidden bg-[#F8F5F0] relative">
                                                         {product.images && product.images[0] ? (

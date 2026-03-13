@@ -131,13 +131,19 @@ function ProductDetailContent({ params }: Props) {
                 const vs = data.variants;
                 setVariants(vs);
 
-                // Pick the default variant (is_default=true), falling back to first
-                const defaultV = vs.find((v: any) => v.is_default === true) || vs[0];
-                const firstSize = defaultV?.size_label ?? null;
-                const firstPack = defaultV?.pack_quantity ?? 1;
-                setSelectedSize(firstSize);
-                setSelectedPack(firstPack);
-                setSelectedVariant(defaultV);
+                const requestedVariantId = searchParams.get('variant');
+                const matchedVariant = requestedVariantId 
+                    ? vs.find((v: any) => v.variant_id === requestedVariantId)
+                    : null;
+
+                // Pick requested variant, or default (is_default=true), falling back to first
+                const targetV = matchedVariant || vs.find((v: any) => v.is_default === true) || vs[0];
+                
+                const targetSize = targetV?.size_label ?? null;
+                const targetPack = targetV?.pack_quantity ?? 1;
+                setSelectedSize(targetSize);
+                setSelectedPack(targetPack);
+                setSelectedVariant(targetV);
             }
 
             setLoading(false);
@@ -242,7 +248,7 @@ function ProductDetailContent({ params }: Props) {
 
         // If user is NOT signed in, redirect to login with a return URL
         if (!isAuthenticated) {
-            const returnUrl = `/product/${product.slug || product.product_id}?buyNow=true`;
+            const returnUrl = `/products/${product.slug || product.product_id}?buyNow=true`;
             router.push(`/login?redirect=${encodeURIComponent(returnUrl)}`);
             return;
         }
@@ -275,7 +281,7 @@ function ProductDetailContent({ params }: Props) {
                         { name: 'Home', url: '/' },
                         { name: 'Shop', url: '/products' },
                         { name: product.category || 'Category', url: `/categories/${encodeURIComponent((product.category || '').toLowerCase().replace(/\s+/g, '-'))}` },
-                        { name: product.product_name, url: `/product/${product.slug || product.product_id}` },
+                        { name: product.product_name, url: `/products/${product.slug || product.product_id}` },
                     ]))
                 }}
             />
