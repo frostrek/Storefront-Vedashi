@@ -30,17 +30,41 @@ const LANGUAGES = [
  * Removing elements from the DOM breaks translation, so we only visually hide them.
  */
 function hideGoogleToolbar() {
-  // Hide the banner iframe via style
-  document.querySelectorAll('.goog-te-banner-frame').forEach(el => {
+  // Hide the banner iframe
+  document.querySelectorAll('.goog-te-banner-frame, .goog-te-banner-frame.skiptranslate, iframe.goog-te-banner-frame').forEach(el => {
     const iframe = el as HTMLElement;
     iframe.style.setProperty('display', 'none', 'important');
     iframe.style.setProperty('visibility', 'hidden', 'important');
     iframe.style.setProperty('height', '0', 'important');
   });
-  // Reset the body top offset that Google pushes
-  if (document.body.style.top && document.body.style.top !== '0px') {
-    document.body.style.top = '0px';
-  }
+
+  // Hide the top notification bar ("Translated into: Russian | Show original")
+  document.querySelectorAll('.skiptranslate').forEach(el => {
+    const elem = el as HTMLElement;
+    // Don't hide our own hidden container
+    if (elem.id === 'gtranslate-hidden') return;
+    // Only hide top-level skiptranslate divs (not nested ones that might break things)
+    if (elem.tagName === 'DIV' && elem.classList.contains('skiptranslate')) {
+      elem.style.setProperty('display', 'none', 'important');
+      elem.style.setProperty('height', '0', 'important');
+      elem.style.setProperty('visibility', 'hidden', 'important');
+      elem.style.setProperty('opacity', '0', 'important');
+      elem.style.setProperty('overflow', 'hidden', 'important');
+    }
+  });
+
+  // Hide Google's notification container by known class names
+  document.querySelectorAll(
+    '.VIpgJd-ZVi9od-aZ2wEe-wOHMyf, .VIpgJd-ZVi9od-aZ2wEe-wOHMyf-ti6hGc, #goog-gt-tt, .goog-te-menu-value'
+  ).forEach(el => {
+    (el as HTMLElement).style.setProperty('display', 'none', 'important');
+  });
+
+  // Reset the body layout shift that Google pushes
+  document.body.style.setProperty('top', '0px', 'important');
+  document.body.style.setProperty('margin-top', '0px', 'important');
+  document.body.style.setProperty('padding-top', '0px', 'important');
+  document.body.style.setProperty('position', '', '');
 }
 
 export default function GoogleTranslateWidget() {
@@ -85,7 +109,7 @@ export default function GoogleTranslateWidget() {
     const interval = setInterval(hideGoogleToolbar, 300);
     // Also react to DOM mutations
     const observer = new MutationObserver(hideGoogleToolbar);
-    observer.observe(document.body, { childList: true, subtree: false });
+    observer.observe(document.body, { childList: true, subtree: false, attributes: true, attributeFilter: ['style', 'class'] });
 
     return () => {
       clearInterval(interval);
@@ -128,6 +152,52 @@ export default function GoogleTranslateWidget() {
 
   return (
     <>
+      <style suppressHydrationWarning>{`
+        /* Aggressively hide ALL Google Translate UI elements */
+        .goog-te-banner-frame,
+        .goog-te-banner-frame.skiptranslate,
+        iframe.goog-te-banner-frame,
+        .skiptranslate:not(#gtranslate-hidden),
+        div.skiptranslate,
+        .VIpgJd-ZVi9od-aZ2wEe-wOHMyf,
+        .VIpgJd-ZVi9od-aZ2wEe-wOHMyf-ti6hGc {
+          display: none !important;
+          height: 0 !important;
+          max-height: 0 !important;
+          visibility: hidden !important;
+          box-shadow: none !important;
+          overflow: hidden !important;
+          opacity: 0 !important;
+          pointer-events: none !important;
+          position: fixed !important;
+          top: -9999px !important;
+          left: -9999px !important;
+        }
+
+        /* Prevent Google from pushing the body down */
+        body {
+          top: 0px !important;
+          margin-top: 0px !important;
+          padding-top: 0px !important;
+        }
+
+        /* Hide tooltips, highlights, and other unwanted Google UI elements */
+        #goog-gt-tt,
+        .goog-te-menu-value,
+        .goog-te-spinner-pos,
+        .goog-tooltip,
+        .goog-tooltip:hover,
+        #google_translate_element2,
+        .goog-te-ftab-link {
+          display: none !important;
+        }
+
+        .goog-text-highlight {
+          background: none !important;
+          box-shadow: none !important;
+        }
+      `}</style>
+      
       {/* Google Translate's actual element — visually hidden but in the DOM */}
       <div
         id="gtranslate-hidden"
@@ -271,3 +341,4 @@ export default function GoogleTranslateWidget() {
     </>
   );
 }
+

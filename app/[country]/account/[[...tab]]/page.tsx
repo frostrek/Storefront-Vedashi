@@ -11,9 +11,10 @@ import {
     getCustomerProfile, updateCustomerProfile, deactivateAccount,
     uploadProfileImage, getProfileImage, removeProfileImage, getOrderById,
     cancelOrder as apiCancelOrder, formatVND, downloadInvoice, getBestSellers,
-    getMyEnquiries, replyToEnquiry, getLoyaltyWallet,
-    getMyNotifications, getUnreadNotificationCount, markNotificationAsRead, 
-    markAllNotificationsAsRead, deleteNotification
+    getMyEnquiries, replyToEnquiry, changePassword,
+    requestEmailChange, verifyEmailChangeProfile,
+    getLoyaltyWallet, getMyNotifications, getUnreadNotificationCount,
+    markNotificationAsRead, markAllNotificationsAsRead, deleteNotification
 } from '@/lib/api';
 import { Order, Address } from '@/types';
 import {
@@ -133,8 +134,25 @@ export default function AccountPage() {
     const [profileSaving, setProfileSaving] = useState(false);
     const [profileData, setProfileData] = useState({
         full_name: '', email: '', phone: '', date_of_birth: '',
-        is_email_verified: false, is_mobile_verified: false,
+        is_email_verified: false, is_mobile_verified: false, has_password: false,
     });
+    const [originalEmail, setOriginalEmail] = useState('');
+
+    // Email OTP modal state
+    const [showEmailOtpModal, setShowEmailOtpModal] = useState(false);
+    const [emailOtpCode, setEmailOtpCode] = useState('');
+    const [emailOtpSubmitting, setEmailOtpSubmitting] = useState(false);
+    const [emailOtpResendTimer, setEmailOtpResendTimer] = useState(0);
+
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (showEmailOtpModal && emailOtpResendTimer > 0) {
+            interval = setInterval(() => {
+                setEmailOtpResendTimer(prev => prev - 1);
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [showEmailOtpModal, emailOtpResendTimer]);
 
     // Profile image state
     const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
@@ -170,9 +188,14 @@ export default function AccountPage() {
     // Export orders modal state
     const [showExportModal, setShowExportModal] = useState(false);
 
+    // Password change state
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
+    const [passwordChanging, setPasswordChanging] = useState(false);
+
     // Body scroll lock for modals
     useEffect(() => {
-        if (isTrackOrderModalOpen || showDeactivateModal || deletingAddressId || cancellingOrderId || reviewModal || showNotificationOverlay || showExportModal) {
+        if (isTrackOrderModalOpen || showDeactivateModal || deletingAddressId || cancellingOrderId || reviewModal || showNotificationOverlay || showExportModal || showPasswordModal || showEmailOtpModal) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = 'unset';
@@ -180,7 +203,7 @@ export default function AccountPage() {
         return () => {
             document.body.style.overflow = 'unset';
         };
-    }, [isTrackOrderModalOpen, showDeactivateModal, deletingAddressId, cancellingOrderId, reviewModal, showNotificationOverlay, showExportModal]);
+    }, [isTrackOrderModalOpen, showDeactivateModal, deletingAddressId, cancellingOrderId, reviewModal, showNotificationOverlay, showExportModal, showPasswordModal, showEmailOtpModal]);
 
     useEffect(() => {
         if (!isLoading && !isAuthenticated) {
@@ -228,14 +251,17 @@ export default function AccountPage() {
         try {
             const res = await getCustomerProfile(user.id);
             if (res.success && res.data) {
+                const fetchedEmail = res.data.email || '';
                 setProfileData({
                     full_name: res.data.full_name || '',
-                    email: res.data.email || '',
+                    email: fetchedEmail,
                     phone: res.data.phone || '',
                     date_of_birth: res.data.date_of_birth ? res.data.date_of_birth.split('T')[0] : '',
                     is_email_verified: !!res.data.is_email_verified,
                     is_mobile_verified: !!res.data.is_mobile_verified,
+                    has_password: !!res.data.has_password,
                 });
+                setOriginalEmail(fetchedEmail);
             }
         } catch (err) {
             console.error('Failed to fetch profile:', err);
@@ -248,8 +274,13 @@ export default function AccountPage() {
         try {
             const res = await getProfileImage(user.id);
             if (res.success && res.data?.profile_image) {
-                const mime = res.data.mime_type || 'image/jpeg';
-                setProfileImageUrl(`data:${mime};base64,${res.data.profile_image}`);
+                const imgData = res.data.profile_image;
+                if (imgData.startsWith('data:')) {
+                    setProfileImageUrl(imgData);
+                } else {
+                    const mime = res.data.mime_type || 'image/jpeg';
+                    setProfileImageUrl(`data:${mime};base64,${imgData}`);
+                }
             }
         } catch {
             // No image or error, stay with fallback
@@ -273,7 +304,6 @@ export default function AccountPage() {
     useEffect(() => {
         if (selectedEnquiry && enquiries.length > 0) {
             const updated = enquiries.find((e: any) => e.feedback_id === selectedEnquiry.feedback_id);
-            // Only update if something actually changed (to prevent unnecessary re-renders)
             if (updated && (updated.status !== selectedEnquiry.status || updated.replies?.length !== selectedEnquiry.replies?.length)) {
                 setSelectedEnquiry(updated);
             }
@@ -377,10 +407,31 @@ export default function AccountPage() {
         if (!user?.id) return;
         setProfileSaving(true);
         try {
-            const res = await updateCustomerProfile(user.id, profileData);
+            // Check if email was changed
+            if (profileData.email !== originalEmail) {
+                const reqRes = await requestEmailChange(profileData.email);
+                if (reqRes.success) {
+                    toast.success(reqRes.message || 'Verification code sent to your new email');
+                    setShowEmailOtpModal(true);
+                    setEmailOtpResendTimer(60);
+                    setProfileSaving(false);
+                    return; // Return and wait for OTP verification
+                } else {
+                    toast.error(reqRes.message || 'Failed to request email change');
+                    setProfileSaving(false);
+                    return;
+                }
+            }
+
+            // Strip out non-DB fields
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { has_password, is_email_verified, is_mobile_verified, email, ...updateData } = profileData;
+            
+            const res = await updateCustomerProfile(user.id, updateData);
             if (res.success) {
                 toast.success('Profile updated successfully');
                 setProfileEditing(false);
+                fetchProfile(); // refresh data
             } else {
                 toast.error(res.message || 'Failed to update profile');
             }
@@ -388,6 +439,88 @@ export default function AccountPage() {
             toast.error('Server error. Please try again.');
         } finally {
             setProfileSaving(false);
+        }
+    };
+
+    const handleResendEmailOtp = async () => {
+        if (emailOtpResendTimer > 0) return;
+        
+        try {
+            const reqRes = await requestEmailChange(profileData.email);
+            if (reqRes.success) {
+                toast.success('A new verification code has been sent');
+                setEmailOtpResendTimer(60);
+            } else {
+                toast.error(reqRes.message || 'Failed to resend code');
+            }
+        } catch {
+            toast.error('Server error');
+        }
+    };
+
+    const handleEmailOtpSubmit = async () => {
+        if (!emailOtpCode) {
+            toast.error('Please enter the OTP');
+            return;
+        }
+        
+        setEmailOtpSubmitting(true);
+        try {
+            const res = await verifyEmailChangeProfile(emailOtpCode);
+            if (res.success) {
+                toast.success('Email updated successfully');
+                setShowEmailOtpModal(false);
+                setEmailOtpCode('');
+                setEmailOtpResendTimer(0);
+                
+                // Continue to update the rest of the profile if it was being edited
+                if (!user?.id) return;
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const { has_password, is_email_verified, is_mobile_verified, email, ...updateData } = profileData;
+                const profileRes = await updateCustomerProfile(user.id, updateData);
+                
+                if (profileRes.success) {
+                    toast.success('Profile all updated');
+                    setProfileEditing(false);
+                }
+                
+                fetchProfile();
+            } else {
+                toast.error(res.message || 'Invalid or expired OTP');
+            }
+        } catch {
+            toast.error('Server error. Please try again.');
+        } finally {
+            setEmailOtpSubmitting(false);
+        }
+    };
+
+    const handlePasswordChange = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (passwords.new !== passwords.confirm) {
+            toast.error('Passwords do not match');
+            return;
+        }
+        if (passwords.new.length < 8) {
+            toast.error('Password must be at least 8 characters');
+            return;
+        }
+
+        setPasswordChanging(true);
+        try {
+            const res = await changePassword(passwords.current, passwords.new);
+            if (res.success) {
+                toast.success('Password updated successfully');
+                setShowPasswordModal(false);
+                setPasswords({ current: '', new: '', confirm: '' });
+                fetchProfile(); // refresh has_password status
+            } else {
+                toast.error(res.message || 'Failed to update password');
+            }
+        } catch {
+            toast.error('Server error');
+        } finally {
+            setPasswordChanging(false);
         }
     };
 
@@ -594,12 +727,12 @@ export default function AccountPage() {
     ];
 
     return (
-        <div className="flex h-screen bg-[#F8F5F0] overflow-hidden">
+        <div className="flex min-h-screen bg-[#F8F5F0]">
             {/* Left Sidebar */}
-            <aside className="w-[280px] bg-[#36453A] text-white flex flex-col flex-shrink-0 relative z-20 shadow-[4px_0_24px_rgba(0,0,0,0.12)]">
-                <div className="flex-1 overflow-y-auto px-5 py-8 custom-scrollbar">
+            <aside className="w-[280px] bg-[#36453A] text-white flex flex-col flex-shrink-0 sticky top-0 h-screen z-20 shadow-[4px_0_24px_rgba(0,0,0,0.12)]">
+                <div className="flex-1 px-5 py-4">
                     {/* CORE EXPERIENCE */}
-                    <div className="mb-8">
+                    <div className="mb-4">
                         <p className="text-[10px] font-bold tracking-[0.15em] text-white/50 mb-3 ml-3">CORE EXPERIENCE</p>
                         <ul className="space-y-1">
                             {coreExperienceTabs.map(tab => (
@@ -658,7 +791,7 @@ export default function AccountPage() {
                 </div>
 
                 {/* Bottom Elite Status Card */}
-                <div className="p-5 mt-auto border-t border-white/10">
+                <div className="p-4 mt-auto border-t border-white/10">
                     <div className="bg-white/5 rounded-xl border border-white/10 p-4 mb-4 relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-2 opacity-10">
                             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" className="text-white">
@@ -681,7 +814,7 @@ export default function AccountPage() {
                     </div>
 
                     {/* User Snippet */}
-                    <div className="flex items-center gap-3 p-3 bg-black/20 rounded-xl">
+                    <div className="flex items-center gap-3 p-2 bg-black/20 rounded-xl">
                         <div className="h-9 w-9 rounded-full bg-white/10 flex items-center justify-center overflow-hidden border border-white/20">
                             {profileImageUrl ? (
                                 // eslint-disable-next-line @next/next/no-img-element
@@ -703,7 +836,7 @@ export default function AccountPage() {
             </aside>
 
             {/* Main Content Area */}
-            <main className="flex-1 flex flex-col h-full relative z-10 overflow-hidden">
+            <main className="flex-1 flex flex-col relative z-10">
                 {/* Header */}
                 <header className="h-12 flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-[#E8E1D5] flex items-center justify-between px-8 xl:px-12 sticky top-0 z-20">
                     <div className="flex items-center gap-3 text-sm font-medium">
@@ -728,7 +861,7 @@ export default function AccountPage() {
                 </header>
 
                 {/* Content Roll */}
-                <div className="flex-1 overflow-y-auto px-4 py-8 md:px-8 xl:px-12 custom-scrollbar">
+                <div className="flex-1 px-4 py-8 md:px-8 xl:px-12">
                     <div className="max-w-6xl mx-auto">
 
                         {/* ═══════════════════ OVERVIEW TAB ═══════════════════ */}
@@ -2058,6 +2191,11 @@ export default function AccountPage() {
                                                         className="w-full bg-[#F8F5F0] border border-[#E8E1D5] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#36453A] focus:ring-1 focus:ring-[#36453A]/20 transition-all font-medium text-[#36453A]" />
                                                 </div>
                                                 <div>
+                                                    <label className="block flex items-center gap-1.5 text-[11px] font-bold text-warm-gray uppercase tracking-widest mb-2"><Calendar className="h-3 w-3" /> Date of Birth</label>
+                                                    <input type="date" value={profileData.date_of_birth} onChange={e => setProfileData({ ...profileData, date_of_birth: e.target.value })}
+                                                        className="w-full bg-[#F8F5F0] border border-[#E8E1D5] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#36453A] focus:ring-1 focus:ring-[#36453A]/20 transition-all font-medium text-[#36453A]" />
+                                                </div>
+                                                <div>
                                                     <label className="block flex items-center gap-1.5 text-[11px] font-bold text-warm-gray uppercase tracking-widest mb-2"><MapPin className="h-3 w-3" /> Current Location</label>
                                                     <div className="relative">
                                                         <input
@@ -2082,10 +2220,13 @@ export default function AccountPage() {
                                                     Security Sanctuary
                                                 </h3>
                                                 <p className="text-sm text-warm-gray mb-6 leading-relaxed">Protect your inner sanctum with a strong, mindful password.</p>
-                                                <button className="w-full rounded-xl border border-[#E8E1D5] py-3.5 text-sm font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors flex items-center justify-center gap-2 mb-2">
-                                                    Modify Access Password <ChevronRight className="h-4 w-4" />
+                                                <button 
+                                                    onClick={() => setShowPasswordModal(true)}
+                                                    className="w-full rounded-xl border border-[#E8E1D5] py-3.5 text-sm font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors flex items-center justify-center gap-2 mb-2"
+                                                >
+                                                    {profileData.has_password ? 'Modify Access Password' : 'Set Access Password'} <ChevronRight className="h-4 w-4" />
                                                 </button>
-                                                <p className="text-xs text-warm-gray text-center mt-3">Last changed 4 months ago</p>
+                                                {profileData.has_password && <p className="text-xs text-warm-gray text-center mt-3">Your account is secured</p>}
                                             </section>
 
                                             {/* Notification Harmony */}
@@ -2095,25 +2236,8 @@ export default function AccountPage() {
                                                     <span className="w-1.5 h-6 bg-[#36453A] rounded-full inline-block"></span>
                                                     Notification Harmony
                                                 </h3>
-                                                <div className="space-y-4">
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-sm font-medium text-[#36453A]">Harvest Updates</span>
-                                                        <div className="w-11 h-6 bg-[#36453A] rounded-full relative cursor-pointer">
-                                                            <div className="w-4 h-4 bg-white rounded-full absolute right-1 top-1 shadow-sm"></div>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-sm font-medium text-[#36453A]">Seasonal Wisdom</span>
-                                                        <div className="w-11 h-6 bg-[#E8E1D5] rounded-full relative cursor-pointer">
-                                                            <div className="w-4 h-4 bg-white rounded-full absolute left-1 top-1 shadow-sm"></div>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-sm font-medium text-[#36453A]">Wishlist Reminders</span>
-                                                        <div className="w-11 h-6 bg-[#36453A] rounded-full relative cursor-pointer">
-                                                            <div className="w-4 h-4 bg-white rounded-full absolute right-1 top-1 shadow-sm"></div>
-                                                        </div>
-                                                    </div>
+                                                <div className="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                                    <NotificationPreferences />
                                                 </div>
                                             </section>
                                         </div>
@@ -2133,7 +2257,7 @@ export default function AccountPage() {
                                                 SAVE ALL CHANGES
                                             </button>
                                             <button
-                                                onClick={() => fetchProfile()}
+                                                onClick={() => { fetchProfile(); toast.success('Modifications discarded'); }}
                                                 className="text-xs font-bold text-warm-gray hover:text-[#36453A] transition-colors border-b border-warm-gray/30 pb-0.5 hover:border-[#36453A]"
                                             >
                                                 Discard Modifications
@@ -2799,6 +2923,141 @@ export default function AccountPage() {
                 }}
                 onCancel={() => setDeletingAddressId(null)}
             />
+
+            {/* Email OTP Verification Modal */}
+            {showEmailOtpModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-charcoal/40 backdrop-blur-sm" onClick={() => setShowEmailOtpModal(false)}></div>
+                    <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-light-border overflow-hidden animate-fadeIn">
+                        <div className="h-1.5" style={{ background: 'linear-gradient(90deg, #36453A, #D4A847, #36453A)' }}></div>
+                        <div className="p-8">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="font-serif text-2xl font-bold text-[#36453A]">
+                                    Verify Email Change
+                                </h3>
+                                <button onClick={() => setShowEmailOtpModal(false)} className="p-2 rounded-full hover:bg-cream/50 transition-colors text-warm-gray hover:text-[#36453A]">
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </div>
+                            
+                            <p className="text-sm text-warm-gray mb-6">
+                                We've sent a secure verification code to <strong className="text-charcoal font-semibold">{profileData.email}</strong>. Please enter the code below to confirm this change.
+                            </p>
+
+                            <div className="space-y-5">
+                                <div>
+                                    <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Secure Code (OTP)</label>
+                                    <input 
+                                        type="text" 
+                                        value={emailOtpCode}
+                                        onChange={(e) => setEmailOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                        placeholder="Enter the 6-digit code" 
+                                        className="w-full bg-white border border-[#D4A847] rounded-xl px-4 py-3.5 text-center text-xl font-bold tracking-[0.5em] focus:outline-none shadow-[0_0_15px_rgba(212,168,71,0.15)] focus:border-[#C49A3C] focus:ring-1 focus:ring-[#C49A3C] transition-all placeholder:tracking-normal placeholder:font-normal placeholder:text-base placeholder:text-gray-300 text-[#1C2B1A]"
+                                    />
+                                </div>
+                                <div className="pt-2">
+                                    <button 
+                                        onClick={handleEmailOtpSubmit}
+                                        disabled={emailOtpSubmitting || emailOtpCode.length < 4}
+                                        className="w-full bg-[#1C2B1A] text-[#E8D5A3] rounded-xl py-3.5 text-sm font-bold shadow-xl hover:bg-[#2A3B28] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed border border-[#3A4B38]"
+                                    >
+                                        {emailOtpSubmitting ? <Loader2 className="h-4 w-4 animate-spin text-[#E8D5A3]" /> : <Check className="h-4 w-4 text-[#E8D5A3]" />}
+                                        Verify & Save
+                                    </button>
+                                </div>
+                                <div className="text-center pt-2">
+                                    <button 
+                                        type="button"
+                                        onClick={handleResendEmailOtp}
+                                        disabled={emailOtpResendTimer > 0}
+                                        className={`text-sm font-semibold transition-all ${emailOtpResendTimer > 0 ? 'text-warm-gray/70 cursor-not-allowed' : 'text-[#D4A847] hover:text-[#b38a36] hover:underline'}`}
+                                    >
+                                        {emailOtpResendTimer > 0 ? `Resend Code in ${emailOtpResendTimer}s` : 'Resend Secure Code'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Password Change Modal */}
+            {showPasswordModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-charcoal/40 backdrop-blur-sm" onClick={() => setShowPasswordModal(false)}></div>
+                    <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-light-border overflow-hidden animate-fadeIn">
+                        <div className="h-1.5" style={{ background: 'linear-gradient(90deg, #36453A, #D4A847, #36453A)' }}></div>
+                        <div className="p-8">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="font-serif text-2xl font-bold text-[#36453A]">
+                                    {profileData.has_password ? 'Modify Password' : 'Set Password'}
+                                </h3>
+                                <button onClick={() => setShowPasswordModal(false)} className="p-2 rounded-full hover:bg-cream/50 transition-colors text-warm-gray hover:text-[#36453A]">
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </div>
+                            
+                            <form onSubmit={handlePasswordChange} className="space-y-4">
+                                <div>
+                                    <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Current Password</label>
+                                    <input 
+                                        type="password" 
+                                        required
+                                        value={passwords.current}
+                                        onChange={e => setPasswords({ ...passwords, current: e.target.value })}
+                                        className="w-full rounded-xl border border-light-border bg-cream/20 px-4 py-3 text-sm focus:border-burgundy/40 focus:outline-none transition-all"
+                                        placeholder="••••••••"
+                                    />
+                                </div>
+                                <div className="space-y-4 pt-2">
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">New Password</label>
+                                        <input 
+                                            type="password" 
+                                            required
+                                            value={passwords.new}
+                                            onChange={e => setPasswords({ ...passwords, new: e.target.value })}
+                                            className="w-full rounded-xl border border-light-border bg-cream/20 px-4 py-3 text-sm focus:border-burgundy/40 focus:outline-none transition-all"
+                                            placeholder="••••••••"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Confirm New Password</label>
+                                        <input 
+                                            type="password" 
+                                            required
+                                            value={passwords.confirm}
+                                            onChange={e => setPasswords({ ...passwords, confirm: e.target.value })}
+                                            className="w-full rounded-xl border border-light-border bg-cream/20 px-4 py-3 text-sm focus:border-burgundy/40 focus:outline-none transition-all"
+                                            placeholder="••••••••"
+                                        />
+                                    </div>
+                                </div>
+                                
+                                <div className="pt-6">
+                                    <button
+                                        type="submit"
+                                        disabled={passwordChanging}
+                                        className="w-full bg-[#36453A] text-white rounded-xl py-4 text-sm font-bold shadow-md hover:bg-[#2A362D] transition-all flex items-center justify-center gap-2"
+                                    >
+                                        {passwordChanging ? (
+                                            <>
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                Updating Sanctuary...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Check className="h-4 w-4" />
+                                                Update Credentials
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            )}
 
         </div>
     );
