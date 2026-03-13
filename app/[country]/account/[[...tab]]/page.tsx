@@ -195,7 +195,7 @@ export default function AccountPage() {
 
     // Body scroll lock for modals
     useEffect(() => {
-        if (selectedOrderDetails || isTrackOrderModalOpen || showDeactivateModal || deletingAddressId || cancellingOrderId || reviewModal || showNotificationOverlay || showExportModal || showPasswordModal || showEmailOtpModal) {
+        if (isTrackOrderModalOpen || showDeactivateModal || deletingAddressId || cancellingOrderId || reviewModal || showNotificationOverlay || showExportModal || showPasswordModal || showEmailOtpModal) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = 'unset';
@@ -203,7 +203,7 @@ export default function AccountPage() {
         return () => {
             document.body.style.overflow = 'unset';
         };
-    }, [selectedOrderDetails, isTrackOrderModalOpen, showDeactivateModal, deletingAddressId, cancellingOrderId, reviewModal, showNotificationOverlay, showExportModal, showPasswordModal, showEmailOtpModal]);
+    }, [isTrackOrderModalOpen, showDeactivateModal, deletingAddressId, cancellingOrderId, reviewModal, showNotificationOverlay, showExportModal, showPasswordModal, showEmailOtpModal]);
 
     useEffect(() => {
         if (!isLoading && !isAuthenticated) {
@@ -397,7 +397,7 @@ export default function AccountPage() {
             fetchProfile();
             fetchProfileImage();
         }
-    }, [activeTab, user?.id, fetchOrders, fetchAddresses, fetchProfile, fetchProfileImage, fetchEnquiries, fetchLoyaltyData]);
+    }, [activeTab, user?.id, fetchOrders, fetchAddresses, fetchProfile, fetchProfileImage, fetchEnquiries, fetchNotificationsData, fetchLoyaltyData]);
 
     const activeTier = loyaltyData?.tier?.tier_name || 'Bronze';
     const activePoints = loyaltyData?.wallet?.balance || 0;
@@ -1279,6 +1279,15 @@ export default function AccountPage() {
                                                                 >
                                                                     {isOrderLoading && selectedOrderDetails?.order_id === order.order_id ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : 'View Details'}
                                                                 </button>
+                                                                 <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        router.push('/help-center/support?orderId=' + order.order_id);
+                                                                    }}
+                                                                    className="rounded-xl px-5 py-2 text-xs font-bold bg-[#36453A]/5 text-[#36453A] border border-transparent hover:border-[#36453A]/20 transition-all whitespace-nowrap"
+                                                                >
+                                                                    Support Ticket
+                                                                </button>
                                                                 <button
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
@@ -1447,8 +1456,11 @@ export default function AccountPage() {
                                                         >
                                                             <Download className="h-3.5 w-3.5" /> Invoice
                                                         </button>
-                                                        <button className="flex-1 flex justify-center items-center gap-2 border border-[#E8E1D5] bg-white rounded-xl py-2.5 text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors shadow-sm">
-                                                            <Mail className="h-3.5 w-3.5" /> Support
+                                                        <button 
+                                                            onClick={() => router.push('/help-center/support?orderId=' + selectedOrderDetails.order_id)}
+                                                            className="flex-1 flex justify-center items-center gap-2 border border-[#E8E1D5] bg-white rounded-xl py-2.5 text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors shadow-sm"
+                                                        >
+                                                            <MessageSquare className="h-3.5 w-3.5" /> Support
                                                         </button>
                                                     </div>
 
@@ -2679,108 +2691,6 @@ export default function AccountPage() {
                             </div>
                         )}
 
-                        {/* ═══ Order Details Modal ═══ */}
-                        {selectedOrderDetails && (
-                            <div className="fixed inset-0 z-50 flex items-center justify-center px-4 p-4 sm:p-0" style={{ animation: 'fadeIn 0.2s ease-out' }}>
-                                <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setSelectedOrderDetails(null)} />
-                                <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl border border-light-border" style={{ animation: 'slideUp 0.25s ease-out' }}>
-                                    <div className="flex justify-between items-center mb-6">
-                                        <h3 className="font-serif text-xl font-bold text-charcoal">Order Details</h3>
-                                        <button onClick={() => setSelectedOrderDetails(null)} className="rounded-full p-2 hover:bg-cream transition-colors text-warm-gray">
-                                            <X className="h-5 w-5" />
-                                        </button>
-                                    </div>
-
-                                    <div className="space-y-6">
-                                        {/* Order Info */}
-                                        <div className="grid grid-cols-2 gap-4 bg-cream p-4 rounded-xl text-sm">
-                                            <div>
-                                                <p className="text-warm-gray mb-1">Order ID</p>
-                                                <p className="font-mono font-medium text-charcoal text-xs break-all">{(selectedOrderDetails as { order_id: string }).order_id}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-warm-gray mb-1">Date</p>
-                                                <p className="font-medium text-charcoal">{new Date((selectedOrderDetails as { created_at: string }).created_at).toLocaleString()}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-warm-gray mb-1">Order Status</p>
-                                                <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${getStatusColor((selectedOrderDetails as { order_status: string }).order_status)}`}>
-                                                    {(selectedOrderDetails as { order_status: string }).order_status}
-                                                </span>
-                                            </div>
-                                            <div>
-                                                <p className="text-warm-gray mb-1">Payment Status</p>
-                                                <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${(selectedOrderDetails as { payment_status?: string }).payment_status?.toLowerCase() === 'paid' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                                    {(selectedOrderDetails as { payment_status?: string }).payment_status || 'UNPAID'}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        {/* Items List */}
-                                        <div>
-                                            <h4 className="font-serif text-lg font-bold text-charcoal mb-4">Items</h4>
-                                            <div className="space-y-3">
-                                                {(selectedOrderDetails as { items: unknown[] }).items?.map((item: unknown) => (
-                                                    <div key={(item as { order_item_id: string }).order_item_id} className="flex gap-4 p-3 border border-light-border rounded-xl hover:border-burgundy/30 transition-colors">
-                                                        <div className="h-16 w-16 bg-cream rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden border border-light-border">
-                                                            {(item as { thumbnail_url?: string }).thumbnail_url ? (
-                                                                // eslint-disable-next-line @next/next/no-img-element
-                                                                <img src={(item as { thumbnail_url: string }).thumbnail_url} alt="Product" className="h-full w-full object-cover" />
-                                                            ) : (
-                                                                <Package className="h-6 w-6 text-warm-gray" />
-                                                            )}
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <p className="font-medium text-charcoal truncate">{(item as { product?: { product_name?: string } }).product?.product_name || 'Product'}</p>
-                                                            <p className="text-xs text-warm-gray mt-1">Brand: {(item as { product?: { brand?: string } }).product?.brand || 'N/A'} | Size: {(item as { variant?: { size_label?: string } }).variant?.size_label || 'N/A'}</p>
-                                                            <div className="flex justify-between items-center mt-2">
-                                                                <p className="text-sm font-medium text-charcoal">Qty: {(item as { quantity: number }).quantity}</p>
-                                                                <p className="text-sm font-bold text-burgundy">{formatPrice(parseFloat((item as { line_total?: string, unit_price: number, quantity: number, tax_amount: number }).line_total || String((item as { unit_price: number, quantity: number, tax_amount: number }).unit_price * (item as { quantity: number }).quantity + (item as { tax_amount: number }).tax_amount)))}</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        {/* Summary */}
-                                        <div className="border-t border-light-border pt-4 space-y-2 text-sm">
-                                            <div className="flex justify-between text-warm-gray">
-                                                <span>Subtotal</span>
-                                                <span>{formatPrice(parseFloat((selectedOrderDetails as { total_amount: string }).total_amount))}</span>
-                                            </div>
-                                            <div className="flex justify-between text-warm-gray">
-                                                <span>Tax</span>
-                                                <span>{formatPrice(parseFloat((selectedOrderDetails as { total_tax: string }).total_tax))}</span>
-                                            </div>
-                                            <div className="flex justify-between font-bold text-charcoal text-base mt-2 pt-2 border-t border-light-border">
-                                                <span>Grand Total</span>
-                                                <span className="text-burgundy">{formatPrice(parseFloat((selectedOrderDetails as { total_amount: string }).total_amount) + parseFloat((selectedOrderDetails as { total_tax: string }).total_tax))}</span>
-                                            </div>
-                                        </div>
-
-                                        {/* Download Invoice Button */}
-                                        <div className="pt-2">
-                                            <button
-                                                onClick={async () => {
-                                                    const toastId = toast.loading('Downloading invoice...');
-                                                    const res = await downloadInvoice((selectedOrderDetails as { order_id: string }).order_id);
-                                                    if (res.success) {
-                                                        toast.success('Invoice downloaded!', { id: toastId });
-                                                    } else {
-                                                        toast.error(res.message || 'Failed to download invoice', { id: toastId });
-                                                    }
-                                                }}
-                                                className="w-full rounded-xl bg-gradient-to-r from-[#722F37] to-[#8B3A42] px-4 py-3 text-sm font-semibold text-white hover:from-[#5E252C] hover:to-[#722F37] transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2"
-                                            >
-                                                <FileText className="h-4 w-4" />
-                                                Download Invoice
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
 
                         {/* ═══════════════════ WALLET TAB ═══════════════════ */}
                         {activeTab === 'wallet' && (
@@ -2829,16 +2739,16 @@ export default function AccountPage() {
                                         {notifications.map((n) => (
                                             <div
                                                 key={n.notification_id}
-                                                className={`group flex items-start gap-4 p-5 rounded-2xl border transition-all ${n.read_at
-                                                    ? 'bg-white/60 border-[#E8E1D5] opacity-75'
+                                                className={`group flex items-start gap-4 p-5 rounded-2xl border transition-all ${n.is_read 
+                                                    ? 'bg-white/60 border-[#E8E1D5] opacity-75' 
                                                     : 'bg-white border-[#36453A]/20 shadow-sm border-l-4 border-l-[#36453A]'}`}
                                             >
-                                                <div className={`mt-1 h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 ${n.read_at ? 'bg-warm-gray/10' : 'bg-[#36453A]/10'}`}>
-                                                    {n.type === 'security' ? <Shield className="h-5 w-5 text-red-500" /> : <Sparkles className="h-5 w-5 text-[#D4A847]" />}
+                                                <div className={`mt-1 h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 ${n.is_read ? 'bg-warm-gray/10' : 'bg-[#36453A]/10'}`}>
+                                                    {n.category === 'security' ? <Shield className="h-5 w-5 text-red-500" /> : <Sparkles className="h-5 w-5 text-[#D4A847]" />}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center justify-between gap-2 mb-1">
-                                                        <h4 className={`text-sm font-bold ${n.read_at ? 'text-[#36453A]/60' : 'text-[#36453A]'}`}>{n.title}</h4>
+                                                        <h4 className={`text-sm font-bold ${n.is_read ? 'text-[#36453A]/60' : 'text-[#36453A]'}`}>{n.title}</h4>
                                                         <span className="text-[10px] font-medium text-warm-gray whitespace-nowrap">
                                                             {new Date(n.created_at).toLocaleDateString()}
                                                         </span>
@@ -2857,19 +2767,19 @@ export default function AccountPage() {
                                                         )}
                                                         <button
                                                             onClick={async () => {
-                                                                if (!n.read_at) {
+                                                                if (!n.is_read) {
                                                                     await markNotificationAsRead(n.notification_id);
                                                                     fetchNotificationsData();
                                                                 }
                                                             }}
-                                                            disabled={!!n.read_at}
-                                                            className={`text-[10px] font-black uppercase tracking-widest transition-colors ${n.read_at ? 'text-[#36453A]/30 cursor-default' : 'text-[#D4A847] hover:text-[#B38720]'}`}
+                                                            disabled={!!n.is_read}
+                                                            className={`text-[10px] font-black uppercase tracking-widest transition-colors ${n.is_read ? 'text-[#36453A]/30 cursor-default' : 'text-[#D4A847] hover:text-[#B38720]'}`}
                                                         >
-                                                            {n.read_at ? 'Seen' : 'Mark as Read'}
+                                                            {n.is_read ? 'Seen' : 'Mark as Read'}
                                                         </button>
                                                     </div>
                                                 </div>
-                                                <button
+                                                <button 
                                                     onClick={() => handleDeleteNotification(n.notification_id)}
                                                     className="opacity-0 group-hover:opacity-100 p-2 text-warm-gray/40 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
                                                 >
@@ -2881,8 +2791,6 @@ export default function AccountPage() {
                                 )}
                             </div>
                         )}
-
-
 
                         {/* ═══ Track Order Modal ═══ */}
                         {isTrackOrderModalOpen && (
