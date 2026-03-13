@@ -14,10 +14,10 @@ interface Preference {
 }
 
 const CHANNEL_META: Record<string, { label: string; description: string; icon: React.ElementType; color: string }> = {
-    email: { label: 'Email', description: 'Receive notifications via email', icon: Mail, color: '#6B2737' },
-    sms: { label: 'SMS', description: 'Receive notifications via text message', icon: Smartphone, color: '#2563EB' },
+    email: { label: 'Email', description: 'Receive notifications via email', icon: Mail, color: '#3B5D3B' }, // herbal-green
+    sms: { label: 'SMS', description: 'Receive notifications via text message', icon: Smartphone, color: '#2D4A2D' }, // deep herbal-green
     whatsapp: { label: 'WhatsApp', description: 'Receive notifications on WhatsApp', icon: MessageSquare, color: '#25D366' },
-    push: { label: 'Push Notifications', description: 'Browser and app push notifications', icon: Bell, color: '#F59E0B' },
+    push: { label: 'Push Notifications', description: 'Browser and app push notifications', icon: Bell, color: '#8B7A3D' }, // keeping gold as secondary or shift? user said greenish accents. lets go light green.
 };
 
 const CATEGORY_META: Record<string, { label: string; description: string; icon: React.ElementType }> = {
@@ -34,7 +34,15 @@ const CHANNEL_ORDER = ['email', 'sms'];
 // SMS channel only shows a subset of categories
 const SMS_CATEGORIES = ['order_updates', 'account_security'];
 
-export default function NotificationPreferences() {
+interface NotificationPreferencesProps {
+    hideHeader?: boolean;
+    isMobileVerified?: boolean;
+}
+
+export default function NotificationPreferences({ 
+    hideHeader = false,
+    isMobileVerified = false 
+}: NotificationPreferencesProps) {
     const [preferences, setPreferences] = useState<Preference[]>([]);
     const [loading, setLoading] = useState(true);
     const [togglingKey, setTogglingKey] = useState<string | null>(null);
@@ -116,67 +124,67 @@ export default function NotificationPreferences() {
     return (
         <div className="max-w-3xl space-y-6">
             {/* Header */}
-            <div>
-                <h2 className="font-serif text-lg font-bold text-charcoal">Notification Preferences</h2>
-                <p className="text-sm text-warm-gray mt-0.5">
-                    Manage how you&apos;d like to receive alerts and updates from us
-                </p>
-            </div>
+            {!hideHeader && (
+                <div>
+                    <h2 className="font-serif text-lg font-bold text-charcoal">Notification Preferences</h2>
+                    <p className="text-sm text-warm-gray mt-0.5">
+                        Manage how you&apos;d like to receive alerts and updates from us
+                    </p>
+                </div>
+            )}
 
             {/* ── Receive Notifications Via ── */}
-            <div className="rounded-2xl border border-light-border bg-white overflow-hidden shadow-sm">
+            <div className="rounded-3xl border border-light-border bg-white overflow-hidden shadow-sm">
                 <div className="px-6 py-4 border-b border-light-border bg-cream/50">
-                    <h3 className="font-serif text-base font-bold text-charcoal">Receive notifications via:</h3>
-                    <p className="text-xs text-warm-gray mt-0.5">Select the channels you want to receive notifications on</p>
+                    <h3 className="font-serif text-base font-bold text-herbal-green">Receive notifications via:</h3>
+                    <p className="text-[10px] font-bold text-warm-gray uppercase tracking-widest mt-1">Select the channels for your periodic awareness</p>
                 </div>
-                <div className="px-6 py-4 flex flex-wrap gap-5">
-                    {/* SMS — active */}
-                    <label className="flex items-center gap-2.5 cursor-default select-none">
+                <div className="px-6 py-5 flex flex-wrap sm:flex-nowrap items-center gap-6 md:gap-10">
+                    {/* SMS — active if verified */}
+                    <div className={`flex items-center gap-2 cursor-default select-none ${!isMobileVerified ? 'opacity-40' : ''}`}>
                         <span
-                            className="relative flex h-5 w-5 items-center justify-center rounded border-2"
-                            style={{ borderColor: '#2563EB', backgroundColor: '#2563EB' }}
+                            className="relative flex h-5 w-5 items-center justify-center rounded-lg border-2"
+                            style={{ 
+                                borderColor: isMobileVerified ? '#3B5D3B' : '#D4CFC0', 
+                                backgroundColor: isMobileVerified ? '#3B5D3B' : '#F8F5F0' 
+                            }}
                         >
-                            <svg className="h-3 w-3 text-white" viewBox="0 0 12 12" fill="none">
-                                <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                            <input type="checkbox" disabled checked readOnly className="sr-only" />
+                            {isMobileVerified && (
+                                <svg className="h-3 w-3 text-white" viewBox="0 0 12 12" fill="none">
+                                    <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            )}
                         </span>
-                        <Smartphone className="h-4 w-4" style={{ color: '#2563EB' }} />
-                        <span className="text-sm font-medium text-charcoal">SMS</span>
-                        <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700 leading-tight">Active</span>
-                    </label>
+                        <Smartphone className="h-4 w-4 shrink-0" style={{ color: isMobileVerified ? '#3B5D3B' : '#BDB7A3' }} />
+                        <span className="text-[13px] font-bold text-herbal-green whitespace-nowrap">SMS</span>
+                        {isMobileVerified && (
+                            <span className="rounded-full bg-herbal-green/10 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-herbal-green border border-herbal-green/10">Active</span>
+                        )}
+                    </div>
 
                     {/* Email — active */}
-                    <label className="flex items-center gap-2.5 cursor-default select-none">
+                    <div className="flex items-center gap-2 cursor-default select-none">
                         <span
-                            className="relative flex h-5 w-5 items-center justify-center rounded border-2"
-                            style={{ borderColor: '#6B2737', backgroundColor: '#6B2737' }}
+                            className="relative flex h-5 w-5 items-center justify-center rounded-lg border-2"
+                            style={{ borderColor: '#3B5D3B', backgroundColor: '#3B5D3B' }}
                         >
                             <svg className="h-3 w-3 text-white" viewBox="0 0 12 12" fill="none">
-                                <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
-                            <input type="checkbox" disabled checked readOnly className="sr-only" />
                         </span>
-                        <Mail className="h-4 w-4" style={{ color: '#6B2737' }} />
-                        <span className="text-sm font-medium text-charcoal">Email</span>
-                        <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold text-green-700 leading-tight">Active</span>
-                    </label>
+                        <Mail className="h-4 w-4 shrink-0" style={{ color: '#3B5D3B' }} />
+                        <span className="text-[13px] font-bold text-herbal-green whitespace-nowrap">Email</span>
+                        <span className="rounded-full bg-herbal-green/10 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-herbal-green border border-herbal-green/10">Active</span>
+                    </div>
 
                     {/* WhatsApp — coming soon */}
-                    <label className="flex items-center gap-2.5 cursor-not-allowed select-none opacity-60">
-                        <span className="relative flex h-5 w-5 items-center justify-center rounded border border-gray-300 bg-gray-100">
-                            <input
-                                type="checkbox"
-                                disabled
-                                checked={false}
-                                readOnly
-                                className="sr-only"
-                            />
+                    <div className="flex items-center gap-2 cursor-not-allowed select-none opacity-40">
+                        <span className="relative flex h-5 w-5 items-center justify-center rounded-lg border-2 border-light-border bg-cream/30">
                         </span>
-                        <MessageSquare className="h-4 w-4 text-gray-400" />
-                        <span className="text-sm font-medium text-warm-gray">WhatsApp</span>
-                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 leading-tight">Coming Soon</span>
-                    </label>
+                        <MessageSquare className="h-4 w-4 shrink-0 text-warm-gray" />
+                        <span className="text-[13px] font-bold text-warm-gray/60 whitespace-nowrap">WhatsApp</span>
+                        <span className="rounded-full bg-cream px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-warm-gray/50 border border-light-border/40">Soon</span>
+                    </div>
                 </div>
             </div>
 
@@ -186,24 +194,32 @@ export default function NotificationPreferences() {
                 const Icon = meta.icon;
                 // SMS only exposes order_updates + account_security
                 const categories = channel === 'sms' ? SMS_CATEGORIES : CATEGORY_ORDER;
+                const isChannelDisabled = channel === 'sms' && !isMobileVerified;
 
                 return (
                     <div
                         key={channel}
-                        className="rounded-2xl border border-light-border bg-white overflow-hidden shadow-sm"
+                        className={`rounded-[32px] border border-light-border bg-white overflow-hidden shadow-sm ${isChannelDisabled ? 'opacity-50 grayscale-[0.8]' : ''}`}
                     >
                         {/* Channel header */}
-                        <div className="flex items-center gap-3 px-6 py-4 border-b border-light-border bg-cream/50">
-                            <div
-                                className="flex h-10 w-10 items-center justify-center rounded-xl"
-                                style={{ backgroundColor: meta.color + '15' }}
-                            >
-                                <Icon className="h-5 w-5" style={{ color: meta.color }} />
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-light-border bg-cream/50">
+                            <div className="flex items-center gap-3">
+                                <div
+                                    className="flex h-10 w-10 items-center justify-center rounded-xl"
+                                    style={{ backgroundColor: isChannelDisabled ? '#F3F4F6' : meta.color + '15' }}
+                                >
+                                    <Icon className="h-5 w-5" style={{ color: isChannelDisabled ? '#9CA3AF' : meta.color }} />
+                                </div>
+                                <div>
+                                    <h3 className="font-serif text-lg font-bold text-herbal-green">{meta.label}</h3>
+                                    <p className="text-[11px] font-medium text-warm-gray">{meta.description}</p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="font-serif text-base font-bold text-charcoal">{meta.label}</h3>
-                                <p className="text-xs text-warm-gray">{meta.description}</p>
-                            </div>
+                            {isChannelDisabled && (
+                                <div className="text-[9px] font-bold text-burgundy bg-burgundy/5 px-3 py-1.5 rounded-full border border-burgundy/10 uppercase tracking-widest">
+                                    Sanctity verification required
+                                </div>
+                            )}
                         </div>
 
                         {/* Category toggles */}
@@ -214,35 +230,38 @@ export default function NotificationPreferences() {
                                 const isEnabled = getPreferenceValue(channel, category);
                                 const key = `${channel}:${category}`;
                                 const isToggling = togglingKey === key;
+                                const isInternalDisabled = isChannelDisabled || isToggling;
 
                                 return (
                                     <div
                                         key={category}
-                                        className="flex items-center justify-between px-6 py-3.5 hover:bg-cream/30 transition-colors"
+                                        className={`flex items-center justify-between px-6 py-3.5 hover:bg-cream/30 transition-colors ${isChannelDisabled ? 'pointer-events-none' : ''}`}
                                     >
-                                        <div className="flex items-center gap-3">
-                                            <CatIcon className="h-4 w-4 text-warm-gray flex-shrink-0" />
+                                        <div className="flex items-center gap-4">
+                                            <div className="h-8 w-8 rounded-full bg-cream flex items-center justify-center border border-light-border/30">
+                                                <CatIcon className="h-4 w-4 text-herbal-green flex-shrink-0" />
+                                            </div>
                                             <div>
-                                                <p className="text-sm font-medium text-charcoal">{catMeta.label}</p>
-                                                <p className="text-xs text-warm-gray">{catMeta.description}</p>
+                                                <p className="text-sm font-bold text-herbal-green tracking-tight">{catMeta.label}</p>
+                                                <p className="text-xs text-warm-gray font-medium">{catMeta.description}</p>
                                             </div>
                                         </div>
 
                                         {/* Toggle */}
                                         <button
-                                            onClick={() => handleToggle(channel, category, isEnabled)}
-                                            disabled={isToggling}
-                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${isEnabled
+                                            onClick={() => !isChannelDisabled && handleToggle(channel, category, isEnabled)}
+                                            disabled={isInternalDisabled}
+                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${isEnabled && !isChannelDisabled
                                                 ? 'focus:ring-burgundy'
                                                 : 'focus:ring-gray-300'
-                                                } ${isToggling ? 'opacity-50 cursor-wait' : 'cursor-pointer'}`}
+                                                } ${isInternalDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                                             style={{
-                                                backgroundColor: isEnabled ? meta.color : '#D1D5DB',
+                                                backgroundColor: isEnabled && !isChannelDisabled ? meta.color : '#D1D5DB',
                                             }}
                                             aria-label={`${isEnabled ? 'Disable' : 'Enable'} ${catMeta.label} via ${meta.label}`}
                                         >
                                             <span
-                                                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-200 ${isEnabled ? 'translate-x-6' : 'translate-x-1'
+                                                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-200 ${(isEnabled && !isChannelDisabled) ? 'translate-x-6' : 'translate-x-1'
                                                     }`}
                                             />
                                         </button>
@@ -253,7 +272,6 @@ export default function NotificationPreferences() {
                     </div>
                 );
             })}
-
             {/* Footer info */}
             <div className="rounded-xl bg-cream/60 border border-light-border px-5 py-4">
                 <p className="text-xs text-warm-gray leading-relaxed">
