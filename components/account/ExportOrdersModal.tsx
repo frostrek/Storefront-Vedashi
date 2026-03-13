@@ -3,7 +3,7 @@ import { X, FileText, Download, Calendar, DollarSign, Loader2 } from 'lucide-rea
 import { Order } from '@/types';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { formatVND, getOrderById } from '@/lib/api';
+import { getOrderById } from '@/lib/api';
 import toast from 'react-hot-toast';
 
 interface ExportOrdersModalProps {

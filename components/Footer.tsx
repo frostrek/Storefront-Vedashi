@@ -1,10 +1,9 @@
 'use client';
 
-import { Link } from '@/i18n/navigation';
-import { usePathname } from '@/i18n/navigation';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Facebook, Instagram, Twitter, Youtube, Linkedin, Globe, Mail, Phone, MapPin, Clock } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useTranslations } from 'next-intl';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -43,10 +42,10 @@ interface FooterData {
 export default function Footer() {
     const pathname = usePathname();
     const [data, setData] = useState<FooterData | null>(null);
-    const t = useTranslations('Footer');
+
 
     useEffect(() => {
-        fetch(`${API_URL}/api/footer`)
+        fetch(`${API_URL}/api/footer`, { credentials: 'include' })
             .then(r => r.json())
             .then(res => { if (res.success) setData(res.data); })
             .catch(() => { });
@@ -75,7 +74,7 @@ export default function Footer() {
                             <img src="/vedashi-logo.png" alt="Vedashi" className="h-16 w-auto object-contain" />
                         </Link>
                         <p className="text-sm leading-relaxed text-[#6b6b6b] max-w-[260px]">
-                            {t('brandDescription')}
+                            Nurturing your journey towards holistic health through the ancient wisdom of Ayurveda.
                         </p>
 
                         {/* Social icons */}
@@ -100,26 +99,26 @@ export default function Footer() {
 
                     {/* Explore column */}
                     <div>
-                        <h4 className="font-semibold text-[#333] text-base mb-5">{t('explore')}</h4>
+                        <h4 className="font-semibold text-[#333] text-base mb-5">Explore</h4>
                         <ul className="space-y-3">
                             <li>
                                 <Link href="/about" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
-                                    {t('ourStory')}
+                                    Our Story
                                 </Link>
                             </li>
                             <li>
                                 <Link href="/practitioners" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
-                                    {t('practitioners')}
+                                    Practitioners
                                 </Link>
                             </li>
                             <li>
                                 <Link href="/products" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
-                                    {t('naturalProducts')}
+                                    Natural Products
                                 </Link>
                             </li>
                             <li>
                                 <Link href="/quiz" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
-                                    {t('ayurvedicQuiz')}
+                                    Ayurvedic Quiz
                                 </Link>
                             </li>
                         </ul>
@@ -127,26 +126,26 @@ export default function Footer() {
 
                     {/* Support column */}
                     <div>
-                        <h4 className="font-semibold text-[#333] text-base mb-5">{t('support')}</h4>
+                        <h4 className="font-semibold text-[#333] text-base mb-5">Support</h4>
                         <ul className="space-y-3">
                             <li>
                                 <Link href="/help" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
-                                    {t('helpCenter')}
+                                    Help Center
                                 </Link>
                             </li>
                             <li>
                                 <Link href="/faq" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
-                                    {t('consultationFaq')}
+                                    Consultation FAQ
                                 </Link>
                             </li>
                             <li>
                                 <Link href="/shipping" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
-                                    {t('shippingPolicy')}
+                                    Shipping Policy
                                 </Link>
                             </li>
                             <li>
                                 <Link href="/privacy" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
-                                    {t('privacy')}
+                                    Privacy
                                 </Link>
                             </li>
                         </ul>
@@ -154,21 +153,21 @@ export default function Footer() {
 
                     {/* Newsletter column */}
                     <div>
-                        <h4 className="font-semibold text-[#333] text-base mb-5">{t('newsletter')}</h4>
+                        <h4 className="font-semibold text-[#333] text-base mb-5">Newsletter</h4>
                         <p className="text-sm text-[#6b6b6b] leading-relaxed mb-4">
-                            {t('newsletterDesc')}
+                            Join our community for weekly wellness rituals.
                         </p>
                         <form onSubmit={e => e.preventDefault()} className="flex gap-2">
                             <input
                                 type="email"
-                                placeholder={t('emailPlaceholder')}
+                                placeholder="Your email"
                                 className="flex-1 min-w-0 rounded-md px-3 py-2 text-sm bg-white border border-[#d9d9d0] focus:outline-none focus:border-[#3B5D3B] focus:ring-1 focus:ring-[#3B5D3B]/20 placeholder:text-[#aaa] text-[#333] transition-all"
                             />
                             <button
                                 type="submit"
                                 className="px-5 py-2 bg-[#3B5D3B] text-white text-sm font-medium rounded-md hover:bg-[#2d472d] transition-colors whitespace-nowrap"
                             >
-                                {t('join')}
+                                Join
                             </button>
                         </form>
                     </div>
@@ -177,10 +176,10 @@ export default function Footer() {
                 {/* ── Bottom bar ── */}
                 <div className="mt-12 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[#e8e8e0]">
                     <p className="text-xs text-[#999]">
-                        {t('copyright')}
+                        © 2026 Vedashi. All rights reserved.
                     </p>
                     <p className="text-xs text-[#999] italic">
-                        {t('tagline')}
+                        Gently crafted for modern balance.
                     </p>
                 </div>
             </div>

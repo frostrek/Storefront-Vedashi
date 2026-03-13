@@ -1,16 +1,17 @@
 'use client';
 
-import { Link } from '@/i18n/navigation';
+import Link from 'next/link';
 import Image from 'next/image';
 import { Heart, ShoppingCart, Eye, X, Check, AlertTriangle, Loader2, Plus, Minus } from 'lucide-react';
 import { Product } from '@/types';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCart } from '@/context/CartContext';
-import { getRatingSummary, getProductDetails, formatVND } from '@/lib/api';
+import { getRatingSummary, getProductDetails } from '@/lib/api';
+import { useCurrency } from '@/context/CurrencyContext';
 import StarRating from '@/components/reviews/StarRating';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { useTranslations } from 'next-intl';
+
 
 const BLUR_DATA_URL =
     'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjhmNWYyIi8+PC9zdmc+';
@@ -22,10 +23,11 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, onMoveToCart, priority = false }: ProductCardProps) {
+    const { formatPrice } = useCurrency();
     const { isInWishlist, toggleItem } = useWishlist();
     const { addItem, updateQuantity, removeItem, items, loading: cartLoading } = useCart();
     const wishlisted = isInWishlist(product.product_id);
-    const t = useTranslations('Product');
+
 
     const [avgRating, setAvgRating] = useState(0);
     const [totalReviews, setTotalReviews] = useState(0);
@@ -121,11 +123,11 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
             try {
                 const variantIdToUse = (product as any).default_variant_id || null;
                 await addItem(product.product_id, variantIdToUse, 1);
-                toast.success(t('addedToCart', { name: product.product_name }));
+                toast.success(`${product.product_name} added to cart!`);
                 setQuantity(1); // Reset local quantity
                 triggerAddedFeedback();
             } catch {
-                toast.error(t('failedToUpdate'));
+                toast.error('Failed to update cart');
             } finally {
                 setAddingToCart(false);
             }
@@ -153,7 +155,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                 setQuantity(existing ? existing.quantity : 1);
             }
         } catch {
-            toast.error(t('couldNotLoad'));
+            toast.error('Could not load variant options');
         } finally {
             setLoadingVariants(false);
         }
@@ -176,10 +178,10 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
         try {
             const variantIdToUse = hasVariants ? selectedVariant.variant_id : ((product as any).default_variant_id || null);
             await addItem(product.product_id, variantIdToUse, quantity);
-            toast.success(t('addedToCart', { name: product.product_name }));
+            toast.success(`${product.product_name} added to cart!`);
             triggerAddedFeedback();
         } catch {
-            toast.error(t('failedToUpdate'));
+            toast.error('Failed to update cart');
         } finally {
             setAddingToCart(false);
         }
@@ -204,12 +206,12 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                 const newQty = currentItemInCart.quantity + 1;
                 await updateQuantity(currentItemInCart.cart_item_id, newQty);
                 setQuantity(newQty);
-                toast.success(t('cartUpdated'));
+                toast.success('Cart updated successfully!');
             } else {
-                toast.error(t('maxStockReached'));
+                toast.error('Max stock reached.');
             }
         } catch {
-            toast.error(t('failedToUpdate'));
+            toast.error('Failed to update cart');
         } finally {
             setAddingToCart(false);
         }
@@ -223,14 +225,14 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                 const newQty = currentItemInCart.quantity - 1;
                 await updateQuantity(currentItemInCart.cart_item_id, newQty);
                 setQuantity(newQty);
-                toast.success(t('cartUpdated'));
+                toast.success('Cart updated successfully!');
             } else {
                 await removeItem(currentItemInCart.cart_item_id);
                 setQuantity(1);
                 toast.success(currentItemInCart.product_name + ' removed from cart');
             }
         } catch {
-            toast.error(t('failedToUpdate'));
+            toast.error('Failed to update cart');
         } finally {
             setAddingToCart(false);
         }
@@ -324,7 +326,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                                 )}
                                 {product.is_new_arrival && !isComingSoon && (
                                     <span className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-[9px] font-bold tracking-wider text-white uppercase">
-                                        {t('new')}
+                                        New
                                     </span>
                                 )}
                             </div>
@@ -338,7 +340,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                                             className="w-full flex items-center justify-center gap-2 bg-[#3d5c3a]/95 backdrop-blur-sm py-3 text-sm font-bold text-white hover:bg-[#3d5c3a] transition-colors cursor-pointer"
                                         >
                                             <Eye className="h-4 w-4" />
-                                            {t('previewOptions')}
+                                            Preview Options
                                         </button>
                                     ) : (
                                         <button
@@ -353,7 +355,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                                             ) : (
                                                 <ShoppingCart className="h-4 w-4" />
                                             )}
-                                            {addingToCart ? t('processing') : justAdded ? t('addedToBag') : t('addToCart')}
+                                            {addingToCart ? 'Processing...' : justAdded ? 'Added to Bag' : 'Add to Cart'}
                                         </button>
                                     )}
                                 </div>
@@ -386,15 +388,15 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                             {/* Price */}
                             <div className="flex items-center gap-2 flex-wrap">
                                 <p className="text-lg font-bold text-[#3d5c3a]">
-                                    {formatVND(displayPrice)}
+                                    {formatPrice(displayPrice)}
                                 </p>
                                 {isOnSale && originalPrice && (
                                     <>
                                         <p className="text-xs text-gray-400 line-through">
-                                            {formatVND(originalPrice)}
+                                            {formatPrice(originalPrice)}
                                         </p>
                                         <span className="bg-red-50 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded border border-red-100">
-                                            {discountPercent}% {t('off')}
+                                            {discountPercent}% OFF
                                         </span>
                                     </>
                                 )}
@@ -496,20 +498,20 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                                                                 <p className={`text-sm font-semibold transition-colors duration-300 ${isSelected ? 'text-[#3d5c3a]' : 'text-gray-900'}`}>{label}</p>
                                                                 {isInactive && (
                                                                     <p className="text-[10px] text-gray-400 font-semibold mt-0.5 flex items-center gap-1">
-                                                                        {t('unavailable') ?? 'Unavailable'}
+                                                                        Unavailable
                                                                     </p>
                                                                 )}
                                                                 {!isInactive && isOut && (
                                                                     <p className="text-[10px] text-red-500 font-semibold mt-0.5 flex items-center gap-1">
-                                                                        <AlertTriangle className="h-3 w-3" /> {t('outOfStock')}
+                                                                        <AlertTriangle className="h-3 w-3" /> Out of Stock
                                                                     </p>
                                                                 )}
                                                             </div>
 
                                                             <div className="text-right flex-shrink-0">
-                                                                <p className={`text-sm font-bold transition-colors duration-300 ${isSelected ? 'text-[#3d5c3a]' : 'text-gray-900'}`}>{formatVND(v.price)}</p>
+                                                                <p className={`text-sm font-bold transition-colors duration-300 ${isSelected ? 'text-[#3d5c3a]' : 'text-gray-900'}`}>{formatPrice(v.price)}</p>
                                                                 {v.is_on_sale && v.original_price && (
-                                                                    <p className="text-[10px] text-gray-400 line-through">{formatVND(v.original_price)}</p>
+                                                                    <p className="text-[10px] text-gray-400 line-through">{formatPrice(v.original_price)}</p>
                                                                 )}
                                                             </div>
                                                         </div>
@@ -519,7 +521,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                                         </div>
                                     </div>
                                 ) : (
-                                    <p className="text-sm text-gray-400 text-center py-6">{t('noOptionsAvailable')}</p>
+                                    <p className="text-sm text-gray-400 text-center py-6">No options available.</p>
                                 )
                             ) : null}
 
@@ -548,7 +550,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                                     ) : (
                                         <ShoppingCart className="h-4 w-4" />
                                     )}
-                                    {addingToCart ? t('processing') : justAdded ? t('addedToBag') : `${t('addToCart')} - ${formatVND((hasVariants ? (selectedVariant?.price ?? 0) : displayPrice) * quantity)}`}
+                                    {addingToCart ? 'Processing...' : justAdded ? 'Added to Bag' : `Add to Cart - ${formatPrice((hasVariants ? (selectedVariant?.price ?? 0) : displayPrice) * quantity)}`}
                                 </button>
                             ) : (
                                 <div className="flex items-center gap-2 bg-gray-50/50 p-1 rounded-xl border border-gray-100 shadow-sm">
@@ -560,7 +562,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                                         {currentItemInCart.quantity > 1 ? <Minus className="h-4 w-4" /> : <X className="h-4 w-4" />}
                                     </button>
                                     <div className="flex-1 text-center">
-                                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-0.5">{t('quantity')}</p>
+                                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-0.5">Quantity</p>
                                         <p className="text-lg font-black text-[#3d5c3a] leading-none">{currentItemInCart.quantity}</p>
                                     </div>
                                     <button

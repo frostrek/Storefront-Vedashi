@@ -1,7 +1,8 @@
 'use client';
 
-import { Link, useRouter, usePathname } from '@/i18n/navigation';
-import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter, usePathname } from 'next/navigation';
+import { useState, useEffect, useRef } from 'react';
 import { ShoppingCart, User, Menu, X, Heart, ChevronDown, Search, ArrowRight, Leaf, Sparkles } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
@@ -9,8 +10,9 @@ import { useAuth } from '@/context/AuthContext';
 import { getCategories } from '@/lib/api';
 import toast from 'react-hot-toast';
 import SearchAutocomplete from './SearchAutocomplete';
-import LanguageSwitcher from './LanguageSwitcher';
-import { useTranslations } from 'next-intl';
+import GoogleTranslateWidget from './GoogleTranslateWidget';
+import RegionSwitcher from './RegionSwitcher';
+import NotificationCenter from './account/NotificationCenter';
 
 interface Category {
   category_id: string;
@@ -73,7 +75,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
-  const t = useTranslations('Navbar');
+
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const { totalItems, loading: cartLoading } = useCart();
@@ -81,6 +83,7 @@ export default function Navbar() {
   const { isAuthenticated } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [showCartReminder, setShowCartReminder] = useState(false);
+  const [prevTotalItems, setPrevTotalItems] = useState(0);
   const [scrolled, setScrolled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<HeaderConfig>(DEFAULT_CONFIG);
@@ -97,14 +100,13 @@ export default function Navbar() {
     if (isAuthenticated) {
       router.push('/account/wishlist');
     } else {
-      toast(t('wishlistSignIn'));
+      toast('Please sign in to view your wishlist');
       router.push('/login');
     }
   };
 
-  // Fetch header config from API
   useEffect(() => {
-    fetch(`${API_URL}/api/header`)
+    fetch(`${API_URL}/api/header`, { credentials: 'include' })
       .then(r => r.json())
       .then(data => {
         if (data.success && data.data) {
@@ -121,18 +123,35 @@ export default function Navbar() {
       .finally(() => setLoading(false));
   }, []);
 
+  // 1. Trigger when a new product is added (but not on initial load)
+  const isFirstCount = useRef(true);
   useEffect(() => {
-    if (!cartLoading && totalItems > 0) {
-      const hasShown = sessionStorage.getItem('cartReminderShown');
-      if (!hasShown) {
-        const timer = setTimeout(() => {
-          setShowCartReminder(true);
-          sessionStorage.setItem('cartReminderShown', 'true');
-        }, 1500);
-        return () => clearTimeout(timer);
+    if (!cartLoading) {
+      if (isFirstCount.current) {
+        setPrevTotalItems(totalItems);
+        isFirstCount.current = false;
+        return;
       }
+      
+      if (totalItems > prevTotalItems && totalItems > 0) {
+        setShowCartReminder(true);
+      }
+      setPrevTotalItems(totalItems);
     }
-  }, [totalItems, cartLoading]);
+  }, [totalItems, cartLoading, prevTotalItems]);
+
+  // 2. Trigger when customer logs in
+  useEffect(() => {
+    if (isAuthenticated && !cartLoading && totalItems > 0) {
+      const hasShownOnLogin = sessionStorage.getItem('cartReminderLoginShown');
+      if (!hasShownOnLogin) {
+        setShowCartReminder(true);
+        sessionStorage.setItem('cartReminderLoginShown', 'true');
+      }
+    } else if (!isAuthenticated) {
+      sessionStorage.removeItem('cartReminderLoginShown');
+    }
+  }, [isAuthenticated, totalItems, cartLoading]);
 
   useEffect(() => {
     getCategories().then(cats => {
@@ -243,8 +262,11 @@ export default function Navbar() {
                     ></div>
                     
                     <button
-                      onClick={() => setShowCartReminder(false)}
-                      className="absolute top-3 right-3 p-2 text-[#5B4A31]/40 hover:text-[#4A5D23] transition-all hover:bg-[#4A5D23]/5 rounded-full z-10"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowCartReminder(false);
+                      }}
+                      className="absolute top-3 right-3 p-2 text-[#5B4A31]/40 hover:text-[#4A5D23] transition-all hover:bg-[#4A5D23]/5 rounded-full z-50"
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -255,11 +277,11 @@ export default function Navbar() {
                         </div>
                         <div className="pr-2">
                           <div className="flex items-center gap-2 mb-1">
-                            <h4 className="text-base font-serif font-bold text-[#1a2408]">{t('itemsInCart')}</h4>
+                            <h4 className="text-base font-serif font-bold text-[#1a2408]">Items left in cart</h4>
                             <Sparkles className="h-3 w-3 text-[#c8a84e]" />
                           </div>
                           <p className="text-xs text-[#5B4A31] leading-relaxed mb-4 font-medium italic">
-                            {t('cartReminderText', { count: totalItems })}
+                            You previously left {totalItems} {totalItems === 1 ? 'item' : 'items'} in your cart. Checkout fast before they go out of stock!
                           </p>
                           <Link
                             href="/cart"
@@ -267,7 +289,7 @@ export default function Navbar() {
                             className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white px-5 py-2.5 rounded-xl transition-all shadow-xl hover:-translate-y-0.5 active:translate-y-0"
                             style={{ backgroundColor: '#4A5D23' }}
                           >
-                            {t('goToCart')} <ArrowRight className="h-3.5 w-3.5" />
+                            Go to Cart <ArrowRight className="h-3.5 w-3.5" />
                           </Link>
                         </div>
                       </div>
@@ -276,11 +298,16 @@ export default function Navbar() {
                 )}
               </div>
 
-              <LanguageSwitcher />
+              <RegionSwitcher />
+              <GoogleTranslateWidget />
 
               <Link href="/account" className="relative p-2 group">
                 <User className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
               </Link>
+
+              {isAuthenticated && (
+                <NotificationCenter colors={colors} />
+              )}
 
               {/* Mobile toggle */}
               <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2" style={{ color: colors.navbar_text }}>
@@ -307,7 +334,7 @@ export default function Navbar() {
                     onMouseEnter={e => (e.currentTarget.style.color = colors.strip_accent)}
                     onMouseLeave={e => (e.currentTarget.style.color = colors.strip_text)}
                   >
-                    {t('trackOrders')}
+                    Track Orders
                   </Link>
                 )}
 
@@ -322,7 +349,7 @@ export default function Navbar() {
                       className="flex items-center gap-1 font-medium cursor-pointer transition-colors duration-200"
                       style={{ color: colors.strip_text }}
                     >
-                      {t('categories')}
+                      Categories
                       <ChevronDown className="h-3 w-3 transition-transform duration-200 group-hover:rotate-180" />
                     </button>
                     <div className="absolute top-9 left-0 min-w-[280px] bg-white text-gray-800 shadow-2xl rounded-b-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[200] border-t-[3px]" style={{ borderColor: colors.strip_text }}>
@@ -383,7 +410,7 @@ export default function Navbar() {
               <div className="flex items-center gap-1.5 font-medium" style={{ color: colors.strip_text }}>
                 <span className="text-sm">✆</span>
                 <span>
-                  {t('hotline')}:{' '}
+                  Hotline:{' '}
                   <span className="font-semibold" style={{ color: colors.strip_accent }}>{strip.hotline}</span>
                 </span>
               </div>
@@ -438,7 +465,7 @@ export default function Navbar() {
                   (e.currentTarget as HTMLElement).style.color = colors.navbar_text;
                 }}
               >
-                {t('trackOrders')}
+                Track Orders
               </Link>
             )}
 
@@ -446,7 +473,7 @@ export default function Navbar() {
             <div className="border-t border-gray-100 my-2" />
 
             {/* Categories */}
-            <p className="px-3 text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1">{t('categories')}</p>
+            <p className="px-3 text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1">Categories</p>
             {parentCategories.map(parent => (
               <div key={parent.category_id} className="flex flex-col">
                 <Link
@@ -484,7 +511,7 @@ export default function Navbar() {
             {/* Hotline */}
             <div className="border-t border-gray-100 my-2" />
             <p className="px-3 text-xs" style={{ color: colors.strip_text }}>
-              ✆ {t('hotline')}: <span className="font-semibold" style={{ color: colors.navbar_hover }}>{strip.hotline}</span>
+              ✆ Hotline: <span className="font-semibold" style={{ color: colors.navbar_hover }}>{strip.hotline}</span>
             </p>
           </nav>
         </div>

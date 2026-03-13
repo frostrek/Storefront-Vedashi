@@ -11,13 +11,15 @@ import {
     getCustomerProfile, updateCustomerProfile, deactivateAccount,
     uploadProfileImage, getProfileImage, removeProfileImage, getOrderById,
     cancelOrder as apiCancelOrder, formatVND, downloadInvoice, getBestSellers,
-    getMyEnquiries, replyToEnquiry
+    getMyEnquiries, replyToEnquiry, getLoyaltyWallet,
+    getMyNotifications, getUnreadNotificationCount, markNotificationAsRead, 
+    markAllNotificationsAsRead, deleteNotification
 } from '@/lib/api';
 import { Order, Address } from '@/types';
 import {
     Package, MapPin, Heart, LogOut, User, Plus, Pencil, Trash2,
     Loader2, ShieldOff, Camera, X, Check, Star, Phone, Calendar, Mail,
-    CheckCircle2, Smartphone, AlertCircle, Shield, FileText, MessageSquare, Send, Clock, User2, MessageCircle
+    CheckCircle2, Smartphone, AlertCircle, Shield, FileText, MessageSquare, Send, Clock, User2, MessageCircle, Sparkles
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import toast from 'react-hot-toast';
@@ -25,13 +27,17 @@ import PrivacyDashboard from '@/components/account/PrivacyDashboard';
 import ReviewForm from '@/components/reviews/ReviewForm';
 import NotificationPreferences from '@/components/account/NotificationPreferences';
 import ExportOrdersModal from '@/components/account/ExportOrdersModal';
-import { BadgeCheck, BellRing, Download, ChevronRight, Search, ShoppingCart, LayoutGrid, List } from 'lucide-react';
+import { BadgeCheck, BellRing, Download, ChevronRight, Search, ShoppingCart, LayoutGrid, List, Wallet } from 'lucide-react';
+import MyWallet from '@/components/account/MyWallet';
+import ConfirmModal from '@/components/ui/ConfirmModal';
+import { useCurrency } from '@/context/CurrencyContext';
 
-type Tab = 'overview' | 'orders' | 'wishlist' | 'addresses' | 'profile' | 'privacy' | 'support';
+type Tab = 'overview' | 'orders' | 'wishlist' | 'addresses' | 'profile' | 'privacy' | 'support' | 'wallet' | 'notifications';
 
-const VALID_TABS: Tab[] = ['overview', 'orders', 'wishlist', 'addresses', 'profile', 'privacy', 'support'];
+const VALID_TABS: Tab[] = ['overview', 'orders', 'wishlist', 'addresses', 'profile', 'privacy', 'support', 'wallet', 'notifications'];
 
 export default function AccountPage() {
+    const { formatPrice } = useCurrency();
     const router = useRouter();
     const params = useParams<{ tab?: string[] }>();
     const { user, isAuthenticated, isLoading, logout } = useAuth();
@@ -75,7 +81,11 @@ export default function AccountPage() {
         });
         toast.success(`Removed ${selectedWishlistItems.size} items from wishlist`);
         setSelectedWishlistItems(new Set());
+        setConfirmingBulkRemove(false);
     };
+
+    const [confirmingBulkRemove, setConfirmingBulkRemove] = useState(false);
+    const [confirmingIndividualRemove, setConfirmingIndividualRemove] = useState<string | null>(null);
 
     // Derive active tab from URL path segment, default to 'overview'
     const activeTab: Tab = useMemo(() => {
@@ -296,17 +306,71 @@ export default function AccountPage() {
         }
     };
 
+    // Notifications state
+    const [notifications, setNotifications] = useState<any[]>([]);
+    const [notificationsLoading, setNotificationsLoading] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    const fetchNotificationsData = useCallback(async () => {
+        setNotificationsLoading(true);
+        try {
+            const [notifs, unread] = await Promise.all([
+                getMyNotifications(),
+                getUnreadNotificationCount()
+            ]);
+            if (notifs) setNotifications(notifs);
+            if (unread !== undefined) setUnreadCount(unread);
+        } catch (err) {
+            console.error('Failed to fetch notifications:', err);
+        } finally {
+            setNotificationsLoading(false);
+        }
+    }, []);
+
+    const handleMarkAllRead = async () => {
+        try {
+            await markAllNotificationsAsRead();
+            toast.success('All marked as read');
+            fetchNotificationsData();
+        } catch (err) { toast.error('Failed to update'); }
+    };
+
+    const handleDeleteNotification = async (id: string) => {
+        try {
+            await deleteNotification(id);
+            toast.success('Notification removed');
+            fetchNotificationsData();
+        } catch (err) { toast.error('Failed to delete'); }
+    };
+
+    // Loyalty state
+    const [loyaltyData, setLoyaltyData] = useState<any>(null);
+
+    const fetchLoyaltyData = useCallback(async () => {
+        try {
+            const data = await getLoyaltyWallet();
+            if (data) setLoyaltyData(data);
+        } catch (err) {
+            console.error('Failed to fetch loyalty data:', err);
+        }
+    }, []);
+
     useEffect(() => {
         if (!user?.id) return;
         if (activeTab === 'orders') fetchOrders();
         if (activeTab === 'addresses') fetchAddresses();
         if (activeTab === 'support') fetchEnquiries();
+        if (activeTab === 'notifications') fetchNotificationsData();
+        if (activeTab === 'wallet' || activeTab === 'overview') fetchLoyaltyData();
         if (activeTab === 'profile') {
             fetchOrders(); // for order count
             fetchProfile();
             fetchProfileImage();
         }
-    }, [activeTab, user?.id, fetchOrders, fetchAddresses, fetchProfile, fetchProfileImage, fetchEnquiries]);
+    }, [activeTab, user?.id, fetchOrders, fetchAddresses, fetchProfile, fetchProfileImage, fetchEnquiries, fetchLoyaltyData]);
+
+    const activeTier = loyaltyData?.tier?.tier_name || 'Bronze';
+    const activePoints = loyaltyData?.wallet?.balance || 0;
 
     // ── Profile save handler ─────────────────────────────────────────
     const handleProfileSave = async () => {
@@ -420,13 +484,14 @@ export default function AccountPage() {
             const res = await apiDeleteAddress(user.id, addressId);
             if (res.success) {
                 toast.success('Address deleted');
-                setDeletingAddressId(null);
                 fetchAddresses();
             } else {
                 toast.error(res.message || 'Failed to delete address');
             }
         } catch {
             toast.error('Something went wrong');
+        } finally {
+            setDeletingAddressId(null);
         }
     };
 
@@ -516,8 +581,10 @@ export default function AccountPage() {
     // Sidebar groups
     const coreExperienceTabs = [
         { id: 'overview', label: 'Overview', icon: LayoutGrid },
+        { id: 'notifications', label: 'Notifications', icon: BellRing, count: unreadCount },
         { id: 'orders', label: 'Orders', icon: Package, count: orderCount },
         { id: 'wishlist', label: 'Wishlist', icon: Heart, count: wishlistItems.length },
+        { id: 'wallet', label: 'My Wallet', icon: Wallet },
     ];
     const identityAccessTabs = [
         { id: 'profile', label: 'Personal Profile', icon: User },
@@ -530,15 +597,6 @@ export default function AccountPage() {
         <div className="flex h-screen bg-[#F8F5F0] overflow-hidden">
             {/* Left Sidebar */}
             <aside className="w-[280px] bg-[#36453A] text-white flex flex-col flex-shrink-0 relative z-20 shadow-[4px_0_24px_rgba(0,0,0,0.12)]">
-                {/* Logo Area */}
-                <div className="h-[88px] flex items-center px-8 border-b border-white/10">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-white">
-                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" />
-                        <path d="M7 12C7 14.7614 9.23858 17 12 17V7C9.23858 7 7 9.23858 7 12Z" stroke="currentColor" strokeWidth="2" />
-                    </svg>
-                    <span className="ml-3 font-serif text-xl font-bold tracking-wide">Vedashi</span>
-                </div>
-
                 <div className="flex-1 overflow-y-auto px-5 py-8 custom-scrollbar">
                     {/* CORE EXPERIENCE */}
                     <div className="mb-8">
@@ -611,10 +669,13 @@ export default function AccountPage() {
                             <span className="p-1.5 bg-white/10 rounded-full flex items-center justify-center">
                                 <Star className="h-3 w-3 text-[#D4A847] fill-[#D4A847]" />
                             </span>
-                            <span className="text-[10px] font-bold tracking-wider text-white">ELITE STATUS</span>
+                            <span className="text-[10px] font-bold tracking-wider text-white uppercase">{activeTier} STATUS</span>
                         </div>
-                        <p className="text-xs text-white/80 leading-relaxed mb-3">You currently possess the <strong className="text-white">Premium Access</strong> tag.</p>
-                        <button className="text-[10px] uppercase font-bold text-[#D4A847] flex items-center gap-1 hover:text-white transition-colors">
+                        <p className="text-xs text-white/80 leading-relaxed mb-3">You currently possess the <strong className="text-white">{activeTier}</strong> ritualist rank.</p>
+                        <button 
+                            onClick={() => router.push('/account/wallet')}
+                            className="text-[10px] uppercase font-bold text-[#D4A847] flex items-center gap-1 hover:text-white transition-colors"
+                        >
                             VIEW BENEFITS <ChevronRight className="h-3 w-3" />
                         </button>
                     </div>
@@ -644,7 +705,7 @@ export default function AccountPage() {
             {/* Main Content Area */}
             <main className="flex-1 flex flex-col h-full relative z-10 overflow-hidden">
                 {/* Header */}
-                <header className="h-[88px] flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-[#E8E1D5] flex items-center justify-between px-8 xl:px-12 sticky top-0 z-20">
+                <header className="h-12 flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-[#E8E1D5] flex items-center justify-between px-8 xl:px-12 sticky top-0 z-20">
                     <div className="flex items-center gap-3 text-sm font-medium">
                         <button onClick={() => router.push('/account')} className="text-[#36453A]/60 hover:text-[#36453A] transition-colors">Account</button>
                         <ChevronRight className="h-4 w-4 text-[#36453A]/30" />
@@ -657,22 +718,9 @@ export default function AccountPage() {
                     </div>
 
                     <div className="flex items-center gap-5">
-                        <div className="relative hidden md:block group">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-warm-gray group-focus-within:text-[#36453A] transition-colors" />
-                            <input
-                                type="text"
-                                placeholder="Search settings..."
-                                className="w-64 bg-[#F8F5F0] border border-[#E8E1D5] rounded-full pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-[#36453A]/40 focus:ring-1 focus:ring-[#36453A]/20 transition-all text-[#36453A] placeholder:text-warm-gray/70"
-                            />
-                        </div>
-                        <div className="w-px h-6 bg-[#E8E1D5] hidden md:block"></div>
-                        <button className="relative p-2 text-warm-gray hover:text-[#36453A] hover:bg-[#F8F5F0] rounded-full transition-all">
-                            <BellRing className="h-5 w-5" />
-                            <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full border border-white"></span>
-                        </button>
                         <button
                             onClick={() => { logout(); toast.success('Signed out'); router.push('/'); }}
-                            className="bg-white border border-[#E8E1D5] text-[#36453A] px-4 py-2 rounded-full text-sm font-bold shadow-sm hover:shadow-md hover:border-[#36453A]/30 transition-all flex items-center gap-2"
+                            className="bg-white border border-[#E8E1D5] text-[#36453A] px-4 py-1.5 rounded-full text-xs font-bold shadow-sm hover:shadow-md hover:border-[#36453A]/30 transition-all flex items-center gap-2"
                         >
                             Sign Out
                         </button>
@@ -760,9 +808,8 @@ export default function AccountPage() {
                                         </div>
                                         <div className="relative z-10">
                                             <p className="text-xs font-bold text-warm-gray uppercase tracking-wider mb-1">Loyalty Points</p>
-                                            {/* Mocking points visually since the backend doesn't track this currently natively under `user.points` */}
-                                            <h3 className="font-serif text-2xl font-bold text-[#36453A] mb-1">{(user as any)?.seed_points || 0} Pts</h3>
-                                            <p className="text-[11px] text-warm-gray font-medium">You can redeem ${(Number((user as any)?.seed_points || 0) * 0.05).toFixed(2)} today</p>
+                                            <h3 className="font-serif text-2xl font-bold text-[#36453A] mb-1">{activePoints} Pts</h3>
+                                            <p className="text-[11px] text-[#A8B28B] font-medium">{activeTier} Tier Multiplier: {loyaltyData?.tier?.points_multiplier || 1}x</p>
                                         </div>
                                     </div>
                                 </div>
@@ -845,7 +892,7 @@ export default function AccountPage() {
                                                                     {order.status || 'PENDING'}
                                                                 </span>
                                                             </td>
-                                                            <td className="py-4 text-sm font-bold text-[#36453A] text-right">{formatVND(order.total_amount)}</td>
+                                                            <td className="py-4 text-sm font-bold text-[#36453A] text-right">{formatPrice(order.total_amount)}</td>
                                                         </tr>
                                                     ))}
                                                     {orders.length === 0 && (
@@ -886,7 +933,7 @@ export default function AccountPage() {
                                                             <p className="text-[9px] font-bold tracking-widest text-[#A8B28B] uppercase mb-0.5 truncate">{item.category_name || 'WELLNESS'}</p>
                                                             <p className="text-xs font-bold text-[#36453A] line-clamp-2 leading-tight mb-1 group-hover:text-black">{item.product_name}</p>
                                                             <div className="flex items-center gap-2 mt-auto">
-                                                                <span className="text-xs font-bold text-[#36453A]">{formatVND(item.price)}</span>
+                                                                <span className="text-xs font-bold text-[#36453A]">{formatPrice(item.price)}</span>
                                                                 {item.on_sale && <span className="text-[10px] bg-red-100 text-red-700 px-1 rounded font-bold uppercase">Sale</span>}
                                                             </div>
                                                         </div>
@@ -1088,7 +1135,7 @@ export default function AccountPage() {
                                                             <div className="flex flex-col items-start sm:items-end w-full">
                                                                 <span className="text-[10px] font-bold tracking-widest text-warm-gray uppercase mb-1">Total Amount</span>
                                                                 <span className="font-serif text-2xl font-bold text-[#36453A]">
-                                                                    {formatVND(order.final_total || order.total_amount)}
+                                                                    {formatPrice(order.final_total || order.total_amount)}
                                                                 </span>
                                                             </div>
                                                             <div className="flex flex-col gap-2 w-full sm:w-auto">
@@ -1202,7 +1249,7 @@ export default function AccountPage() {
                                                                             </div>
                                                                         </div>
                                                                         <span className="text-xs font-bold text-[#36453A] whitespace-nowrap">
-                                                                            {formatVND(item.price || item.unit_price)}
+                                                                            {formatPrice(item.price || item.unit_price)}
                                                                         </span>
                                                                     </div>
                                                                 );
@@ -1236,7 +1283,7 @@ export default function AccountPage() {
                                                         <div className="space-y-3">
                                                             <div className="flex items-center justify-between text-xs text-warm-gray font-medium">
                                                                 <span>Subtotal</span>
-                                                                <span className="text-[#36453A] font-bold">{formatVND(selectedOrderDetails.total_amount || 0)}</span>
+                                                                <span className="text-[#36453A] font-bold">{formatPrice(selectedOrderDetails.total_amount || 0)}</span>
                                                             </div>
                                                             <div className="flex items-center justify-between text-xs text-warm-gray font-medium">
                                                                 <span>Eco-Shipping</span>
@@ -1244,11 +1291,11 @@ export default function AccountPage() {
                                                             </div>
                                                             <div className="flex items-center justify-between text-xs text-warm-gray font-medium">
                                                                 <span>Tax</span>
-                                                                <span className="text-[#36453A] font-bold">{formatVND(selectedOrderDetails.vat_amount || 0)}</span>
+                                                                <span className="text-[#36453A] font-bold">{formatPrice(selectedOrderDetails.vat_amount || 0)}</span>
                                                             </div>
                                                             <div className="pt-3 border-t border-[#E8E1D5] flex items-center justify-between">
                                                                 <span className="text-sm font-bold text-[#36453A]">Total</span>
-                                                                <span className="font-serif text-lg font-bold text-[#36453A]">{formatVND(selectedOrderDetails.final_total || selectedOrderDetails.total_amount || 0)}</span>
+                                                                <span className="font-serif text-lg font-bold text-[#36453A]">{formatPrice(selectedOrderDetails.final_total || selectedOrderDetails.total_amount || 0)}</span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1457,7 +1504,7 @@ export default function AccountPage() {
                                         </button>
 
                                         <button
-                                            onClick={handleRemoveSelected}
+                                            onClick={() => setConfirmingBulkRemove(true)}
                                             disabled={selectedWishlistItems.size === 0}
                                             className="flex items-center gap-2 text-sm font-bold text-warm-gray hover:text-red-500 disabled:opacity-30 transition-colors"
                                         >
@@ -1505,6 +1552,18 @@ export default function AccountPage() {
 
                                             return (
                                                 <div key={product.product_id} className="group flex flex-col rounded-3xl border border-[#E8E1D5] bg-white p-4 transition-all hover:shadow-lg relative">
+                                                    {/* Individual Remove Button */}
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setConfirmingIndividualRemove(product.product_id);
+                                                        }}
+                                                        className="absolute top-6 right-6 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white text-warm-gray shadow-sm hover:text-red-500 hover:shadow-md transition-all border border-[#E8E1D5] opacity-0 group-hover:opacity-100"
+                                                        title="Remove from wishlist"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+
                                                     {/* Checkbox Overlay */}
                                                     <div className="absolute top-6 left-6 z-10">
                                                         <div className="relative flex items-center justify-center">
@@ -2069,16 +2128,24 @@ export default function AccountPage() {
                                             </button>
                                         </div>
 
-                                        {/* Active Plan */}
-                                        <div className="bg-[#36453A] rounded-3xl p-6 text-white relative overflow-hidden shadow-lg">
-                                            <div className="absolute top-0 right-0 p-4 opacity-10">
-                                                <Star className="h-16 w-16" />
+                                        {/* Active Plan / Loyalty Status */}
+                                        <div className="bg-[#1A2E1A] rounded-3xl p-6 text-white relative overflow-hidden shadow-lg border border-[#D4A847]/30 group hover:border-[#D4A847] transition-all duration-500">
+                                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                                <Star className="h-16 w-16 text-[#D4A847]" />
                                             </div>
-                                            <p className="text-[10px] font-bold tracking-widest text-white/50 mb-2">ACTIVE PLAN</p>
-                                            <h3 className="font-serif text-2xl font-bold text-[#D4A847] mb-2">Prana Wellness Pro</h3>
-                                            <p className="text-sm text-white/80 leading-relaxed mb-6">Free shipping, exclusive product drops, and monthly holistic consultations.</p>
-                                            <button className="w-full rounded-xl bg-white/10 hover:bg-white/20 py-3 text-sm font-bold transition-colors">
-                                                Manage Subscription
+                                            <p className="text-[10px] font-bold tracking-[0.2em] text-[#D4A847]/60 mb-2 uppercase">ACTIVE PLAN</p>
+                                            <h3 className="font-serif text-2xl font-bold text-[#D4A847] mb-2">{activeTier} Ritualist</h3>
+                                            <p className="text-sm text-white/70 leading-relaxed mb-6">
+                                                {loyaltyData?.tier?.benefits && Array.isArray(loyaltyData.tier.benefits) && loyaltyData.tier.benefits.length > 0 
+                                                    ? loyaltyData.tier.benefits.join(', ')
+                                                    : "Enhance your aura with every ritual to unlock exotic benefits and golden boons."
+                                                }
+                                            </p>
+                                            <button 
+                                                onClick={() => router.push('/account/wallet')}
+                                                className="w-full rounded-xl bg-[#D4A847] text-[#1A2E1A] py-3 text-sm font-bold hover:bg-white transition-all transform active:scale-95 shadow-lg"
+                                            >
+                                                Manage Rewards
                                             </button>
                                         </div>
 
@@ -2254,7 +2321,7 @@ export default function AccountPage() {
                                                         <p className="text-sm text-white/80 max-w-md">Our support team is here to help. You'll receive an email notification as soon as we reply.</p>
                                                     </div>
                                                     <button 
-                                                        onClick={() => router.push('/contact')}
+                                                        onClick={() => router.push('/help-center/support')}
                                                         className="bg-[#D4A847] text-[#36453A] px-8 py-3 rounded-xl text-sm font-bold shadow-md hover:bg-[#B38720] transition-colors whitespace-nowrap"
                                                     >
                                                         Submit New Enquiry
@@ -2335,7 +2402,7 @@ export default function AccountPage() {
                                                     <h3 className="font-serif text-2xl font-bold text-[#36453A] mb-2">No Past Enquiries</h3>
                                                     <p className="text-sm text-warm-gray max-w-xs mx-auto mb-8">Your path has been smooth! If you ever need help, our support team is just a message away.</p>
                                                     <button 
-                                                        onClick={() => router.push('/contact')}
+                                                        onClick={() => router.push('/help-center/support')}
                                                         className="bg-[#36453A] text-white px-8 py-3 rounded-xl text-sm font-bold shadow-md hover:bg-[#2A362D] transition-colors"
                                                     >
                                                         Create New Ticket
@@ -2534,7 +2601,7 @@ export default function AccountPage() {
                                                             <p className="text-xs text-warm-gray mt-1">Brand: {(item as { product?: { brand?: string } }).product?.brand || 'N/A'} | Size: {(item as { variant?: { size_label?: string } }).variant?.size_label || 'N/A'}</p>
                                                             <div className="flex justify-between items-center mt-2">
                                                                 <p className="text-sm font-medium text-charcoal">Qty: {(item as { quantity: number }).quantity}</p>
-                                                                <p className="text-sm font-bold text-burgundy">{formatVND(parseFloat((item as { line_total?: string, unit_price: number, quantity: number, tax_amount: number }).line_total || String((item as { unit_price: number, quantity: number, tax_amount: number }).unit_price * (item as { quantity: number }).quantity + (item as { tax_amount: number }).tax_amount)))}</p>
+                                                                <p className="text-sm font-bold text-burgundy">{formatPrice(parseFloat((item as { line_total?: string, unit_price: number, quantity: number, tax_amount: number }).line_total || String((item as { unit_price: number, quantity: number, tax_amount: number }).unit_price * (item as { quantity: number }).quantity + (item as { tax_amount: number }).tax_amount)))}</p>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -2546,15 +2613,15 @@ export default function AccountPage() {
                                         <div className="border-t border-light-border pt-4 space-y-2 text-sm">
                                             <div className="flex justify-between text-warm-gray">
                                                 <span>Subtotal</span>
-                                                <span>{formatVND(parseFloat((selectedOrderDetails as { total_amount: string }).total_amount))}</span>
+                                                <span>{formatPrice(parseFloat((selectedOrderDetails as { total_amount: string }).total_amount))}</span>
                                             </div>
                                             <div className="flex justify-between text-warm-gray">
                                                 <span>Tax</span>
-                                                <span>{formatVND(parseFloat((selectedOrderDetails as { total_tax: string }).total_tax))}</span>
+                                                <span>{formatPrice(parseFloat((selectedOrderDetails as { total_tax: string }).total_tax))}</span>
                                             </div>
                                             <div className="flex justify-between font-bold text-charcoal text-base mt-2 pt-2 border-t border-light-border">
                                                 <span>Grand Total</span>
-                                                <span className="text-burgundy">{formatVND(parseFloat((selectedOrderDetails as { total_amount: string }).total_amount) + parseFloat((selectedOrderDetails as { total_tax: string }).total_tax))}</span>
+                                                <span className="text-burgundy">{formatPrice(parseFloat((selectedOrderDetails as { total_amount: string }).total_amount) + parseFloat((selectedOrderDetails as { total_tax: string }).total_tax))}</span>
                                             </div>
                                         </div>
 
@@ -2578,6 +2645,199 @@ export default function AccountPage() {
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                        )}
+
+                        {/* ═══════════════════ WALLET TAB ═══════════════════ */}
+                        {activeTab === 'wallet' && (
+                            <div className="animate-fadeIn">
+                                <MyWallet customerId={user?.id || ''} />
+                            </div>
+                        )}
+
+                        {/* ═══════════════════ NOTIFICATIONS TAB ═══════════════════ */}
+                        {activeTab === 'notifications' && (
+                            <div className="max-w-[900px] animate-fadeIn pb-12">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                                    <div className="flex items-center gap-4">
+                                        <div className="h-12 w-12 rounded-xl bg-white border border-[#E8E1D5] flex items-center justify-center shadow-sm">
+                                            <BellRing className="h-6 w-6 text-[#36453A]" />
+                                        </div>
+                                        <div>
+                                            <h1 className="font-serif text-3xl font-bold text-[#36453A]">Your Notifications</h1>
+                                            <p className="text-sm text-warm-gray">Security alerts and update rituals</p>
+                                        </div>
+                                    </div>
+                                    {notifications.length > 0 && (
+                                        <button 
+                                            onClick={handleMarkAllRead}
+                                            className="px-4 py-2 bg-white border border-[#E8E1D5] rounded-xl text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors flex items-center gap-2"
+                                        >
+                                            <Check className="h-3.5 w-3.5" /> Mark All as Read
+                                        </button>
+                                    )}
+                                </div>
+
+                                {notificationsLoading ? (
+                                    <div className="py-24 flex justify-center">
+                                        <Loader2 className="h-10 w-10 animate-spin text-[#36453A]" />
+                                    </div>
+                                ) : notifications.length === 0 ? (
+                                    <div className="bg-white rounded-[30px] border border-[#E8E1D5] py-20 px-6 text-center">
+                                        <div className="h-20 w-20 rounded-full bg-[#F8F5F0] border border-[#E8E1D5] flex items-center justify-center mx-auto mb-6">
+                                            <BellRing className="h-10 w-10 text-warm-gray/30" />
+                                        </div>
+                                        <h3 className="font-serif text-2xl font-bold text-[#36453A] mb-2">Inner Peace</h3>
+                                        <p className="text-warm-gray text-sm max-w-xs mx-auto">You have no new notifications at this moment. Stay mindful and enjoy your wellness journey.</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {notifications.map((n) => (
+                                            <div 
+                                                key={n.notification_id}
+                                                className={`group flex items-start gap-4 p-5 rounded-2xl border transition-all ${n.read_at 
+                                                    ? 'bg-white/60 border-[#E8E1D5] opacity-75' 
+                                                    : 'bg-white border-[#36453A]/20 shadow-sm border-l-4 border-l-[#36453A]'}`}
+                                            >
+                                                <div className={`mt-1 h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 ${n.read_at ? 'bg-warm-gray/10' : 'bg-[#36453A]/10'}`}>
+                                                    {n.type === 'security' ? <Shield className="h-5 w-5 text-red-500" /> : <Sparkles className="h-5 w-5 text-[#D4A847]" />}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center justify-between gap-2 mb-1">
+                                                        <h4 className={`text-sm font-bold ${n.read_at ? 'text-[#36453A]/60' : 'text-[#36453A]'}`}>{n.title}</h4>
+                                                        <span className="text-[10px] font-medium text-warm-gray whitespace-nowrap">
+                                                            {new Date(n.created_at).toLocaleDateString()}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-xs text-warm-gray leading-relaxed mb-3">
+                                                        {n.message}
+                                                    </p>
+                                                    <div className="flex items-center gap-4">
+                                                        {n.link_url && (
+                                                            <button 
+                                                                onClick={() => router.push(n.link_url as any)}
+                                                                className="text-[10px] font-black uppercase tracking-widest text-[#36453A] hover:underline"
+                                                            >
+                                                                View Details
+                                                            </button>
+                                                        )}
+                                                        <button 
+                                                            onClick={async () => {
+                                                                if (!n.read_at) {
+                                                                    await markNotificationAsRead(n.notification_id);
+                                                                    fetchNotificationsData();
+                                                                }
+                                                            }}
+                                                            disabled={!!n.read_at}
+                                                            className={`text-[10px] font-black uppercase tracking-widest transition-colors ${n.read_at ? 'text-[#36453A]/30 cursor-default' : 'text-[#D4A847] hover:text-[#B38720]'}`}
+                                                        >
+                                                            {n.read_at ? 'Seen' : 'Mark as Read'}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <button 
+                                                    onClick={() => handleDeleteNotification(n.notification_id)}
+                                                    className="opacity-0 group-hover:opacity-100 p-2 text-warm-gray/40 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* ═══════════════════ NOTIFICATIONS TAB ═══════════════════ */}
+                        {activeTab === 'notifications' && (
+                            <div className="max-w-[900px] animate-fadeIn pb-12">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                                    <div className="flex items-center gap-4">
+                                        <div className="h-12 w-12 rounded-xl bg-white border border-[#E8E1D5] flex items-center justify-center shadow-sm">
+                                            <BellRing className="h-6 w-6 text-[#36453A]" />
+                                        </div>
+                                        <div>
+                                            <h1 className="font-serif text-3xl font-bold text-[#36453A]">Your Notifications</h1>
+                                            <p className="text-sm text-warm-gray">Security alerts and update rituals</p>
+                                        </div>
+                                    </div>
+                                    {notifications.length > 0 && (
+                                        <button 
+                                            onClick={handleMarkAllRead}
+                                            className="px-4 py-2 bg-white border border-[#E8E1D5] rounded-xl text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors flex items-center gap-2"
+                                        >
+                                            <Check className="h-3.5 w-3.5" /> Mark All as Read
+                                        </button>
+                                    )}
+                                </div>
+
+                                {notificationsLoading ? (
+                                    <div className="py-24 flex justify-center">
+                                        <Loader2 className="h-10 w-10 animate-spin text-[#36453A]" />
+                                    </div>
+                                ) : notifications.length === 0 ? (
+                                    <div className="bg-white rounded-[30px] border border-[#E8E1D5] py-20 px-6 text-center">
+                                        <div className="h-20 w-20 rounded-full bg-[#F8F5F0] border border-[#E8E1D5] flex items-center justify-center mx-auto mb-6">
+                                            <BellRing className="h-10 w-10 text-warm-gray/30" />
+                                        </div>
+                                        <h3 className="font-serif text-2xl font-bold text-[#36453A] mb-2">Inner Peace</h3>
+                                        <p className="text-warm-gray text-sm max-w-xs mx-auto">You have no new notifications at this moment. Stay mindful and enjoy your wellness journey.</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {notifications.map((n) => (
+                                            <div 
+                                                key={n.notification_id}
+                                                className={`group flex items-start gap-4 p-5 rounded-2xl border transition-all ${n.read_at 
+                                                    ? 'bg-white/60 border-[#E8E1D5] opacity-75' 
+                                                    : 'bg-white border-[#36453A]/20 shadow-sm border-l-4 border-l-[#36453A]'}`}
+                                            >
+                                                <div className={`mt-1 h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 ${n.read_at ? 'bg-warm-gray/10' : 'bg-[#36453A]/10'}`}>
+                                                    {n.type === 'security' ? <Shield className="h-5 w-5 text-red-500" /> : <Sparkles className="h-5 w-5 text-[#D4A847]" />}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center justify-between gap-2 mb-1">
+                                                        <h4 className={`text-sm font-bold ${n.read_at ? 'text-[#36453A]/60' : 'text-[#36453A]'}`}>{n.title}</h4>
+                                                        <span className="text-[10px] font-medium text-warm-gray whitespace-nowrap">
+                                                            {new Date(n.created_at).toLocaleDateString()}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-xs text-warm-gray leading-relaxed mb-3">
+                                                        {n.message}
+                                                    </p>
+                                                    <div className="flex items-center gap-4">
+                                                        {n.link_url && (
+                                                            <button 
+                                                                onClick={() => router.push(n.link_url as any)}
+                                                                className="text-[10px] font-black uppercase tracking-widest text-[#36453A] hover:underline"
+                                                            >
+                                                                View Details
+                                                            </button>
+                                                        )}
+                                                        <button 
+                                                            onClick={async () => {
+                                                                if (!n.read_at) {
+                                                                    await markNotificationAsRead(n.notification_id);
+                                                                    fetchNotificationsData();
+                                                                }
+                                                            }}
+                                                            disabled={!!n.read_at}
+                                                            className={`text-[10px] font-black uppercase tracking-widest transition-colors ${n.read_at ? 'text-[#36453A]/30 cursor-default' : 'text-[#D4A847] hover:text-[#B38720]'}`}
+                                                        >
+                                                            {n.read_at ? 'Seen' : 'Mark as Read'}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <button 
+                                                    onClick={() => handleDeleteNotification(n.notification_id)}
+                                                    className="opacity-0 group-hover:opacity-100 p-2 text-warm-gray/40 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -2678,6 +2938,51 @@ export default function AccountPage() {
                     </div>
                 </div>
             </main>
+
+            {/* Confirm modals */}
+            <ConfirmModal
+                isOpen={confirmingBulkRemove}
+                title="Remove Items"
+                message={`Are you sure you want to remove ${selectedWishlistItems.size} items from your sanctuary?`}
+                confirmText="Remove"
+                cancelText="Cancel"
+                isDestructive={true}
+                onConfirm={handleRemoveSelected}
+                onCancel={() => setConfirmingBulkRemove(false)}
+            />
+
+            <ConfirmModal
+                isOpen={!!confirmingIndividualRemove}
+                title="Remove Item"
+                message="Are you sure you want to remove this item from your sanctuary?"
+                confirmText="Remove"
+                cancelText="Cancel"
+                isDestructive={true}
+                onConfirm={() => {
+                    if (confirmingIndividualRemove) {
+                        removeWishlistItem(confirmingIndividualRemove);
+                        toast.success('Item removed from wishlist');
+                        setConfirmingIndividualRemove(null);
+                    }
+                }}
+                onCancel={() => setConfirmingIndividualRemove(null)}
+            />
+
+            <ConfirmModal
+                isOpen={!!deletingAddressId}
+                title="Delete Address"
+                message="Are you sure you want to permanently delete this address? This action cannot be undone."
+                confirmText="Delete"
+                cancelText="Cancel"
+                isDestructive={true}
+                onConfirm={() => {
+                    if (deletingAddressId) {
+                        handleDeleteAddress(deletingAddressId);
+                    }
+                }}
+                onCancel={() => setDeletingAddressId(null)}
+            />
+
         </div>
     );
 }

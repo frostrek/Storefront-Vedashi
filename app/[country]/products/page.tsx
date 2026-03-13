@@ -2,7 +2,8 @@
 
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { getProducts, getCategories, formatVND, getFilterOptions, getBestSellers, getNewArrivals, getFilteredProducts, searchProducts } from '@/lib/api';
+import { getProducts, getCategories, getFilterOptions, getBestSellers, getNewArrivals, getFilteredProducts, searchProducts } from '@/lib/api';
+import { useCurrency } from '@/context/CurrencyContext';
 import { FilteredProduct, FilterMeta } from '@/types';
 import ProductCard from '@/components/ProductCard';
 import { SkeletonProductGrid } from '@/components/Skeleton';
@@ -29,6 +30,7 @@ import { toast } from 'react-hot-toast';
 const ITEMS_PER_PAGE = 24;
 
 function ProductsContent() {
+    const { formatPrice } = useCurrency();
     const {
         filters,
         activeChips,
@@ -341,7 +343,7 @@ function ProductsContent() {
                     step={priceMax <= 5000 ? 100 : (priceMax <= 20000 ? 500 : 1000)}
                     value={[filters.priceRange[0] ?? 0, filters.priceRange[1] === Infinity ? priceMax : filters.priceRange[1]]}
                     onChange={(val) => setPriceRange(val, priceMax)}
-                    formatLabel={v => formatVND(v)}
+                    formatLabel={v => formatPrice(v)}
                 />
             </FilterSection>
 
