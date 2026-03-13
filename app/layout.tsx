@@ -116,6 +116,7 @@ export default async function RootLayout({
                 <WishlistProvider>
                   <Toaster
                     position="bottom-right"
+                    containerStyle={{ zIndex: 999999 }}
                     toastOptions={{
                       duration: 3500,
                       className: 'modern-toast',
