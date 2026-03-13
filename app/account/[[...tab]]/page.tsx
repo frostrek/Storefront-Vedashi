@@ -27,6 +27,7 @@ import NotificationPreferences from '@/components/account/NotificationPreference
 import ExportOrdersModal from '@/components/account/ExportOrdersModal';
 import { BadgeCheck, BellRing, Download, ChevronRight, Search, ShoppingCart, LayoutGrid, List, Wallet } from 'lucide-react';
 import MyWallet from '@/components/account/MyWallet';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 type Tab = 'overview' | 'orders' | 'wishlist' | 'addresses' | 'profile' | 'privacy' | 'support' | 'wallet';
 
@@ -76,7 +77,11 @@ export default function AccountPage() {
         });
         toast.success(`Removed ${selectedWishlistItems.size} items from wishlist`);
         setSelectedWishlistItems(new Set());
+        setConfirmingBulkRemove(false);
     };
+
+    const [confirmingBulkRemove, setConfirmingBulkRemove] = useState(false);
+    const [confirmingIndividualRemove, setConfirmingIndividualRemove] = useState<string | null>(null);
 
     // Derive active tab from URL path segment, default to 'overview'
     const activeTab: Tab = useMemo(() => {
@@ -437,13 +442,14 @@ export default function AccountPage() {
             const res = await apiDeleteAddress(user.id, addressId);
             if (res.success) {
                 toast.success('Address deleted');
-                setDeletingAddressId(null);
                 fetchAddresses();
             } else {
                 toast.error(res.message || 'Failed to delete address');
             }
         } catch {
             toast.error('Something went wrong');
+        } finally {
+            setDeletingAddressId(null);
         }
     };
 
@@ -1455,7 +1461,7 @@ export default function AccountPage() {
                                         </button>
 
                                         <button
-                                            onClick={handleRemoveSelected}
+                                            onClick={() => setConfirmingBulkRemove(true)}
                                             disabled={selectedWishlistItems.size === 0}
                                             className="flex items-center gap-2 text-sm font-bold text-warm-gray hover:text-red-500 disabled:opacity-30 transition-colors"
                                         >
@@ -1503,6 +1509,18 @@ export default function AccountPage() {
 
                                             return (
                                                 <div key={product.product_id} className="group flex flex-col rounded-3xl border border-[#E8E1D5] bg-white p-4 transition-all hover:shadow-lg relative">
+                                                    {/* Individual Remove Button */}
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setConfirmingIndividualRemove(product.product_id);
+                                                        }}
+                                                        className="absolute top-6 right-6 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white text-warm-gray shadow-sm hover:text-red-500 hover:shadow-md transition-all border border-[#E8E1D5] opacity-0 group-hover:opacity-100"
+                                                        title="Remove from wishlist"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+
                                                     {/* Checkbox Overlay */}
                                                     <div className="absolute top-6 left-6 z-10">
                                                         <div className="relative flex items-center justify-center">
@@ -2691,6 +2709,51 @@ export default function AccountPage() {
                     </div>
                 </div>
             </main>
+
+            {/* Confirm modals */}
+            <ConfirmModal
+                isOpen={confirmingBulkRemove}
+                title="Remove Items"
+                message={`Are you sure you want to remove ${selectedWishlistItems.size} items from your sanctuary?`}
+                confirmText="Remove"
+                cancelText="Cancel"
+                isDestructive={true}
+                onConfirm={handleRemoveSelected}
+                onCancel={() => setConfirmingBulkRemove(false)}
+            />
+
+            <ConfirmModal
+                isOpen={!!confirmingIndividualRemove}
+                title="Remove Item"
+                message="Are you sure you want to remove this item from your sanctuary?"
+                confirmText="Remove"
+                cancelText="Cancel"
+                isDestructive={true}
+                onConfirm={() => {
+                    if (confirmingIndividualRemove) {
+                        removeWishlistItem(confirmingIndividualRemove);
+                        toast.success('Item removed from wishlist');
+                        setConfirmingIndividualRemove(null);
+                    }
+                }}
+                onCancel={() => setConfirmingIndividualRemove(null)}
+            />
+
+            <ConfirmModal
+                isOpen={!!deletingAddressId}
+                title="Delete Address"
+                message="Are you sure you want to permanently delete this address? This action cannot be undone."
+                confirmText="Delete"
+                cancelText="Cancel"
+                isDestructive={true}
+                onConfirm={() => {
+                    if (deletingAddressId) {
+                        handleDeleteAddress(deletingAddressId);
+                    }
+                }}
+                onCancel={() => setDeletingAddressId(null)}
+            />
+
         </div>
     );
 }

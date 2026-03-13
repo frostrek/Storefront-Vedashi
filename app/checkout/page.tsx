@@ -272,7 +272,7 @@ function CheckoutContent() {
                         return newErrs;
                     });
                 } else if (!res.success && res.message) {
-                    setFormErrors(prev => ({ ...prev, pincode: res.message }));
+                    // Do not set form error, just let user enter manually
                 }
                 setIsLookupLoading(false);
             }, 300);
@@ -306,7 +306,7 @@ function CheckoutContent() {
                         return newErrs;
                     });
                 } else if (!res.success && res.message) {
-                    setFormErrors(prev => ({ ...prev, billing_pincode: res.message }));
+                    // Do not set form error, just let user enter manually
                 }
                 setIsLookupLoading(false);
             }, 300);

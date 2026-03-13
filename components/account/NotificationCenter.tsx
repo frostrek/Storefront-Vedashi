@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Bell, X, Check, Trash2, ExternalLink, ShieldAlert, Package, MessageSquare } from 'lucide-react';
 import { getMyNotifications, getUnreadNotificationCount, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification } from '@/lib/api';
-import { useRouter } from '@/i18n/navigation';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Notification {
