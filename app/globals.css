@@ -1113,3 +1113,26 @@ div.skiptranslate,
 .cart-advisor-card .action:hover {
   text-decoration: underline;
 }
+/* --- Custom Scrollbar --- */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #FAF8F0;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #3B5D3B;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #2D4A2D;
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #3B5D3B #FAF8F0;
+}

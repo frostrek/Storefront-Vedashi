@@ -20,7 +20,7 @@ export default function PromoBanner() {
 
     useEffect(() => {
         // Skip fetching on auth pages
-        if (pathname === '/login' || pathname === '/signup') {
+        if (pathname?.endsWith('/login') || pathname?.endsWith('/signup')) {
             setLoading(false);
             return;
         }
@@ -44,7 +44,7 @@ export default function PromoBanner() {
         fetchBanner();
     }, [pathname]);
 
-    if (loading || !banner || pathname === '/login' || pathname === '/signup') return null;
+    if (loading || !banner || pathname?.endsWith('/login') || pathname?.endsWith('/signup')) return null;
 
     let contentClass = 'text-center font-bold tracking-[0.2em]';
 
