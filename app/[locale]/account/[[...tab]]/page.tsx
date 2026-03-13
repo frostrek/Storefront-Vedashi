@@ -1652,123 +1652,151 @@ export default function AccountPage() {
 
                         {/* ═══════════════════ ADDRESSES TAB ═══════════════════ */}
                         {activeTab === 'addresses' && (
-                            <div>
-                                <div className="flex justify-between items-center mb-6">
-                                    <div>
-                                        <h2 className="font-serif text-lg font-bold text-charcoal">Address Book</h2>
-                                        <p className="text-sm text-warm-gray mt-0.5">Manage your delivery addresses</p>
+                            <div className="max-w-[1200px] space-y-12 pb-16">
+                                {/* ── Rituals Header ── */}
+                                <div className="rounded-[40px] bg-[#F8F5F0] overflow-hidden relative shadow-sm border border-[#E8E1D5] py-16 px-12">
+                                    {/* Abstract background shapes matching sanctuary aesthetic */}
+                                    <div className="absolute top-0 right-0 w-[60%] h-full bg-white opacity-40 mix-blend-overlay rounded-bl-[100px] pointer-events-none -mr-12 -mt-12"></div>
+                                    <div className="absolute bottom-0 left-[20%] w-[30%] h-[30%] bg-white opacity-30 mix-blend-overlay rounded-tr-[100px] pointer-events-none"></div>
+
+                                    <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-12">
+                                        <div className="max-w-xl">
+                                            <span className="inline-block bg-white border border-[#E8E1D5] rounded-full px-4 py-1.5 text-[10px] font-bold text-[#36453A] uppercase tracking-widest mb-6">
+                                                Delivery Rituals
+                                            </span>
+                                            <h2 className="font-serif text-5xl font-bold text-[#36453A] leading-tight mb-4">
+                                                Your Sacred <br className="hidden sm:block" /> Delivery Spaces
+                                            </h2>
+                                            <p className="text-warm-gray text-base leading-relaxed">
+                                                Manage the destinations for your wellness rituals. Each address is a point of connection for your Ayurvedic journey.
+                                            </p>
+                                        </div>
+
+                                        {/* Add New Address Card */}
+                                        {!showAddressForm && (
+                                            <button 
+                                                onClick={() => { resetAddressForm(); setShowAddressForm(true); }}
+                                                className="bg-white rounded-3xl shadow-md border border-[#E8E1D5]/50 p-8 flex flex-col items-center justify-center min-w-[200px] relative z-20 group hover:border-[#36453A]/30 transition-all hover:shadow-lg"
+                                            >
+                                                <div className="h-16 w-16 bg-[#F8F5F0] rounded-2xl flex items-center justify-center mb-4 group-hover:bg-[#36453A] transition-colors">
+                                                    <Plus className="h-7 w-7 text-[#36453A] group-hover:text-white transition-colors" />
+                                                </div>
+                                                <p className="font-serif text-xl font-bold text-[#36453A] mb-1">Add Ritual Space</p>
+                                                <p className="text-[10px] font-bold text-warm-gray uppercase tracking-widest">New Delivery Address</p>
+                                            </button>
+                                        )}
                                     </div>
-                                    {!showAddressForm && (
-                                        <button
-                                            onClick={() => {
-                                                resetAddressForm();
-                                                setShowAddressForm(true);
-                                            }}
-                                            className="flex items-center gap-2 rounded-lg bg-burgundy px-4 py-2.5 text-sm font-semibold text-white hover:bg-burgundy-dark transition-all hover:shadow-md"
-                                        >
-                                            <Plus className="h-4 w-4" /> Add Address
-                                        </button>
-                                    )}
                                 </div>
 
                                 {/* Address Form (animated) */}
                                 {showAddressForm && (
                                     <div
-                                        className="mb-6 rounded-2xl border border-light-border bg-white overflow-hidden shadow-sm"
-                                        style={{ animation: 'slideDown 0.3s ease-out' }}
+                                        className="mb-12 rounded-[30px] border border-[#E8E1D5] bg-white overflow-hidden shadow-sm animate-fadeIn"
                                     >
                                         {/* Form header accent */}
-                                        <div className="h-1" style={{ background: 'linear-gradient(90deg, #6B2737, #D4A847)' }} />
-                                        <div className="p-6">
-                                            <div className="flex items-center justify-between mb-5">
-                                                <h3 className="font-serif text-base font-bold text-charcoal">
-                                                    {editingAddress ? 'Edit Address' : 'New Address'}
-                                                </h3>
-                                                <button onClick={resetAddressForm} className="p-1.5 rounded-lg hover:bg-cream transition-colors text-warm-gray hover:text-charcoal">
-                                                    <X className="h-4 w-4" />
+                                        <div className="h-1.5" style={{ background: 'linear-gradient(90deg, #36453A, #D4A847, #36453A)' }} />
+                                        <div className="p-8 lg:p-10">
+                                            <div className="flex items-center justify-between mb-8">
+                                                <div>
+                                                    <h3 className="font-serif text-2xl font-bold text-[#36453A]">
+                                                        {editingAddress ? 'Revise Ritual Space' : 'New Delivery Ritual'}
+                                                    </h3>
+                                                    <p className="text-xs text-warm-gray mt-1">Provide the details for your sacred delivery destination.</p>
+                                                </div>
+                                                <button onClick={resetAddressForm} className="p-2 rounded-full hover:bg-[#F8F5F0] transition-colors text-warm-gray hover:text-[#36453A]">
+                                                    <X className="h-5 w-5" />
                                                 </button>
                                             </div>
-                                            <div className="grid gap-4 sm:grid-cols-2">
+                                            
+                                            <div className="grid gap-6 sm:grid-cols-2">
                                                 <div className="sm:col-span-2">
-                                                    <label className="block text-sm font-medium text-charcoal mb-1">Address Line 1 *</label>
+                                                    <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Address Line 1 *</label>
                                                     <input type="text" value={addressForm.address_line1}
                                                         onChange={e => setAddressForm({ ...addressForm, address_line1: e.target.value })}
-                                                        className="w-full rounded-lg border border-light-border px-4 py-2.5 text-sm focus:border-burgundy focus:outline-none transition-colors"
-                                                        placeholder="Street address" />
+                                                        className="w-full rounded-xl border border-[#E8E1D5] bg-[#F8F5F0]/30 px-4 py-3 text-sm focus:border-[#36453A]/40 focus:ring-1 focus:ring-[#36453A]/20 focus:outline-none transition-all text-[#36453A] placeholder:text-warm-gray/40"
+                                                        placeholder="Street address or P.O. Box" />
                                                 </div>
                                                 <div className="sm:col-span-2">
-                                                    <label className="block text-sm font-medium text-charcoal mb-1">Address Line 2</label>
+                                                    <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Address Line 2 (Optional)</label>
                                                     <input type="text" value={addressForm.address_line2}
                                                         onChange={e => setAddressForm({ ...addressForm, address_line2: e.target.value })}
-                                                        className="w-full rounded-lg border border-light-border px-4 py-2.5 text-sm focus:border-burgundy focus:outline-none transition-colors"
-                                                        placeholder="Apartment, suite, etc." />
+                                                        className="w-full rounded-xl border border-[#E8E1D5] bg-[#F8F5F0]/30 px-4 py-3 text-sm focus:border-[#36453A]/40 focus:ring-1 focus:ring-[#36453A]/20 focus:outline-none transition-all text-[#36453A] placeholder:text-warm-gray/40"
+                                                        placeholder="Apartment, suite, unit, floor, etc." />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-charcoal mb-1">City *</label>
+                                                    <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">City *</label>
                                                     <input type="text" value={addressForm.city}
                                                         onChange={e => setAddressForm({ ...addressForm, city: e.target.value })}
-                                                        className="w-full rounded-lg border border-light-border px-4 py-2.5 text-sm focus:border-burgundy focus:outline-none transition-colors"
+                                                        className="w-full rounded-xl border border-[#E8E1D5] bg-[#F8F5F0]/30 px-4 py-3 text-sm focus:border-[#36453A]/40 focus:ring-1 focus:ring-[#36453A]/20 focus:outline-none transition-all text-[#36453A] placeholder:text-warm-gray/40"
                                                         placeholder="City" />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-charcoal mb-1">State *</label>
+                                                    <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">State / Province *</label>
                                                     <input type="text" value={addressForm.state}
                                                         onChange={e => setAddressForm({ ...addressForm, state: e.target.value })}
-                                                        className="w-full rounded-lg border border-light-border px-4 py-2.5 text-sm focus:border-burgundy focus:outline-none transition-colors"
+                                                        className="w-full rounded-xl border border-[#E8E1D5] bg-[#F8F5F0]/30 px-4 py-3 text-sm focus:border-[#36453A]/40 focus:ring-1 focus:ring-[#36453A]/20 focus:outline-none transition-all text-[#36453A] placeholder:text-warm-gray/40"
                                                         placeholder="State" />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-charcoal mb-1">Pincode *</label>
+                                                    <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Pincode / ZIP *</label>
                                                     <input type="text" value={addressForm.pincode}
                                                         onChange={e => setAddressForm({ ...addressForm, pincode: e.target.value })}
-                                                        className="w-full rounded-lg border border-light-border px-4 py-2.5 text-sm focus:border-burgundy focus:outline-none transition-colors"
+                                                        className="w-full rounded-xl border border-[#E8E1D5] bg-[#F8F5F0]/30 px-4 py-3 text-sm focus:border-[#36453A]/40 focus:ring-1 focus:ring-[#36453A]/20 focus:outline-none transition-all text-[#36453A] placeholder:text-warm-gray/40"
                                                         placeholder="Pincode" />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-charcoal mb-1">Country</label>
+                                                    <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Country</label>
                                                     <input type="text" value={addressForm.country}
                                                         onChange={e => setAddressForm({ ...addressForm, country: e.target.value })}
-                                                        className="w-full rounded-lg border border-light-border px-4 py-2.5 text-sm focus:border-burgundy focus:outline-none transition-colors"
+                                                        className="w-full rounded-xl border border-[#E8E1D5] bg-[#F8F5F0]/30 px-4 py-3 text-sm focus:border-[#36453A]/40 focus:ring-1 focus:ring-[#36453A]/20 focus:outline-none transition-all text-[#36453A] placeholder:text-warm-gray/40"
                                                         placeholder="Country" />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-charcoal mb-1">Phone</label>
-                                                    <input type="tel" value={addressForm.phone}
-                                                        onChange={e => setAddressForm({ ...addressForm, phone: e.target.value })}
-                                                        className="w-full rounded-lg border border-light-border px-4 py-2.5 text-sm focus:border-burgundy focus:outline-none transition-colors"
-                                                        placeholder="Phone number" />
+                                                    <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Contact Phone</label>
+                                                    <div className="relative">
+                                                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-warm-gray/60" />
+                                                        <input type="tel" value={addressForm.phone}
+                                                            onChange={e => setAddressForm({ ...addressForm, phone: e.target.value })}
+                                                            className="w-full rounded-xl border border-[#E8E1D5] bg-[#F8F5F0]/30 pl-11 pr-4 py-3 text-sm focus:border-[#36453A]/40 focus:ring-1 focus:ring-[#36453A]/20 focus:outline-none transition-all text-[#36453A] placeholder:text-warm-gray/40"
+                                                            placeholder="Phone number" />
+                                                    </div>
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-charcoal mb-1">Label</label>
+                                                    <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Space Label</label>
                                                     <div className="flex gap-2">
                                                         {['Home', 'Office', 'Other'].map(l => (
                                                             <button key={l} type="button"
                                                                 onClick={() => setAddressForm({ ...addressForm, label: l })}
-                                                                className={`rounded-lg px-4 py-2.5 text-sm font-medium border transition-all ${addressForm.label === l
-                                                                    ? 'border-burgundy bg-burgundy/5 text-burgundy'
-                                                                    : 'border-light-border text-warm-gray hover:border-burgundy/30'}`
+                                                                className={`flex-1 rounded-xl px-4 py-3 text-xs font-bold transition-all border
+                                                                ${addressForm.label === l
+                                                                    ? 'bg-[#36453A] text-white border-[#36453A] shadow-sm'
+                                                                    : 'bg-white text-[#36453A] border-[#E8E1D5] hover:border-[#36453A]/30 hover:bg-[#F8F5F0]'}`
                                                                 }>
                                                                 {l}
                                                             </button>
                                                         ))}
                                                     </div>
                                                 </div>
-                                                <div className="sm:col-span-2">
-                                                    <label className="flex items-center gap-2 cursor-pointer">
-                                                        <input type="checkbox" checked={addressForm.is_default}
-                                                            onChange={e => setAddressForm({ ...addressForm, is_default: e.target.checked })}
-                                                            className="rounded border-light-border text-burgundy focus:ring-burgundy w-4 h-4" />
-                                                        <span className="text-sm text-charcoal">Set as default address</span>
+                                                <div className="sm:col-span-2 pt-2">
+                                                    <label className="flex items-center gap-3 cursor-pointer group w-fit">
+                                                        <div className="relative flex items-center justify-center">
+                                                            <input type="checkbox" checked={addressForm.is_default}
+                                                                onChange={e => setAddressForm({ ...addressForm, is_default: e.target.checked })}
+                                                                className="peer appearance-none w-5 h-5 rounded-md border-2 border-[#E8E1D5] checked:bg-[#36453A] checked:border-[#36453A] transition-colors cursor-pointer" />
+                                                            <Check className="absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100 pointer-events-none" strokeWidth={3} />
+                                                        </div>
+                                                        <span className="text-sm font-bold text-[#36453A] group-hover:text-black transition-colors">Designate as Primary Ritual Space</span>
                                                     </label>
                                                 </div>
                                             </div>
-                                            <div className="mt-5 flex gap-3">
+                                            
+                                            <div className="mt-10 flex flex-col sm:flex-row gap-4">
                                                 <button onClick={handleAddressSubmit}
-                                                    className="rounded-lg bg-burgundy px-6 py-2.5 text-sm font-semibold text-white hover:bg-burgundy-dark transition-all hover:shadow-md">
-                                                    {editingAddress ? 'Update Address' : 'Save Address'}
+                                                    className="flex-1 rounded-xl bg-[#36453A] px-8 py-4 text-sm font-bold text-white shadow-md hover:bg-[#2A362D] hover:shadow-lg transition-all flex items-center justify-center gap-2">
+                                                    <CheckCircle2 className="h-4 w-4" /> {editingAddress ? 'Update Ritual Space' : 'Save Ritual Space'}
                                                 </button>
                                                 <button onClick={resetAddressForm}
-                                                    className="rounded-lg border border-light-border px-6 py-2.5 text-sm font-medium text-charcoal hover:bg-cream transition-colors">
+                                                    className="rounded-xl border border-[#E8E1D5] px-8 py-4 text-sm font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors">
                                                     Cancel
                                                 </button>
                                             </div>
@@ -1777,70 +1805,82 @@ export default function AccountPage() {
                                 )}
 
                                 {addressesLoading ? (
-                                    <div className="flex justify-center py-16">
-                                        <Loader2 className="h-8 w-8 animate-spin text-burgundy" />
+                                    <div className="flex justify-center py-24">
+                                        <Loader2 className="h-12 w-12 animate-spin text-[#36453A]" />
                                     </div>
                                 ) : addresses.length === 0 && !showAddressForm ? (
-                                    <div className="rounded-2xl border border-light-border bg-white py-16 text-center">
-                                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-cream">
-                                            <MapPin className="h-8 w-8 text-warm-gray/50" />
-                                        </div>
-                                        <p className="font-serif text-lg text-charcoal">No saved addresses</p>
-                                        <p className="mt-1 text-sm text-warm-gray mb-5">Add your first delivery address</p>
+                                    <div className="rounded-[30px] border border-[#E8E1D5] bg-white py-24 text-center">
+                                        <MapPin className="mx-auto h-16 w-16 text-warm-gray/30 mb-4" />
+                                        <p className="font-serif text-2xl font-bold text-[#36453A]">No saved rituals</p>
+                                        <p className="mt-2 text-warm-gray text-lg">Define your first delivery space to begin your journey.</p>
                                         <button
                                             onClick={() => { resetAddressForm(); setShowAddressForm(true); }}
-                                            className="rounded-lg bg-burgundy px-5 py-2.5 text-sm font-semibold text-white hover:bg-burgundy-dark transition-colors"
+                                            className="mt-8 rounded-xl bg-[#36453A] px-10 py-3 text-sm font-bold text-white shadow-md hover:bg-[#2A362D] transition-all"
                                         >
-                                            <Plus className="inline h-4 w-4 mr-1 -mt-0.5" /> Add Address
+                                            <Plus className="inline h-4 w-4 mr-2" strokeWidth={3} /> Add Address
                                         </button>
                                     </div>
                                 ) : (
-                                    <div className="grid gap-4 sm:grid-cols-2">
+                                    <div className="grid gap-6 sm:grid-cols-2">
                                         {addresses.map(addr => (
                                             <div key={addr.address_id}
-                                                className={`group relative rounded-xl border bg-white p-5 transition-all hover:shadow-md ${addr.is_default ? 'border-burgundy/30 ring-1 ring-burgundy/10' : 'border-light-border'}`}
+                                                className={`group relative rounded-[24px] border bg-white p-6 transition-all hover:shadow-lg ${addr.is_default ? 'border-[#D4A847] ring-1 ring-[#D4A847]/20 shadow-sm' : 'border-[#E8E1D5]'}`}
                                             >
                                                 {/* Default badge */}
                                                 {addr.is_default && (
-                                                    <div className="absolute -top-2.5 left-4 flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold text-white"
-                                                        style={{ background: 'linear-gradient(135deg, #D4A847, #B8902D)' }}>
-                                                        <Star className="h-2.5 w-2.5" fill="white" /> DEFAULT
+                                                    <div className="absolute -top-3 left-6 flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[10px] font-bold text-white shadow-md"
+                                                        style={{ background: 'linear-gradient(135deg, #36453A, #4A5D23)' }}>
+                                                        <Star className="h-3 w-3 fill-[#D4A847] text-[#D4A847]" /> PRIMARY RITUAL SPACE
                                                     </div>
                                                 )}
 
                                                 <div className="flex justify-between items-start">
-                                                    <div className="pt-1">
-                                                        {addr.label && (
-                                                            <span className="inline-block rounded-full bg-burgundy/10 px-2.5 py-0.5 text-[10px] font-bold text-burgundy uppercase mb-2">
-                                                                {addr.label}
-                                                            </span>
-                                                        )}
-                                                        <p className="text-sm font-medium text-charcoal">{addr.address_line1}</p>
-                                                        {addr.address_line2 && <p className="text-sm text-warm-gray">{addr.address_line2}</p>}
-                                                        <p className="text-sm text-warm-gray">{addr.city}, {addr.state} {addr.pincode}</p>
-                                                        {addr.country && addr.country !== 'India' && (
-                                                            <p className="text-sm text-warm-gray">{addr.country}</p>
-                                                        )}
-                                                        {addr.phone && (
-                                                            <p className="mt-2 text-sm text-charcoal flex items-center gap-1.5">
-                                                                <Phone className="h-3 w-3 text-warm-gray" /> {addr.phone}
+                                                    <div className="pt-2">
+                                                        <div className="flex items-center gap-3 mb-4">
+                                                            <div className="h-10 w-10 rounded-xl bg-[#F8F5F0] flex items-center justify-center border border-[#E8E1D5]">
+                                                                <MapPin className="h-5 w-5 text-[#36453A]" />
+                                                            </div>
+                                                            {addr.label && (
+                                                                <span className="bg-[#36453A]/10 text-[#36453A] px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                                                                    {addr.label}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p className="text-base font-bold text-[#36453A] leading-tight">{addr.address_line1}</p>
+                                                            {addr.address_line2 && <p className="text-sm text-warm-gray font-medium">{addr.address_line2}</p>}
+                                                            <p className="text-sm text-warm-gray font-medium tracking-wide">
+                                                                {addr.city}, {addr.state} {addr.pincode}
                                                             </p>
+                                                            {addr.country && addr.country !== 'India' && (
+                                                                <p className="text-sm text-warm-gray font-medium">{addr.country}</p>
+                                                            )}
+                                                        </div>
+                                                        
+                                                        {addr.phone && (
+                                                            <div className="mt-5 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#F8F5F0] border border-[#E8E1D5] w-fit">
+                                                                <Phone className="h-3 w-3 text-warm-gray" />
+                                                                <span className="text-xs font-bold text-[#36453A]">{addr.phone}</span>
+                                                            </div>
                                                         )}
                                                     </div>
-                                                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    
+                                                    <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
                                                         {!addr.is_default && (
                                                             <button onClick={() => handleSetDefault(addr)}
-                                                                title="Set as default"
-                                                                className="p-2 text-warm-gray hover:text-amber-600 transition-colors rounded-lg hover:bg-amber-50">
+                                                                title="Set as primary"
+                                                                className="h-9 w-9 flex items-center justify-center text-warm-gray hover:text-[#D4A847] transition-all bg-white rounded-xl border border-[#E8E1D5] hover:border-[#D4A847]/30 hover:shadow-sm">
                                                                 <Star className="h-4 w-4" />
                                                             </button>
                                                         )}
                                                         <button onClick={() => startEditAddress(addr)}
-                                                            className="p-2 text-warm-gray hover:text-burgundy transition-colors rounded-lg hover:bg-burgundy/5">
+                                                            title="Edit Details"
+                                                            className="h-9 w-9 flex items-center justify-center text-warm-gray hover:text-[#36453A] transition-all bg-white rounded-xl border border-[#E8E1D5] hover:border-[#36453A]/30 hover:shadow-sm">
                                                             <Pencil className="h-4 w-4" />
                                                         </button>
                                                         <button onClick={() => setDeletingAddressId(addr.address_id)}
-                                                            className="p-2 text-warm-gray hover:text-red-500 transition-colors rounded-lg hover:bg-red-50">
+                                                            title="Delete Space"
+                                                            className="h-9 w-9 flex items-center justify-center text-warm-gray hover:text-red-500 transition-all bg-white rounded-xl border border-[#E8E1D5] hover:border-red-200 hover:shadow-sm">
                                                             <Trash2 className="h-4 w-4" />
                                                         </button>
                                                     </div>

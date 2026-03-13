@@ -97,7 +97,7 @@ export default function CollectionPage() {
                         <ArrowLeft className="h-4 w-4" /> Back to Home
                     </Link>
 
-                    <h1 className={`font-serif text-3xl sm:text-4xl lg:text-5xl font-bold ${collection.image_url ? 'text-white' : 'text-wine-gold'
+                    <h1 className={`font-serif text-3xl sm:text-4xl lg:text-5xl font-bold ${collection.image_url ? 'text-white' : 'text-vedic-gold'
                         }`}>
                         {collection.name}
                     </h1>

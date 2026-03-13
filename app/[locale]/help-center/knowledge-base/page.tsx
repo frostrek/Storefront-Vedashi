@@ -69,84 +69,89 @@ export default function KnowledgeBasePage() {
     const displayArticles = searchResults || articles;
 
     return (
-        <div className="min-h-screen bg-[#FAF7F2]">
+        <div className="min-h-screen bg-[#FDFBF7]">
             {/* ═══════════════ HERO SECTION ═══════════════ */}
-            <section className="relative overflow-hidden bg-gradient-to-br from-[#3d5c3a] via-[#4a6b47] to-[#5a7a57] py-16 md:py-24 px-6">
-                {/* Decorative botanical SVG background */}
-                <div className="absolute inset-0 opacity-[0.06]">
-                    <svg className="absolute top-0 right-0 h-full w-1/2" viewBox="0 0 400 500" fill="none">
-                        <path d="M250 50 C300 100, 350 200, 300 300 C250 400, 150 450, 100 400 C50 350, 80 250, 150 200 C220 150, 200 0, 250 50Z" stroke="white" strokeWidth="1.5" fill="none" />
-                        <path d="M280 100 C330 150, 370 250, 320 340 C270 430, 170 470, 130 420" stroke="white" strokeWidth="1" fill="none" />
-                        <path d="M200 80 Q250 150, 230 250 Q210 350, 160 380" stroke="white" strokeWidth="1" fill="none" />
-                    </svg>
-                    <svg className="absolute bottom-0 left-0 h-3/4 w-1/3" viewBox="0 0 300 400" fill="none">
-                        <path d="M50 350 C0 300, 20 200, 80 150 C140 100, 200 120, 180 200 C160 280, 100 320, 50 350Z" stroke="white" strokeWidth="1.5" fill="none" />
-                        <path d="M80 300 C40 260, 60 180, 110 140" stroke="white" strokeWidth="1" fill="none" />
-                    </svg>
-                </div>
+            <section className="relative min-h-[60vh] flex items-center justify-center overflow-hidden py-24 px-6">
+                {/* Ayurvedic Texture Background */}
+                <div 
+                    className="absolute inset-0 z-0 opacity-40 bg-repeat bg-center"
+                    style={{ 
+                        backgroundImage: "url('/ayurvedic-texture.png')",
+                        backgroundSize: '400px',
+                        filter: 'sepia(0.2) contrast(1.1)'
+                    }}
+                ></div>
 
-                <div className="max-w-3xl mx-auto text-center relative z-10">
+                {/* Decorative Elements */}
+                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-[#4A5D23]/20 via-transparent to-[#4A5D23]/5 z-0"></div>
+                <div className="absolute -top-24 -right-24 w-96 h-96 bg-[#4A5D23]/10 rounded-full blur-3xl"></div>
+                <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-[#8B4513]/5 rounded-full blur-3xl"></div>
+
+                <div className="max-w-4xl mx-auto text-center relative z-10">
                     {/* Resource Hub badge */}
-                    <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 mb-6">
-                        <Sparkles className="h-3.5 w-3.5 text-[#c8d8a0]" />
-                        <span className="text-xs font-semibold tracking-widest uppercase text-white/90">Vedashi Resource Hub</span>
+                    <div className="inline-flex items-center gap-3 bg-white/40 backdrop-blur-md border border-[#4A5D23]/10 rounded-full px-6 py-2 mb-10 shadow-sm">
+                        <Sparkles className="h-4 w-4 text-[#4A5D23]" />
+                        <span className="text-xs font-black tracking-[0.2em] uppercase text-[#1a2408]">Vedashi Resource Hub</span>
                     </div>
 
-                    <h1 className="text-4xl md:text-5xl font-serif font-bold text-white mb-4 leading-tight">
-                        How can we help you <em className="not-italic text-[#c8d8a0]">grow</em> today?
+                    <h1 className="text-5xl md:text-7xl font-serif font-bold text-[#1a2408] mb-8 leading-tight">
+                        Sacred <span className="text-[#4A5D23]">Knowledge</span> Archive
                     </h1>
 
-                    <p className="text-white/70 text-sm md:text-base max-w-xl mx-auto mb-8">
-                        Search our extensive library of guides, tutorials, and policy documentation to find the answers you need.
+                    <p className="text-[#5B4A31] text-lg md:text-xl max-w-2xl mx-auto mb-12 font-medium leading-relaxed">
+                        Deep dive into our collection of herbal guides, traditional practices, and modern Ayurvedic research.
                     </p>
 
                     {/* Search bar */}
-                    <div className="relative max-w-xl mx-auto">
-                        <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => {
-                                setSearchQuery(e.target.value);
-                                if (!e.target.value.trim()) setSearchResults(null);
-                            }}
-                            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                            placeholder="Search for 'refunds', 'tracking', or 'ingredients'..."
-                            className="w-full pl-12 pr-16 py-4 rounded-xl bg-white text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8d8a0] shadow-xl"
-                        />
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                        <button
-                            onClick={handleSearch}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-[#3d5c3a] text-white rounded-lg flex items-center justify-center hover:bg-[#2d4a2a] transition-colors cursor-pointer"
-                        >
-                            <ArrowRight className="h-4 w-4" />
-                        </button>
+                    <div className="relative max-w-2xl mx-auto group">
+                        <div className="absolute -inset-1 bg-gradient-to-r from-[#4A5D23]/20 to-[#8B4513]/20 rounded-[30px] blur opacity-25 group-focus-within:opacity-100 transition duration-1000"></div>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => {
+                                    setSearchQuery(e.target.value);
+                                    if (!e.target.value.trim()) setSearchResults(null);
+                                }}
+                                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                                placeholder="Search the archive..."
+                                className="w-full pl-16 pr-20 py-6 rounded-[24px] bg-white/90 backdrop-blur-xl text-[#1a2408] placeholder-[#5B4A31]/40 text-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23]/20 shadow-2xl transition-all border border-[#4A5D23]/5"
+                            />
+                            <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-6 w-6 text-[#4A5D23]" />
+                            <button
+                                onClick={handleSearch}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 w-14 h-14 bg-[#4A5D23] text-white rounded-2xl flex items-center justify-center hover:bg-[#3a491b] hover:scale-105 transition-all cursor-pointer shadow-lg"
+                            >
+                                <ArrowRight className="h-6 w-6" />
+                            </button>
+                        </div>
                     </div>
                 </div>
             </section>
 
             {/* ═══════════════ MAIN CONTENT ═══════════════ */}
-            <div className="max-w-6xl mx-auto px-6 py-12 md:py-16">
+            <div className="max-w-7xl mx-auto px-6 py-20">
 
                 {/* Search results header */}
                 {searchResults && (
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-lg font-bold text-gray-900">
+                    <div className="flex items-center justify-between mb-12 animate-in fade-in slide-in-from-top-4">
+                        <h2 className="text-3xl font-serif font-bold text-[#1a2408]">
                             {searchResults.length > 0
-                                ? `${searchResults.length} result${searchResults.length !== 1 ? 's' : ''} for "${searchQuery}"`
-                                : 'No results found'}
+                                ? `${searchResults.length} Wisdom Found for "${searchQuery}"`
+                                : 'No results found in the hub'}
                         </h2>
                         <button
                             onClick={() => { setSearchQuery(''); setSearchResults(null); }}
-                            className="text-sm text-[#3d5c3a] hover:underline font-medium cursor-pointer"
+                            className="text-sm font-black uppercase tracking-widest text-[#4A5D23] hover:text-[#3a491b] flex items-center gap-2 cursor-pointer bg-white px-6 py-3 rounded-full border border-[#4A5D23]/5 shadow-sm"
                         >
-                            Clear search
+                            <ChevronLeft className="h-4 w-4" /> Clear Search
                         </button>
                     </div>
                 )}
 
                 {/* Category filter pills */}
                 {!searchResults && categories.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-10">
+                    <div className="flex flex-wrap items-center justify-center gap-4 mb-20">
                         <button
                             onClick={() => {
                                 setSelectedCategory('');
@@ -154,20 +159,20 @@ export default function KnowledgeBasePage() {
                                 setLoading(true);
                                 getKBArticles().then(a => { setArticles(Array.isArray(a) ? a : []); setLoading(false); });
                             }}
-                            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${!selectedCategory
-                                ? 'bg-[#3d5c3a] text-white'
-                                : 'bg-white text-gray-600 border border-gray-200 hover:border-[#3d5c3a]/30'
+                            className={`px-8 py-3 rounded-[20px] text-sm font-black uppercase tracking-widest transition-all cursor-pointer shadow-sm ${!selectedCategory
+                                ? 'bg-[#4A5D23] text-white shadow-[#4A5D23]/30 shadow-lg'
+                                : 'bg-white text-[#5B4A31] border border-[#4A5D23]/5 hover:border-[#4A5D23]/30'
                                 }`}
                         >
-                            All
+                            All Articles
                         </button>
                         {categories.map((cat: any) => (
                             <button
                                 key={cat.category_id}
                                 onClick={() => handleCategoryClick(cat.slug)}
-                                className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${selectedCategory === cat.slug
-                                    ? 'bg-[#3d5c3a] text-white'
-                                    : 'bg-white text-gray-600 border border-gray-200 hover:border-[#3d5c3a]/30'
+                                className={`px-8 py-3 rounded-[20px] text-sm font-black uppercase tracking-widest transition-all cursor-pointer shadow-sm ${selectedCategory === cat.slug
+                                    ? 'bg-[#4A5D23] text-white shadow-[#4A5D23]/30 shadow-lg'
+                                    : 'bg-white text-[#5B4A31] border border-[#4A5D23]/5 hover:border-[#4A5D23]/30'
                                     }`}
                             >
                                 {cat.name}
@@ -179,34 +184,34 @@ export default function KnowledgeBasePage() {
                 {/* Article cards grid */}
                 {loading ? (
                     /* Loading skeleton */
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                         {[...Array(6)].map((_, i) => (
-                            <div key={i} className="bg-white rounded-2xl p-6 animate-pulse border border-gray-100">
-                                <div className="flex items-center justify-between mb-6">
-                                    <div className="h-5 bg-gray-200 rounded-full w-20" />
-                                    <div className="h-4 bg-gray-200 rounded w-16" />
+                            <div key={i} className="bg-white rounded-[40px] p-10 animate-pulse border border-[#4A5D23]/5 h-[400px]">
+                                <div className="flex items-center justify-between mb-8">
+                                    <div className="h-6 bg-gray-100 rounded-full w-24" />
+                                    <div className="h-4 bg-gray-50 rounded w-16" />
                                 </div>
-                                <div className="w-12 h-12 bg-gray-200 rounded-xl mb-4" />
-                                <div className="h-5 bg-gray-200 rounded w-3/4 mb-3" />
-                                <div className="h-3 bg-gray-200 rounded w-full mb-2" />
-                                <div className="h-3 bg-gray-200 rounded w-2/3" />
+                                <div className="w-16 h-16 bg-gray-100 rounded-2xl mb-8" />
+                                <div className="h-8 bg-gray-100 rounded w-3/4 mb-4" />
+                                <div className="h-4 bg-gray-50 rounded w-full mb-2" />
+                                <div className="h-4 bg-gray-50 rounded w-2/3" />
                             </div>
                         ))}
                     </div>
                 ) : displayArticles.length === 0 ? (
                     /* Empty state */
-                    <div className="text-center py-20">
-                        <div className="w-16 h-16 rounded-2xl bg-[#3d5c3a]/10 flex items-center justify-center mx-auto mb-5">
-                            <BookOpen className="h-7 w-7 text-[#3d5c3a]/40" />
+                    <div className="text-center py-32 bg-white rounded-[60px] border border-[#4A5D23]/5 shadow-xl">
+                        <div className="w-24 h-24 rounded-[30px] bg-[#4A5D23]/10 flex items-center justify-center mx-auto mb-10">
+                            <BookOpen className="h-10 w-10 text-[#4A5D23]" />
                         </div>
-                        <h3 className="text-lg font-bold text-gray-700 mb-2">No articles found</h3>
-                        <p className="text-sm text-gray-400 max-w-xs mx-auto">
-                            {searchResults ? 'Try different search terms or browse by category.' : 'Articles will be published soon'}
+                        <h3 className="text-3xl font-serif font-bold text-[#1a2408] mb-4">The library is currently silent</h3>
+                        <p className="text-lg text-[#5B4A31] max-w-sm mx-auto font-medium">
+                            {searchResults ? 'Our archive doesn\'t seem to contain that wisdom. Try adjusting your search.' : 'Our scholars are preparing new guides for you.'}
                         </p>
                     </div>
                 ) : (
                     /* Article cards */
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                         {displayArticles.map((article: any) => {
                             const Icon = getCategoryIcon(article.category_name);
                             const readTime = estimateReadTime(article.content, article.excerpt);
@@ -215,42 +220,42 @@ export default function KnowledgeBasePage() {
                             return (
                                 <div
                                     key={article.article_id}
-                                    className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-[#3d5c3a]/15 transition-all duration-300 flex flex-col"
+                                    className="bg-white rounded-[40px] border border-[#4A5D23]/5 overflow-hidden hover:shadow-[0_32px_64px_-16px_rgba(74,93,35,0.12)] hover:-translate-y-2 transition-all duration-500 group flex flex-col"
                                 >
-                                    <div className="p-6 flex-1 flex flex-col">
+                                    <div className="p-10 flex-1 flex flex-col">
                                         {/* Top meta row */}
-                                        <div className="flex items-center justify-between mb-5">
+                                        <div className="flex items-center justify-between mb-8">
                                             {article.category_name && (
-                                                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 bg-gray-50 border border-gray-100 px-2.5 py-1 rounded-full">
+                                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#4A5D23] bg-[#4A5D23]/5 px-4 py-1.5 rounded-full">
                                                     {article.category_name}
                                                 </span>
                                             )}
-                                            <div className="flex items-center gap-1 text-[11px] text-gray-400">
-                                                <Clock className="h-3 w-3" />
-                                                {readTime} min read
+                                            <div className="flex items-center gap-1.5 text-xs font-bold text-[#5B4A31]/50">
+                                                <Clock className="h-3.5 w-3.5" />
+                                                {readTime} MIN READ
                                             </div>
                                         </div>
 
                                         {/* Icon */}
-                                        <div className="w-12 h-12 rounded-xl bg-[#3d5c3a]/8 border border-[#3d5c3a]/10 flex items-center justify-center mb-4">
-                                            <Icon className="h-5 w-5 text-[#3d5c3a]" />
+                                        <div className="w-16 h-16 rounded-2xl bg-[#4A5D23]/5 flex items-center justify-center mb-8 group-hover:bg-[#4A5D23] transition-all duration-500 shadow-inner">
+                                            <Icon className="h-7 w-7 text-[#4A5D23] group-hover:text-white transition-colors duration-500" />
                                         </div>
 
                                         {/* Title */}
-                                        <h3 className="text-base font-bold text-gray-900 mb-2 leading-snug">
+                                        <h3 className="text-xl md:text-2xl font-serif font-bold text-[#1a2408] mb-4 leading-snug group-hover:text-[#4A5D23] transition-colors">
                                             {article.title}
                                         </h3>
 
                                         {/* Excerpt */}
                                         {article.excerpt && (
-                                            <p className="text-xs text-gray-500 leading-relaxed mb-4 flex-1 line-clamp-3">
+                                            <p className="text-base text-[#5B4A31] leading-relaxed mb-6 flex-1 line-clamp-3 font-medium">
                                                 {article.excerpt}
                                             </p>
                                         )}
 
                                         {/* Expanded content preview */}
-                                        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[300px] mb-4' : 'max-h-0'}`}>
-                                            <div className="text-xs text-gray-600 leading-relaxed border-t border-gray-100 pt-3 whitespace-pre-line">
+                                        <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isExpanded ? 'max-h-[500px] mb-6' : 'max-h-0'}`}>
+                                            <div className="text-sm text-[#5B4A31] leading-relaxed border-t border-[#4A5D23]/10 pt-6 whitespace-pre-line font-medium">
                                                 {article.content?.substring(0, 400)}
                                                 {article.content && article.content.length > 400 && '...'}
                                             </div>
@@ -258,21 +263,21 @@ export default function KnowledgeBasePage() {
                                     </div>
 
                                     {/* Footer action */}
-                                    <div className="px-6 pb-5">
-                                        <div className="flex items-center gap-4">
+                                    <div className="px-10 pb-10">
+                                        <div className="flex items-center gap-6">
                                             <button
                                                 onClick={() => setExpandedId(isExpanded ? null : article.article_id)}
-                                                className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-[#3d5c3a] transition-colors cursor-pointer group"
+                                                className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[#5B4A31] hover:text-[#4A5D23] transition-colors cursor-pointer group/btn"
                                             >
-                                                {isExpanded ? 'Hide Preview' : 'Read Full Guide'}
-                                                <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                                                {isExpanded ? 'Collapse' : 'Sneak Peek'}
+                                                <ChevronDown className={`h-4 w-4 transition-transform duration-500 ${isExpanded ? 'rotate-180' : ''}`} />
                                             </button>
                                             <Link
                                                 href={`/help-center/knowledge-base/${article.slug}`}
-                                                className="inline-flex items-center gap-1 text-xs font-bold text-[#3d5c3a] hover:text-[#2d4a2a] transition-colors ml-auto group"
+                                                className="inline-flex items-center gap-3 bg-[#4A5D23]/5 text-[#4A5D23] px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-[#4A5D23] hover:text-white transition-all ml-auto hover:shadow-lg"
                                             >
                                                 Open Article
-                                                <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
+                                                <ArrowRight className="h-4 w-4" />
                                             </Link>
                                         </div>
                                     </div>
@@ -283,22 +288,26 @@ export default function KnowledgeBasePage() {
                 )}
 
                 {/* Back + Help footer */}
-                <div className="mt-16 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-200 pt-8">
+                <div className="mt-32 flex flex-col sm:flex-row items-center justify-between gap-8 border-t border-[#4A5D23]/10 pt-16">
                     <Link
                         href="/help-center"
-                        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#3d5c3a] transition-colors"
+                        className="inline-flex items-center gap-4 text-lg font-bold text-[#5B4A31] hover:text-[#4A5D23] transition-all group"
                     >
-                        <ChevronLeft className="h-4 w-4" />
-                        Back to Help Center
+                        <div className="w-14 h-14 rounded-2xl bg-white shadow-xl flex items-center justify-center group-hover:bg-[#4A5D23] group-hover:text-white transition-all">
+                            <ChevronLeft className="h-7 w-7" />
+                        </div>
+                        Help Center Home
                     </Link>
                     <Link
                         href="/help-center/support"
-                        className="inline-flex items-center gap-2 bg-[#3d5c3a] text-white px-6 py-3 rounded-xl text-sm font-semibold hover:bg-[#2d4a2a] transition-colors shadow-sm"
+                        className="inline-flex items-center gap-4 bg-[#4A5D23] text-white px-10 py-5 rounded-2xl text-lg font-black uppercase tracking-widest hover:bg-[#3a491b] transition-all shadow-2xl hover:-translate-y-1"
                     >
-                        Submit a Support Ticket
+                        <HeadphonesIcon className="h-6 w-6" />
+                        Request Support
                     </Link>
                 </div>
             </div>
         </div>
+
     );
 }
