@@ -46,7 +46,7 @@ export default function Footer() {
     const t = useTranslations('Footer');
 
     useEffect(() => {
-        fetch(`${API_URL}/api/footer`)
+        fetch(`${API_URL}/api/footer`, { credentials: 'include' })
             .then(r => r.json())
             .then(res => { if (res.success) setData(res.data); })
             .catch(() => { });

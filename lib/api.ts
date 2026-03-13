@@ -82,7 +82,7 @@ export async function getProducts(params?: {
         if (params?.status) searchParams.set('status', params.status);
 
         const url = `${API_URL}/api/products${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
-        const res = await fetch(url);
+        const res = await fetch(url, { credentials: 'include' });
         if (!res.ok) return [];
         const json: ApiResponse<any> = await res.json();
         // Backend may return data as { products: [...], meta } or as a direct array
@@ -103,7 +103,7 @@ export async function getProducts(params?: {
 export async function getRelatedProducts(productId: string, type: string = 'similar', limit: number = 4): Promise<Product[]> {
     try {
         const url = `${API_URL}/api/products/${productId}/related?type=${type}&limit=${limit}`;
-        const res = await fetch(url);
+        const res = await fetch(url, { credentials: 'include' });
         if (!res.ok) return [];
         const json: ApiResponse<any> = await res.json();
 
@@ -126,7 +126,7 @@ export async function getRelatedProducts(productId: string, type: string = 'simi
 
 export async function getFeaturedProducts(): Promise<Product[]> {
     try {
-        const res = await fetch(`${API_URL}/api/products/featured`, { cache: 'no-store' });
+        const res = await fetch(`${API_URL}/api/products/featured`, { cache: 'no-store', credentials: 'include' });
         if (!res.ok) return [];
         const json: ApiResponse<any> = await res.json();
         console.log('[getFeaturedProducts] response:', json);
@@ -172,7 +172,7 @@ export interface StorefrontCollectionDetail extends StorefrontCollection {
 /** Fetch featured collections for the storefront homepage. */
 export async function getFeaturedCollections(limit: number = 6): Promise<StorefrontCollection[]> {
     try {
-        const res = await fetch(`${API_URL}/api/collections/featured?limit=${limit}`, { cache: 'no-store' });
+        const res = await fetch(`${API_URL}/api/collections/featured?limit=${limit}`, { cache: 'no-store', credentials: 'include' });
         if (!res.ok) return [];
         const json: ApiResponse<any> = await res.json();
         return json.success && Array.isArray(json.data) ? json.data : [];
@@ -185,7 +185,7 @@ export async function getFeaturedCollections(limit: number = 6): Promise<Storefr
 /** Fetch a single collection by slug with its products. */
 export async function getCollectionBySlug(slug: string, limit: number = 20, offset: number = 0): Promise<StorefrontCollectionDetail | null> {
     try {
-        const res = await fetch(`${API_URL}/api/collections/${slug}?limit=${limit}&offset=${offset}`, { cache: 'no-store' });
+        const res = await fetch(`${API_URL}/api/collections/${slug}?limit=${limit}&offset=${offset}`, { cache: 'no-store', credentials: 'include' });
         if (!res.ok) return null;
         const json: ApiResponse<any> = await res.json();
         if (json.success && json.data) {
@@ -262,7 +262,7 @@ export async function getFilteredProducts(
 
         const qs = sp.toString();
         const url = `${API_URL}/api/products/filter${qs ? '?' + qs : ''}`;
-        const res = await fetch(url);
+        const res = await fetch(url, { credentials: 'include' });
         const json = await res.json();
 
         if (json.success) {
@@ -305,7 +305,7 @@ export async function getBestSellers(params?: {
 
         const qs = sp.toString();
         const url = `${API_URL}/api/products/best-sellers${qs ? '?' + qs : ''}`;
-        const res = await fetch(url);
+        const res = await fetch(url, { credentials: 'include' });
         const json = await res.json();
 
         if (json.success && json.data) {
@@ -365,7 +365,7 @@ export async function getNewArrivals(params?: {
 
         const qs = sp.toString();
         const url = `${API_URL}/api/products/new-arrivals${qs ? '?' + qs : ''}`;
-        const res = await fetch(url);
+        const res = await fetch(url, { credentials: 'include' });
         const json = await res.json();
 
         if (json.success && json.data) {
@@ -402,8 +402,8 @@ export async function getFilterOptions(): Promise<{ brands: string[]; countries:
         const [{ data: products }, { data: maxPriceProd }, catRes, attrRes] = await Promise.all([
             getFilteredProducts({ limit: 500 }),
             getFilteredProducts({ limit: 1, sort: 'price_desc' }),
-            fetch(`${API_URL}/api/categories?tree=true`).then(res => res.json()).catch(() => ({ data: [] })),
-            fetch(`${API_URL}/api/filter-attributes`).then(res => res.json()).catch(() => ({ data: [] }))
+            fetch(`${API_URL}/api/categories?tree=true`, { credentials: 'include' }).then(res => res.json()).catch(() => ({ data: [] })),
+            fetch(`${API_URL}/api/filter-attributes`, { credentials: 'include' }).then(res => res.json()).catch(() => ({ data: [] }))
         ]);
 
         const brandSet = new Set<string>();
@@ -438,7 +438,7 @@ export async function getFilterOptions(): Promise<{ brands: string[]; countries:
 
 export async function getProduct(id: string): Promise<Product | null> {
     try {
-        const res = await fetch(`${API_URL}/api/products/${id}`);
+        const res = await fetch(`${API_URL}/api/products/${id}`, { credentials: 'include' });
         const json: ApiResponse<any> = await res.json();
         if (json.success && json.data) {
             const p = json.data;
@@ -453,7 +453,7 @@ export async function getProduct(id: string): Promise<Product | null> {
 
 export async function getProductDetails(id: string): Promise<ProductWithDetails | null> {
     try {
-        const res = await fetch(`${API_URL}/api/products/${id}/details`);
+        const res = await fetch(`${API_URL}/api/products/${id}/details`, { credentials: 'include' });
         const json: ApiResponse<any> = await res.json();
         if (!json.success || !json.data) return null;
 
@@ -471,7 +471,7 @@ export async function getProductDetails(id: string): Promise<ProductWithDetails 
 
 export async function searchProducts(query: string): Promise<Product[]> {
     try {
-        const res = await fetch(`${API_URL}/api/products/search?q=${encodeURIComponent(query)}`);
+        const res = await fetch(`${API_URL}/api/products/search?q=${encodeURIComponent(query)}`, { credentials: 'include' });
         const json: ApiResponse<any[]> = await res.json();
         if (json.success && json.data) {
             return json.data.map((p: any) => ({
@@ -488,7 +488,7 @@ export async function searchProducts(query: string): Promise<Product[]> {
 
 export async function checkApiHealth(): Promise<boolean> {
     try {
-        const res = await fetch(`${API_URL}/api/products?limit=1`);
+        const res = await fetch(`${API_URL}/api/products?limit=1`, { credentials: 'include' });
         return res.ok;
     } catch {
         return false;
@@ -816,6 +816,7 @@ export async function directCheckout(data: {
     payment_method?: string;
     order_notes?: string;
     coupon_code?: string;
+    redeem_points?: number;
 }) {
     try {
         const res = await authFetch(`${API_URL}/api/orders/direct`, {
@@ -910,6 +911,7 @@ export async function checkoutOrder(data: {
     coupon_code?: string; 
     order_notes?: string;
     payment_method?: string;
+    redeem_points?: number;
 }) {
     try {
         const res = await authFetch(`${API_URL}/api/orders/checkout`, {
@@ -1146,7 +1148,7 @@ export async function getProductReviews(productId: string, params?: { limit?: nu
     if (params?.offset) searchParams.set('offset', String(params.offset));
     if (params?.sort) searchParams.set('sort', params.sort);
     const qs = searchParams.toString();
-    const res = await fetch(`${API_URL}/api/reviews/product/${productId}${qs ? '?' + qs : ''}`);
+    const res = await fetch(`${API_URL}/api/reviews/product/${productId}${qs ? '?' + qs : ''}`, { credentials: 'include' });
     return res.json();
 }
 
@@ -1265,7 +1267,7 @@ export async function clearWishlist() {
 export async function getCategories(tree?: boolean): Promise<any[]> {
     try {
         const qs = tree ? '?tree=true' : '';
-        const res = await fetch(`${API_URL}/api/categories${qs}`);
+        const res = await fetch(`${API_URL}/api/categories${qs}`, { credentials: 'include' });
         if (!res.ok) return [];
         const json: ApiResponse<any[]> = await res.json();
         return json.success && json.data ? json.data : [];
@@ -1281,7 +1283,7 @@ export async function getCategoryProducts(categoryId: string, params?: { limit?:
         if (params?.limit) searchParams.set('limit', String(params.limit));
         if (params?.offset) searchParams.set('offset', String(params.offset));
         const qs = searchParams.toString();
-        const res = await fetch(`${API_URL}/api/categories/${categoryId}/products${qs ? '?' + qs : ''}`);
+        const res = await fetch(`${API_URL}/api/categories/${categoryId}/products${qs ? '?' + qs : ''}`, { credentials: 'include' });
         if (!res.ok) return [];
         const json: ApiResponse<Product[]> = await res.json();
         return json.success && json.data ? json.data : [];
@@ -1299,7 +1301,7 @@ export async function getProductImages(productId: string, variantId?: string): P
         if (variantId) sp.set('variant_id', variantId);
         const qs = sp.toString();
         const url = `${API_URL}/api/products/${productId}/images${qs ? '?' + qs : ''}`;
-        const res = await fetch(url);
+        const res = await fetch(url, { credentials: 'include' });
         const json: ApiResponse<ProductAsset[]> = await res.json();
         return json.success && json.data ? json.data : [];
     } catch (error) {
@@ -1340,7 +1342,8 @@ export async function searchAutocomplete(q: string, limit: number = 8): Promise<
     try {
         if (!q || q.trim().length < 2) return [];
         const res = await fetch(
-            `${API_URL}/api/search/autocomplete?q=${encodeURIComponent(q.trim())}&limit=${limit}`
+            `${API_URL}/api/search/autocomplete?q=${encodeURIComponent(q.trim())}&limit=${limit}`,
+            { credentials: 'include' }
         );
         if (!res.ok) return [];
         const json: ApiResponse<SearchSuggestion[]> = await res.json();
@@ -1372,7 +1375,7 @@ export async function advancedSearch(
         if (params.brand) sp.set('brand', params.brand);
 
         const url = `${API_URL}/api/search?${sp.toString()}`;
-        const res = await fetch(url);
+        const res = await fetch(url, { credentials: 'include' });
         const json = await res.json();
 
         if (json.success) {
@@ -1483,7 +1486,7 @@ export async function getBlogPosts(params?: { cursor?: string; limit?: number; b
         if (params?.cursor) sp.set('cursor', params.cursor);
         if (params?.limit) sp.set('limit', String(params.limit));
         if (params?.blog_type) sp.set('blog_type', params.blog_type);
-        const res = await fetch(`${API_URL}/api/blog/posts?${sp.toString()}`);
+        const res = await fetch(`${API_URL}/api/blog/posts?${sp.toString()}`, { credentials: 'include' });
         const json = await res.json();
         if (json.success) return json.data;
         return { posts: [], nextCursor: null, hasMore: false };
@@ -1492,7 +1495,7 @@ export async function getBlogPosts(params?: { cursor?: string; limit?: number; b
 
 export async function getFeaturedBlogPosts(limit = 5): Promise<BlogPost[]> {
     try {
-        const res = await fetch(`${API_URL}/api/blog/posts/featured?limit=${limit}`);
+        const res = await fetch(`${API_URL}/api/blog/posts/featured?limit=${limit}`, { credentials: 'include' });
         const json = await res.json();
         if (json.success) return json.data || [];
         return [];
@@ -1513,7 +1516,7 @@ export async function getBlogPostsByCategory(categorySlug: string, params?: { cu
         const sp = new URLSearchParams();
         if (params?.cursor) sp.set('cursor', params.cursor);
         if (params?.limit) sp.set('limit', String(params.limit));
-        const res = await fetch(`${API_URL}/api/blog/posts/category/${categorySlug}?${sp.toString()}`);
+        const res = await fetch(`${API_URL}/api/blog/posts/category/${categorySlug}?${sp.toString()}`, { credentials: 'include' });
         const json = await res.json();
         if (json.success) return json.data;
         return { posts: [], nextCursor: null, hasMore: false };
@@ -1525,7 +1528,7 @@ export async function getBlogPostsByTag(tagSlug: string, params?: { cursor?: str
         const sp = new URLSearchParams();
         if (params?.cursor) sp.set('cursor', params.cursor);
         if (params?.limit) sp.set('limit', String(params.limit));
-        const res = await fetch(`${API_URL}/api/blog/posts/tag/${tagSlug}?${sp.toString()}`);
+        const res = await fetch(`${API_URL}/api/blog/posts/tag/${tagSlug}?${sp.toString()}`, { credentials: 'include' });
         const json = await res.json();
         if (json.success) return json.data;
         return { posts: [], nextCursor: null, hasMore: false };
@@ -1537,7 +1540,7 @@ export async function searchBlogPosts(search: string, params?: { cursor?: string
         const sp = new URLSearchParams({ search });
         if (params?.cursor) sp.set('cursor', params.cursor);
         if (params?.limit) sp.set('limit', String(params.limit));
-        const res = await fetch(`${API_URL}/api/blog/posts/search?${sp.toString()}`);
+        const res = await fetch(`${API_URL}/api/blog/posts/search?${sp.toString()}`, { credentials: 'include' });
         const json = await res.json();
         if (json.success) return json.data;
         return { posts: [], nextCursor: null, hasMore: false };
@@ -1546,7 +1549,7 @@ export async function searchBlogPosts(search: string, params?: { cursor?: string
 
 export async function getRelatedBlogPosts(postId: string, limit = 4): Promise<BlogPost[]> {
     try {
-        const res = await fetch(`${API_URL}/api/blog/posts/${postId}/related?limit=${limit}`);
+        const res = await fetch(`${API_URL}/api/blog/posts/${postId}/related?limit=${limit}`, { credentials: 'include' });
         const json = await res.json();
         if (json.success) return json.data || [];
         return [];
@@ -1555,7 +1558,7 @@ export async function getRelatedBlogPosts(postId: string, limit = 4): Promise<Bl
 
 export async function getBlogCategories(): Promise<BlogCategory[]> {
     try {
-        const res = await fetch(`${API_URL}/api/blog/categories`);
+        const res = await fetch(`${API_URL}/api/blog/categories`, { credentials: 'include' });
         const json = await res.json();
         if (json.success) return json.data || [];
         return [];
@@ -1564,7 +1567,7 @@ export async function getBlogCategories(): Promise<BlogCategory[]> {
 
 export async function getBlogCategoryTree(): Promise<BlogCategory[]> {
     try {
-        const res = await fetch(`${API_URL}/api/blog/categories/tree`);
+        const res = await fetch(`${API_URL}/api/blog/categories/tree`, { credentials: 'include' });
         const json = await res.json();
         if (json.success) return json.data || [];
         return [];
@@ -1573,7 +1576,7 @@ export async function getBlogCategoryTree(): Promise<BlogCategory[]> {
 
 export async function getPopularBlogTags(limit = 15): Promise<BlogTag[]> {
     try {
-        const res = await fetch(`${API_URL}/api/blog/tags/popular?limit=${limit}`);
+        const res = await fetch(`${API_URL}/api/blog/tags/popular?limit=${limit}`, { credentials: 'include' });
         const json = await res.json();
         if (json.success) return json.data || [];
         return [];
@@ -1601,11 +1604,11 @@ export async function postBlogComment(postId: string, data: { body: string; comm
 }
 
 export async function recordBlogView(postId: string) {
-    try { fetch(`${API_URL}/api/blog/analytics/views`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ post_id: postId }) }); } catch { /* fire-and-forget */ }
+    try { fetch(`${API_URL}/api/blog/analytics/views`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ post_id: postId }), credentials: 'include' }); } catch { /* fire-and-forget */ }
 }
 
 export async function recordBlogShare(postId: string, platform: string) {
-    try { fetch(`${API_URL}/api/blog/analytics/shares`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ post_id: postId, platform }) }); } catch { /* fire-and-forget */ }
+    try { fetch(`${API_URL}/api/blog/analytics/shares`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ post_id: postId, platform }), credentials: 'include' }); } catch { /* fire-and-forget */ }
 }
 
 /* ─── Support & Help System ─── */
@@ -1613,7 +1616,7 @@ export async function recordBlogShare(postId: string, platform: string) {
 // FAQs
 export async function getFaqs() {
     try {
-        const res = await fetch(`${API_URL}/api/faqs`);
+        const res = await fetch(`${API_URL}/api/faqs`, { credentials: 'include' });
         const json = await res.json();
         return json.success ? json.data : { faqs: [], grouped: {} };
     } catch { return { faqs: [], grouped: {} }; }
@@ -1621,7 +1624,7 @@ export async function getFaqs() {
 
 export async function searchFaqs(q: string) {
     try {
-        const res = await fetch(`${API_URL}/api/faqs/search?q=${encodeURIComponent(q)}`);
+        const res = await fetch(`${API_URL}/api/faqs/search?q=${encodeURIComponent(q)}`, { credentials: 'include' });
         const json = await res.json();
         return json.success ? json.data : [];
     } catch { return []; }
@@ -1630,7 +1633,7 @@ export async function searchFaqs(q: string) {
 // Help Center
 export async function getHelpArticles() {
     try {
-        const res = await fetch(`${API_URL}/api/help-center`);
+        const res = await fetch(`${API_URL}/api/help-center`, { credentials: 'include' });
         const json = await res.json();
         return json.success ? json.data : { articles: [], grouped: {} };
     } catch { return { articles: [], grouped: {} }; }
@@ -1638,7 +1641,7 @@ export async function getHelpArticles() {
 
 export async function searchHelpArticles(q: string) {
     try {
-        const res = await fetch(`${API_URL}/api/help-center/search?q=${encodeURIComponent(q)}`);
+        const res = await fetch(`${API_URL}/api/help-center/search?q=${encodeURIComponent(q)}`, { credentials: 'include' });
         const json = await res.json();
         return json.success ? json.data : [];
     } catch { return []; }
@@ -1646,7 +1649,7 @@ export async function searchHelpArticles(q: string) {
 
 export async function getHelpArticle(slug: string) {
     try {
-        const res = await fetch(`${API_URL}/api/help-center/${slug}`);
+        const res = await fetch(`${API_URL}/api/help-center/${slug}`, { credentials: 'include' });
         const json = await res.json();
         return json.success ? json.data : null;
     } catch { return null; }
@@ -1655,7 +1658,7 @@ export async function getHelpArticle(slug: string) {
 // Knowledge Base
 export async function getKBCategories() {
     try {
-        const res = await fetch(`${API_URL}/api/knowledge-base/categories`);
+        const res = await fetch(`${API_URL}/api/knowledge-base/categories`, { credentials: 'include' });
         const json = await res.json();
         return json.success ? json.data : [];
     } catch { return []; }
@@ -1664,7 +1667,7 @@ export async function getKBCategories() {
 export async function getKBArticles(category?: string) {
     try {
         const qs = category ? `?category=${encodeURIComponent(category)}` : '';
-        const res = await fetch(`${API_URL}/api/knowledge-base${qs}`);
+        const res = await fetch(`${API_URL}/api/knowledge-base${qs}`, { credentials: 'include' });
         const json = await res.json();
         return json.success ? json.data : [];
     } catch { return []; }
@@ -1672,7 +1675,7 @@ export async function getKBArticles(category?: string) {
 
 export async function getKBArticle(slug: string) {
     try {
-        const res = await fetch(`${API_URL}/api/knowledge-base/article/${slug}`);
+        const res = await fetch(`${API_URL}/api/knowledge-base/article/${slug}`, { credentials: 'include' });
         const json = await res.json();
         return json.success ? json.data : null;
     } catch { return null; }
@@ -1761,4 +1764,77 @@ export async function replyToEnquiry(id: string, message: string) {
         });
         return (await res.json());
     } catch { return { success: false, message: 'Network error' }; }
+}
+
+// In-App Notifications
+export async function getMyNotifications(limit = 50, offset = 0) {
+    try {
+        const res = await authFetch(`${API_URL}/api/notifications?limit=${limit}&offset=${offset}`);
+        const json = await res.json();
+        return json.success ? json.data : [];
+    } catch { return []; }
+}
+
+export async function getUnreadNotificationCount() {
+    try {
+        const res = await authFetch(`${API_URL}/api/notifications/unread-count`);
+        const json = await res.json();
+        return json.success ? json.data.unread_count : 0;
+    } catch { return 0; }
+}
+
+export async function markNotificationAsRead(id: string) {
+    try {
+        const res = await authFetch(`${API_URL}/api/notifications/${id}/read`, {
+            method: 'PATCH'
+        });
+        return await res.json();
+    } catch { return { success: false }; }
+}
+
+export async function markAllNotificationsAsRead() {
+    try {
+        const res = await authFetch(`${API_URL}/api/notifications/read-all`, {
+            method: 'PATCH'
+        });
+        return await res.json();
+    } catch { return { success: false }; }
+}
+
+export async function deleteNotification(id: string) {
+    try {
+        const res = await authFetch(`${API_URL}/api/notifications/${id}`, {
+            method: 'DELETE'
+        });
+        return await res.json();
+    } catch { return { success: false }; }
+}
+
+// ─── Loyalty & Rewards ───
+
+export async function getLoyaltyWallet() {
+    try {
+        const res = await authFetch(`${API_URL}/api/loyalty/wallet`);
+        const json = await res.json();
+        return json.success ? json.data : null;
+    } catch { return null; }
+}
+
+export async function getLoyaltyTransactions(limit = 20, offset = 0) {
+    try {
+        const res = await authFetch(`${API_URL}/api/loyalty/transactions?limit=${limit}&offset=${offset}`);
+        const json = await res.json();
+        if (json.success && json.data) {
+            return Array.isArray(json.data.transactions) ? json.data.transactions : (Array.isArray(json.data) ? json.data : []);
+        }
+        return [];
+    } catch { return []; }
+}
+
+export async function getLoyaltyTiers() {
+    try {
+        const res = await fetch(`${API_URL}/api/loyalty/tiers`, { credentials: 'include' });
+        const json = await res.json();
+        return json.success ? json.data : [];
+    } catch { return []; }
 }

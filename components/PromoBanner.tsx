@@ -21,7 +21,7 @@ export default function PromoBanner() {
     useEffect(() => {
         const fetchBanner = async () => {
             try {
-                const res = await fetch(`${API_URL}/api/promo-banners/active`);
+                const res = await fetch(`${API_URL}/api/promo-banners/active`, { credentials: 'include' });
                 const data = await res.json();
                 if (data.success && data.data) {
                     setBanner(data.data);

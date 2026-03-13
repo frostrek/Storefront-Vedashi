@@ -52,8 +52,8 @@ export default function HeroCarousel() {
     useEffect(() => {
         // Fetch active slides and settings in parallel
         Promise.all([
-            fetch(`${API_URL}/api/media/hero/active`).then(r => r.json()),
-            fetch(`${API_URL}/api/media/hero/settings`).then(r => r.json())
+            fetch(`${API_URL}/api/media/hero/active`, { credentials: 'include' }).then(r => r.json()),
+            fetch(`${API_URL}/api/media/hero/settings`, { credentials: 'include' }).then(r => r.json())
         ])
             .then(([slidesData, settingsData]) => {
                 if (slidesData.success && slidesData.data?.length > 0) setSlides(slidesData.data);
