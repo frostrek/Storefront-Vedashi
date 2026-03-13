@@ -42,13 +42,24 @@ body {
    Google Translate — Premium Widget Styling
    ============================================ */
 
-/* Hide the top banner/toolbar that Google injects (CSS-only, never remove from DOM) */
+/* Hide ALL Google Translate UI — banner, notification bar, and overlays */
 .goog-te-banner-frame,
 .goog-te-banner-frame.skiptranslate,
-iframe.goog-te-banner-frame {
+iframe.goog-te-banner-frame,
+div.skiptranslate,
+.skiptranslate:not(#gtranslate-hidden),
+.VIpgJd-ZVi9od-aZ2wEe-wOHMyf,
+.VIpgJd-ZVi9od-aZ2wEe-wOHMyf-ti6hGc {
   display: none !important;
   height: 0 !important;
+  max-height: 0 !important;
   visibility: hidden !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  position: fixed !important;
+  top: -9999px !important;
+  left: -9999px !important;
 }
 
 /* Hide ALL Google branding text and logos */

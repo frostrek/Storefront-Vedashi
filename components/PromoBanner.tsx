@@ -19,22 +19,31 @@ export default function PromoBanner() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        // Skip fetching on auth pages
+        if (pathname === '/login' || pathname === '/signup') {
+            setLoading(false);
+            return;
+        }
+
         const fetchBanner = async () => {
             try {
                 const res = await fetch(`${API_URL}/api/promo-banners/active`);
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                
                 const data = await res.json();
                 if (data.success && data.data) {
                     setBanner(data.data);
                 }
             } catch (err) {
-                console.error('Error fetching promo banner:', err);
+                // Silent error to avoid console noise, just hide banner
+                console.warn('Promo banner unavailable (background fetch failed)');
             } finally {
                 setLoading(false);
             }
         };
 
         fetchBanner();
-    }, []);
+    }, [pathname]);
 
     if (loading || !banner || pathname === '/login' || pathname === '/signup') return null;
 

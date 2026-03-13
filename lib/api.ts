@@ -1049,6 +1049,24 @@ export async function updateCustomerProfile(id: string, data: Record<string, unk
     return res.json();
 }
 
+export async function requestEmailChange(newEmail: string) {
+    const res = await authFetch(`${API_URL}/api/customers/profile/email/request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ new_email: newEmail }),
+    });
+    return res.json();
+}
+
+export async function verifyEmailChangeProfile(token: string) {
+    const res = await authFetch(`${API_URL}/api/customers/profile/email/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+    });
+    return res.json();
+}
+
 export async function verifyAge(customerId: string) {
     const res = await authFetch(`${API_URL}/api/customers/${customerId}/verify-age`, {
         method: 'POST',
