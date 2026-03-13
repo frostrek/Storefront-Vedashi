@@ -594,12 +594,12 @@ export default function AccountPage() {
     ];
 
     return (
-        <div className="flex h-screen bg-[#F8F5F0] overflow-hidden">
+        <div className="flex min-h-screen bg-[#F8F5F0]">
             {/* Left Sidebar */}
-            <aside className="w-[280px] bg-[#36453A] text-white flex flex-col flex-shrink-0 relative z-20 shadow-[4px_0_24px_rgba(0,0,0,0.12)]">
-                <div className="flex-1 overflow-y-auto px-5 py-8 custom-scrollbar">
+            <aside className="w-[280px] bg-[#36453A] text-white flex flex-col flex-shrink-0 sticky top-0 h-screen z-20 shadow-[4px_0_24px_rgba(0,0,0,0.12)]">
+                <div className="flex-1 px-5 py-4">
                     {/* CORE EXPERIENCE */}
-                    <div className="mb-8">
+                    <div className="mb-4">
                         <p className="text-[10px] font-bold tracking-[0.15em] text-white/50 mb-3 ml-3">CORE EXPERIENCE</p>
                         <ul className="space-y-1">
                             {coreExperienceTabs.map(tab => (
@@ -658,7 +658,7 @@ export default function AccountPage() {
                 </div>
 
                 {/* Bottom Elite Status Card */}
-                <div className="p-5 mt-auto border-t border-white/10">
+                <div className="p-4 mt-auto border-t border-white/10">
                     <div className="bg-white/5 rounded-xl border border-white/10 p-4 mb-4 relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-2 opacity-10">
                             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" className="text-white">
@@ -681,7 +681,7 @@ export default function AccountPage() {
                     </div>
 
                     {/* User Snippet */}
-                    <div className="flex items-center gap-3 p-3 bg-black/20 rounded-xl">
+                    <div className="flex items-center gap-3 p-2 bg-black/20 rounded-xl">
                         <div className="h-9 w-9 rounded-full bg-white/10 flex items-center justify-center overflow-hidden border border-white/20">
                             {profileImageUrl ? (
                                 // eslint-disable-next-line @next/next/no-img-element
@@ -703,7 +703,7 @@ export default function AccountPage() {
             </aside>
 
             {/* Main Content Area */}
-            <main className="flex-1 flex flex-col h-full relative z-10 overflow-hidden">
+            <main className="flex-1 flex flex-col relative z-10">
                 {/* Header */}
                 <header className="h-12 flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-[#E8E1D5] flex items-center justify-between px-8 xl:px-12 sticky top-0 z-20">
                     <div className="flex items-center gap-3 text-sm font-medium">
@@ -728,7 +728,7 @@ export default function AccountPage() {
                 </header>
 
                 {/* Content Roll */}
-                <div className="flex-1 overflow-y-auto px-4 py-8 md:px-8 xl:px-12 custom-scrollbar">
+                <div className="flex-1 px-4 py-8 md:px-8 xl:px-12">
                     <div className="max-w-6xl mx-auto">
 
                         {/* ═══════════════════ OVERVIEW TAB ═══════════════════ */}
