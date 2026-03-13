@@ -11,13 +11,15 @@ import {
     getCustomerProfile, updateCustomerProfile, deactivateAccount,
     uploadProfileImage, getProfileImage, removeProfileImage, getOrderById,
     cancelOrder as apiCancelOrder, formatVND, downloadInvoice, getBestSellers,
-    getMyEnquiries, replyToEnquiry, getLoyaltyWallet
+    getMyEnquiries, replyToEnquiry, getLoyaltyWallet,
+    getMyNotifications, getUnreadNotificationCount, markNotificationAsRead, 
+    markAllNotificationsAsRead, deleteNotification
 } from '@/lib/api';
 import { Order, Address } from '@/types';
 import {
     Package, MapPin, Heart, LogOut, User, Plus, Pencil, Trash2,
     Loader2, ShieldOff, Camera, X, Check, Star, Phone, Calendar, Mail,
-    CheckCircle2, Smartphone, AlertCircle, Shield, FileText, MessageSquare, Send, Clock, User2, MessageCircle
+    CheckCircle2, Smartphone, AlertCircle, Shield, FileText, MessageSquare, Send, Clock, User2, MessageCircle, Sparkles
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import toast from 'react-hot-toast';
@@ -29,9 +31,9 @@ import { BadgeCheck, BellRing, Download, ChevronRight, Search, ShoppingCart, Lay
 import MyWallet from '@/components/account/MyWallet';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 
-type Tab = 'overview' | 'orders' | 'wishlist' | 'addresses' | 'profile' | 'privacy' | 'support' | 'wallet';
+type Tab = 'overview' | 'orders' | 'wishlist' | 'addresses' | 'profile' | 'privacy' | 'support' | 'wallet' | 'notifications';
 
-const VALID_TABS: Tab[] = ['overview', 'orders', 'wishlist', 'addresses', 'profile', 'privacy', 'support', 'wallet'];
+const VALID_TABS: Tab[] = ['overview', 'orders', 'wishlist', 'addresses', 'profile', 'privacy', 'support', 'wallet', 'notifications'];
 
 export default function AccountPage() {
     const router = useRouter();
@@ -302,6 +304,43 @@ export default function AccountPage() {
         }
     };
 
+    // Notifications state
+    const [notifications, setNotifications] = useState<any[]>([]);
+    const [notificationsLoading, setNotificationsLoading] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    const fetchNotificationsData = useCallback(async () => {
+        setNotificationsLoading(true);
+        try {
+            const [notifs, unread] = await Promise.all([
+                getMyNotifications(),
+                getUnreadNotificationCount()
+            ]);
+            if (notifs) setNotifications(notifs);
+            if (unread !== undefined) setUnreadCount(unread);
+        } catch (err) {
+            console.error('Failed to fetch notifications:', err);
+        } finally {
+            setNotificationsLoading(false);
+        }
+    }, []);
+
+    const handleMarkAllRead = async () => {
+        try {
+            await markAllNotificationsAsRead();
+            toast.success('All marked as read');
+            fetchNotificationsData();
+        } catch (err) { toast.error('Failed to update'); }
+    };
+
+    const handleDeleteNotification = async (id: string) => {
+        try {
+            await deleteNotification(id);
+            toast.success('Notification removed');
+            fetchNotificationsData();
+        } catch (err) { toast.error('Failed to delete'); }
+    };
+
     // Loyalty state
     const [loyaltyData, setLoyaltyData] = useState<any>(null);
 
@@ -319,6 +358,7 @@ export default function AccountPage() {
         if (activeTab === 'orders') fetchOrders();
         if (activeTab === 'addresses') fetchAddresses();
         if (activeTab === 'support') fetchEnquiries();
+        if (activeTab === 'notifications') fetchNotificationsData();
         if (activeTab === 'wallet' || activeTab === 'overview') fetchLoyaltyData();
         if (activeTab === 'profile') {
             fetchOrders(); // for order count
@@ -539,6 +579,7 @@ export default function AccountPage() {
     // Sidebar groups
     const coreExperienceTabs = [
         { id: 'overview', label: 'Overview', icon: LayoutGrid },
+        { id: 'notifications', label: 'Notifications', icon: BellRing, count: unreadCount },
         { id: 'orders', label: 'Orders', icon: Package, count: orderCount },
         { id: 'wishlist', label: 'Wishlist', icon: Heart, count: wishlistItems.length },
         { id: 'wallet', label: 'My Wallet', icon: Wallet },
@@ -2609,6 +2650,99 @@ export default function AccountPage() {
                         {activeTab === 'wallet' && (
                             <div className="animate-fadeIn">
                                 <MyWallet customerId={user?.id || ''} />
+                            </div>
+                        )}
+
+                        {/* ═══════════════════ NOTIFICATIONS TAB ═══════════════════ */}
+                        {activeTab === 'notifications' && (
+                            <div className="max-w-[900px] animate-fadeIn pb-12">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                                    <div className="flex items-center gap-4">
+                                        <div className="h-12 w-12 rounded-xl bg-white border border-[#E8E1D5] flex items-center justify-center shadow-sm">
+                                            <BellRing className="h-6 w-6 text-[#36453A]" />
+                                        </div>
+                                        <div>
+                                            <h1 className="font-serif text-3xl font-bold text-[#36453A]">Your Notifications</h1>
+                                            <p className="text-sm text-warm-gray">Security alerts and update rituals</p>
+                                        </div>
+                                    </div>
+                                    {notifications.length > 0 && (
+                                        <button 
+                                            onClick={handleMarkAllRead}
+                                            className="px-4 py-2 bg-white border border-[#E8E1D5] rounded-xl text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors flex items-center gap-2"
+                                        >
+                                            <Check className="h-3.5 w-3.5" /> Mark All as Read
+                                        </button>
+                                    )}
+                                </div>
+
+                                {notificationsLoading ? (
+                                    <div className="py-24 flex justify-center">
+                                        <Loader2 className="h-10 w-10 animate-spin text-[#36453A]" />
+                                    </div>
+                                ) : notifications.length === 0 ? (
+                                    <div className="bg-white rounded-[30px] border border-[#E8E1D5] py-20 px-6 text-center">
+                                        <div className="h-20 w-20 rounded-full bg-[#F8F5F0] border border-[#E8E1D5] flex items-center justify-center mx-auto mb-6">
+                                            <BellRing className="h-10 w-10 text-warm-gray/30" />
+                                        </div>
+                                        <h3 className="font-serif text-2xl font-bold text-[#36453A] mb-2">Inner Peace</h3>
+                                        <p className="text-warm-gray text-sm max-w-xs mx-auto">You have no new notifications at this moment. Stay mindful and enjoy your wellness journey.</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {notifications.map((n) => (
+                                            <div 
+                                                key={n.notification_id}
+                                                className={`group flex items-start gap-4 p-5 rounded-2xl border transition-all ${n.read_at 
+                                                    ? 'bg-white/60 border-[#E8E1D5] opacity-75' 
+                                                    : 'bg-white border-[#36453A]/20 shadow-sm border-l-4 border-l-[#36453A]'}`}
+                                            >
+                                                <div className={`mt-1 h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 ${n.read_at ? 'bg-warm-gray/10' : 'bg-[#36453A]/10'}`}>
+                                                    {n.type === 'security' ? <Shield className="h-5 w-5 text-red-500" /> : <Sparkles className="h-5 w-5 text-[#D4A847]" />}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center justify-between gap-2 mb-1">
+                                                        <h4 className={`text-sm font-bold ${n.read_at ? 'text-[#36453A]/60' : 'text-[#36453A]'}`}>{n.title}</h4>
+                                                        <span className="text-[10px] font-medium text-warm-gray whitespace-nowrap">
+                                                            {new Date(n.created_at).toLocaleDateString()}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-xs text-warm-gray leading-relaxed mb-3">
+                                                        {n.message}
+                                                    </p>
+                                                    <div className="flex items-center gap-4">
+                                                        {n.link_url && (
+                                                            <button 
+                                                                onClick={() => router.push(n.link_url as any)}
+                                                                className="text-[10px] font-black uppercase tracking-widest text-[#36453A] hover:underline"
+                                                            >
+                                                                View Details
+                                                            </button>
+                                                        )}
+                                                        <button 
+                                                            onClick={async () => {
+                                                                if (!n.read_at) {
+                                                                    await markNotificationAsRead(n.notification_id);
+                                                                    fetchNotificationsData();
+                                                                }
+                                                            }}
+                                                            disabled={!!n.read_at}
+                                                            className={`text-[10px] font-black uppercase tracking-widest transition-colors ${n.read_at ? 'text-[#36453A]/30 cursor-default' : 'text-[#D4A847] hover:text-[#B38720]'}`}
+                                                        >
+                                                            {n.read_at ? 'Seen' : 'Mark as Read'}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <button 
+                                                    onClick={() => handleDeleteNotification(n.notification_id)}
+                                                    className="opacity-0 group-hover:opacity-100 p-2 text-warm-gray/40 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         )}
 

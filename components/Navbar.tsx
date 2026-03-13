@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ShoppingCart, User, Menu, X, Heart, ChevronDown, Search, ArrowRight, Leaf, Sparkles } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
@@ -82,6 +82,7 @@ export default function Navbar() {
   const { isAuthenticated } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [showCartReminder, setShowCartReminder] = useState(false);
+  const [prevTotalItems, setPrevTotalItems] = useState(0);
   const [scrolled, setScrolled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<HeaderConfig>(DEFAULT_CONFIG);
@@ -121,18 +122,35 @@ export default function Navbar() {
       .finally(() => setLoading(false));
   }, []);
 
+  // 1. Trigger when a new product is added (but not on initial load)
+  const isFirstCount = useRef(true);
   useEffect(() => {
-    if (!cartLoading && totalItems > 0) {
-      const hasShown = sessionStorage.getItem('cartReminderShown');
-      if (!hasShown) {
-        const timer = setTimeout(() => {
-          setShowCartReminder(true);
-          sessionStorage.setItem('cartReminderShown', 'true');
-        }, 1500);
-        return () => clearTimeout(timer);
+    if (!cartLoading) {
+      if (isFirstCount.current) {
+        setPrevTotalItems(totalItems);
+        isFirstCount.current = false;
+        return;
       }
+      
+      if (totalItems > prevTotalItems && totalItems > 0) {
+        setShowCartReminder(true);
+      }
+      setPrevTotalItems(totalItems);
     }
-  }, [totalItems, cartLoading]);
+  }, [totalItems, cartLoading, prevTotalItems]);
+
+  // 2. Trigger when customer logs in
+  useEffect(() => {
+    if (isAuthenticated && !cartLoading && totalItems > 0) {
+      const hasShownOnLogin = sessionStorage.getItem('cartReminderLoginShown');
+      if (!hasShownOnLogin) {
+        setShowCartReminder(true);
+        sessionStorage.setItem('cartReminderLoginShown', 'true');
+      }
+    } else if (!isAuthenticated) {
+      sessionStorage.removeItem('cartReminderLoginShown');
+    }
+  }, [isAuthenticated, totalItems, cartLoading]);
 
   useEffect(() => {
     getCategories().then(cats => {
@@ -243,8 +261,11 @@ export default function Navbar() {
                     ></div>
                     
                     <button
-                      onClick={() => setShowCartReminder(false)}
-                      className="absolute top-3 right-3 p-2 text-[#5B4A31]/40 hover:text-[#4A5D23] transition-all hover:bg-[#4A5D23]/5 rounded-full z-10"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowCartReminder(false);
+                      }}
+                      className="absolute top-3 right-3 p-2 text-[#5B4A31]/40 hover:text-[#4A5D23] transition-all hover:bg-[#4A5D23]/5 rounded-full z-50"
                     >
                       <X className="h-4 w-4" />
                     </button>
