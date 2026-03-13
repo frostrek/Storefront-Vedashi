@@ -117,6 +117,12 @@ export interface ProductVariant {
     weight_kg?: number;
     barcode?: string;
     status?: 'Active' | 'Inactive';
+    weight_g?: number;
+    strength?: string;
+    strength_unit?: string;
+    units_count?: number;
+    form_factor?: string;
+    flavor?: string;
 }
 
 export interface ProductCompliance {

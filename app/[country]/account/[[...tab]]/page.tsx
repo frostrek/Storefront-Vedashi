@@ -10,14 +10,17 @@ import {
     updateAddress as apiUpdateAddress, deleteAddress as apiDeleteAddress,
     getCustomerProfile, updateCustomerProfile, deactivateAccount,
     uploadProfileImage, getProfileImage, removeProfileImage, getOrderById,
-    cancelOrder as apiCancelOrder, downloadInvoice, getBestSellers,
-    getMyEnquiries, replyToEnquiry, getLoyaltyWallet
+    cancelOrder as apiCancelOrder, formatVND, downloadInvoice, getBestSellers,
+    getMyEnquiries, replyToEnquiry, changePassword,
+    requestEmailChange, verifyEmailChangeProfile,
+    getLoyaltyWallet, getMyNotifications, getUnreadNotificationCount,
+    markNotificationAsRead, markAllNotificationsAsRead, deleteNotification
 } from '@/lib/api';
 import { Order, Address } from '@/types';
 import {
     Package, MapPin, Heart, LogOut, User, Plus, Pencil, Trash2,
     Loader2, ShieldOff, Camera, X, Check, Star, Phone, Calendar, Mail,
-    CheckCircle2, Smartphone, AlertCircle, Shield, FileText, MessageSquare, Send, Clock, User2, MessageCircle
+    CheckCircle2, Smartphone, AlertCircle, Shield, FileText, MessageSquare, Send, Clock, User2, MessageCircle, Sparkles
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import toast from 'react-hot-toast';
@@ -30,9 +33,9 @@ import MyWallet from '@/components/account/MyWallet';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { useCurrency } from '@/context/CurrencyContext';
 
-type Tab = 'overview' | 'orders' | 'wishlist' | 'addresses' | 'profile' | 'privacy' | 'support' | 'wallet';
+type Tab = 'overview' | 'orders' | 'wishlist' | 'addresses' | 'profile' | 'privacy' | 'support' | 'wallet' | 'notifications';
 
-const VALID_TABS: Tab[] = ['overview', 'orders', 'wishlist', 'addresses', 'profile', 'privacy', 'support', 'wallet'];
+const VALID_TABS: Tab[] = ['overview', 'orders', 'wishlist', 'addresses', 'profile', 'privacy', 'support', 'wallet', 'notifications'];
 
 export default function AccountPage() {
     const { formatPrice } = useCurrency();
@@ -131,8 +134,25 @@ export default function AccountPage() {
     const [profileSaving, setProfileSaving] = useState(false);
     const [profileData, setProfileData] = useState({
         full_name: '', email: '', phone: '', date_of_birth: '',
-        is_email_verified: false, is_mobile_verified: false,
+        is_email_verified: false, is_mobile_verified: false, has_password: false,
     });
+    const [originalEmail, setOriginalEmail] = useState('');
+
+    // Email OTP modal state
+    const [showEmailOtpModal, setShowEmailOtpModal] = useState(false);
+    const [emailOtpCode, setEmailOtpCode] = useState('');
+    const [emailOtpSubmitting, setEmailOtpSubmitting] = useState(false);
+    const [emailOtpResendTimer, setEmailOtpResendTimer] = useState(0);
+
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (showEmailOtpModal && emailOtpResendTimer > 0) {
+            interval = setInterval(() => {
+                setEmailOtpResendTimer(prev => prev - 1);
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [showEmailOtpModal, emailOtpResendTimer]);
 
     // Profile image state
     const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
@@ -168,9 +188,14 @@ export default function AccountPage() {
     // Export orders modal state
     const [showExportModal, setShowExportModal] = useState(false);
 
+    // Password change state
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
+    const [passwordChanging, setPasswordChanging] = useState(false);
+
     // Body scroll lock for modals
     useEffect(() => {
-        if (selectedOrderDetails || isTrackOrderModalOpen || showDeactivateModal || deletingAddressId || cancellingOrderId || reviewModal || showNotificationOverlay || showExportModal) {
+        if (isTrackOrderModalOpen || showDeactivateModal || deletingAddressId || cancellingOrderId || reviewModal || showNotificationOverlay || showExportModal || showPasswordModal || showEmailOtpModal) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = 'unset';
@@ -178,7 +203,7 @@ export default function AccountPage() {
         return () => {
             document.body.style.overflow = 'unset';
         };
-    }, [selectedOrderDetails, isTrackOrderModalOpen, showDeactivateModal, deletingAddressId, cancellingOrderId, reviewModal, showNotificationOverlay, showExportModal]);
+    }, [isTrackOrderModalOpen, showDeactivateModal, deletingAddressId, cancellingOrderId, reviewModal, showNotificationOverlay, showExportModal, showPasswordModal, showEmailOtpModal]);
 
     useEffect(() => {
         if (!isLoading && !isAuthenticated) {
@@ -226,14 +251,17 @@ export default function AccountPage() {
         try {
             const res = await getCustomerProfile(user.id);
             if (res.success && res.data) {
+                const fetchedEmail = res.data.email || '';
                 setProfileData({
                     full_name: res.data.full_name || '',
-                    email: res.data.email || '',
+                    email: fetchedEmail,
                     phone: res.data.phone || '',
                     date_of_birth: res.data.date_of_birth ? res.data.date_of_birth.split('T')[0] : '',
                     is_email_verified: !!res.data.is_email_verified,
                     is_mobile_verified: !!res.data.is_mobile_verified,
+                    has_password: !!res.data.has_password,
                 });
+                setOriginalEmail(fetchedEmail);
             }
         } catch (err) {
             console.error('Failed to fetch profile:', err);
@@ -246,8 +274,13 @@ export default function AccountPage() {
         try {
             const res = await getProfileImage(user.id);
             if (res.success && res.data?.profile_image) {
-                const mime = res.data.mime_type || 'image/jpeg';
-                setProfileImageUrl(`data:${mime};base64,${res.data.profile_image}`);
+                const imgData = res.data.profile_image;
+                if (imgData.startsWith('data:')) {
+                    setProfileImageUrl(imgData);
+                } else {
+                    const mime = res.data.mime_type || 'image/jpeg';
+                    setProfileImageUrl(`data:${mime};base64,${imgData}`);
+                }
             }
         } catch {
             // No image or error, stay with fallback
@@ -271,7 +304,6 @@ export default function AccountPage() {
     useEffect(() => {
         if (selectedEnquiry && enquiries.length > 0) {
             const updated = enquiries.find((e: any) => e.feedback_id === selectedEnquiry.feedback_id);
-            // Only update if something actually changed (to prevent unnecessary re-renders)
             if (updated && (updated.status !== selectedEnquiry.status || updated.replies?.length !== selectedEnquiry.replies?.length)) {
                 setSelectedEnquiry(updated);
             }
@@ -304,6 +336,43 @@ export default function AccountPage() {
         }
     };
 
+    // Notifications state
+    const [notifications, setNotifications] = useState<any[]>([]);
+    const [notificationsLoading, setNotificationsLoading] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    const fetchNotificationsData = useCallback(async () => {
+        setNotificationsLoading(true);
+        try {
+            const [notifs, unread] = await Promise.all([
+                getMyNotifications(),
+                getUnreadNotificationCount()
+            ]);
+            if (notifs) setNotifications(notifs);
+            if (unread !== undefined) setUnreadCount(unread);
+        } catch (err) {
+            console.error('Failed to fetch notifications:', err);
+        } finally {
+            setNotificationsLoading(false);
+        }
+    }, []);
+
+    const handleMarkAllRead = async () => {
+        try {
+            await markAllNotificationsAsRead();
+            toast.success('All marked as read');
+            fetchNotificationsData();
+        } catch (err) { toast.error('Failed to update'); }
+    };
+
+    const handleDeleteNotification = async (id: string) => {
+        try {
+            await deleteNotification(id);
+            toast.success('Notification removed');
+            fetchNotificationsData();
+        } catch (err) { toast.error('Failed to delete'); }
+    };
+
     // Loyalty state
     const [loyaltyData, setLoyaltyData] = useState<any>(null);
 
@@ -321,13 +390,14 @@ export default function AccountPage() {
         if (activeTab === 'orders') fetchOrders();
         if (activeTab === 'addresses') fetchAddresses();
         if (activeTab === 'support') fetchEnquiries();
+        if (activeTab === 'notifications') fetchNotificationsData();
         if (activeTab === 'wallet' || activeTab === 'overview') fetchLoyaltyData();
         if (activeTab === 'profile') {
             fetchOrders(); // for order count
             fetchProfile();
             fetchProfileImage();
         }
-    }, [activeTab, user?.id, fetchOrders, fetchAddresses, fetchProfile, fetchProfileImage, fetchEnquiries, fetchLoyaltyData]);
+    }, [activeTab, user?.id, fetchOrders, fetchAddresses, fetchProfile, fetchProfileImage, fetchEnquiries, fetchNotificationsData, fetchLoyaltyData]);
 
     const activeTier = loyaltyData?.tier?.tier_name || 'Bronze';
     const activePoints = loyaltyData?.wallet?.balance || 0;
@@ -337,10 +407,31 @@ export default function AccountPage() {
         if (!user?.id) return;
         setProfileSaving(true);
         try {
-            const res = await updateCustomerProfile(user.id, profileData);
+            // Check if email was changed
+            if (profileData.email !== originalEmail) {
+                const reqRes = await requestEmailChange(profileData.email);
+                if (reqRes.success) {
+                    toast.success(reqRes.message || 'Verification code sent to your new email');
+                    setShowEmailOtpModal(true);
+                    setEmailOtpResendTimer(60);
+                    setProfileSaving(false);
+                    return; // Return and wait for OTP verification
+                } else {
+                    toast.error(reqRes.message || 'Failed to request email change');
+                    setProfileSaving(false);
+                    return;
+                }
+            }
+
+            // Strip out non-DB fields
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { has_password, is_email_verified, is_mobile_verified, email, ...updateData } = profileData;
+            
+            const res = await updateCustomerProfile(user.id, updateData);
             if (res.success) {
                 toast.success('Profile updated successfully');
                 setProfileEditing(false);
+                fetchProfile(); // refresh data
             } else {
                 toast.error(res.message || 'Failed to update profile');
             }
@@ -348,6 +439,88 @@ export default function AccountPage() {
             toast.error('Server error. Please try again.');
         } finally {
             setProfileSaving(false);
+        }
+    };
+
+    const handleResendEmailOtp = async () => {
+        if (emailOtpResendTimer > 0) return;
+        
+        try {
+            const reqRes = await requestEmailChange(profileData.email);
+            if (reqRes.success) {
+                toast.success('A new verification code has been sent');
+                setEmailOtpResendTimer(60);
+            } else {
+                toast.error(reqRes.message || 'Failed to resend code');
+            }
+        } catch {
+            toast.error('Server error');
+        }
+    };
+
+    const handleEmailOtpSubmit = async () => {
+        if (!emailOtpCode) {
+            toast.error('Please enter the OTP');
+            return;
+        }
+        
+        setEmailOtpSubmitting(true);
+        try {
+            const res = await verifyEmailChangeProfile(emailOtpCode);
+            if (res.success) {
+                toast.success('Email updated successfully');
+                setShowEmailOtpModal(false);
+                setEmailOtpCode('');
+                setEmailOtpResendTimer(0);
+                
+                // Continue to update the rest of the profile if it was being edited
+                if (!user?.id) return;
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const { has_password, is_email_verified, is_mobile_verified, email, ...updateData } = profileData;
+                const profileRes = await updateCustomerProfile(user.id, updateData);
+                
+                if (profileRes.success) {
+                    toast.success('Profile all updated');
+                    setProfileEditing(false);
+                }
+                
+                fetchProfile();
+            } else {
+                toast.error(res.message || 'Invalid or expired OTP');
+            }
+        } catch {
+            toast.error('Server error. Please try again.');
+        } finally {
+            setEmailOtpSubmitting(false);
+        }
+    };
+
+    const handlePasswordChange = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (passwords.new !== passwords.confirm) {
+            toast.error('Passwords do not match');
+            return;
+        }
+        if (passwords.new.length < 8) {
+            toast.error('Password must be at least 8 characters');
+            return;
+        }
+
+        setPasswordChanging(true);
+        try {
+            const res = await changePassword(passwords.current, passwords.new);
+            if (res.success) {
+                toast.success('Password updated successfully');
+                setShowPasswordModal(false);
+                setPasswords({ current: '', new: '', confirm: '' });
+                fetchProfile(); // refresh has_password status
+            } else {
+                toast.error(res.message || 'Failed to update password');
+            }
+        } catch {
+            toast.error('Server error');
+        } finally {
+            setPasswordChanging(false);
         }
     };
 
@@ -541,6 +714,7 @@ export default function AccountPage() {
     // Sidebar groups
     const coreExperienceTabs = [
         { id: 'overview', label: 'Overview', icon: LayoutGrid },
+        { id: 'notifications', label: 'Notifications', icon: BellRing, count: unreadCount },
         { id: 'orders', label: 'Orders', icon: Package, count: orderCount },
         { id: 'wishlist', label: 'Wishlist', icon: Heart, count: wishlistItems.length },
         { id: 'wallet', label: 'My Wallet', icon: Wallet },
@@ -553,12 +727,12 @@ export default function AccountPage() {
     ];
 
     return (
-        <div className="flex h-screen bg-[#F8F5F0] overflow-hidden">
+        <div className="flex min-h-screen bg-[#F8F5F0]">
             {/* Left Sidebar */}
-            <aside className="w-[280px] bg-[#36453A] text-white flex flex-col flex-shrink-0 relative z-20 shadow-[4px_0_24px_rgba(0,0,0,0.12)]">
-                <div className="flex-1 overflow-y-auto px-5 py-8 custom-scrollbar">
+            <aside className="w-[280px] bg-[#36453A] text-white flex flex-col flex-shrink-0 sticky top-0 h-screen z-20 shadow-[4px_0_24px_rgba(0,0,0,0.12)]">
+                <div className="flex-1 px-5 py-4">
                     {/* CORE EXPERIENCE */}
-                    <div className="mb-8">
+                    <div className="mb-4">
                         <p className="text-[10px] font-bold tracking-[0.15em] text-white/50 mb-3 ml-3">CORE EXPERIENCE</p>
                         <ul className="space-y-1">
                             {coreExperienceTabs.map(tab => (
@@ -617,7 +791,7 @@ export default function AccountPage() {
                 </div>
 
                 {/* Bottom Elite Status Card */}
-                <div className="p-5 mt-auto border-t border-white/10">
+                <div className="p-4 mt-auto border-t border-white/10">
                     <div className="bg-white/5 rounded-xl border border-white/10 p-4 mb-4 relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-2 opacity-10">
                             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" className="text-white">
@@ -640,7 +814,7 @@ export default function AccountPage() {
                     </div>
 
                     {/* User Snippet */}
-                    <div className="flex items-center gap-3 p-3 bg-black/20 rounded-xl">
+                    <div className="flex items-center gap-3 p-2 bg-black/20 rounded-xl">
                         <div className="h-9 w-9 rounded-full bg-white/10 flex items-center justify-center overflow-hidden border border-white/20">
                             {profileImageUrl ? (
                                 // eslint-disable-next-line @next/next/no-img-element
@@ -662,7 +836,7 @@ export default function AccountPage() {
             </aside>
 
             {/* Main Content Area */}
-            <main className="flex-1 flex flex-col h-full relative z-10 overflow-hidden">
+            <main className="flex-1 flex flex-col relative z-10">
                 {/* Header */}
                 <header className="h-12 flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-[#E8E1D5] flex items-center justify-between px-8 xl:px-12 sticky top-0 z-20">
                     <div className="flex items-center gap-3 text-sm font-medium">
@@ -687,7 +861,7 @@ export default function AccountPage() {
                 </header>
 
                 {/* Content Roll */}
-                <div className="flex-1 overflow-y-auto px-4 py-8 md:px-8 xl:px-12 custom-scrollbar">
+                <div className="flex-1 px-4 py-8 md:px-8 xl:px-12">
                     <div className="max-w-6xl mx-auto">
 
                         {/* ═══════════════════ OVERVIEW TAB ═══════════════════ */}
@@ -1106,6 +1280,15 @@ export default function AccountPage() {
                                                                 >
                                                                     {isOrderLoading && selectedOrderDetails?.order_id === order.order_id ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : 'View Details'}
                                                                 </button>
+                                                                 <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        router.push('/help-center/support?orderId=' + order.order_id);
+                                                                    }}
+                                                                    className="rounded-xl px-5 py-2 text-xs font-bold bg-[#36453A]/5 text-[#36453A] border border-transparent hover:border-[#36453A]/20 transition-all whitespace-nowrap"
+                                                                >
+                                                                    Support Ticket
+                                                                </button>
                                                                 <button
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
@@ -1274,8 +1457,11 @@ export default function AccountPage() {
                                                         >
                                                             <Download className="h-3.5 w-3.5" /> Invoice
                                                         </button>
-                                                        <button className="flex-1 flex justify-center items-center gap-2 border border-[#E8E1D5] bg-white rounded-xl py-2.5 text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors shadow-sm">
-                                                            <Mail className="h-3.5 w-3.5" /> Support
+                                                        <button 
+                                                            onClick={() => router.push('/help-center/support?orderId=' + selectedOrderDetails.order_id)}
+                                                            className="flex-1 flex justify-center items-center gap-2 border border-[#E8E1D5] bg-white rounded-xl py-2.5 text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors shadow-sm"
+                                                        >
+                                                            <MessageSquare className="h-3.5 w-3.5" /> Support
                                                         </button>
                                                     </div>
 
@@ -2005,6 +2191,11 @@ export default function AccountPage() {
                                                         className="w-full bg-[#F8F5F0] border border-[#E8E1D5] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#36453A] focus:ring-1 focus:ring-[#36453A]/20 transition-all font-medium text-[#36453A]" />
                                                 </div>
                                                 <div>
+                                                    <label className="block flex items-center gap-1.5 text-[11px] font-bold text-warm-gray uppercase tracking-widest mb-2"><Calendar className="h-3 w-3" /> Date of Birth</label>
+                                                    <input type="date" value={profileData.date_of_birth} onChange={e => setProfileData({ ...profileData, date_of_birth: e.target.value })}
+                                                        className="w-full bg-[#F8F5F0] border border-[#E8E1D5] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#36453A] focus:ring-1 focus:ring-[#36453A]/20 transition-all font-medium text-[#36453A]" />
+                                                </div>
+                                                <div>
                                                     <label className="block flex items-center gap-1.5 text-[11px] font-bold text-warm-gray uppercase tracking-widest mb-2"><MapPin className="h-3 w-3" /> Current Location</label>
                                                     <div className="relative">
                                                         <input
@@ -2029,10 +2220,13 @@ export default function AccountPage() {
                                                     Security Sanctuary
                                                 </h3>
                                                 <p className="text-sm text-warm-gray mb-6 leading-relaxed">Protect your inner sanctum with a strong, mindful password.</p>
-                                                <button className="w-full rounded-xl border border-[#E8E1D5] py-3.5 text-sm font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors flex items-center justify-center gap-2 mb-2">
-                                                    Modify Access Password <ChevronRight className="h-4 w-4" />
+                                                <button 
+                                                    onClick={() => setShowPasswordModal(true)}
+                                                    className="w-full rounded-xl border border-[#E8E1D5] py-3.5 text-sm font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors flex items-center justify-center gap-2 mb-2"
+                                                >
+                                                    {profileData.has_password ? 'Modify Access Password' : 'Set Access Password'} <ChevronRight className="h-4 w-4" />
                                                 </button>
-                                                <p className="text-xs text-warm-gray text-center mt-3">Last changed 4 months ago</p>
+                                                {profileData.has_password && <p className="text-xs text-warm-gray text-center mt-3">Your account is secured</p>}
                                             </section>
 
                                             {/* Notification Harmony */}
@@ -2042,25 +2236,8 @@ export default function AccountPage() {
                                                     <span className="w-1.5 h-6 bg-[#36453A] rounded-full inline-block"></span>
                                                     Notification Harmony
                                                 </h3>
-                                                <div className="space-y-4">
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-sm font-medium text-[#36453A]">Harvest Updates</span>
-                                                        <div className="w-11 h-6 bg-[#36453A] rounded-full relative cursor-pointer">
-                                                            <div className="w-4 h-4 bg-white rounded-full absolute right-1 top-1 shadow-sm"></div>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-sm font-medium text-[#36453A]">Seasonal Wisdom</span>
-                                                        <div className="w-11 h-6 bg-[#E8E1D5] rounded-full relative cursor-pointer">
-                                                            <div className="w-4 h-4 bg-white rounded-full absolute left-1 top-1 shadow-sm"></div>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-sm font-medium text-[#36453A]">Wishlist Reminders</span>
-                                                        <div className="w-11 h-6 bg-[#36453A] rounded-full relative cursor-pointer">
-                                                            <div className="w-4 h-4 bg-white rounded-full absolute right-1 top-1 shadow-sm"></div>
-                                                        </div>
-                                                    </div>
+                                                <div className="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                                    <NotificationPreferences />
                                                 </div>
                                             </section>
                                         </div>
@@ -2080,7 +2257,7 @@ export default function AccountPage() {
                                                 SAVE ALL CHANGES
                                             </button>
                                             <button
-                                                onClick={() => fetchProfile()}
+                                                onClick={() => { fetchProfile(); toast.success('Modifications discarded'); }}
                                                 className="text-xs font-bold text-warm-gray hover:text-[#36453A] transition-colors border-b border-warm-gray/30 pb-0.5 hover:border-[#36453A]"
                                             >
                                                 Discard Modifications
@@ -2504,113 +2681,104 @@ export default function AccountPage() {
                             </div>
                         )}
 
-                        {/* ═══ Order Details Modal ═══ */}
-                        {selectedOrderDetails && (
-                            <div className="fixed inset-0 z-50 flex items-center justify-center px-4 p-4 sm:p-0" style={{ animation: 'fadeIn 0.2s ease-out' }}>
-                                <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setSelectedOrderDetails(null)} />
-                                <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl border border-light-border" style={{ animation: 'slideUp 0.25s ease-out' }}>
-                                    <div className="flex justify-between items-center mb-6">
-                                        <h3 className="font-serif text-xl font-bold text-charcoal">Order Details</h3>
-                                        <button onClick={() => setSelectedOrderDetails(null)} className="rounded-full p-2 hover:bg-cream transition-colors text-warm-gray">
-                                            <X className="h-5 w-5" />
-                                        </button>
-                                    </div>
-
-                                    <div className="space-y-6">
-                                        {/* Order Info */}
-                                        <div className="grid grid-cols-2 gap-4 bg-cream p-4 rounded-xl text-sm">
-                                            <div>
-                                                <p className="text-warm-gray mb-1">Order ID</p>
-                                                <p className="font-mono font-medium text-charcoal text-xs break-all">{(selectedOrderDetails as { order_id: string }).order_id}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-warm-gray mb-1">Date</p>
-                                                <p className="font-medium text-charcoal">{new Date((selectedOrderDetails as { created_at: string }).created_at).toLocaleString()}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-warm-gray mb-1">Order Status</p>
-                                                <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${getStatusColor((selectedOrderDetails as { order_status: string }).order_status)}`}>
-                                                    {(selectedOrderDetails as { order_status: string }).order_status}
-                                                </span>
-                                            </div>
-                                            <div>
-                                                <p className="text-warm-gray mb-1">Payment Status</p>
-                                                <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${(selectedOrderDetails as { payment_status?: string }).payment_status?.toLowerCase() === 'paid' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                                    {(selectedOrderDetails as { payment_status?: string }).payment_status || 'UNPAID'}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        {/* Items List */}
-                                        <div>
-                                            <h4 className="font-serif text-lg font-bold text-charcoal mb-4">Items</h4>
-                                            <div className="space-y-3">
-                                                {(selectedOrderDetails as { items: unknown[] }).items?.map((item: unknown) => (
-                                                    <div key={(item as { order_item_id: string }).order_item_id} className="flex gap-4 p-3 border border-light-border rounded-xl hover:border-burgundy/30 transition-colors">
-                                                        <div className="h-16 w-16 bg-cream rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden border border-light-border">
-                                                            {(item as { thumbnail_url?: string }).thumbnail_url ? (
-                                                                // eslint-disable-next-line @next/next/no-img-element
-                                                                <img src={(item as { thumbnail_url: string }).thumbnail_url} alt="Product" className="h-full w-full object-cover" />
-                                                            ) : (
-                                                                <Package className="h-6 w-6 text-warm-gray" />
-                                                            )}
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <p className="font-medium text-charcoal truncate">{(item as { product?: { product_name?: string } }).product?.product_name || 'Product'}</p>
-                                                            <p className="text-xs text-warm-gray mt-1">Brand: {(item as { product?: { brand?: string } }).product?.brand || 'N/A'} | Size: {(item as { variant?: { size_label?: string } }).variant?.size_label || 'N/A'}</p>
-                                                            <div className="flex justify-between items-center mt-2">
-                                                                <p className="text-sm font-medium text-charcoal">Qty: {(item as { quantity: number }).quantity}</p>
-                                                                <p className="text-sm font-bold text-burgundy">{formatPrice(parseFloat((item as { line_total?: string, unit_price: number, quantity: number, tax_amount: number }).line_total || String((item as { unit_price: number, quantity: number, tax_amount: number }).unit_price * (item as { quantity: number }).quantity + (item as { tax_amount: number }).tax_amount)))}</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        {/* Summary */}
-                                        <div className="border-t border-light-border pt-4 space-y-2 text-sm">
-                                            <div className="flex justify-between text-warm-gray">
-                                                <span>Subtotal</span>
-                                                <span>{formatPrice(parseFloat((selectedOrderDetails as { total_amount: string }).total_amount))}</span>
-                                            </div>
-                                            <div className="flex justify-between text-warm-gray">
-                                                <span>Tax</span>
-                                                <span>{formatPrice(parseFloat((selectedOrderDetails as { total_tax: string }).total_tax))}</span>
-                                            </div>
-                                            <div className="flex justify-between font-bold text-charcoal text-base mt-2 pt-2 border-t border-light-border">
-                                                <span>Grand Total</span>
-                                                <span className="text-burgundy">{formatPrice(parseFloat((selectedOrderDetails as { total_amount: string }).total_amount) + parseFloat((selectedOrderDetails as { total_tax: string }).total_tax))}</span>
-                                            </div>
-                                        </div>
-
-                                        {/* Download Invoice Button */}
-                                        <div className="pt-2">
-                                            <button
-                                                onClick={async () => {
-                                                    const toastId = toast.loading('Downloading invoice...');
-                                                    const res = await downloadInvoice((selectedOrderDetails as { order_id: string }).order_id);
-                                                    if (res.success) {
-                                                        toast.success('Invoice downloaded!', { id: toastId });
-                                                    } else {
-                                                        toast.error(res.message || 'Failed to download invoice', { id: toastId });
-                                                    }
-                                                }}
-                                                className="w-full rounded-xl bg-gradient-to-r from-[#722F37] to-[#8B3A42] px-4 py-3 text-sm font-semibold text-white hover:from-[#5E252C] hover:to-[#722F37] transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2"
-                                            >
-                                                <FileText className="h-4 w-4" />
-                                                Download Invoice
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
 
                         {/* ═══════════════════ WALLET TAB ═══════════════════ */}
                         {activeTab === 'wallet' && (
                             <div className="animate-fadeIn">
                                 <MyWallet customerId={user?.id || ''} />
+                            </div>
+                        )}
+
+                        {/* ═══════════════════ NOTIFICATIONS TAB ═══════════════════ */}
+                        {activeTab === 'notifications' && (
+                            <div className="max-w-[900px] animate-fadeIn pb-12">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                                    <div className="flex items-center gap-4">
+                                        <div className="h-12 w-12 rounded-xl bg-white border border-[#E8E1D5] flex items-center justify-center shadow-sm">
+                                            <BellRing className="h-6 w-6 text-[#36453A]" />
+                                        </div>
+                                        <div>
+                                            <h1 className="font-serif text-3xl font-bold text-[#36453A]">Your Notifications</h1>
+                                            <p className="text-sm text-warm-gray">Security alerts and update rituals</p>
+                                        </div>
+                                    </div>
+                                    {notifications.length > 0 && (
+                                        <button 
+                                            onClick={handleMarkAllRead}
+                                            className="px-4 py-2 bg-white border border-[#E8E1D5] rounded-xl text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors flex items-center gap-2"
+                                        >
+                                            <Check className="h-3.5 w-3.5" /> Mark All as Read
+                                        </button>
+                                    )}
+                                </div>
+
+                                {notificationsLoading ? (
+                                    <div className="py-24 flex justify-center">
+                                        <Loader2 className="h-10 w-10 animate-spin text-[#36453A]" />
+                                    </div>
+                                ) : notifications.length === 0 ? (
+                                    <div className="bg-white rounded-[30px] border border-[#E8E1D5] py-20 px-6 text-center">
+                                        <div className="h-20 w-20 rounded-full bg-[#F8F5F0] border border-[#E8E1D5] flex items-center justify-center mx-auto mb-6">
+                                            <BellRing className="h-10 w-10 text-warm-gray/30" />
+                                        </div>
+                                        <h3 className="font-serif text-2xl font-bold text-[#36453A] mb-2">Inner Peace</h3>
+                                        <p className="text-warm-gray text-sm max-w-xs mx-auto">You have no new notifications at this moment. Stay mindful and enjoy your wellness journey.</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {notifications.map((n) => (
+                                            <div 
+                                                key={n.notification_id}
+                                                className={`group flex items-start gap-4 p-5 rounded-2xl border transition-all ${n.is_read 
+                                                    ? 'bg-white/60 border-[#E8E1D5] opacity-75' 
+                                                    : 'bg-white border-[#36453A]/20 shadow-sm border-l-4 border-l-[#36453A]'}`}
+                                            >
+                                                <div className={`mt-1 h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 ${n.is_read ? 'bg-warm-gray/10' : 'bg-[#36453A]/10'}`}>
+                                                    {n.category === 'security' ? <Shield className="h-5 w-5 text-red-500" /> : <Sparkles className="h-5 w-5 text-[#D4A847]" />}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center justify-between gap-2 mb-1">
+                                                        <h4 className={`text-sm font-bold ${n.is_read ? 'text-[#36453A]/60' : 'text-[#36453A]'}`}>{n.title}</h4>
+                                                        <span className="text-[10px] font-medium text-warm-gray whitespace-nowrap">
+                                                            {new Date(n.created_at).toLocaleDateString()}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-xs text-warm-gray leading-relaxed mb-3">
+                                                        {n.message}
+                                                    </p>
+                                                    <div className="flex items-center gap-4">
+                                                        {n.link_url && (
+                                                            <button 
+                                                                onClick={() => router.push(n.link_url as any)}
+                                                                className="text-[10px] font-black uppercase tracking-widest text-[#36453A] hover:underline"
+                                                            >
+                                                                View Details
+                                                            </button>
+                                                        )}
+                                                        <button 
+                                                            onClick={async () => {
+                                                                if (!n.is_read) {
+                                                                    await markNotificationAsRead(n.notification_id);
+                                                                    fetchNotificationsData();
+                                                                }
+                                                            }}
+                                                            disabled={!!n.is_read}
+                                                            className={`text-[10px] font-black uppercase tracking-widest transition-colors ${n.is_read ? 'text-[#36453A]/30 cursor-default' : 'text-[#D4A847] hover:text-[#B38720]'}`}
+                                                        >
+                                                            {n.is_read ? 'Seen' : 'Mark as Read'}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <button 
+                                                    onClick={() => handleDeleteNotification(n.notification_id)}
+                                                    className="opacity-0 group-hover:opacity-100 p-2 text-warm-gray/40 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -2755,6 +2923,141 @@ export default function AccountPage() {
                 }}
                 onCancel={() => setDeletingAddressId(null)}
             />
+
+            {/* Email OTP Verification Modal */}
+            {showEmailOtpModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-charcoal/40 backdrop-blur-sm" onClick={() => setShowEmailOtpModal(false)}></div>
+                    <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-light-border overflow-hidden animate-fadeIn">
+                        <div className="h-1.5" style={{ background: 'linear-gradient(90deg, #36453A, #D4A847, #36453A)' }}></div>
+                        <div className="p-8">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="font-serif text-2xl font-bold text-[#36453A]">
+                                    Verify Email Change
+                                </h3>
+                                <button onClick={() => setShowEmailOtpModal(false)} className="p-2 rounded-full hover:bg-cream/50 transition-colors text-warm-gray hover:text-[#36453A]">
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </div>
+                            
+                            <p className="text-sm text-warm-gray mb-6">
+                                We've sent a secure verification code to <strong className="text-charcoal font-semibold">{profileData.email}</strong>. Please enter the code below to confirm this change.
+                            </p>
+
+                            <div className="space-y-5">
+                                <div>
+                                    <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Secure Code (OTP)</label>
+                                    <input 
+                                        type="text" 
+                                        value={emailOtpCode}
+                                        onChange={(e) => setEmailOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                        placeholder="Enter the 6-digit code" 
+                                        className="w-full bg-white border border-[#D4A847] rounded-xl px-4 py-3.5 text-center text-xl font-bold tracking-[0.5em] focus:outline-none shadow-[0_0_15px_rgba(212,168,71,0.15)] focus:border-[#C49A3C] focus:ring-1 focus:ring-[#C49A3C] transition-all placeholder:tracking-normal placeholder:font-normal placeholder:text-base placeholder:text-gray-300 text-[#1C2B1A]"
+                                    />
+                                </div>
+                                <div className="pt-2">
+                                    <button 
+                                        onClick={handleEmailOtpSubmit}
+                                        disabled={emailOtpSubmitting || emailOtpCode.length < 4}
+                                        className="w-full bg-[#1C2B1A] text-[#E8D5A3] rounded-xl py-3.5 text-sm font-bold shadow-xl hover:bg-[#2A3B28] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed border border-[#3A4B38]"
+                                    >
+                                        {emailOtpSubmitting ? <Loader2 className="h-4 w-4 animate-spin text-[#E8D5A3]" /> : <Check className="h-4 w-4 text-[#E8D5A3]" />}
+                                        Verify & Save
+                                    </button>
+                                </div>
+                                <div className="text-center pt-2">
+                                    <button 
+                                        type="button"
+                                        onClick={handleResendEmailOtp}
+                                        disabled={emailOtpResendTimer > 0}
+                                        className={`text-sm font-semibold transition-all ${emailOtpResendTimer > 0 ? 'text-warm-gray/70 cursor-not-allowed' : 'text-[#D4A847] hover:text-[#b38a36] hover:underline'}`}
+                                    >
+                                        {emailOtpResendTimer > 0 ? `Resend Code in ${emailOtpResendTimer}s` : 'Resend Secure Code'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Password Change Modal */}
+            {showPasswordModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-charcoal/40 backdrop-blur-sm" onClick={() => setShowPasswordModal(false)}></div>
+                    <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-light-border overflow-hidden animate-fadeIn">
+                        <div className="h-1.5" style={{ background: 'linear-gradient(90deg, #36453A, #D4A847, #36453A)' }}></div>
+                        <div className="p-8">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="font-serif text-2xl font-bold text-[#36453A]">
+                                    {profileData.has_password ? 'Modify Password' : 'Set Password'}
+                                </h3>
+                                <button onClick={() => setShowPasswordModal(false)} className="p-2 rounded-full hover:bg-cream/50 transition-colors text-warm-gray hover:text-[#36453A]">
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </div>
+                            
+                            <form onSubmit={handlePasswordChange} className="space-y-4">
+                                <div>
+                                    <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Current Password</label>
+                                    <input 
+                                        type="password" 
+                                        required
+                                        value={passwords.current}
+                                        onChange={e => setPasswords({ ...passwords, current: e.target.value })}
+                                        className="w-full rounded-xl border border-light-border bg-cream/20 px-4 py-3 text-sm focus:border-burgundy/40 focus:outline-none transition-all"
+                                        placeholder="••••••••"
+                                    />
+                                </div>
+                                <div className="space-y-4 pt-2">
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">New Password</label>
+                                        <input 
+                                            type="password" 
+                                            required
+                                            value={passwords.new}
+                                            onChange={e => setPasswords({ ...passwords, new: e.target.value })}
+                                            className="w-full rounded-xl border border-light-border bg-cream/20 px-4 py-3 text-sm focus:border-burgundy/40 focus:outline-none transition-all"
+                                            placeholder="••••••••"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Confirm New Password</label>
+                                        <input 
+                                            type="password" 
+                                            required
+                                            value={passwords.confirm}
+                                            onChange={e => setPasswords({ ...passwords, confirm: e.target.value })}
+                                            className="w-full rounded-xl border border-light-border bg-cream/20 px-4 py-3 text-sm focus:border-burgundy/40 focus:outline-none transition-all"
+                                            placeholder="••••••••"
+                                        />
+                                    </div>
+                                </div>
+                                
+                                <div className="pt-6">
+                                    <button
+                                        type="submit"
+                                        disabled={passwordChanging}
+                                        className="w-full bg-[#36453A] text-white rounded-xl py-4 text-sm font-bold shadow-md hover:bg-[#2A362D] transition-all flex items-center justify-center gap-2"
+                                    >
+                                        {passwordChanging ? (
+                                            <>
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                Updating Sanctuary...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Check className="h-4 w-4" />
+                                                Update Credentials
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            )}
 
         </div>
     );

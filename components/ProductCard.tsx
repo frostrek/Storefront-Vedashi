@@ -441,22 +441,48 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                                         <div className="grid grid-cols-1 gap-1.5">
                                             {variants.map((v: any) => {
                                                 const isSelected = selectedVariant?.variant_id === v.variant_id;
+                                                const isInactive = v.status === 'Inactive' || v.is_active === false;
                                                 const isOut = v.stock_quantity !== null && v.stock_quantity !== undefined && v.stock_quantity <= 0;
-                                                const label = [v.size_label, v.pack_quantity > 1 ? `Pack of ${v.pack_quantity}` : ''].filter(Boolean).join(' · ') || v.sku || 'Standard';
+                                                const isDisabled = isOut || isInactive;
+                                                const formatVolume = (ml: number) => {
+                                                    if (!ml) return '';
+                                                    return ml >= 999 ? `${(ml / 1000).toFixed(ml % 1000 === 0 ? 0 : 1)} L` : `${ml} ml`;
+                                                };
+                                                const formatWeight = (g: number) => {
+                                                    if (!g) return '';
+                                                    return g >= 1000 ? `${(g / 1000).toFixed(g % 1000 === 0 ? 0 : g % 100 === 0 ? 1 : 2)} kg` : `${Math.round(g)} g`;
+                                                };
+                                                const volLabel = formatVolume(v.volume_ml);
+                                                const weightLabel = formatWeight(v.weight_g);
+                                                const countLabel = v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : '';
+                                                const strengthLabel = v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : '';
+                                                
+                                                const labelParts = [
+                                                    v.size_label,
+                                                    weightLabel,
+                                                    volLabel,
+                                                    countLabel,
+                                                    strengthLabel,
+                                                    v.flavor,
+                                                    v.pack_quantity > 1 ? `Pack of ${v.pack_quantity}` : ''
+                                                ].filter(Boolean);
+                                                const label = labelParts.join(' · ') || v.sku || 'Standard';
 
                                                 return (
                                                     <button
                                                         key={v.variant_id}
                                                         onClick={() => {
-                                                            if (!isOut) {
+                                                            if (!isDisabled) {
                                                                 setSelectedVariant(v);
                                                                 const existing = items.find(i => i.variant_id === v.variant_id);
                                                                 setQuantity(existing ? existing.quantity : 1);
                                                             }
                                                         }}
-                                                        disabled={isOut}
+                                                        disabled={isDisabled}
                                                         className={`w-full group relative flex items-center justify-between p-2.5 rounded-xl border-2 text-left transition-all duration-300 transform outline-none focus:ring-2 focus:ring-[#3d5c3a]/50 ${isSelected
                                                             ? 'border-[#3d5c3a] bg-[#3d5c3a]/[0.02] shadow-[0_2px_10px_rgba(61,92,58,0.1)] z-10 scale-[1.02]'
+                                                            : isInactive
+                                                                ? 'border-gray-100 bg-gray-50 text-gray-300 opacity-50 cursor-not-allowed'
                                                             : isOut
                                                                 ? 'border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed'
                                                                 : 'border-gray-100 hover:border-[#3d5c3a]/30 hover:bg-gray-50'
@@ -470,9 +496,14 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
 
                                                             <div className="flex-1 min-w-0">
                                                                 <p className={`text-sm font-semibold transition-colors duration-300 ${isSelected ? 'text-[#3d5c3a]' : 'text-gray-900'}`}>{label}</p>
-                                                                {isOut && (
-                                                                        <p className="text-[10px] text-red-500 font-semibold mt-0.5 flex items-center gap-1">
-                                                                            <AlertTriangle className="h-3 w-3" /> Out of Stock
+                                                                {isInactive && (
+                                                                    <p className="text-[10px] text-gray-400 font-semibold mt-0.5 flex items-center gap-1">
+                                                                        Unavailable
+                                                                    </p>
+                                                                )}
+                                                                {!isInactive && isOut && (
+                                                                    <p className="text-[10px] text-red-500 font-semibold mt-0.5 flex items-center gap-1">
+                                                                        <AlertTriangle className="h-3 w-3" /> Out of Stock
                                                                     </p>
                                                                 )}
                                                             </div>
