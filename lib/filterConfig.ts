@@ -2,7 +2,7 @@
  * Centralized filter configuration.
  * Adding a new filter = adding one entry here. Zero UI changes needed.
  */
-import { formatVND } from './api';
+
 
 export type FilterType = 'checkbox' | 'range' | 'toggle' | 'rating';
 
@@ -39,7 +39,7 @@ export const FILTER_CONFIGS: FilterConfig[] = [
         min: 0,
         max: 500,
         step: 5,
-        formatLabel: (v: number) => formatVND(v),
+        formatLabel: (v: number) => `₹${v}`,
         defaultValue: [0, 500],
     },
 

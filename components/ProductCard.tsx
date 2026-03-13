@@ -6,7 +6,8 @@ import { Heart, ShoppingCart, Eye, X, Check, AlertTriangle, Loader2, Plus, Minus
 import { Product } from '@/types';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCart } from '@/context/CartContext';
-import { getRatingSummary, getProductDetails, formatVND } from '@/lib/api';
+import { getRatingSummary, getProductDetails } from '@/lib/api';
+import { useCurrency } from '@/context/CurrencyContext';
 import StarRating from '@/components/reviews/StarRating';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
@@ -22,6 +23,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, onMoveToCart, priority = false }: ProductCardProps) {
+    const { formatPrice } = useCurrency();
     const { isInWishlist, toggleItem } = useWishlist();
     const { addItem, updateQuantity, removeItem, items, loading: cartLoading } = useCart();
     const wishlisted = isInWishlist(product.product_id);
@@ -386,12 +388,12 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                             {/* Price */}
                             <div className="flex items-center gap-2 flex-wrap">
                                 <p className="text-lg font-bold text-[#3d5c3a]">
-                                    {formatVND(displayPrice)}
+                                    {formatPrice(displayPrice)}
                                 </p>
                                 {isOnSale && originalPrice && (
                                     <>
                                         <p className="text-xs text-gray-400 line-through">
-                                            {formatVND(originalPrice)}
+                                            {formatPrice(originalPrice)}
                                         </p>
                                         <span className="bg-red-50 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded border border-red-100">
                                             {discountPercent}% OFF
@@ -476,9 +478,9 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                                                             </div>
 
                                                             <div className="text-right flex-shrink-0">
-                                                                <p className={`text-sm font-bold transition-colors duration-300 ${isSelected ? 'text-[#3d5c3a]' : 'text-gray-900'}`}>{formatVND(v.price)}</p>
+                                                                <p className={`text-sm font-bold transition-colors duration-300 ${isSelected ? 'text-[#3d5c3a]' : 'text-gray-900'}`}>{formatPrice(v.price)}</p>
                                                                 {v.is_on_sale && v.original_price && (
-                                                                    <p className="text-[10px] text-gray-400 line-through">{formatVND(v.original_price)}</p>
+                                                                    <p className="text-[10px] text-gray-400 line-through">{formatPrice(v.original_price)}</p>
                                                                 )}
                                                             </div>
                                                         </div>
@@ -517,7 +519,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                                     ) : (
                                         <ShoppingCart className="h-4 w-4" />
                                     )}
-                                    {addingToCart ? 'Processing...' : justAdded ? 'Added to Bag' : `Add to Cart - ${formatVND((hasVariants ? (selectedVariant?.price ?? 0) : displayPrice) * quantity)}`}
+                                    {addingToCart ? 'Processing...' : justAdded ? 'Added to Bag' : `Add to Cart - ${formatPrice((hasVariants ? (selectedVariant?.price ?? 0) : displayPrice) * quantity)}`}
                                 </button>
                             ) : (
                                 <div className="flex items-center gap-2 bg-gray-50/50 p-1 rounded-xl border border-gray-100 shadow-sm">
