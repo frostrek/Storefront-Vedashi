@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Link } from '@/i18n/navigation';
+import Link from 'next/link';
 import { ArrowRight, Star, Sparkles, Leaf, ShieldCheck, Beaker, Heart, Stethoscope, Salad, FlaskConical, CalendarCheck } from 'lucide-react';
 import { getBestSellers, getFeaturedProducts as fetchFeatured } from '@/lib/api';
 import { Product } from '@/types';
@@ -9,7 +9,6 @@ import ProductCard from '@/components/ProductCard';
 import HeroSection from '@/components/HeroSection';
 import { SkeletonProductGrid } from '@/components/Skeleton';
 import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
-import { useTranslations } from 'next-intl';
 
 export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
@@ -30,8 +29,6 @@ export default function HomePage() {
 
   const allProducts = featuredProducts.length > 0 ? featuredProducts : bestSellers;
   const productsLoading = featuredLoading && loading;
-  const t = useTranslations('Home');
-  const tc = useTranslations('Common');
 
   return (
     <div className="bg-cream relative">
@@ -54,7 +51,7 @@ export default function HomePage() {
                 <div className="flex items-center gap-2 mb-4">
                   <Sparkles className="h-4 w-4 text-[#8B7A3D]" />
                   <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#8B7A3D]">
-                    {t('discoverNature')}
+                    Discover Your Nature
                   </span>
                 </div>
                 <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C2C2C] leading-tight">
@@ -70,10 +67,10 @@ export default function HomePage() {
                     href="/about"
                     className="inline-flex items-center gap-2.5 rounded-full bg-[#3B5D3B] px-7 py-3.5 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:bg-[#2D4A2D] hover:-translate-y-0.5 hover:shadow-xl"
                   >
-                    {t('startAssessment')}
+                    Start Assessment
                     <ArrowRight className="h-4 w-4" />
                   </Link>
-                  <span className="text-xs text-[#8B7A3D] font-medium">{t('takesMinutes')}</span>
+                  <span className="text-xs text-[#8B7A3D] font-medium">Takes only 3 minutes</span>
                 </div>
               </div>
               {/* Right — Image + Testimonial */}
@@ -107,14 +104,14 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 sm:mb-14 gap-3">
               <div>
                 <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C2C2C]">
-                  {t('apothecaryStaples')}
+                  Apothecary Staples
                 </h2>
                 <p className="mt-2 text-[#6B6B60] text-base">
-                  {t('apothecaryDesc')}
+                  Our most sought-after clinical formulations, trusted by practitioners worldwide.
                 </p>
               </div>
               <Link href="/products" className="hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-[#3B5D3B] hover:text-[#2D4A2D] transition-colors">
-                {tc('viewAllProducts')} <ArrowRight className="h-4 w-4" />
+                View All Products <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </AnimateOnScroll>
@@ -131,15 +128,15 @@ export default function HomePage() {
             ) : (
               <div className="rounded-2xl border border-light-border bg-[#F5F2E8] py-16 text-center">
                 <img src="/herbal_placeholder.png" alt="Coming Soon" className="h-20 w-20 mx-auto mb-4 opacity-40 mix-blend-multiply" />
-                <p className="font-serif text-xl text-charcoal">{t('comingSoon')}</p>
-                <p className="mt-2 text-sm text-warm-gray">{t('addProductsHint')}</p>
+                <p className="font-serif text-xl text-charcoal">Formulations coming soon</p>
+                <p className="mt-2 text-sm text-warm-gray">Add products via the admin panel</p>
               </div>
             )}
           </AnimateOnScroll>
 
           <div className="mt-8 text-center sm:hidden">
             <Link href="/products" className="inline-flex items-center gap-2 text-sm font-semibold text-[#3B5D3B]">
-              {tc('viewAllProducts')} <ArrowRight className="h-4 w-4" />
+              View All Products <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
@@ -200,7 +197,7 @@ export default function HomePage() {
             <div>
               <AnimateOnScroll animation="fadeRight" delay={0.1}>
                 <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#3B5D3B] leading-tight italic">
-                  {t('trustTitle')}
+                  Rooted in Nature, Verified by Science
                 </h2>
                 <p className="mt-5 text-[#6B6B60] text-base leading-relaxed">
                   We don&apos;t just believe in tradition; we measure its success. Every
@@ -211,9 +208,9 @@ export default function HomePage() {
 
               <div className="mt-10 space-y-8">
                 {[
-                  { icon: FlaskConical, title: t('clinicalTransparency'), desc: t('clinicalTransparencyDesc') },
-                  { icon: Leaf, title: t('ethicalSourcing'), desc: t('ethicalSourcingDesc') },
-                  { icon: ShieldCheck, title: t('physicianFormulated'), desc: t('physicianFormulatedDesc') },
+                  { icon: FlaskConical, title: 'Clinical Transparency', desc: 'Full access to batch-specific lab results via QR codes on every bottle.' },
+                  { icon: Leaf, title: 'Ethical Sourcing', desc: 'Fair-trade partnerships with tribal farmers across the Himalayan belt.' },
+                  { icon: ShieldCheck, title: 'Physician Formulated', desc: 'Direct oversight by our board of certified MDs and Ayurvedic Vaidyas.' },
                 ].map((item, i) => (
                   <AnimateOnScroll key={i} animation="fadeRight" delay={0.2 + i * 0.1}>
                     <div className="flex gap-4 items-start">
@@ -247,10 +244,10 @@ export default function HomePage() {
 
           <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {[
-              { icon: Heart, title: t('panchakarma'), desc: t('panchakarmaDesc'), color: 'bg-[#F5F2E8]' },
-              { icon: Salad, title: t('dietaryGuidance'), desc: t('dietaryGuidanceDesc'), color: 'bg-[#E8F0E8]' },
-              { icon: Beaker, title: t('herbalTherapy'), desc: t('herbalTherapyDesc'), color: 'bg-[#F0F0E4]' },
-              { icon: CalendarCheck, title: t('lifestyleCoaching'), desc: t('lifestyleCoachingDesc'), color: 'bg-[#F5EFE4]' },
+              { icon: Heart, title: 'Panchakarma', desc: 'Five-fold detoxification therapy for complete cellular renewal.', color: 'bg-[#F5F2E8]' },
+              { icon: Salad, title: 'Dietary Guidance', desc: 'Personalized nutrition plans aligned with your unique Prakriti.', color: 'bg-[#E8F0E8]' },
+              { icon: Beaker, title: 'Herbal Therapy', desc: 'Custom-compounded remedies from our private botanical garden.', color: 'bg-[#F0F0E4]' },
+              { icon: CalendarCheck, title: 'Lifestyle Coaching', desc: 'Daily routines (Dinacharya) to harmonize with cosmic cycles.', color: 'bg-[#F5EFE4]' },
             ].map((service, i) => (
               <AnimateOnScroll key={i} animation="fadeUp" delay={i * 0.1}>
                 <div className={`${service.color} rounded-2xl p-8 text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group`}>
@@ -338,8 +335,8 @@ export default function HomePage() {
               Receive weekly Ayurvedic insights, seasonal recipes, and early access to physician-curated kits.
             </p>
             <div className="relative z-10 mt-8 flex flex-wrap justify-center gap-4">
-              <Link href="/login" className="rounded-lg border-2 border-white/30 bg-white/10 px-8 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/20 hover:-translate-y-0.5">{tc('login')}</Link>
-              <Link href="/login" className="rounded-lg bg-[#C9B87A] px-8 py-3 text-sm font-semibold text-[#2C2C2C] transition-all hover:bg-[#D4C38A] hover:-translate-y-0.5 shadow-lg">{tc('signUp')}</Link>
+              <Link href="/login" className="rounded-lg border-2 border-white/30 bg-white/10 px-8 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/20 hover:-translate-y-0.5">Login</Link>
+              <Link href="/login" className="rounded-lg bg-[#C9B87A] px-8 py-3 text-sm font-semibold text-[#2C2C2C] transition-all hover:bg-[#D4C38A] hover:-translate-y-0.5 shadow-lg">Sign Up</Link>
             </div>
             <p className="relative z-10 mt-6 text-[10px] text-white/40 tracking-wide">We respect your peace. Unsubscribe at any time.</p>
           </div>

@@ -1,16 +1,12 @@
-import createMiddleware from 'next-intl/middleware';
-import { routing } from './i18n/routing';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-export default createMiddleware(routing);
+export function middleware(request: NextRequest) {
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [
-    // Match all pathnames except for
-    // - /api (API routes)
-    // - /_next (Next.js internals)
-    // - /_vercel (Vercel internals)
-    // - /monitoring (monitoring)
-    // - Static files with common extensions
     '/((?!api|_next|_vercel|monitoring|.*\\..*).*)'
   ]
 };

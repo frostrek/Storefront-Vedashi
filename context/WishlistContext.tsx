@@ -9,7 +9,7 @@ import {
     removeFromWishlist as apiRemoveFromWishlist,
 } from '@/lib/api';
 import toast from 'react-hot-toast';
-import { useTranslations } from 'next-intl';
+
 
 interface WishlistContextType {
     items: Product[];
@@ -28,7 +28,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     const [loading, setLoading] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const { onAuthChange } = useAuth();
-    const t = useTranslations('Product');
+
 
     /** Load wishlist from backend */
     const initWishlist = useCallback(async () => {
@@ -85,7 +85,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
             if (prev.find(p => p.product_id === product.product_id)) return prev;
             return [...prev, product];
         });
-        toast.success(t('addedToWishlist'));
+        toast.success('Added to wishlist');
         apiAddToWishlist(product.product_id).catch(err => {
             console.error('[WishlistContext] addItem error:', err);
             setItems(prev => prev.filter(p => p.product_id !== product.product_id));
@@ -96,7 +96,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
         if (!isAuthenticated) return;
         const removedItem = items.find(p => p.product_id === productId);
         setItems(prev => prev.filter(p => p.product_id !== productId));
-        toast.success(t('removedFromWishlist'));
+        toast.success('Removed from wishlist');
         apiRemoveFromWishlist(productId).catch(err => {
             console.error('[WishlistContext] removeItem error:', err);
             if (removedItem) {
