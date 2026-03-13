@@ -5,9 +5,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import {
-    checkoutOrder, directCheckout, getAddresses, formatVND,
+    checkoutOrder, directCheckout, getAddresses,
     createPaymentOrder, verifyPayment, lookupPostalCode,
 } from '@/lib/api';
+import { useCurrency } from '@/context/CurrencyContext';
 import { Address } from '@/types';
 import { COUNTRIES } from '@/lib/countries';
 import Select from 'react-select';
@@ -58,6 +59,7 @@ function StepIndicator({ currentStep = 1 }: { currentStep?: number }) {
 }
 
 function CheckoutContent() {
+    const { formatPrice } = useCurrency();
     const router = useRouter();
     const searchParams = useSearchParams();
     const isBuyNow = searchParams.get('buyNow') === 'true';
@@ -942,7 +944,7 @@ function CheckoutContent() {
                                 
                                 <div className="mt-8">
                                     <button onClick={handlePlaceOrder} disabled={placing || paymentProcessing} className="cart-checkout-btn w-full text-center flex items-center justify-center gap-2 py-4 text-base">
-                                        {placing || paymentProcessing ? <><Loader2 className="h-5 w-5 animate-spin" /> Processing Ritual...</> : <><Lock className="w-4 h-4" /> Place Final Order — {formatVND(grandTotal)}</>}
+                                        {placing || paymentProcessing ? <><Loader2 className="h-5 w-5 animate-spin" /> Processing Ritual...</> : <><Lock className="w-4 h-4" /> Place Final Order — {formatPrice(grandTotal)}</>}
                                     </button>
                                     <p className="text-center text-xs text-[#6B6B60] mt-4 max-w-lg mx-auto leading-relaxed">By placing your order, you agree to Vedashi's <span className="underline cursor-pointer hover:text-[#2D3B2D]">Terms of Service</span> and <span className="underline cursor-pointer hover:text-[#2D3B2D]">Privacy & Wellness Policy</span>.</p>
                                 </div>
@@ -980,7 +982,7 @@ function CheckoutContent() {
                                                     {(item as any).size_label && <p className="text-[#a4a9a4] text-xs">{(item as any).size_label}</p>}
                                                     <div className="ritual-summary-item-qty mt-0.5">Qty: {item.quantity}</div>
                                                 </div>
-                                                <span className="ritual-summary-item-price">{formatVND(lineTotal)}</span>
+                                                <span className="ritual-summary-item-price">{formatPrice(lineTotal)}</span>
                                             </div>
                                         );
                                     })}
@@ -991,22 +993,22 @@ function CheckoutContent() {
                                 <div className="space-y-2">
                                     <div className="ritual-summary-row">
                                         <span className="label">Item Subtotal</span>
-                                        <span className="value">{formatVND(baseSubtotal)}</span>
+                                        <span className="value">{formatPrice(baseSubtotal)}</span>
                                     </div>
                                     {!isBuyNow && couponDiscount > 0 && (
                                         <div className="ritual-summary-row">
                                             <span className="label text-[#86EFAC] flex items-center gap-1"><Ticket className="w-3 h-3" /> Promo: {couponCode}</span>
-                                            <span className="value text-[#86EFAC]">- {formatVND(couponDiscount)}</span>
+                                            <span className="value text-[#86EFAC]">- {formatPrice(couponDiscount)}</span>
                                         </div>
                                     )}
                                     <div className="ritual-summary-row">
                                         <span className="label">Shipping</span>
-                                        <span className="value">{shippingCost === 0 ? 'FREE' : formatVND(shippingCost)}</span>
+                                        <span className="value">{shippingCost === 0 ? 'FREE' : formatPrice(shippingCost)}</span>
                                     </div>
                                     {totalTaxes > 0 && (
                                         <div className="ritual-summary-row">
                                             <span className="label">Federal Tax</span>
-                                            <span className="value">{formatVND(totalTaxes)}</span>
+                                            <span className="value">{formatPrice(totalTaxes)}</span>
                                         </div>
                                     )}
                                 </div>
@@ -1014,7 +1016,7 @@ function CheckoutContent() {
                                 <div className="ritual-summary-total">
                                     <div>
                                         <div className="ritual-summary-total-label">Total Amount</div>
-                                        <div className="ritual-summary-total-value mt-1">{formatVND(grandTotal)}</div>
+                                        <div className="ritual-summary-total-value mt-1">{formatPrice(grandTotal)}</div>
                                     </div>
                                     <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.05)]">
                                         <Leaf className="h-5 w-5 text-white opacity-80" />

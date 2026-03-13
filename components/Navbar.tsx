@@ -11,6 +11,7 @@ import { getCategories } from '@/lib/api';
 import toast from 'react-hot-toast';
 import SearchAutocomplete from './SearchAutocomplete';
 import GoogleTranslateWidget from './GoogleTranslateWidget';
+import RegionSwitcher from './RegionSwitcher';
 
 interface Category {
   category_id: string;
@@ -276,6 +277,7 @@ export default function Navbar() {
                 )}
               </div>
 
+              <RegionSwitcher />
               <GoogleTranslateWidget />
 
               <Link href="/account" className="relative p-2 group">

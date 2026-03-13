@@ -10,7 +10,7 @@ import {
     updateAddress as apiUpdateAddress, deleteAddress as apiDeleteAddress,
     getCustomerProfile, updateCustomerProfile, deactivateAccount,
     uploadProfileImage, getProfileImage, removeProfileImage, getOrderById,
-    cancelOrder as apiCancelOrder, formatVND, downloadInvoice, getBestSellers,
+    cancelOrder as apiCancelOrder, downloadInvoice, getBestSellers,
     getMyEnquiries, replyToEnquiry
 } from '@/lib/api';
 import { Order, Address } from '@/types';
@@ -27,12 +27,14 @@ import NotificationPreferences from '@/components/account/NotificationPreference
 import ExportOrdersModal from '@/components/account/ExportOrdersModal';
 import { BadgeCheck, BellRing, Download, ChevronRight, Search, ShoppingCart, LayoutGrid, List } from 'lucide-react';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import { useCurrency } from '@/context/CurrencyContext';
 
 type Tab = 'overview' | 'orders' | 'wishlist' | 'addresses' | 'profile' | 'privacy' | 'support';
 
 const VALID_TABS: Tab[] = ['overview', 'orders', 'wishlist', 'addresses', 'profile', 'privacy', 'support'];
 
 export default function AccountPage() {
+    const { formatPrice } = useCurrency();
     const router = useRouter();
     const params = useParams<{ tab?: string[] }>();
     const { user, isAuthenticated, isLoading, logout } = useAuth();
@@ -851,7 +853,7 @@ export default function AccountPage() {
                                                                     {order.status || 'PENDING'}
                                                                 </span>
                                                             </td>
-                                                            <td className="py-4 text-sm font-bold text-[#36453A] text-right">{formatVND(order.total_amount)}</td>
+                                                            <td className="py-4 text-sm font-bold text-[#36453A] text-right">{formatPrice(order.total_amount)}</td>
                                                         </tr>
                                                     ))}
                                                     {orders.length === 0 && (
@@ -892,7 +894,7 @@ export default function AccountPage() {
                                                             <p className="text-[9px] font-bold tracking-widest text-[#A8B28B] uppercase mb-0.5 truncate">{item.category_name || 'WELLNESS'}</p>
                                                             <p className="text-xs font-bold text-[#36453A] line-clamp-2 leading-tight mb-1 group-hover:text-black">{item.product_name}</p>
                                                             <div className="flex items-center gap-2 mt-auto">
-                                                                <span className="text-xs font-bold text-[#36453A]">{formatVND(item.price)}</span>
+                                                                <span className="text-xs font-bold text-[#36453A]">{formatPrice(item.price)}</span>
                                                                 {item.on_sale && <span className="text-[10px] bg-red-100 text-red-700 px-1 rounded font-bold uppercase">Sale</span>}
                                                             </div>
                                                         </div>
@@ -1094,7 +1096,7 @@ export default function AccountPage() {
                                                             <div className="flex flex-col items-start sm:items-end w-full">
                                                                 <span className="text-[10px] font-bold tracking-widest text-warm-gray uppercase mb-1">Total Amount</span>
                                                                 <span className="font-serif text-2xl font-bold text-[#36453A]">
-                                                                    {formatVND(order.final_total || order.total_amount)}
+                                                                    {formatPrice(order.final_total || order.total_amount)}
                                                                 </span>
                                                             </div>
                                                             <div className="flex flex-col gap-2 w-full sm:w-auto">
@@ -1208,7 +1210,7 @@ export default function AccountPage() {
                                                                             </div>
                                                                         </div>
                                                                         <span className="text-xs font-bold text-[#36453A] whitespace-nowrap">
-                                                                            {formatVND(item.price || item.unit_price)}
+                                                                            {formatPrice(item.price || item.unit_price)}
                                                                         </span>
                                                                     </div>
                                                                 );
@@ -1242,7 +1244,7 @@ export default function AccountPage() {
                                                         <div className="space-y-3">
                                                             <div className="flex items-center justify-between text-xs text-warm-gray font-medium">
                                                                 <span>Subtotal</span>
-                                                                <span className="text-[#36453A] font-bold">{formatVND(selectedOrderDetails.total_amount || 0)}</span>
+                                                                <span className="text-[#36453A] font-bold">{formatPrice(selectedOrderDetails.total_amount || 0)}</span>
                                                             </div>
                                                             <div className="flex items-center justify-between text-xs text-warm-gray font-medium">
                                                                 <span>Eco-Shipping</span>
@@ -1250,11 +1252,11 @@ export default function AccountPage() {
                                                             </div>
                                                             <div className="flex items-center justify-between text-xs text-warm-gray font-medium">
                                                                 <span>Tax</span>
-                                                                <span className="text-[#36453A] font-bold">{formatVND(selectedOrderDetails.vat_amount || 0)}</span>
+                                                                <span className="text-[#36453A] font-bold">{formatPrice(selectedOrderDetails.vat_amount || 0)}</span>
                                                             </div>
                                                             <div className="pt-3 border-t border-[#E8E1D5] flex items-center justify-between">
                                                                 <span className="text-sm font-bold text-[#36453A]">Total</span>
-                                                                <span className="font-serif text-lg font-bold text-[#36453A]">{formatVND(selectedOrderDetails.final_total || selectedOrderDetails.total_amount || 0)}</span>
+                                                                <span className="font-serif text-lg font-bold text-[#36453A]">{formatPrice(selectedOrderDetails.final_total || selectedOrderDetails.total_amount || 0)}</span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -2552,7 +2554,7 @@ export default function AccountPage() {
                                                             <p className="text-xs text-warm-gray mt-1">Brand: {(item as { product?: { brand?: string } }).product?.brand || 'N/A'} | Size: {(item as { variant?: { size_label?: string } }).variant?.size_label || 'N/A'}</p>
                                                             <div className="flex justify-between items-center mt-2">
                                                                 <p className="text-sm font-medium text-charcoal">Qty: {(item as { quantity: number }).quantity}</p>
-                                                                <p className="text-sm font-bold text-burgundy">{formatVND(parseFloat((item as { line_total?: string, unit_price: number, quantity: number, tax_amount: number }).line_total || String((item as { unit_price: number, quantity: number, tax_amount: number }).unit_price * (item as { quantity: number }).quantity + (item as { tax_amount: number }).tax_amount)))}</p>
+                                                                <p className="text-sm font-bold text-burgundy">{formatPrice(parseFloat((item as { line_total?: string, unit_price: number, quantity: number, tax_amount: number }).line_total || String((item as { unit_price: number, quantity: number, tax_amount: number }).unit_price * (item as { quantity: number }).quantity + (item as { tax_amount: number }).tax_amount)))}</p>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -2564,15 +2566,15 @@ export default function AccountPage() {
                                         <div className="border-t border-light-border pt-4 space-y-2 text-sm">
                                             <div className="flex justify-between text-warm-gray">
                                                 <span>Subtotal</span>
-                                                <span>{formatVND(parseFloat((selectedOrderDetails as { total_amount: string }).total_amount))}</span>
+                                                <span>{formatPrice(parseFloat((selectedOrderDetails as { total_amount: string }).total_amount))}</span>
                                             </div>
                                             <div className="flex justify-between text-warm-gray">
                                                 <span>Tax</span>
-                                                <span>{formatVND(parseFloat((selectedOrderDetails as { total_tax: string }).total_tax))}</span>
+                                                <span>{formatPrice(parseFloat((selectedOrderDetails as { total_tax: string }).total_tax))}</span>
                                             </div>
                                             <div className="flex justify-between font-bold text-charcoal text-base mt-2 pt-2 border-t border-light-border">
                                                 <span>Grand Total</span>
-                                                <span className="text-burgundy">{formatVND(parseFloat((selectedOrderDetails as { total_amount: string }).total_amount) + parseFloat((selectedOrderDetails as { total_tax: string }).total_tax))}</span>
+                                                <span className="text-burgundy">{formatPrice(parseFloat((selectedOrderDetails as { total_amount: string }).total_amount) + parseFloat((selectedOrderDetails as { total_tax: string }).total_tax))}</span>
                                             </div>
                                         </div>
 

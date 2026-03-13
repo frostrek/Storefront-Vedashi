@@ -3,7 +3,8 @@
 import { useState, useEffect, use, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { getProduct, getProductDetails, getRelatedProducts, formatVND } from '@/lib/api';
+import { getProduct, getProductDetails, getRelatedProducts } from '@/lib/api';
+import { useCurrency } from '@/context/CurrencyContext';
 import { Product, ProductWithDetails } from '@/types';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
@@ -94,7 +95,7 @@ function LazyRelatedProducts({ productId, type, title, icon }: {
 
 function ProductDetailContent({ params }: Props) {
     const { id } = use(params);
-
+    const { formatPrice } = useCurrency();
     const [product, setProduct] = useState<ProductWithDetails | null>(null);
     const [loading, setLoading] = useState(true);
     const [pageQuantity, setPageQuantity] = useState(1);
@@ -351,12 +352,12 @@ function ProductDetailContent({ params }: Props) {
                         {/* PRICE */}
                         <div className="flex items-end gap-3 mt-4">
                             <p className="text-2xl font-bold text-gray-900">
-                                {formatVND(displayPrice)} <span className="text-sm font-normal text-gray-500">/ set</span>
+                                {formatPrice(displayPrice)} <span className="text-sm font-normal text-gray-500">/ set</span>
                             </p>
                             {isOnSale && originalPrice && (
                                 <>
                                     <p className="text-base text-gray-400 line-through mb-0.5">
-                                        {formatVND(originalPrice)}
+                                        {formatPrice(originalPrice)}
                                     </p>
                                     <span className="bg-[#3d5c3a]/10 text-[#3d5c3a] text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wide mb-1">
                                         {discountPercent}% OFF
