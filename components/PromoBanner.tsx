@@ -27,9 +27,8 @@ export default function PromoBanner() {
 
         const fetchBanner = async () => {
             try {
-                const res = await fetch(`${API_URL}/api/promo-banners/active`);
+                const res = await fetch(`${API_URL}/api/promo-banners/active`, { credentials: 'include' });
                 if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                
                 const data = await res.json();
                 if (data.success && data.data) {
                     setBanner(data.data);

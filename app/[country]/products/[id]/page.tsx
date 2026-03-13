@@ -3,7 +3,8 @@
 import { useState, useEffect, use, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { getProduct, getProductDetails, getRelatedProducts, formatVND } from '@/lib/api';
+import { getProduct, getProductDetails, getRelatedProducts } from '@/lib/api';
+import { useCurrency } from '@/context/CurrencyContext';
 import { Product, ProductWithDetails } from '@/types';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
@@ -94,7 +95,7 @@ function LazyRelatedProducts({ productId, type, title, icon }: {
 
 function ProductDetailContent({ params }: Props) {
     const { id } = use(params);
-
+    const { formatPrice } = useCurrency();
     const [product, setProduct] = useState<ProductWithDetails | null>(null);
     const [loading, setLoading] = useState(true);
     const [pageQuantity, setPageQuantity] = useState(1);
@@ -102,7 +103,11 @@ function ProductDetailContent({ params }: Props) {
     // ✅ Variant state
     const [variants, setVariants] = useState<any[]>([]);
     const [selectedVariant, setSelectedVariant] = useState<any>(null);
-    const [selectedSize, setSelectedSize] = useState<string | null>(null);
+    const [selectedWeight, setSelectedWeight] = useState<number | null>(null);
+    const [selectedStrength, setSelectedStrength] = useState<string | null>(null);
+    const [selectedVolume, setSelectedVolume] = useState<number | null>(null);
+    const [selectedCount, setSelectedCount] = useState<string | null>(null);
+    const [selectedFlavor, setSelectedFlavor] = useState<string | null>(null);
     const [selectedPack, setSelectedPack] = useState<number | null>(null);
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -139,10 +144,12 @@ function ProductDetailContent({ params }: Props) {
                 // Pick requested variant, or default (is_default=true), falling back to first
                 const targetV = matchedVariant || vs.find((v: any) => v.is_default === true) || vs[0];
                 
-                const targetSize = targetV?.size_label ?? null;
-                const targetPack = targetV?.pack_quantity ?? 1;
-                setSelectedSize(targetSize);
-                setSelectedPack(targetPack);
+                setSelectedWeight(targetV?.weight_g ?? null);
+                setSelectedStrength(targetV?.strength ? `${targetV.strength} ${targetV.strength_unit || ''}`.trim() : null);
+                setSelectedVolume(targetV?.volume_ml ?? null);
+                setSelectedCount(targetV?.units_count ? `${targetV.units_count} ${targetV.form_factor || 'Units'}` : null);
+                setSelectedFlavor(targetV?.flavor ?? null);
+                setSelectedPack(targetV?.pack_quantity ?? 1);
                 setSelectedVariant(targetV);
             }
 
@@ -213,6 +220,9 @@ function ProductDetailContent({ params }: Props) {
     const originalPrice = selectedVariant?.original_price ?? product.original_price ?? displayPrice;
     const discountPercent = selectedVariant?.discount_percentage ?? product.discount_percentage ?? 0;
 
+    // Variant Activity
+    const isVariantInactive = selectedVariant?.status === 'Inactive' || selectedVariant?.is_active === false;
+
     // Stock availability
     const stockQty = selectedVariant?.stock_quantity ?? product.stock_quantity ?? null;
     const isOutOfStock = stockQty !== null && stockQty <= 0;
@@ -221,7 +231,7 @@ function ProductDetailContent({ params }: Props) {
     // Scheduled availability
     const isComingSoon = product.is_coming_soon ?? false;
     const isExpired = product.is_availability_expired ?? false;
-    const isUnavailable = isComingSoon || isExpired || isOutOfStock;
+    const isUnavailable = isComingSoon || isExpired || isOutOfStock || isVariantInactive;
 
     const handleMinus = () => {
         setPageQuantity(prev => Math.max(1, prev - 1));
@@ -351,12 +361,12 @@ function ProductDetailContent({ params }: Props) {
                         {/* PRICE */}
                         <div className="flex items-end gap-3 mt-4">
                             <p className="text-2xl font-bold text-gray-900">
-                                {formatVND(displayPrice)} <span className="text-sm font-normal text-gray-500">/ set</span>
+                                {formatPrice(displayPrice)} <span className="text-sm font-normal text-gray-500">/ set</span>
                             </p>
                             {isOnSale && originalPrice && (
                                 <>
                                     <p className="text-base text-gray-400 line-through mb-0.5">
-                                        {formatVND(originalPrice)}
+                                        {formatPrice(originalPrice)}
                                     </p>
                                     <span className="bg-[#3d5c3a]/10 text-[#3d5c3a] text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wide mb-1">
                                         {discountPercent}% OFF
@@ -369,84 +379,300 @@ function ProductDetailContent({ params }: Props) {
                             A high-potency infusion of Ashwagandha and Saffron designed to restore vital energy (Ojas) and deeply nourish the dermal layers.
                         </p>
 
-                        {/* ✅ VARIANT SELECTORS: Size + Pack */}
+                        {/* ✅ VARIANT SELECTORS: Weight, Strength, Volume, Count, Flavor, Pack */}
                         {variants.length > 0 && (() => {
-                            const uniqueSizes = [...new Set(variants.map((v: any) => v.size_label as string))].filter(Boolean);
-                            const uniquePacks = [...new Set(variants.map((v: any) => (v.pack_quantity ?? 1) as number))].sort((a, b) => a - b);
+                            const uniqueWeights = [...new Set(variants.map((v: any) => v.weight_g as number))].filter(Boolean).sort((a, b) => a - b);
+                            const uniqueStrengths = [...new Set(variants.map((v: any) => v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : null))].filter(Boolean);
+                            const uniqueVolumes = [...new Set(variants.map((v: any) => v.volume_ml as number))].filter(Boolean).sort((a, b) => a - b);
+                            const uniqueCounts = [...new Set(variants.map((v: any) => v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : null))].filter(Boolean);
+                            const uniqueFlavors = [...new Set(variants.map((v: any) => v.flavor as string))].filter(Boolean);
+                            const uniquePacks = [...new Set(variants.map((v: any) => (v.pack_quantity ?? 1) as number))].filter(Boolean).sort((a, b) => a - b);
 
-                            const handleSizeSelect = (size: string) => {
-                                setSelectedSize(size);
-                                const match = variants.find((v: any) => v.size_label === size && (v.pack_quantity ?? 1) === (selectedPack ?? 1));
-                                if (match) setSelectedVariant(match);
-                                else {
-                                    // fallback: find any variant with this size
-                                    const fallback = variants.find((v: any) => v.size_label === size);
-                                    if (fallback) {
-                                        setSelectedPack(fallback.pack_quantity ?? 1);
-                                        setSelectedVariant(fallback);
-                                    }
+                            const formatVolume = (ml: number) => {
+                                return ml >= 999 ? `${(ml / 1000).toFixed(ml % 1000 === 0 ? 0 : 1)} L` : `${ml} ml`;
+                            };
+
+                            const formatWeight = (g: number) => {
+                                return g >= 1000 ? `${(g / 1000).toFixed(g % 1000 === 0 ? 0 : g % 100 === 0 ? 1 : 2)} kg` : `${Math.round(g)} g`;
+                            };
+
+                            const updateSelection = (updates: any) => {
+                                const newW = updates.weight !== undefined ? updates.weight : selectedWeight;
+                                const newS = updates.strength !== undefined ? updates.strength : selectedStrength;
+                                const newV = updates.volume !== undefined ? updates.volume : selectedVolume;
+                                const newC = updates.count !== undefined ? updates.count : selectedCount;
+                                const newF = updates.flavor !== undefined ? updates.flavor : selectedFlavor;
+                                const newP = updates.pack !== undefined ? updates.pack : selectedPack;
+
+                                // Try to find an exact match first
+                                let match = variants.find((v: any) => 
+                                    (v.weight_g || null) === newW &&
+                                    (v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : null) === newS &&
+                                    (v.volume_ml || null) === newV &&
+                                    (v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : null) === newC &&
+                                    (v.flavor || null) === newF &&
+                                    (v.pack_quantity ?? 1) === newP
+                                );
+
+                                // If no exact match, fallback to finding the first variant that matches the MOST RECENTLY updated dimension
+                                if (!match) {
+                                    if (updates.weight !== undefined) match = variants.find((v: any) => v.weight_g === newW);
+                                    else if (updates.strength !== undefined) match = variants.find((v: any) => (v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : null) === newS);
+                                    else if (updates.volume !== undefined) match = variants.find((v: any) => v.volume_ml === newV);
+                                    else if (updates.count !== undefined) match = variants.find((v: any) => (v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : null) === newC);
+                                    else if (updates.flavor !== undefined) match = variants.find((v: any) => v.flavor === newF);
+                                    else if (updates.pack !== undefined) match = variants.find((v: any) => (v.pack_quantity ?? 1) === newP);
+                                }
+
+                                if (match) {
+                                    setSelectedWeight(match.weight_g || null);
+                                    setSelectedStrength(match.strength ? `${match.strength} ${match.strength_unit || ''}`.trim() : null);
+                                    setSelectedVolume(match.volume_ml || null);
+                                    setSelectedCount(match.units_count ? `${match.units_count} ${match.form_factor || 'Units'}` : null);
+                                    setSelectedFlavor(match.flavor || null);
+                                    setSelectedPack(match.pack_quantity ?? 1);
+                                    setSelectedVariant(match);
+                                } else {
+                                    // Update state anyway to show what user clicked, but wait... variant must exist. 
+                                    // With the above fallback, we always find at least some variant.
                                 }
                             };
 
-                            const handlePackSelect = (pack: number) => {
-                                setSelectedPack(pack);
-                                const match = variants.find((v: any) => v.size_label === selectedSize && (v.pack_quantity ?? 1) === pack);
-                                if (match) setSelectedVariant(match);
-                                else {
-                                    // fallback: find any variant with this pack
-                                    const fallback = variants.find((v: any) => (v.pack_quantity ?? 1) === pack);
-                                    if (fallback) {
-                                        setSelectedSize(fallback.size_label);
-                                        setSelectedVariant(fallback);
-                                    }
-                                }
+                            const checkAvailable = (dimension: string, value: any) => {
+                                return variants.some((v: any) => {
+                                    if (dimension === 'weight') return v.weight_g === value && (v.pack_quantity ?? 1) === (selectedPack ?? 1);
+                                    if (dimension === 'strength') return (v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : null) === value && (v.pack_quantity ?? 1) === (selectedPack ?? 1);
+                                    if (dimension === 'volume') return v.volume_ml === value && (v.pack_quantity ?? 1) === (selectedPack ?? 1);
+                                    if (dimension === 'count') return (v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : null) === value && (v.pack_quantity ?? 1) === (selectedPack ?? 1);
+                                    if (dimension === 'flavor') return v.flavor === value && (v.pack_quantity ?? 1) === (selectedPack ?? 1);
+                                    if (dimension === 'pack') return (v.pack_quantity ?? 1) === value; // For pack, we typically don't restrict based on other dimensions, but we could check against all. Let's just return true if it exists.
+                                    return true;
+                                });
                             };
 
-                            const hasCombo = (size: string, pack: number) =>
-                                variants.some((v: any) => v.size_label === size && (v.pack_quantity ?? 1) === pack);
+                            const isOptionActive = (dimension: string, value: any) => {
+                                return variants.some((v: any) => {
+                                    let match = false;
+                                    if (dimension === 'weight') match = v.weight_g === value;
+                                    if (dimension === 'strength') match = (v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : null) === value;
+                                    if (dimension === 'volume') match = v.volume_ml === value;
+                                    if (dimension === 'count') match = (v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : null) === value;
+                                    if (dimension === 'flavor') match = v.flavor === value;
+                                    if (dimension === 'pack') match = (v.pack_quantity ?? 1) === value;
+
+                                    return match && v.status !== 'Inactive' && v.is_active !== false;
+                                });
+                            };
+
+                            const hasSingleWeight = uniqueWeights.length === 1;
+                            const hasSingleStrength = uniqueStrengths.length === 1;
+                            const hasSingleVolume = uniqueVolumes.length === 1;
+                            const hasSingleCount = uniqueCounts.length === 1;
+                            const hasSingleFlavor = uniqueFlavors.length === 1;
+                            const hasSinglePack = uniquePacks.length === 1 && uniquePacks[0] > 1; // Only show single pack if it's not a generic size of 1
 
                             return (
                                 <div className="space-y-4">
-                                    {/* Choose Size */}
-                                    {uniqueSizes.length > 0 && (
+                                    {/* ✅ SINGLE-ATTRIBUTES AS KEY-VALUE PAIRS */}
+                                    {(hasSingleWeight || hasSingleStrength || hasSingleVolume || hasSingleCount || hasSingleFlavor || hasSinglePack) && (
+                                        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-6 pb-4 border-b border-gray-100">
+                                            {hasSingleWeight && (
+                                                <div className="flex items-baseline">
+                                                    <span className="text-sm text-gray-500 mr-2">Weight:</span>
+                                                    <span className="text-sm font-medium text-gray-900">{formatWeight(uniqueWeights[0])}</span>
+                                                </div>
+                                            )}
+                                            {hasSingleStrength && (
+                                                <div className="flex items-baseline">
+                                                    <span className="text-sm text-gray-500 mr-2">Strength:</span>
+                                                    <span className="text-sm font-medium text-gray-900">{uniqueStrengths[0]}</span>
+                                                </div>
+                                            )}
+                                            {hasSingleVolume && (
+                                                <div className="flex items-baseline">
+                                                    <span className="text-sm text-gray-500 mr-2">Volume:</span>
+                                                    <span className="text-sm font-medium text-gray-900">{formatVolume(uniqueVolumes[0])}</span>
+                                                </div>
+                                            )}
+                                            {hasSingleCount && (
+                                                <div className="flex items-baseline">
+                                                    <span className="text-sm text-gray-500 mr-2">Count:</span>
+                                                    <span className="text-sm font-medium text-gray-900">{uniqueCounts[0]}</span>
+                                                </div>
+                                            )}
+                                            {hasSingleFlavor && (
+                                                <div className="flex items-baseline">
+                                                    <span className="text-sm text-gray-500 mr-2">Flavour:</span>
+                                                    <span className="text-sm font-medium text-gray-900 capitalize">{uniqueFlavors[0]}</span>
+                                                </div>
+                                            )}
+                                            {hasSinglePack && (
+                                                <div className="flex items-baseline">
+                                                    <span className="text-sm text-gray-500 mr-2">Pack:</span>
+                                                    <span className="text-sm font-medium text-gray-900">Pack of {uniquePacks[0]}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Choose Weight */}
+                                    {uniqueWeights.length > 1 && (
                                         <div>
-                                            <p className="text-sm font-semibold mb-2">Choose Size:</p>
+                                            <p className="text-sm font-semibold mb-2">Choose Weight:</p>
                                             <div className="flex gap-2 flex-wrap">
-                                                {uniqueSizes.map((size) => (
-                                                    <button
-                                                        key={size}
-                                                        onClick={() => handleSizeSelect(size)}
-                                                        className={`px-4 py-2 rounded-lg border text-sm font-medium transition
-                                                            ${selectedSize === size
-                                                                ? 'bg-[#3d5c3a] text-white border-[#3d5c3a]'
-                                                                : 'border-gray-200 text-gray-700 hover:border-[#3d5c3a]'
-                                                            }`}
-                                                    >
-                                                        {size}
-                                                    </button>
-                                                ))}
+                                                {uniqueWeights.map((w) => {
+                                                    const active = isOptionActive('weight', w);
+                                                    return (
+                                                        <button
+                                                            key={w}
+                                                            onClick={() => active && updateSelection({ weight: w })}
+                                                            disabled={!active}
+                                                            className={`px-4 py-2 rounded-lg border text-sm font-medium transition
+                                                                ${selectedWeight === w
+                                                                    ? 'bg-[#3d5c3a] text-white border-[#3d5c3a]'
+                                                                    : !active
+                                                                        ? 'border-gray-200 text-gray-400 bg-gray-50 opacity-60 cursor-not-allowed'
+                                                                    : 'border-gray-200 text-gray-700 hover:border-[#3d5c3a]'
+                                                                }`}
+                                                        >
+                                                            {formatWeight(w)}
+                                                        </button>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
                                     )}
 
-                                    {/* Choose Pack — only show if more than 1 unique pack */}
+                                    {/* By Strength */}
+                                    {uniqueStrengths.length > 1 && (
+                                        <div>
+                                            <p className="text-sm font-semibold mb-2">By Strength:</p>
+                                            <div className="flex gap-2 flex-wrap">
+                                                {uniqueStrengths.map((str) => {
+                                                    const active = isOptionActive('strength', str);
+                                                    return (
+                                                        <button
+                                                            key={str}
+                                                            onClick={() => active && updateSelection({ strength: str })}
+                                                            disabled={!active}
+                                                            className={`px-4 py-2 rounded-lg border text-sm font-medium transition
+                                                                ${selectedStrength === str
+                                                                    ? 'bg-[#3d5c3a] text-white border-[#3d5c3a]'
+                                                                    : !active
+                                                                        ? 'border-gray-200 text-gray-400 bg-gray-50 opacity-60 cursor-not-allowed'
+                                                                    : 'border-gray-200 text-gray-700 hover:border-[#3d5c3a]'
+                                                                }`}
+                                                        >
+                                                            {str}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Choose Volume */}
+                                    {uniqueVolumes.length > 1 && (
+                                        <div>
+                                            <p className="text-sm font-semibold mb-2">Choose Volume:</p>
+                                            <div className="flex gap-2 flex-wrap">
+                                                {uniqueVolumes.map((vol) => {
+                                                    const active = isOptionActive('volume', vol);
+                                                    return (
+                                                        <button
+                                                            key={vol}
+                                                            onClick={() => active && updateSelection({ volume: vol })}
+                                                            disabled={!active}
+                                                            className={`px-4 py-2 rounded-lg border text-sm font-medium transition
+                                                                ${selectedVolume === vol
+                                                                    ? 'bg-[#3d5c3a] text-white border-[#3d5c3a]'
+                                                                    : !active
+                                                                        ? 'border-gray-200 text-gray-400 bg-gray-50 opacity-60 cursor-not-allowed'
+                                                                    : 'border-gray-200 text-gray-700 hover:border-[#3d5c3a]'
+                                                                }`}
+                                                        >
+                                                            {formatVolume(vol)}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* By Count */}
+                                    {uniqueCounts.length > 1 && (
+                                        <div>
+                                            <p className="text-sm font-semibold mb-2">By Count:</p>
+                                            <div className="flex gap-2 flex-wrap">
+                                                {uniqueCounts.map((countStr) => {
+                                                    const active = isOptionActive('count', countStr);
+                                                    return (
+                                                        <button
+                                                            key={countStr}
+                                                            onClick={() => active && updateSelection({ count: countStr })}
+                                                            disabled={!active}
+                                                            className={`px-4 py-2 rounded-lg border text-sm font-medium transition
+                                                                ${selectedCount === countStr
+                                                                    ? 'bg-[#3d5c3a] text-white border-[#3d5c3a]'
+                                                                    : !active
+                                                                        ? 'border-gray-200 text-gray-400 bg-gray-50 opacity-60 cursor-not-allowed'
+                                                                    : 'border-gray-200 text-gray-700 hover:border-[#3d5c3a]'
+                                                                }`}
+                                                        >
+                                                            {countStr}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* By Flavor */}
+                                    {uniqueFlavors.length > 1 && (
+                                        <div>
+                                            <p className="text-sm font-semibold mb-2">By Flavour:</p>
+                                            <div className="flex gap-2 flex-wrap">
+                                                {uniqueFlavors.map((flav) => {
+                                                    const active = isOptionActive('flavor', flav);
+                                                    return (
+                                                        <button
+                                                            key={flav}
+                                                            onClick={() => active && updateSelection({ flavor: flav })}
+                                                            disabled={!active}
+                                                            className={`px-4 py-2 rounded-lg border text-sm font-medium transition
+                                                                ${selectedFlavor === flav
+                                                                    ? 'bg-[#3d5c3a] text-white border-[#3d5c3a]'
+                                                                    : !active
+                                                                        ? 'border-gray-200 text-gray-400 bg-gray-50 opacity-60 cursor-not-allowed'
+                                                                    : 'border-gray-200 text-gray-700 hover:border-[#3d5c3a]'
+                                                                }`}
+                                                        >
+                                                            {flav}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Choose Pack */}
                                     {uniquePacks.length > 1 && (
                                         <div>
                                             <p className="text-sm font-semibold mb-2">Choose Pack:</p>
                                             <div className="flex gap-2 flex-wrap">
                                                 {uniquePacks.map((pack) => {
-                                                    const available = hasCombo(selectedSize!, pack);
+                                                    const active = isOptionActive('pack', pack);
                                                     return (
                                                         <button
                                                             key={pack}
-                                                            onClick={() => available && handlePackSelect(pack)}
-                                                            disabled={!available}
+                                                            onClick={() => active && updateSelection({ pack })}
+                                                            disabled={!active}
                                                             className={`px-4 py-2 rounded-lg border text-sm font-medium transition
                                                                 ${selectedPack === pack
                                                                     ? 'bg-[#3d5c3a] text-white border-[#3d5c3a]'
-                                                                    : available
-                                                                        ? 'border-gray-200 text-gray-700 hover:border-[#3d5c3a]'
-                                                                        : 'border-gray-100 text-gray-400 opacity-50 cursor-not-allowed'
+                                                                    : !active
+                                                                        ? 'border-gray-200 text-gray-400 bg-gray-50 opacity-60 cursor-not-allowed'
+                                                                    : 'border-gray-200 text-gray-700 hover:border-[#3d5c3a]'
                                                                 }`}
                                                         >
                                                             Pack of {pack}
@@ -535,7 +761,7 @@ function ProductDetailContent({ params }: Props) {
                                         }`}
                                 >
                                     <ShoppingCart size={18} />
-                                    {isComingSoon ? 'Coming Soon' : isExpired ? 'Unavailable' : isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+                                    {isComingSoon ? 'Coming Soon' : isExpired ? 'Unavailable' : isVariantInactive ? 'Option Unavailable' : isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
                                 </button>
 
                                 <button

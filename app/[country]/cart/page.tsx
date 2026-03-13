@@ -7,7 +7,7 @@ import { createPortal } from 'react-dom';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { Minus, Plus, X, ShoppingCart, ArrowLeft, Loader2, Ticket, Bookmark, ArrowRight, Leaf, MapPin, Search } from 'lucide-react';
-import { formatVND } from '@/lib/api';
+import { useCurrency } from '@/context/CurrencyContext';
 import toast from 'react-hot-toast';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 
@@ -42,6 +42,7 @@ function StepIndicator({ currentStep = 0 }: { currentStep?: number }) {
 /* ─── Main Cart Page ─────────────────────────────────────────── */
 
 export default function CartPage() {
+    const { formatPrice } = useCurrency();
     const {
         items, savedItems, updateQuantity, removeItem, saveForLater, moveToCart,
         totalPrice, totalItems, loading, error,
@@ -161,9 +162,9 @@ export default function CartPage() {
                                                     </div>
                                                     <div className="text-right">
                                                         <div className="font-serif text-lg font-bold text-[#1A1A1A]">
-                                                            {formatVND(price * item.quantity)}
+                                                            {formatPrice(price * item.quantity)}
                                                         </div>
-                                                        <div className="text-xs text-[#8B7A3D] mt-1">{formatVND(price)} each</div>
+                                                        <div className="text-xs text-[#8B7A3D] mt-1">{formatPrice(price)} each</div>
                                                     </div>
                                                 </div>
 
@@ -214,7 +215,7 @@ export default function CartPage() {
                                                     <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
                                                         <h3 className="text-sm font-bold text-[#1A1A1A] hover:text-[#3d5c3a] transition-colors">{item.product_name || 'Product'}</h3>
                                                     </Link>
-                                                    <p className="font-serif text-[#4A4A4A] mt-1">{formatVND(price)}</p>
+                                                    <p className="font-serif text-[#4A4A4A] mt-1">{formatPrice(price)}</p>
                                                 </div>
                                                 <div className="flex flex-col items-end gap-2">
                                                     <button onClick={() => { moveToCart(item.cart_item_id); toast.success('Moved to cart'); }} disabled={loading} className="bg-[#6B8F5E] text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-[#5A7A4E]">
@@ -243,7 +244,7 @@ export default function CartPage() {
                                     {couponCode ? (
                                         <div className="ritual-coupon-applied">
                                             <div className="coupon-info text-[#1A1A1A] font-semibold text-sm">
-                                                {couponCode} <span className="text-[#6B8F5E]">(-{formatVND(couponDiscount)})</span>
+                                                {couponCode} <span className="text-[#6B8F5E]">(-{formatPrice(couponDiscount)})</span>
                                             </div>
                                             <button onClick={() => { removeCoupon(); toast.success('Coupon removed'); }} className="text-[#C0392B] text-xs font-semibold uppercase hover:underline">Remove</button>
                                         </div>
@@ -339,7 +340,7 @@ export default function CartPage() {
                                                     {item.product_name || 'Product'}
                                                     <div className="ritual-summary-item-qty mt-0.5">Qty: {item.quantity}</div>
                                                 </div>
-                                                <span className="ritual-summary-item-price">{formatVND(lineTotal)}</span>
+                                                <span className="ritual-summary-item-price">{formatPrice(lineTotal)}</span>
                                             </div>
                                         );
                                     })}
@@ -350,28 +351,28 @@ export default function CartPage() {
                                 <div className="space-y-2">
                                     <div className="ritual-summary-row">
                                         <span className="label">Bundle Subtotal</span>
-                                        <span className="value">{formatVND(totalMRP)}</span>
+                                        <span className="value">{formatPrice(totalMRP)}</span>
                                     </div>
                                     {saleDiscount > 0 && (
                                         <div className="ritual-summary-row">
                                             <span className="label">Vedic Discount</span>
-                                            <span className="value !text-[#86EFAC]">- {formatVND(saleDiscount)}</span>
+                                            <span className="value !text-[#86EFAC]">- {formatPrice(saleDiscount)}</span>
                                         </div>
                                     )}
                                     {couponDiscount > 0 && (
                                         <div className="ritual-summary-row">
                                             <span className="label">Promo Discount</span>
-                                            <span className="value !text-[#86EFAC]">- {formatVND(couponDiscount)}</span>
+                                            <span className="value !text-[#86EFAC]">- {formatPrice(couponDiscount)}</span>
                                         </div>
                                     )}
                                     <div className="ritual-summary-row">
                                         <span className="label">Vedic Shipping <span className="text-[9px] uppercase tracking-wider opacity-70 ml-1">(Standard)</span></span>
-                                        <span className="value">{deliveryFee === 0 ? 'FREE' : formatVND(deliveryFee)}</span>
+                                        <span className="value">{deliveryFee === 0 ? 'FREE' : formatPrice(deliveryFee)}</span>
                                     </div>
                                     {totalTaxes > 0 && (
                                         <div className="ritual-summary-row">
                                             <span className="label">Ayurvedic Levy (Tax)</span>
-                                            <span className="value">{formatVND(totalTaxes)}</span>
+                                            <span className="value">{formatPrice(totalTaxes)}</span>
                                         </div>
                                     )}
                                 </div>
@@ -379,7 +380,7 @@ export default function CartPage() {
                                 <div className="ritual-summary-total">
                                     <div>
                                         <div className="ritual-summary-total-label">Total Investment</div>
-                                        <div className="ritual-summary-total-value mt-1">{formatVND(grandTotal)}</div>
+                                        <div className="ritual-summary-total-value mt-1">{formatPrice(grandTotal)}</div>
                                     </div>
                                     <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.05)]">
                                         <Leaf className="h-5 w-5 text-white opacity-80" />
