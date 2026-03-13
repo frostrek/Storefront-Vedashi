@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import {
     ChevronLeft, Plus, MessageSquare, Clock, AlertCircle,
@@ -40,18 +41,35 @@ function timeAgo(date: string) {
     return new Date(date).toLocaleDateString();
 }
 
-
 export default function SupportPage() {
+    return (
+        <Suspense fallback={<div className="p-12 text-center text-[#5B4A31]">Loading support...</div>}>
+            <SupportContent />
+        </Suspense>
+    );
+}
+
+function SupportContent() {
     const { isAuthenticated, user } = useAuth();
+    const searchParams = useSearchParams();
+    const urlOrderId = searchParams.get('orderId');
+
     const [tickets, setTickets] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [view, setView] = useState<'list' | 'create'>('list');
+    const [view, setView] = useState<'list' | 'create'>(urlOrderId ? 'create' : 'list');
     const [submitting, setSubmitting] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('');
     const [form, setForm] = useState({
-        subject: '', category: 'Other', description: '', order_id: '', priority: 'medium',
+        subject: '', category: 'Orders', description: '', order_id: urlOrderId || '', priority: 'medium',
     });
+
+    useEffect(() => {
+        if (urlOrderId) {
+            setView('create');
+            setForm(prev => ({ ...prev, order_id: urlOrderId, category: 'Orders' }));
+        }
+    }, [urlOrderId]);
 
     useEffect(() => {
         if (isAuthenticated) {
