@@ -1,9 +1,10 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { Link } from '@/i18n/navigation';
+import { usePathname } from '@/i18n/navigation';
 import { Facebook, Instagram, Twitter, Youtube, Linkedin, Globe, Mail, Phone, MapPin, Clock } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -42,6 +43,7 @@ interface FooterData {
 export default function Footer() {
     const pathname = usePathname();
     const [data, setData] = useState<FooterData | null>(null);
+    const t = useTranslations('Footer');
 
     useEffect(() => {
         fetch(`${API_URL}/api/footer`)
@@ -70,16 +72,10 @@ export default function Footer() {
                     {/* Brand column */}
                     <div>
                         <Link href="/" className="flex items-center gap-2 mb-4 group">
-                            <svg width="28" height="28" viewBox="0 0 32 32" fill="none" className="text-[#3B5D3B]">
-                                <path d="M16 2C16 2 8 8 8 16C8 20.4 11.6 24 16 24C20.4 24 24 20.4 24 16C24 8 16 2 16 2Z" fill="currentColor" opacity="0.15" />
-                                <path d="M16 4C16 4 10 9 10 16C10 19.3 12.7 22 16 22C19.3 22 22 19.3 22 16C22 9 16 4 16 4Z" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                                <path d="M16 8V18" stroke="currentColor" strokeWidth="1.2" />
-                                <path d="M13 12C13 12 14.5 14 16 14C17.5 14 19 12 19 12" stroke="currentColor" strokeWidth="1" fill="none" />
-                            </svg>
-                            <span className="font-serif text-2xl font-bold tracking-wide text-[#3B5D3B]">Vedashi</span>
+                            <img src="/vedashi-logo.png" alt="Vedashi" className="h-16 w-auto object-contain" />
                         </Link>
                         <p className="text-sm leading-relaxed text-[#6b6b6b] max-w-[260px]">
-                            Nurturing your journey towards holistic health through the ancient wisdom of Ayurveda.
+                            {t('brandDescription')}
                         </p>
 
                         {/* Social icons */}
@@ -104,26 +100,26 @@ export default function Footer() {
 
                     {/* Explore column */}
                     <div>
-                        <h4 className="font-semibold text-[#333] text-base mb-5">Explore</h4>
+                        <h4 className="font-semibold text-[#333] text-base mb-5">{t('explore')}</h4>
                         <ul className="space-y-3">
                             <li>
                                 <Link href="/about" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
-                                    Our Story
+                                    {t('ourStory')}
                                 </Link>
                             </li>
                             <li>
                                 <Link href="/practitioners" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
-                                    Practitioners
+                                    {t('practitioners')}
                                 </Link>
                             </li>
                             <li>
                                 <Link href="/products" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
-                                    Natural Products
+                                    {t('naturalProducts')}
                                 </Link>
                             </li>
                             <li>
                                 <Link href="/quiz" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
-                                    Ayurvedic Quiz
+                                    {t('ayurvedicQuiz')}
                                 </Link>
                             </li>
                         </ul>
@@ -131,26 +127,26 @@ export default function Footer() {
 
                     {/* Support column */}
                     <div>
-                        <h4 className="font-semibold text-[#333] text-base mb-5">Support</h4>
+                        <h4 className="font-semibold text-[#333] text-base mb-5">{t('support')}</h4>
                         <ul className="space-y-3">
                             <li>
                                 <Link href="/help" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
-                                    Help Center
+                                    {t('helpCenter')}
                                 </Link>
                             </li>
                             <li>
                                 <Link href="/faq" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
-                                    Consultation FAQ
+                                    {t('consultationFaq')}
                                 </Link>
                             </li>
                             <li>
                                 <Link href="/shipping" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
-                                    Shipping Policy
+                                    {t('shippingPolicy')}
                                 </Link>
                             </li>
                             <li>
                                 <Link href="/privacy" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
-                                    Privacy
+                                    {t('privacy')}
                                 </Link>
                             </li>
                         </ul>
@@ -158,21 +154,21 @@ export default function Footer() {
 
                     {/* Newsletter column */}
                     <div>
-                        <h4 className="font-semibold text-[#333] text-base mb-5">Newsletter</h4>
+                        <h4 className="font-semibold text-[#333] text-base mb-5">{t('newsletter')}</h4>
                         <p className="text-sm text-[#6b6b6b] leading-relaxed mb-4">
-                            Join our community for weekly wellness rituals.
+                            {t('newsletterDesc')}
                         </p>
                         <form onSubmit={e => e.preventDefault()} className="flex gap-2">
                             <input
                                 type="email"
-                                placeholder="Your email"
+                                placeholder={t('emailPlaceholder')}
                                 className="flex-1 min-w-0 rounded-md px-3 py-2 text-sm bg-white border border-[#d9d9d0] focus:outline-none focus:border-[#3B5D3B] focus:ring-1 focus:ring-[#3B5D3B]/20 placeholder:text-[#aaa] text-[#333] transition-all"
                             />
                             <button
                                 type="submit"
                                 className="px-5 py-2 bg-[#3B5D3B] text-white text-sm font-medium rounded-md hover:bg-[#2d472d] transition-colors whitespace-nowrap"
                             >
-                                Join
+                                {t('join')}
                             </button>
                         </form>
                     </div>
@@ -181,10 +177,10 @@ export default function Footer() {
                 {/* ── Bottom bar ── */}
                 <div className="mt-12 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[#e8e8e0]">
                     <p className="text-xs text-[#999]">
-                        © 2024 Vedashi. All rights reserved.
+                        {t('copyright')}
                     </p>
                     <p className="text-xs text-[#999] italic">
-                        Gently crafted for modern balance.
+                        {t('tagline')}
                     </p>
                 </div>
             </div>

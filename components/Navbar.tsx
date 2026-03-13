@@ -1,15 +1,16 @@
 'use client';
 
-import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
+import { Link, useRouter, usePathname } from '@/i18n/navigation';
 import { useState, useEffect } from 'react';
-import { ShoppingCart, User, Menu, X, Heart, ChevronDown, Search, ArrowRight } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, Heart, ChevronDown, Search, ArrowRight, Leaf, Sparkles } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useAuth } from '@/context/AuthContext';
 import { getCategories } from '@/lib/api';
 import toast from 'react-hot-toast';
 import SearchAutocomplete from './SearchAutocomplete';
+import LanguageSwitcher from './LanguageSwitcher';
+import { useTranslations } from 'next-intl';
 
 interface Category {
   category_id: string;
@@ -18,6 +19,7 @@ interface Category {
 }
 
 interface HeaderConfig {
+  settings?: { use_backend_navbar: boolean; };
   branding: { logo_url: string; logo_alt: string; };
   colors: {
     navbar_bg: string;
@@ -49,7 +51,14 @@ const DEFAULT_CONFIG: HeaderConfig = {
     strip_accent: '#C9B87A',
     cart_badge_bg: '#3B5D3B',
   },
-  nav_links: [],
+  nav_links: [
+    { label: 'Home', url: '/', enabled: true },
+    { label: 'Shop', url: '/products', enabled: true },
+    { label: 'About Us', url: '/about', enabled: true },
+    { label: 'Contact', url: '/contact', enabled: true },
+    { label: 'Blog', url: '/blog', enabled: true },
+    { label: 'Help', url: '/help-center', enabled: true },
+  ],
   strip: {
     enabled: false,
     center_message: '',
@@ -64,6 +73,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
+  const t = useTranslations('Navbar');
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const { totalItems, loading: cartLoading } = useCart();
@@ -87,7 +97,7 @@ export default function Navbar() {
     if (isAuthenticated) {
       router.push('/account/wishlist');
     } else {
-      toast('Please sign in to view your wishlist');
+      toast(t('wishlistSignIn'));
       router.push('/login');
     }
   };
@@ -98,7 +108,13 @@ export default function Navbar() {
       .then(r => r.json())
       .then(data => {
         if (data.success && data.data) {
-          setConfig(prev => ({ ...DEFAULT_CONFIG, ...data.data }));
+          if (data.data.settings?.use_backend_navbar === false) {
+            // Revert/Keep default hardcoded config
+            setConfig(DEFAULT_CONFIG);
+          } else {
+            // Overlay backend config on defaults
+            setConfig(prev => ({ ...DEFAULT_CONFIG, ...data.data }));
+          }
         }
       })
       .catch(() => { /* stay with defaults */ })
@@ -136,33 +152,27 @@ export default function Navbar() {
       {/* ═══════════════ MAIN NAVBAR ═══════════════ */}
       <div
         className={`border-b transition-all duration-500 ${scrolled
-            ? 'bg-white/80 backdrop-blur-xl border-[#3B5D3B]/10 shadow-[0_2px_20px_rgba(59,93,59,0.08)]'
-            : 'bg-white border-gray-200 shadow-sm'
+          ? 'bg-white/80 backdrop-blur-xl border-[#3B5D3B]/10 shadow-[0_2px_20px_rgba(59,93,59,0.08)]'
+          : 'bg-white border-gray-200 shadow-sm'
           }`}
       >
         <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
-          <div className="flex h-16 items-center justify-between">
+          <div className="flex h-16 items-center justify-between relative">
 
             {/* Logo */}
-            <Link href="/" className="flex-shrink-0 flex items-center gap-2">
-              {branding.logo_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={branding.logo_url} alt={branding.logo_alt} className="h-14 sm:h-16 md:h-20 w-auto object-contain" />
-              ) : (
-                <span className="flex items-center gap-2">
-                  <svg width="28" height="28" viewBox="0 0 32 32" fill="none" className="text-[#3B5D3B]">
-                    <path d="M16 2C16 2 8 8 8 16C8 20.4 11.6 24 16 24C20.4 24 24 20.4 24 16C24 8 16 2 16 2Z" fill="currentColor" opacity="0.2" />
-                    <path d="M16 4C16 4 10 9 10 16C10 19.3 12.7 22 16 22C19.3 22 22 19.3 22 16C22 9 16 4 16 4Z" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                    <path d="M16 8V18" stroke="currentColor" strokeWidth="1.2" />
-                    <path d="M13 12C13 12 14.5 14 16 14C17.5 14 19 12 19 12" stroke="currentColor" strokeWidth="1" fill="none" />
-                  </svg>
-                  <span className="font-serif text-xl sm:text-2xl font-bold tracking-wide" style={{ color: '#3B5D3B' }}>Vedashi</span>
-                </span>
-              )}
-            </Link>
+            <div className="flex-1 flex items-center justify-start">
+              <Link href="/" className="flex-shrink-0 flex items-center gap-2">
+                {branding.logo_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={branding.logo_url} alt={branding.logo_alt} className="h-14 sm:h-16 md:h-20 w-auto object-contain" />
+                ) : (
+                  <img src="/vedashi-logo.png" alt="Vedashi" className="h-14 sm:h-16 md:h-20 w-auto object-contain" />
+                )}
+              </Link>
+            </div>
 
             {/* Center Nav Links */}
-            <nav className="hidden md:flex items-center gap-8">
+            <nav className="hidden md:flex flex-shrink-0 items-center justify-center gap-8 mx-4">
               {visibleLinks.map(link => (
                 <Link
                   key={link.label}
@@ -178,7 +188,7 @@ export default function Navbar() {
             </nav>
 
             {/* Right Icons + Search */}
-            <div className="flex items-center gap-1 sm:gap-2 relative">
+            <div className="flex-1 flex items-center justify-end gap-1 sm:gap-2 relative">
               {/* Desktop Search */}
               <div className="hidden md:block relative">
                 {searchOpen ? (
@@ -222,35 +232,51 @@ export default function Navbar() {
 
                 {/* Cart Reminder Popup */}
                 {showCartReminder && (
-                  <div className="absolute top-full right-0 mt-3 w-72 bg-white rounded-xl shadow-2xl border border-gray-100 p-4 z-50 animate-in slide-in-from-top-4 fade-in duration-300">
+                  <div className="absolute top-full right-0 mt-3 w-80 bg-white rounded-[30px] shadow-2xl border border-[#4A5D23]/10 overflow-hidden z-[110] animate-in slide-in-from-top-4 fade-in duration-300">
+                    {/* Background Texture */}
+                    <div 
+                      className="absolute inset-0 z-0 opacity-[0.08] pointer-events-none"
+                      style={{ 
+                        backgroundImage: "url('/ayurvedic-texture.png')",
+                        backgroundSize: '200px'
+                      }}
+                    ></div>
+                    
                     <button
                       onClick={() => setShowCartReminder(false)}
-                      className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-gray-600 transition-colors rounded-full hover:bg-gray-100"
+                      className="absolute top-3 right-3 p-2 text-[#5B4A31]/40 hover:text-[#4A5D23] transition-all hover:bg-[#4A5D23]/5 rounded-full z-10"
                     >
                       <X className="h-4 w-4" />
                     </button>
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${colors.navbar_hover}18` }}>
-                        <ShoppingCart className="h-5 w-5" style={{ color: colors.strip_text }} />
-                      </div>
-                      <div className="pr-4">
-                        <h4 className="text-sm font-bold text-gray-900 mb-1">Items left in cart</h4>
-                        <p className="text-xs text-gray-600 leading-relaxed mb-3">
-                          You previously left {totalItems} {totalItems === 1 ? 'item' : 'items'} in your cart. Checkout fast before they go out of stock!
-                        </p>
-                        <Link
-                          href="/cart"
-                          onClick={() => setShowCartReminder(false)}
-                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-white px-4 py-2 rounded-lg transition-all shadow-sm hover:shadow-md"
-                          style={{ backgroundColor: colors.navbar_hover }}
-                        >
-                          Go to Cart <ArrowRight className="h-3 w-3" />
-                        </Link>
+                    <div className="relative z-10 p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-[#4A5D23]/10 flex items-center justify-center flex-shrink-0 animate-pulse text-[#4A5D23]">
+                          <Leaf className="h-6 w-6" />
+                        </div>
+                        <div className="pr-2">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="text-base font-serif font-bold text-[#1a2408]">{t('itemsInCart')}</h4>
+                            <Sparkles className="h-3 w-3 text-[#c8a84e]" />
+                          </div>
+                          <p className="text-xs text-[#5B4A31] leading-relaxed mb-4 font-medium italic">
+                            {t('cartReminderText', { count: totalItems })}
+                          </p>
+                          <Link
+                            href="/cart"
+                            onClick={() => setShowCartReminder(false)}
+                            className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white px-5 py-2.5 rounded-xl transition-all shadow-xl hover:-translate-y-0.5 active:translate-y-0"
+                            style={{ backgroundColor: '#4A5D23' }}
+                          >
+                            {t('goToCart')} <ArrowRight className="h-3.5 w-3.5" />
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   </div>
                 )}
               </div>
+
+              <LanguageSwitcher />
 
               <Link href="/account" className="relative p-2 group">
                 <User className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
@@ -281,7 +307,7 @@ export default function Navbar() {
                     onMouseEnter={e => (e.currentTarget.style.color = colors.strip_accent)}
                     onMouseLeave={e => (e.currentTarget.style.color = colors.strip_text)}
                   >
-                    Track Orders
+                    {t('trackOrders')}
                   </Link>
                 )}
 
@@ -296,7 +322,7 @@ export default function Navbar() {
                       className="flex items-center gap-1 font-medium cursor-pointer transition-colors duration-200"
                       style={{ color: colors.strip_text }}
                     >
-                      Categories
+                      {t('categories')}
                       <ChevronDown className="h-3 w-3 transition-transform duration-200 group-hover:rotate-180" />
                     </button>
                     <div className="absolute top-9 left-0 min-w-[280px] bg-white text-gray-800 shadow-2xl rounded-b-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[200] border-t-[3px]" style={{ borderColor: colors.strip_text }}>
@@ -357,7 +383,7 @@ export default function Navbar() {
               <div className="flex items-center gap-1.5 font-medium" style={{ color: colors.strip_text }}>
                 <span className="text-sm">✆</span>
                 <span>
-                  Hotline:{' '}
+                  {t('hotline')}:{' '}
                   <span className="font-semibold" style={{ color: colors.strip_accent }}>{strip.hotline}</span>
                 </span>
               </div>
@@ -412,7 +438,7 @@ export default function Navbar() {
                   (e.currentTarget as HTMLElement).style.color = colors.navbar_text;
                 }}
               >
-                Track Orders
+                {t('trackOrders')}
               </Link>
             )}
 
@@ -420,7 +446,7 @@ export default function Navbar() {
             <div className="border-t border-gray-100 my-2" />
 
             {/* Categories */}
-            <p className="px-3 text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1">Categories</p>
+            <p className="px-3 text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1">{t('categories')}</p>
             {parentCategories.map(parent => (
               <div key={parent.category_id} className="flex flex-col">
                 <Link
@@ -458,7 +484,7 @@ export default function Navbar() {
             {/* Hotline */}
             <div className="border-t border-gray-100 my-2" />
             <p className="px-3 text-xs" style={{ color: colors.strip_text }}>
-              ✆ Hotline: <span className="font-semibold" style={{ color: colors.navbar_hover }}>{strip.hotline}</span>
+              ✆ {t('hotline')}: <span className="font-semibold" style={{ color: colors.navbar_hover }}>{strip.hotline}</span>
             </p>
           </nav>
         </div>

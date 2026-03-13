@@ -4,7 +4,7 @@ import { useEffect, useCallback, useRef, memo } from 'react';
 import styles from './gallery.module.css';
 
 interface ImageLightboxProps {
-    images: { id: string; src: string; alt: string }[];
+    images: { id: string; src: string; alt: string; isVideo?: boolean; videoSrc?: string }[];
     activeIndex: number;
     onClose: () => void;
     onPrev: () => void;
@@ -112,14 +112,30 @@ function ImageLightboxInner({
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
             >
-                <img
-                    key={current.id}
-                    src={current.src}
-                    alt={current.alt}
-                    className={styles.lightboxImage}
-                    draggable={false}
-                    decoding="async"
-                />
+                {current.isVideo ? (
+                    <video
+                        key={current.id}
+                        src={current.videoSrc}
+                        controls
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className={styles.lightboxImage}
+                        style={{ background: '#000' }}
+                    >
+                        Your browser does not support the video tag.
+                    </video>
+                ) : (
+                    <img
+                        key={current.id}
+                        src={current.src}
+                        alt={current.alt}
+                        className={styles.lightboxImage}
+                        draggable={false}
+                        decoding="async"
+                    />
+                )}
             </div>
 
             {/* Next */}
@@ -143,13 +159,21 @@ function ImageLightboxInner({
                             onClick={() => onSelect(index)}
                             aria-label={`View image ${index + 1}`}
                         >
-                            <img
-                                src={img.src}
-                                alt={img.alt}
-                                className={styles.lightboxThumbImg}
-                                draggable={false}
-                                decoding="async"
-                            />
+                            {img.isVideo ? (
+                                <div className={styles.lightboxThumbImg} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1a1a1a' }}>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white" stroke="none">
+                                        <polygon points="5,3 19,12 5,21" />
+                                    </svg>
+                                </div>
+                            ) : (
+                                <img
+                                    src={img.src}
+                                    alt={img.alt}
+                                    className={styles.lightboxThumbImg}
+                                    draggable={false}
+                                    decoding="async"
+                                />
+                            )}
                         </button>
                     ))}
                 </div>
