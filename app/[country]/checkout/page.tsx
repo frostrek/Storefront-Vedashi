@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -6,13 +7,13 @@ import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import {
     checkoutOrder, directCheckout, getAddresses,
-    createPaymentOrder, verifyPayment, lookupPostalCode,
+    createPaymentOrder, verifyPayment, lookupPostalCode, getLoyaltyWallet
 } from '@/lib/api';
 import { useCurrency } from '@/context/CurrencyContext';
 import { Address } from '@/types';
 import { COUNTRIES } from '@/lib/countries';
 import Select from 'react-select';
-import { CheckCircle, Loader2, MapPin, CreditCard, Banknote, ShieldCheck, AlertTriangle, ArrowLeft, Leaf, ChevronRight, Lock, Ticket, Globe, Search } from 'lucide-react';
+import { CheckCircle, Loader2, MapPin, CreditCard, Banknote, ShieldCheck, AlertTriangle, ArrowLeft, Leaf, ChevronRight, Lock, Ticket, Globe } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
@@ -151,6 +152,10 @@ function CheckoutContent() {
     const [couponInput, setCouponInput] = useState('');
     const [applyingCoupon, setApplyingCoupon] = useState(false);
 
+    // Loyalty UI
+    const [wallet, setWallet] = useState<any>(null);
+    const [redeemPoints, setRedeemPoints] = useState<string>('');
+
 
     useEffect(() => {
         if (isBuyNow) {
@@ -176,7 +181,18 @@ function CheckoutContent() {
     const subtotalWithTaxes = isBuyNow && buyNowItem ? buyNowItem.unit_price * buyNowItem.quantity : totalPrice;
     const shippingCost = couponType === 'free_shipping' ? 0 : (subtotalWithTaxes > 50 ? 0 : 15);
     const discount = isBuyNow ? 0 : couponDiscount;
-    const grandTotal = subtotalWithTaxes + shippingCost - discount;
+
+    const prePointsTotal = subtotalWithTaxes + shippingCost - discount;
+    const maxRedeemablePoints = Math.min(wallet?.balance || 0, Math.floor(prePointsTotal));
+    
+    // Parse valid points from input
+    let pointsToRedeem = 0;
+    if (redeemPoints && !isNaN(Number(redeemPoints))) {
+        pointsToRedeem = Math.min(parseInt(redeemPoints) || 0, maxRedeemablePoints);
+    }
+    
+    // Assuming 1 point = 1 INR
+    const grandTotal = Math.max(0, prePointsTotal - pointsToRedeem);
 
     // Load addresses
     useEffect(() => {
@@ -193,6 +209,10 @@ function CheckoutContent() {
                 })
                 .catch(() => setUseNewAddress(true))
                 .finally(() => setAddressesLoading(false));
+
+            getLoyaltyWallet().then(res => {
+                if (res) setWallet(res);
+            }).catch(() => {});
             
             if (user.email) setContactEmail(user.email);
             if (user.phone) setContactPhone(user.phone);
@@ -427,6 +447,7 @@ function CheckoutContent() {
                     billing_address: !billingSameAsShipping && useNewBillingAddress ? newBillingAddress as unknown as Record<string, string> : (billingSameAsShipping && useNewAddress ? newAddress as unknown as Record<string, string> : undefined),
                     payment_method: paymentMethod,
                     order_notes: orderNotes.trim() || undefined,
+                    redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
                 });
             } else if (isAuthenticated && cartId && user?.id) {
                 result = await checkoutOrder({
@@ -439,6 +460,7 @@ function CheckoutContent() {
                     coupon_code: couponCode || undefined,
                     order_notes: orderNotes.trim() || undefined,
                     payment_method: paymentMethod,
+                    redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
                 } as any);
             } else {
                 result = await directCheckout({
@@ -451,6 +473,7 @@ function CheckoutContent() {
                     payment_method: paymentMethod,
                     coupon_code: couponCode || undefined,
                     order_notes: orderNotes.trim() || undefined,
+                    redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
                 });
             }
 
@@ -946,7 +969,7 @@ function CheckoutContent() {
                                     <button onClick={handlePlaceOrder} disabled={placing || paymentProcessing} className="cart-checkout-btn w-full text-center flex items-center justify-center gap-2 py-4 text-base">
                                         {placing || paymentProcessing ? <><Loader2 className="h-5 w-5 animate-spin" /> Processing Ritual...</> : <><Lock className="w-4 h-4" /> Place Final Order — {formatPrice(grandTotal)}</>}
                                     </button>
-                                    <p className="text-center text-xs text-[#6B6B60] mt-4 max-w-lg mx-auto leading-relaxed">By placing your order, you agree to Vedashi's <span className="underline cursor-pointer hover:text-[#2D3B2D]">Terms of Service</span> and <span className="underline cursor-pointer hover:text-[#2D3B2D]">Privacy & Wellness Policy</span>.</p>
+                                    <p className="text-center text-xs text-[#6B6B60] mt-4 max-w-lg mx-auto leading-relaxed">By placing your order, you agree to Vedashi&apos;s <span className="underline cursor-pointer hover:text-[#2D3B2D]">Terms of Service</span> and <span className="underline cursor-pointer hover:text-[#2D3B2D]">Privacy & Wellness Policy</span>.</p>
                                 </div>
                             </div>
                         )}
@@ -1001,6 +1024,12 @@ function CheckoutContent() {
                                             <span className="value text-[#86EFAC]">- {formatPrice(couponDiscount)}</span>
                                         </div>
                                     )}
+                                    {pointsToRedeem > 0 && (
+                                        <div className="ritual-summary-row">
+                                            <span className="label text-[#86EFAC] flex items-center gap-1"><Leaf className="w-3 h-3" /> Loyalty Points</span>
+                                            <span className="value text-[#86EFAC]">- {formatPrice(pointsToRedeem)}</span>
+                                        </div>
+                                    )}
                                     <div className="ritual-summary-row">
                                         <span className="label">Shipping</span>
                                         <span className="value">{shippingCost === 0 ? 'FREE' : formatPrice(shippingCost)}</span>
@@ -1031,6 +1060,40 @@ function CheckoutContent() {
                                             <input type="text" value={couponInput} onChange={e => setCouponInput(e.target.value.toUpperCase())} placeholder="Enter code" className="flex-1 rounded border border-[rgba(255,255,255,0.3)] bg-[rgba(255,255,255,0.05)] px-3 py-1.5 text-sm text-white focus:outline-none focus:border-white font-mono uppercase" />
                                             <button onClick={async () => { if (!couponInput.trim()) return; setApplyingCoupon(true); const ok = await applyCoupon(couponInput.trim()); if (ok) { toast.success('Coupon applied!'); setCouponInput(''); } setApplyingCoupon(false); }} disabled={applyingCoupon || !couponInput.trim()} className="bg-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.2)] text-white px-3 py-1.5 rounded text-sm font-bold transition-colors disabled:opacity-50">Apply</button>
                                         </div>
+                                    </div>
+                                )}
+
+                                {isAuthenticated && wallet && wallet.balance > 0 && (
+                                    <div className="mt-4 pt-4 border-t border-[rgba(255,255,255,0.1)]">
+                                        <p className="text-xs text-[rgba(255,255,255,0.7)] mb-2 font-bold uppercase tracking-wide flex justify-between items-center">
+                                            <span>Loyalty Points</span>
+                                            <span className="text-[#86EFAC]">{wallet.balance} available</span>
+                                        </p>
+                                        <div className="flex gap-2">
+                                            <input 
+                                                type="number" 
+                                                value={redeemPoints} 
+                                                onChange={e => {
+                                                    const val = e.target.value;
+                                                    if (!val) setRedeemPoints('');
+                                                    else if (parseInt(val) >= 0) setRedeemPoints(val);
+                                                }}
+                                                placeholder={`Max: ${maxRedeemablePoints}`}
+                                                max={maxRedeemablePoints}
+                                                className="flex-1 rounded border border-[rgba(255,255,255,0.3)] bg-[rgba(255,255,255,0.05)] px-3 py-1.5 text-sm text-white focus:outline-none focus:border-white font-mono" 
+                                            />
+                                            <button 
+                                                onClick={() => { setRedeemPoints(maxRedeemablePoints.toString()) }} 
+                                                className="bg-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.2)] text-white px-3 py-1.5 rounded text-sm font-bold transition-colors"
+                                            >
+                                                Max
+                                            </button>
+                                        </div>
+                                        {pointsToRedeem > 0 && (
+                                            <p className="text-[10px] text-[#86EFAC] mt-1 text-right">
+                                                - {formatPrice(pointsToRedeem)} applied
+                                            </p>
+                                        )}
                                     </div>
                                 )}
                             </div>

@@ -11,7 +11,7 @@ import {
     getCustomerProfile, updateCustomerProfile, deactivateAccount,
     uploadProfileImage, getProfileImage, removeProfileImage, getOrderById,
     cancelOrder as apiCancelOrder, downloadInvoice, getBestSellers,
-    getMyEnquiries, replyToEnquiry
+    getMyEnquiries, replyToEnquiry, getLoyaltyWallet
 } from '@/lib/api';
 import { Order, Address } from '@/types';
 import {
@@ -25,13 +25,14 @@ import PrivacyDashboard from '@/components/account/PrivacyDashboard';
 import ReviewForm from '@/components/reviews/ReviewForm';
 import NotificationPreferences from '@/components/account/NotificationPreferences';
 import ExportOrdersModal from '@/components/account/ExportOrdersModal';
-import { BadgeCheck, BellRing, Download, ChevronRight, Search, ShoppingCart, LayoutGrid, List } from 'lucide-react';
+import { BadgeCheck, BellRing, Download, ChevronRight, Search, ShoppingCart, LayoutGrid, List, Wallet } from 'lucide-react';
+import MyWallet from '@/components/account/MyWallet';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { useCurrency } from '@/context/CurrencyContext';
 
-type Tab = 'overview' | 'orders' | 'wishlist' | 'addresses' | 'profile' | 'privacy' | 'support';
+type Tab = 'overview' | 'orders' | 'wishlist' | 'addresses' | 'profile' | 'privacy' | 'support' | 'wallet';
 
-const VALID_TABS: Tab[] = ['overview', 'orders', 'wishlist', 'addresses', 'profile', 'privacy', 'support'];
+const VALID_TABS: Tab[] = ['overview', 'orders', 'wishlist', 'addresses', 'profile', 'privacy', 'support', 'wallet'];
 
 export default function AccountPage() {
     const { formatPrice } = useCurrency();
@@ -303,17 +304,33 @@ export default function AccountPage() {
         }
     };
 
+    // Loyalty state
+    const [loyaltyData, setLoyaltyData] = useState<any>(null);
+
+    const fetchLoyaltyData = useCallback(async () => {
+        try {
+            const data = await getLoyaltyWallet();
+            if (data) setLoyaltyData(data);
+        } catch (err) {
+            console.error('Failed to fetch loyalty data:', err);
+        }
+    }, []);
+
     useEffect(() => {
         if (!user?.id) return;
         if (activeTab === 'orders') fetchOrders();
         if (activeTab === 'addresses') fetchAddresses();
         if (activeTab === 'support') fetchEnquiries();
+        if (activeTab === 'wallet' || activeTab === 'overview') fetchLoyaltyData();
         if (activeTab === 'profile') {
             fetchOrders(); // for order count
             fetchProfile();
             fetchProfileImage();
         }
-    }, [activeTab, user?.id, fetchOrders, fetchAddresses, fetchProfile, fetchProfileImage, fetchEnquiries]);
+    }, [activeTab, user?.id, fetchOrders, fetchAddresses, fetchProfile, fetchProfileImage, fetchEnquiries, fetchLoyaltyData]);
+
+    const activeTier = loyaltyData?.tier?.tier_name || 'Bronze';
+    const activePoints = loyaltyData?.wallet?.balance || 0;
 
     // ── Profile save handler ─────────────────────────────────────────
     const handleProfileSave = async () => {
@@ -526,6 +543,7 @@ export default function AccountPage() {
         { id: 'overview', label: 'Overview', icon: LayoutGrid },
         { id: 'orders', label: 'Orders', icon: Package, count: orderCount },
         { id: 'wishlist', label: 'Wishlist', icon: Heart, count: wishlistItems.length },
+        { id: 'wallet', label: 'My Wallet', icon: Wallet },
     ];
     const identityAccessTabs = [
         { id: 'profile', label: 'Personal Profile', icon: User },
@@ -538,15 +556,6 @@ export default function AccountPage() {
         <div className="flex h-screen bg-[#F8F5F0] overflow-hidden">
             {/* Left Sidebar */}
             <aside className="w-[280px] bg-[#36453A] text-white flex flex-col flex-shrink-0 relative z-20 shadow-[4px_0_24px_rgba(0,0,0,0.12)]">
-                {/* Logo Area */}
-                <div className="h-[88px] flex items-center px-8 border-b border-white/10">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-white">
-                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" />
-                        <path d="M7 12C7 14.7614 9.23858 17 12 17V7C9.23858 7 7 9.23858 7 12Z" stroke="currentColor" strokeWidth="2" />
-                    </svg>
-                    <span className="ml-3 font-serif text-xl font-bold tracking-wide">Vedashi</span>
-                </div>
-
                 <div className="flex-1 overflow-y-auto px-5 py-8 custom-scrollbar">
                     {/* CORE EXPERIENCE */}
                     <div className="mb-8">
@@ -619,10 +628,13 @@ export default function AccountPage() {
                             <span className="p-1.5 bg-white/10 rounded-full flex items-center justify-center">
                                 <Star className="h-3 w-3 text-[#D4A847] fill-[#D4A847]" />
                             </span>
-                            <span className="text-[10px] font-bold tracking-wider text-white">ELITE STATUS</span>
+                            <span className="text-[10px] font-bold tracking-wider text-white uppercase">{activeTier} STATUS</span>
                         </div>
-                        <p className="text-xs text-white/80 leading-relaxed mb-3">You currently possess the <strong className="text-white">Premium Access</strong> tag.</p>
-                        <button className="text-[10px] uppercase font-bold text-[#D4A847] flex items-center gap-1 hover:text-white transition-colors">
+                        <p className="text-xs text-white/80 leading-relaxed mb-3">You currently possess the <strong className="text-white">{activeTier}</strong> ritualist rank.</p>
+                        <button 
+                            onClick={() => router.push('/account/wallet')}
+                            className="text-[10px] uppercase font-bold text-[#D4A847] flex items-center gap-1 hover:text-white transition-colors"
+                        >
                             VIEW BENEFITS <ChevronRight className="h-3 w-3" />
                         </button>
                     </div>
@@ -652,7 +664,7 @@ export default function AccountPage() {
             {/* Main Content Area */}
             <main className="flex-1 flex flex-col h-full relative z-10 overflow-hidden">
                 {/* Header */}
-                <header className="h-[88px] flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-[#E8E1D5] flex items-center justify-between px-8 xl:px-12 sticky top-0 z-20">
+                <header className="h-12 flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-[#E8E1D5] flex items-center justify-between px-8 xl:px-12 sticky top-0 z-20">
                     <div className="flex items-center gap-3 text-sm font-medium">
                         <button onClick={() => router.push('/account')} className="text-[#36453A]/60 hover:text-[#36453A] transition-colors">Account</button>
                         <ChevronRight className="h-4 w-4 text-[#36453A]/30" />
@@ -665,22 +677,9 @@ export default function AccountPage() {
                     </div>
 
                     <div className="flex items-center gap-5">
-                        <div className="relative hidden md:block group">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-warm-gray group-focus-within:text-[#36453A] transition-colors" />
-                            <input
-                                type="text"
-                                placeholder="Search settings..."
-                                className="w-64 bg-[#F8F5F0] border border-[#E8E1D5] rounded-full pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-[#36453A]/40 focus:ring-1 focus:ring-[#36453A]/20 transition-all text-[#36453A] placeholder:text-warm-gray/70"
-                            />
-                        </div>
-                        <div className="w-px h-6 bg-[#E8E1D5] hidden md:block"></div>
-                        <button className="relative p-2 text-warm-gray hover:text-[#36453A] hover:bg-[#F8F5F0] rounded-full transition-all">
-                            <BellRing className="h-5 w-5" />
-                            <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full border border-white"></span>
-                        </button>
                         <button
                             onClick={() => { logout(); toast.success('Signed out'); router.push('/'); }}
-                            className="bg-white border border-[#E8E1D5] text-[#36453A] px-4 py-2 rounded-full text-sm font-bold shadow-sm hover:shadow-md hover:border-[#36453A]/30 transition-all flex items-center gap-2"
+                            className="bg-white border border-[#E8E1D5] text-[#36453A] px-4 py-1.5 rounded-full text-xs font-bold shadow-sm hover:shadow-md hover:border-[#36453A]/30 transition-all flex items-center gap-2"
                         >
                             Sign Out
                         </button>
@@ -768,9 +767,8 @@ export default function AccountPage() {
                                         </div>
                                         <div className="relative z-10">
                                             <p className="text-xs font-bold text-warm-gray uppercase tracking-wider mb-1">Loyalty Points</p>
-                                            {/* Mocking points visually since the backend doesn't track this currently natively under `user.points` */}
-                                            <h3 className="font-serif text-2xl font-bold text-[#36453A] mb-1">{(user as any)?.seed_points || 0} Pts</h3>
-                                            <p className="text-[11px] text-warm-gray font-medium">You can redeem ${(Number((user as any)?.seed_points || 0) * 0.05).toFixed(2)} today</p>
+                                            <h3 className="font-serif text-2xl font-bold text-[#36453A] mb-1">{activePoints} Pts</h3>
+                                            <p className="text-[11px] text-[#A8B28B] font-medium">{activeTier} Tier Multiplier: {loyaltyData?.tier?.points_multiplier || 1}x</p>
                                         </div>
                                     </div>
                                 </div>
@@ -2089,16 +2087,24 @@ export default function AccountPage() {
                                             </button>
                                         </div>
 
-                                        {/* Active Plan */}
-                                        <div className="bg-[#36453A] rounded-3xl p-6 text-white relative overflow-hidden shadow-lg">
-                                            <div className="absolute top-0 right-0 p-4 opacity-10">
-                                                <Star className="h-16 w-16" />
+                                        {/* Active Plan / Loyalty Status */}
+                                        <div className="bg-[#1A2E1A] rounded-3xl p-6 text-white relative overflow-hidden shadow-lg border border-[#D4A847]/30 group hover:border-[#D4A847] transition-all duration-500">
+                                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                                <Star className="h-16 w-16 text-[#D4A847]" />
                                             </div>
-                                            <p className="text-[10px] font-bold tracking-widest text-white/50 mb-2">ACTIVE PLAN</p>
-                                            <h3 className="font-serif text-2xl font-bold text-[#D4A847] mb-2">Prana Wellness Pro</h3>
-                                            <p className="text-sm text-white/80 leading-relaxed mb-6">Free shipping, exclusive product drops, and monthly holistic consultations.</p>
-                                            <button className="w-full rounded-xl bg-white/10 hover:bg-white/20 py-3 text-sm font-bold transition-colors">
-                                                Manage Subscription
+                                            <p className="text-[10px] font-bold tracking-[0.2em] text-[#D4A847]/60 mb-2 uppercase">ACTIVE PLAN</p>
+                                            <h3 className="font-serif text-2xl font-bold text-[#D4A847] mb-2">{activeTier} Ritualist</h3>
+                                            <p className="text-sm text-white/70 leading-relaxed mb-6">
+                                                {loyaltyData?.tier?.benefits && Array.isArray(loyaltyData.tier.benefits) && loyaltyData.tier.benefits.length > 0 
+                                                    ? loyaltyData.tier.benefits.join(', ')
+                                                    : "Enhance your aura with every ritual to unlock exotic benefits and golden boons."
+                                                }
+                                            </p>
+                                            <button 
+                                                onClick={() => router.push('/account/wallet')}
+                                                className="w-full rounded-xl bg-[#D4A847] text-[#1A2E1A] py-3 text-sm font-bold hover:bg-white transition-all transform active:scale-95 shadow-lg"
+                                            >
+                                                Manage Rewards
                                             </button>
                                         </div>
 
@@ -2274,7 +2280,7 @@ export default function AccountPage() {
                                                         <p className="text-sm text-white/80 max-w-md">Our support team is here to help. You'll receive an email notification as soon as we reply.</p>
                                                     </div>
                                                     <button 
-                                                        onClick={() => router.push('/contact')}
+                                                        onClick={() => router.push('/help-center/support')}
                                                         className="bg-[#D4A847] text-[#36453A] px-8 py-3 rounded-xl text-sm font-bold shadow-md hover:bg-[#B38720] transition-colors whitespace-nowrap"
                                                     >
                                                         Submit New Enquiry
@@ -2355,7 +2361,7 @@ export default function AccountPage() {
                                                     <h3 className="font-serif text-2xl font-bold text-[#36453A] mb-2">No Past Enquiries</h3>
                                                     <p className="text-sm text-warm-gray max-w-xs mx-auto mb-8">Your path has been smooth! If you ever need help, our support team is just a message away.</p>
                                                     <button 
-                                                        onClick={() => router.push('/contact')}
+                                                        onClick={() => router.push('/help-center/support')}
                                                         className="bg-[#36453A] text-white px-8 py-3 rounded-xl text-sm font-bold shadow-md hover:bg-[#2A362D] transition-colors"
                                                     >
                                                         Create New Ticket
@@ -2598,6 +2604,13 @@ export default function AccountPage() {
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                        )}
+
+                        {/* ═══════════════════ WALLET TAB ═══════════════════ */}
+                        {activeTab === 'wallet' && (
+                            <div className="animate-fadeIn">
+                                <MyWallet customerId={user?.id || ''} />
                             </div>
                         )}
 

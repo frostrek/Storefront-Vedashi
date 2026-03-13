@@ -12,6 +12,7 @@ import toast from 'react-hot-toast';
 import SearchAutocomplete from './SearchAutocomplete';
 import GoogleTranslateWidget from './GoogleTranslateWidget';
 import RegionSwitcher from './RegionSwitcher';
+import NotificationCenter from './account/NotificationCenter';
 
 interface Category {
   category_id: string;
@@ -103,9 +104,8 @@ export default function Navbar() {
     }
   };
 
-  // Fetch header config from API
   useEffect(() => {
-    fetch(`${API_URL}/api/header`)
+    fetch(`${API_URL}/api/header`, { credentials: 'include' })
       .then(r => r.json())
       .then(data => {
         if (data.success && data.data) {
@@ -283,6 +283,10 @@ export default function Navbar() {
               <Link href="/account" className="relative p-2 group">
                 <User className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
               </Link>
+
+              {isAuthenticated && (
+                <NotificationCenter colors={colors} />
+              )}
 
               {/* Mobile toggle */}
               <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2" style={{ color: colors.navbar_text }}>
