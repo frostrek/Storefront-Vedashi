@@ -9,6 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Minus, Plus, X, ShoppingCart, ArrowLeft, Loader2, Ticket, Bookmark, ArrowRight, Leaf, MapPin, Search } from 'lucide-react';
 import { formatVND } from '@/lib/api';
 import toast from 'react-hot-toast';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 /* ─── Step Indicator ─────────────────────────────────────────── */
 
@@ -420,35 +421,22 @@ export default function CartPage() {
             </div>
 
             {/* Custom Remove Confirmation Modal via Portal */}
-            {isMounted && itemToRemove && createPortal(
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                        <div className="p-6">
-                            <h3 className="font-serif text-xl font-bold text-[#1A1A1A] mb-2">Remove Item</h3>
-                            <p className="text-[#4A4A4A] text-sm">Are you sure you want to remove this item from your ritual bundle?</p>
-                        </div>
-                        <div className="bg-[#F5F4F0] px-6 py-4 flex items-center justify-end gap-3 rounded-b-xl border-t border-[#E8E4DC]">
-                            <button
-                                onClick={() => setItemToRemove(null)}
-                                className="px-4 py-2 rounded-lg text-sm font-semibold text-[#4A4A4A] hover:bg-black/5 transition-colors"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={() => {
-                                    removeItem(itemToRemove);
-                                    setItemToRemove(null);
-                                    toast.success('Removed item');
-                                }}
-                                className="px-4 py-2 rounded-lg text-sm font-semibold bg-[#C0392B] text-white hover:bg-[#A93226] transition-colors shadow-sm"
-                            >
-                                Remove
-                            </button>
-                        </div>
-                    </div>
-                </div>,
-                document.body
-            )}
+            <ConfirmModal
+                isOpen={!!itemToRemove}
+                title="Remove Item"
+                message="Are you sure you want to remove this item from your ritual bundle?"
+                confirmText="Remove"
+                cancelText="Cancel"
+                isDestructive={true}
+                onConfirm={() => {
+                    if (itemToRemove) {
+                        removeItem(itemToRemove);
+                        toast.success('Removed item');
+                        setItemToRemove(null);
+                    }
+                }}
+                onCancel={() => setItemToRemove(null)}
+            />
         </div>
     );
 }
