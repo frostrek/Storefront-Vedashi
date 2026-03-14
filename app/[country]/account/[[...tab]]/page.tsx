@@ -14,13 +14,18 @@ import {
     getMyEnquiries, replyToEnquiry, changePassword,
     requestEmailChange, verifyEmailChangeProfile,
     getLoyaltyWallet, getMyNotifications, getUnreadNotificationCount,
-    markNotificationAsRead, markAllNotificationsAsRead, deleteNotification
+    markNotificationAsRead, markAllNotificationsAsRead, deleteNotification,
+    lookupPostalCode
 } from '@/lib/api';
 import { Order, Address } from '@/types';
+import { COUNTRIES } from '@/lib/countries';
+import Select from 'react-select';
 import {
     Package, MapPin, Heart, LogOut, User, Plus, Pencil, Trash2,
     Loader2, ShieldOff, Camera, X, Check, Star, Phone, Calendar, Mail,
-    CheckCircle2, Smartphone, AlertCircle, Shield, FileText, MessageSquare, Send, Clock, User2, MessageCircle, Sparkles
+    CheckCircle2, Smartphone, AlertCircle, Shield, FileText, MessageSquare, Send, Clock, User2, MessageCircle, Sparkles,
+    Globe, ChevronRight, Lock, CreditCard, Banknote,
+    BadgeCheck, BellRing, Download, Search, ShoppingCart, LayoutGrid, List, Wallet, Eye, EyeOff
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import toast from 'react-hot-toast';
@@ -28,7 +33,6 @@ import PrivacyDashboard from '@/components/account/PrivacyDashboard';
 import ReviewForm from '@/components/reviews/ReviewForm';
 import NotificationPreferences from '@/components/account/NotificationPreferences';
 import ExportOrdersModal from '@/components/account/ExportOrdersModal';
-import { BadgeCheck, BellRing, Download, ChevronRight, Search, ShoppingCart, LayoutGrid, List, Wallet } from 'lucide-react';
 import MyWallet from '@/components/account/MyWallet';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { useCurrency } from '@/context/CurrencyContext';
@@ -125,8 +129,64 @@ export default function AccountPage() {
     const [editingAddress, setEditingAddress] = useState<Address | null>(null);
     const [addressForm, setAddressForm] = useState({
         address_line1: '', address_line2: '', city: '', state: '', pincode: '',
-        country: 'India', phone: '', label: '', is_default: false,
+        country: 'India', country_code: 'IN', phone: '', label: '', is_default: false,
     });
+    const [isLookupLoading, setIsLookupLoading] = useState(false);
+    const [manualEdits, setManualEdits] = useState({
+        city: false,
+        state: false
+    });
+
+    const countryOptions = COUNTRIES.map(c => ({
+        value: c.code,
+        label: `${c.flag} ${c.name}`,
+        name: c.name
+    }));
+
+    const customSelectStyles = {
+        control: (provided: any, state: any) => ({
+            ...provided,
+            borderRadius: '8px',
+            borderColor: state.isFocused ? '#6B8F5E' : '#D4CFC0',
+            boxShadow: 'none',
+            '&:hover': {
+                borderColor: '#6B8F5E',
+            },
+            backgroundColor: 'white',
+            paddingLeft: '34px',
+            minHeight: '44px',
+            fontSize: '14px',
+        }),
+        option: (provided: any, state: any) => ({
+            ...provided,
+            backgroundColor: state.isSelected ? '#6B8F5E' : state.isFocused ? '#DFE5D9' : 'white',
+            color: state.isSelected ? 'white' : '#1A1A1A',
+            '&:active': {
+                backgroundColor: '#6B8F5E',
+            },
+            fontSize: '14px',
+        }),
+    };
+
+    // Global Postal Code Auto-Fill
+    useEffect(() => {
+        if (addressForm.pincode.length >= 4 && showAddressForm) {
+            const timer = setTimeout(async () => {
+                setIsLookupLoading(true);
+                const res = await lookupPostalCode(addressForm.pincode, addressForm.country_code);
+                if (res.success && res.city && res.state) {
+                    setAddressForm(prev => ({
+                        ...prev,
+                        city: manualEdits.city ? prev.city : (res.city || prev.city),
+                        state: manualEdits.state ? prev.state : (res.state || prev.state),
+                        country: res.country || prev.country
+                    }));
+                }
+                setIsLookupLoading(false);
+            }, 300);
+            return () => clearTimeout(timer);
+        }
+    }, [addressForm.pincode, addressForm.country_code, showAddressForm, manualEdits.city, manualEdits.state]);
 
     // Profile state
     const [orderCount, setOrderCount] = useState(0);
@@ -192,6 +252,9 @@ export default function AccountPage() {
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
     const [passwordChanging, setPasswordChanging] = useState(false);
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     // Body scroll lock for modals
     useEffect(() => {
@@ -252,6 +315,11 @@ export default function AccountPage() {
             const res = await getCustomerProfile(user.id);
             if (res.success && res.data) {
                 const fetchedEmail = res.data.email || '';
+                
+                // Important fix: handle truthy values explicitly or just rely on backend boolean.
+                // Assuming res.data.has_password is a boolean or 1/0
+                const hasPassword = Boolean(res.data.has_password);
+                
                 setProfileData({
                     full_name: res.data.full_name || '',
                     email: fetchedEmail,
@@ -259,7 +327,7 @@ export default function AccountPage() {
                     date_of_birth: res.data.date_of_birth ? res.data.date_of_birth.split('T')[0] : '',
                     is_email_verified: !!res.data.is_email_verified,
                     is_mobile_verified: !!res.data.is_mobile_verified,
-                    has_password: !!res.data.has_password,
+                    has_password: hasPassword,
                 });
                 setOriginalEmail(fetchedEmail);
             }
@@ -497,6 +565,12 @@ export default function AccountPage() {
 
     const handlePasswordChange = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        if (profileData.has_password && passwords.current === passwords.new) {
+            toast.error('New password cannot be the same as your current password');
+            return;
+        }
+
         if (passwords.new !== passwords.confirm) {
             toast.error('Passwords do not match');
             return;
@@ -513,6 +587,9 @@ export default function AccountPage() {
                 toast.success('Password updated successfully');
                 setShowPasswordModal(false);
                 setPasswords({ current: '', new: '', confirm: '' });
+                setShowCurrentPassword(false);
+                setShowNewPassword(false);
+                setShowConfirmPassword(false);
                 fetchProfile(); // refresh has_password status
             } else {
                 toast.error(res.message || 'Failed to update password');
@@ -652,10 +729,12 @@ export default function AccountPage() {
             state: addr.state || '',
             pincode: addr.pincode || '',
             country: addr.country || 'India',
+            country_code: (addr as any).country_code || 'IN',
             phone: addr.phone || '',
             label: addr.label || '',
             is_default: addr.is_default || false,
         });
+        setManualEdits({ city: true, state: true }); // Assume manual since it's existing data
         setShowAddressForm(true);
     };
 
@@ -664,8 +743,9 @@ export default function AccountPage() {
         setEditingAddress(null);
         setAddressForm({
             address_line1: '', address_line2: '', city: '', state: '', pincode: '',
-            country: 'India', phone: '', label: '', is_default: false,
+            country: 'India', country_code: 'IN', phone: '', label: '', is_default: false,
         });
+        setManualEdits({ city: false, state: false });
     };
 
     const handleViewOrderDetails = async (orderId: string) => {
@@ -1848,8 +1928,8 @@ export default function AccountPage() {
                                 {/* ── Rituals Header ── */}
                                 <div className="rounded-[40px] bg-[#F8F5F0] overflow-hidden relative shadow-sm border border-[#E8E1D5] py-16 px-12">
                                     {/* Abstract background shapes matching sanctuary aesthetic */}
-                                    <div className="absolute top-0 right-0 w-[60%] h-full bg-white opacity-40 mix-blend-overlay rounded-bl-[100px] pointer-events-none -mr-12 -mt-12"></div>
-                                    <div className="absolute bottom-0 left-[20%] w-[30%] h-[30%] bg-white opacity-30 mix-blend-overlay rounded-tr-[100px] pointer-events-none"></div>
+                                    <div className="absolute top-0 right-0 w-[60%] h-full bg-white opacity-40 mix-blend-overlay rounded-bl-[100px] pointer-events-none -mr-12 -mt-12" />
+                                    <div className="absolute bottom-0 left-[20%] w-[30%] h-[30%] bg-white opacity-30 mix-blend-overlay rounded-tr-[100px] pointer-events-none" />
 
                                     <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-12">
                                         <div className="max-w-xl">
@@ -1882,9 +1962,7 @@ export default function AccountPage() {
 
                                 {/* Address Form (animated) */}
                                 {showAddressForm && (
-                                    <div
-                                        className="mb-12 rounded-[30px] border border-[#E8E1D5] bg-white overflow-hidden shadow-sm animate-fadeIn"
-                                    >
+                                    <div className="mb-12 rounded-[30px] border border-[#E8E1D5] bg-white overflow-hidden shadow-sm animate-fadeIn">
                                         {/* Form header accent */}
                                         <div className="h-1.5" style={{ background: 'linear-gradient(90deg, #36453A, #D4A847, #36453A)' }} />
                                         <div className="p-8 lg:p-10">
@@ -1902,93 +1980,152 @@ export default function AccountPage() {
                                             
                                             <div className="grid gap-6 sm:grid-cols-2">
                                                 <div className="sm:col-span-2">
-                                                    <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Address Line 1 *</label>
-                                                    <input type="text" value={addressForm.address_line1}
-                                                        onChange={e => setAddressForm({ ...addressForm, address_line1: e.target.value })}
-                                                        className="w-full rounded-xl border border-[#E8E1D5] bg-[#F8F5F0]/30 px-4 py-3 text-sm focus:border-[#36453A]/40 focus:ring-1 focus:ring-[#36453A]/20 focus:outline-none transition-all text-[#36453A] placeholder:text-warm-gray/40"
-                                                        placeholder="Street address or P.O. Box" />
-                                                </div>
-                                                <div className="sm:col-span-2">
-                                                    <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Address Line 2 (Optional)</label>
-                                                    <input type="text" value={addressForm.address_line2}
-                                                        onChange={e => setAddressForm({ ...addressForm, address_line2: e.target.value })}
-                                                        className="w-full rounded-xl border border-[#E8E1D5] bg-[#F8F5F0]/30 px-4 py-3 text-sm focus:border-[#36453A]/40 focus:ring-1 focus:ring-[#36453A]/20 focus:outline-none transition-all text-[#36453A] placeholder:text-warm-gray/40"
-                                                        placeholder="Apartment, suite, unit, floor, etc." />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">City *</label>
-                                                    <input type="text" value={addressForm.city}
-                                                        onChange={e => setAddressForm({ ...addressForm, city: e.target.value })}
-                                                        className="w-full rounded-xl border border-[#E8E1D5] bg-[#F8F5F0]/30 px-4 py-3 text-sm focus:border-[#36453A]/40 focus:ring-1 focus:ring-[#36453A]/20 focus:outline-none transition-all text-[#36453A] placeholder:text-warm-gray/40"
-                                                        placeholder="City" />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">State / Province *</label>
-                                                    <input type="text" value={addressForm.state}
-                                                        onChange={e => setAddressForm({ ...addressForm, state: e.target.value })}
-                                                        className="w-full rounded-xl border border-[#E8E1D5] bg-[#F8F5F0]/30 px-4 py-3 text-sm focus:border-[#36453A]/40 focus:ring-1 focus:ring-[#36453A]/20 focus:outline-none transition-all text-[#36453A] placeholder:text-warm-gray/40"
-                                                        placeholder="State" />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Pincode / ZIP *</label>
-                                                    <input type="text" value={addressForm.pincode}
-                                                        onChange={e => setAddressForm({ ...addressForm, pincode: e.target.value })}
-                                                        className="w-full rounded-xl border border-[#E8E1D5] bg-[#F8F5F0]/30 px-4 py-3 text-sm focus:border-[#36453A]/40 focus:ring-1 focus:ring-[#36453A]/20 focus:outline-none transition-all text-[#36453A] placeholder:text-warm-gray/40"
-                                                        placeholder="Pincode" />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Country</label>
-                                                    <input type="text" value={addressForm.country}
-                                                        onChange={e => setAddressForm({ ...addressForm, country: e.target.value })}
-                                                        className="w-full rounded-xl border border-[#E8E1D5] bg-[#F8F5F0]/30 px-4 py-3 text-sm focus:border-[#36453A]/40 focus:ring-1 focus:ring-[#36453A]/20 focus:outline-none transition-all text-[#36453A] placeholder:text-warm-gray/40"
-                                                        placeholder="Country" />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Contact Phone</label>
+                                                    <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5 ml-1">Country *</label>
                                                     <div className="relative">
-                                                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-warm-gray/60" />
-                                                        <input type="tel" value={addressForm.phone}
-                                                            onChange={e => setAddressForm({ ...addressForm, phone: e.target.value })}
-                                                            className="w-full rounded-xl border border-[#E8E1D5] bg-[#F8F5F0]/30 pl-11 pr-4 py-3 text-sm focus:border-[#36453A]/40 focus:ring-1 focus:ring-[#36453A]/20 focus:outline-none transition-all text-[#36453A] placeholder:text-warm-gray/40"
-                                                            placeholder="Phone number" />
+                                                        <Select
+                                                            options={countryOptions}
+                                                            value={countryOptions.find(opt => opt.value === addressForm.country_code)}
+                                                            onChange={(opt: any) => {
+                                                                if (opt) {
+                                                                    setAddressForm({ 
+                                                                        ...addressForm, 
+                                                                        country: opt.name, 
+                                                                        country_code: opt.value 
+                                                                    });
+                                                                }
+                                                            }}
+                                                            styles={customSelectStyles}
+                                                            placeholder="Select Country"
+                                                        />
+                                                        <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8B7A3D] z-10 pointer-events-none" />
                                                     </div>
                                                 </div>
+
+                                                <div className="sm:col-span-2">
+                                                    <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5 ml-1">Address Line 1 *</label>
+                                                    <input 
+                                                        type="text" 
+                                                        value={addressForm.address_line1}
+                                                        onChange={e => setAddressForm({ ...addressForm, address_line1: e.target.value })}
+                                                        className="w-full rounded-lg border border-[#D4CFC0] bg-white px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none transition-all text-[#1A1A1A] placeholder:text-warm-gray/40 shadow-sm"
+                                                        placeholder="Street address or P.O. Box" 
+                                                    />
+                                                </div>
+
+                                                <div className="sm:col-span-2">
+                                                    <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5 ml-1">Address Line 2 (Optional)</label>
+                                                    <input 
+                                                        type="text" 
+                                                        value={addressForm.address_line2}
+                                                        onChange={e => setAddressForm({ ...addressForm, address_line2: e.target.value })}
+                                                        className="w-full rounded-lg border border-[#D4CFC0] bg-white px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none transition-all text-[#1A1A1A] placeholder:text-warm-gray/40 shadow-sm"
+                                                        placeholder="Apartment, suite, unit, floor, etc." 
+                                                    />
+                                                </div>
+
                                                 <div>
-                                                    <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Space Label</label>
-                                                    <div className="flex gap-2">
+                                                    <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5 ml-1">Pincode / ZIP *</label>
+                                                    <div className="relative">
+                                                        <input 
+                                                            type="text" 
+                                                            value={addressForm.pincode}
+                                                            onChange={e => setAddressForm({ ...addressForm, pincode: e.target.value })}
+                                                            className="w-full rounded-lg border border-[#D4CFC0] bg-white px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none transition-all text-[#1A1A1A] placeholder:text-warm-gray/40 shadow-sm"
+                                                            placeholder="Pincode" 
+                                                        />
+                                                        {isLookupLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-[#6B8F5E]" />}
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5 ml-1">City *</label>
+                                                    <input 
+                                                        type="text" 
+                                                        value={addressForm.city}
+                                                        onChange={e => {
+                                                            setAddressForm({ ...addressForm, city: e.target.value });
+                                                            setManualEdits(prev => ({ ...prev, city: true }));
+                                                        }}
+                                                        className="w-full rounded-lg border border-[#D4CFC0] bg-white px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none transition-all text-[#1A1A1A] placeholder:text-warm-gray/40 shadow-sm"
+                                                        placeholder="City" 
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5 ml-1">State / Province *</label>
+                                                    <input 
+                                                        type="text" 
+                                                        value={addressForm.state}
+                                                        onChange={e => {
+                                                            setAddressForm({ ...addressForm, state: e.target.value });
+                                                            setManualEdits(prev => ({ ...prev, state: true }));
+                                                        }}
+                                                        className="w-full rounded-lg border border-[#D4CFC0] bg-white px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none transition-all text-[#1A1A1A] placeholder:text-warm-gray/40 shadow-sm"
+                                                        placeholder="State" 
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5 ml-1">Contact Phone</label>
+                                                    <div className="relative">
+                                                        <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8B7A3D]" />
+                                                        <input 
+                                                            type="tel" 
+                                                            value={addressForm.phone}
+                                                            onChange={e => setAddressForm({ ...addressForm, phone: e.target.value })}
+                                                            className="w-full rounded-lg border border-[#D4CFC0] bg-white pl-11 pr-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none transition-all text-[#1A1A1A] placeholder:text-warm-gray/40 shadow-sm"
+                                                            placeholder="Phone number" 
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="sm:col-span-2">
+                                                    <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5 ml-1">Space Label</label>
+                                                    <div className="flex gap-3">
                                                         {['Home', 'Office', 'Other'].map(l => (
-                                                            <button key={l} type="button"
+                                                            <button 
+                                                                key={l} 
+                                                                type="button"
                                                                 onClick={() => setAddressForm({ ...addressForm, label: l })}
-                                                                className={`flex-1 rounded-xl px-4 py-3 text-xs font-bold transition-all border
+                                                                className={`flex-1 rounded-lg px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider transition-all border
                                                                 ${addressForm.label === l
-                                                                    ? 'bg-[#36453A] text-white border-[#36453A] shadow-sm'
-                                                                    : 'bg-white text-[#36453A] border-[#E8E1D5] hover:border-[#36453A]/30 hover:bg-[#F8F5F0]'}`
-                                                                }>
+                                                                    ? 'bg-[#36453A] text-white border-[#36453A] shadow-md transform scale-[1.02]'
+                                                                    : 'bg-white text-[#6B6B60] border-[#D4CFC0] hover:border-[#6B8F5E] hover:bg-[#F8F5F0]'}`
+                                                                }
+                                                            >
                                                                 {l}
                                                             </button>
                                                         ))}
                                                     </div>
                                                 </div>
+
                                                 <div className="sm:col-span-2 pt-2">
                                                     <label className="flex items-center gap-3 cursor-pointer group w-fit">
                                                         <div className="relative flex items-center justify-center">
-                                                            <input type="checkbox" checked={addressForm.is_default}
+                                                            <input 
+                                                                type="checkbox" 
+                                                                checked={addressForm.is_default}
                                                                 onChange={e => setAddressForm({ ...addressForm, is_default: e.target.checked })}
-                                                                className="peer appearance-none w-5 h-5 rounded-md border-2 border-[#E8E1D5] checked:bg-[#36453A] checked:border-[#36453A] transition-colors cursor-pointer" />
+                                                                className="peer appearance-none w-5 h-5 rounded border-2 border-[#D4CFC0] checked:bg-[#6B8F5E] checked:border-[#6B8F5E] transition-colors cursor-pointer" 
+                                                            />
                                                             <Check className="absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100 pointer-events-none" strokeWidth={3} />
                                                         </div>
-                                                        <span className="text-sm font-bold text-[#36453A] group-hover:text-black transition-colors">Designate as Primary Ritual Space</span>
+                                                        <span className="text-sm font-bold text-[#6B6B60] group-hover:text-black transition-colors">Designate as Primary Ritual Space</span>
                                                     </label>
                                                 </div>
                                             </div>
                                             
                                             <div className="mt-10 flex flex-col sm:flex-row gap-4">
-                                                <button onClick={handleAddressSubmit}
-                                                    className="flex-1 rounded-xl bg-[#36453A] px-8 py-4 text-sm font-bold text-white shadow-md hover:bg-[#2A362D] hover:shadow-lg transition-all flex items-center justify-center gap-2">
+                                                <button 
+                                                    onClick={handleAddressSubmit}
+                                                    className="flex-1 rounded-xl bg-[#36453A] px-8 py-4 text-sm font-bold text-white shadow-lg hover:bg-[#2A362D] hover:shadow-xl transition-all flex items-center justify-center gap-2 transform active:scale-95"
+                                                >
                                                     <CheckCircle2 className="h-4 w-4" /> {editingAddress ? 'Update Ritual Space' : 'Save Ritual Space'}
                                                 </button>
-                                                <button onClick={resetAddressForm}
-                                                    className="rounded-xl border border-[#E8E1D5] px-8 py-4 text-sm font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors">
+                                                <button 
+                                                    onClick={resetAddressForm}
+                                                    className="rounded-xl border border-[#D4CFC0] px-8 py-4 text-sm font-bold text-[#6B6B60] hover:bg-[#F8F5F0] transition-colors"
+                                                >
                                                     Cancel
                                                 </button>
                                             </div>
@@ -3181,39 +3318,68 @@ export default function AccountPage() {
                             </div>
                             
                             <form onSubmit={handlePasswordChange} className="space-y-4">
-                                <div>
-                                    <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Current Password</label>
-                                    <input 
-                                        type="password" 
-                                        required
-                                        value={passwords.current}
-                                        onChange={e => setPasswords({ ...passwords, current: e.target.value })}
-                                        className="w-full rounded-xl border border-light-border bg-cream/20 px-4 py-3 text-sm focus:border-burgundy/40 focus:outline-none transition-all"
-                                        placeholder="••••••••"
-                                    />
-                                </div>
+                                {profileData.has_password && (
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Current Password</label>
+                                        <div className="relative">
+                                            <input 
+                                                type={showCurrentPassword ? "text" : "password"}
+                                                required
+                                                value={passwords.current}
+                                                onChange={e => setPasswords({ ...passwords, current: e.target.value })}
+                                                className="w-full rounded-xl border border-light-border bg-cream/20 pl-4 pr-12 py-3 text-sm focus:border-burgundy/40 focus:outline-none transition-all"
+                                                placeholder="••••••••"
+                                            />
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-warm-gray hover:text-[#36453A] transition-colors"
+                                            >
+                                                {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                                 <div className="space-y-4 pt-2">
                                     <div>
                                         <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">New Password</label>
-                                        <input 
-                                            type="password" 
-                                            required
-                                            value={passwords.new}
-                                            onChange={e => setPasswords({ ...passwords, new: e.target.value })}
-                                            className="w-full rounded-xl border border-light-border bg-cream/20 px-4 py-3 text-sm focus:border-burgundy/40 focus:outline-none transition-all"
-                                            placeholder="••••••••"
-                                        />
+                                        <div className="relative">
+                                            <input 
+                                                type={showNewPassword ? "text" : "password"}
+                                                required
+                                                value={passwords.new}
+                                                onChange={e => setPasswords({ ...passwords, new: e.target.value })}
+                                                className="w-full rounded-xl border border-light-border bg-cream/20 pl-4 pr-12 py-3 text-sm focus:border-burgundy/40 focus:outline-none transition-all"
+                                                placeholder="••••••••"
+                                            />
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setShowNewPassword(!showNewPassword)}
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-warm-gray hover:text-[#36453A] transition-colors"
+                                            >
+                                                {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                            </button>
+                                        </div>
                                     </div>
                                     <div>
                                         <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Confirm New Password</label>
-                                        <input 
-                                            type="password" 
-                                            required
-                                            value={passwords.confirm}
-                                            onChange={e => setPasswords({ ...passwords, confirm: e.target.value })}
-                                            className="w-full rounded-xl border border-light-border bg-cream/20 px-4 py-3 text-sm focus:border-burgundy/40 focus:outline-none transition-all"
-                                            placeholder="••••••••"
-                                        />
+                                        <div className="relative">
+                                            <input 
+                                                type={showConfirmPassword ? "text" : "password"}
+                                                required
+                                                value={passwords.confirm}
+                                                onChange={e => setPasswords({ ...passwords, confirm: e.target.value })}
+                                                className="w-full rounded-xl border border-light-border bg-cream/20 pl-4 pr-12 py-3 text-sm focus:border-burgundy/40 focus:outline-none transition-all"
+                                                placeholder="••••••••"
+                                            />
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-warm-gray hover:text-[#36453A] transition-colors"
+                                            >
+                                                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                                 
