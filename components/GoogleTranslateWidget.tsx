@@ -67,7 +67,7 @@ function hideGoogleToolbar() {
   document.body.style.setProperty('position', '', '');
 }
 
-export default function GoogleTranslateWidget() {
+export default function GoogleTranslateWidget({ upward = false }: { upward?: boolean }) {
   const initialized = useRef(false);
   const [open, setOpen] = useState(false);
   const [activeLang, setActiveLang] = useState('en');
@@ -111,6 +111,53 @@ export default function GoogleTranslateWidget() {
     const observer = new MutationObserver(hideGoogleToolbar);
     observer.observe(document.body, { childList: true, subtree: false, attributes: true, attributeFilter: ['style', 'class'] });
 
+    // Inject styles dynamically to prevent Next.js hydration mismatch
+    const styleId = 'gtranslate-widget-styles';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.innerHTML = `
+        .goog-te-banner-frame,
+        .goog-te-banner-frame.skiptranslate,
+        iframe.goog-te-banner-frame,
+        .skiptranslate:not(#gtranslate-hidden),
+        div.skiptranslate,
+        .VIpgJd-ZVi9od-aZ2wEe-wOHMyf,
+        .VIpgJd-ZVi9od-aZ2wEe-wOHMyf-ti6hGc {
+          display: none !important;
+          height: 0 !important;
+          max-height: 0 !important;
+          visibility: hidden !important;
+          box-shadow: none !important;
+          overflow: hidden !important;
+          opacity: 0 !important;
+          pointer-events: none !important;
+          position: fixed !important;
+          top: -9999px !important;
+          left: -9999px !important;
+        }
+        body {
+          top: 0px !important;
+          margin-top: 0px !important;
+          padding-top: 0px !important;
+        }
+        #goog-gt-tt,
+        .goog-te-menu-value,
+        .goog-te-spinner-pos,
+        .goog-tooltip,
+        .goog-tooltip:hover,
+        #google_translate_element2,
+        .goog-te-ftab-link {
+          display: none !important;
+        }
+        .goog-text-highlight {
+          background: none !important;
+          box-shadow: none !important;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
     return () => {
       clearInterval(interval);
       observer.disconnect();
@@ -152,52 +199,6 @@ export default function GoogleTranslateWidget() {
 
   return (
     <>
-      <style suppressHydrationWarning>{`
-        /* Aggressively hide ALL Google Translate UI elements */
-        .goog-te-banner-frame,
-        .goog-te-banner-frame.skiptranslate,
-        iframe.goog-te-banner-frame,
-        .skiptranslate:not(#gtranslate-hidden),
-        div.skiptranslate,
-        .VIpgJd-ZVi9od-aZ2wEe-wOHMyf,
-        .VIpgJd-ZVi9od-aZ2wEe-wOHMyf-ti6hGc {
-          display: none !important;
-          height: 0 !important;
-          max-height: 0 !important;
-          visibility: hidden !important;
-          box-shadow: none !important;
-          overflow: hidden !important;
-          opacity: 0 !important;
-          pointer-events: none !important;
-          position: fixed !important;
-          top: -9999px !important;
-          left: -9999px !important;
-        }
-
-        /* Prevent Google from pushing the body down */
-        body {
-          top: 0px !important;
-          margin-top: 0px !important;
-          padding-top: 0px !important;
-        }
-
-        /* Hide tooltips, highlights, and other unwanted Google UI elements */
-        #goog-gt-tt,
-        .goog-te-menu-value,
-        .goog-te-spinner-pos,
-        .goog-tooltip,
-        .goog-tooltip:hover,
-        #google_translate_element2,
-        .goog-te-ftab-link {
-          display: none !important;
-        }
-
-        .goog-text-highlight {
-          background: none !important;
-          box-shadow: none !important;
-        }
-      `}</style>
-      
       {/* Google Translate's actual element — visually hidden but in the DOM */}
       <div
         id="gtranslate-hidden"
@@ -228,6 +229,7 @@ export default function GoogleTranslateWidget() {
           aria-label={`Translate — ${activeLabel}`}
           title={`Translate — ${activeLabel}`}
           type="button"
+          suppressHydrationWarning
         >
           <Globe
             style={{
@@ -258,7 +260,8 @@ export default function GoogleTranslateWidget() {
           <div
             style={{
               position: 'absolute',
-              top: 'calc(100% + 8px)',
+              bottom: upward ? 'calc(100% + 8px)' : 'auto',
+              top: upward ? 'auto' : 'calc(100% + 8px)',
               right: '-8px',
               width: '200px',
               background: '#fff',
@@ -267,6 +270,7 @@ export default function GoogleTranslateWidget() {
               boxShadow: '0 12px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.04)',
               padding: '10px',
               zIndex: 9999,
+              transformOrigin: upward ? 'bottom right' : 'top right',
             }}
           >
             <div

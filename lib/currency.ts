@@ -1,4 +1,4 @@
-export type SupportedCountryCode = 'us' | 'in' | 'ru' | 'kr';
+export type SupportedCountryCode = 'us' | 'in' | 'gb' | 'ae' | 'ca' | 'au' | 'ru' | 'kr';
 
 export interface CountryConfig {
   code: SupportedCountryCode;
@@ -10,10 +10,14 @@ export interface CountryConfig {
 }
 
 export const SUPPORTED_COUNTRIES: Record<SupportedCountryCode, CountryConfig> = {
-  us: { code: 'us', name: 'United States', currency: 'USD', locale: 'en-US', flag: '🇺🇸', symbol: '$' },
-  in: { code: 'in', name: 'India',         currency: 'INR', locale: 'en-IN', flag: '🇮🇳', symbol: '₹' },
-  ru: { code: 'ru', name: 'Russia',        currency: 'RUB', locale: 'ru-RU', flag: '🇷🇺', symbol: '₽' },
-  kr: { code: 'kr', name: 'South Korea',   currency: 'KRW', locale: 'ko-KR', flag: '🇰🇷', symbol: '₩' },
+  in: { code: 'in', name: 'India',            currency: 'INR', locale: 'en-IN', flag: '🇮🇳', symbol: '₹' },
+  us: { code: 'us', name: 'United States',    currency: 'USD', locale: 'en-US', flag: '🇺🇸', symbol: '$' },
+  gb: { code: 'gb', name: 'United Kingdom',   currency: 'GBP', locale: 'en-GB', flag: '🇬🇧', symbol: '£' },
+  ae: { code: 'ae', name: 'UAE',              currency: 'AED', locale: 'ar-AE', flag: '🇦🇪', symbol: 'د.إ' },
+  ca: { code: 'ca', name: 'Canada',           currency: 'CAD', locale: 'en-CA', flag: '🇨🇦', symbol: 'CA$' },
+  au: { code: 'au', name: 'Australia',        currency: 'AUD', locale: 'en-AU', flag: '🇦🇺', symbol: 'A$' },
+  ru: { code: 'ru', name: 'Russia',           currency: 'RUB', locale: 'ru-RU', flag: '🇷🇺', symbol: '₽' },
+  kr: { code: 'kr', name: 'South Korea',      currency: 'KRW', locale: 'ko-KR', flag: '🇰🇷', symbol: '₩' },
 };
 
 /**

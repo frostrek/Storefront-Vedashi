@@ -105,6 +105,7 @@ export default function NotificationCenter({ colors }: { colors: any }) {
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 group transition-all duration-300 hover:scale-110"
         aria-label="Notifications"
+        suppressHydrationWarning
       >
         <Bell className="h-[20px] w-[20px] transition-colors" style={{ color: isOpen ? colors.navbar_hover : colors.navbar_text }} />
         {unreadCount > 0 && (
