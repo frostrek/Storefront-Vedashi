@@ -163,7 +163,8 @@ export default function Navbar() {
   const { colors, nav_links, strip, branding } = config;
   const visibleLinks = nav_links.filter(l => l.enabled);
 
-  if (pathname === '/login') return null;
+  // Hide navbar on login page (handling localized routes like /[country]/login)
+  if (pathname?.endsWith('/login') || pathname?.endsWith('/signup')) return null;
 
   return (
     <header className={`w-full sticky top-0 z-[100] transition-all duration-500 ${scrolled ? 'shadow-lg' : ''}`}>

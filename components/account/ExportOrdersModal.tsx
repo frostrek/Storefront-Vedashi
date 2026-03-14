@@ -549,9 +549,9 @@ export default function ExportOrdersModal({
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6" style={{ animation: 'fadeIn 0.3s ease-out' }}>
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+            <div className="absolute inset-0 bg-charcoal/50 backdrop-blur-md" onClick={onClose} />
 
-            <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl bg-white shadow-2xl overflow-hidden" style={{ animation: 'slideUp 0.35s ease-out' }}>
+            <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-3xl bg-white/95 backdrop-blur-sm shadow-2xl border border-white/20 overflow-hidden" style={{ animation: 'slideUp 0.35s ease-out' }}>
                 {/* Header Stripe */}
                 <div className="flex-shrink-0 h-1.5 w-full" style={{ background: 'linear-gradient(90deg, #3B5D3B, #B5952F)' }} />
 

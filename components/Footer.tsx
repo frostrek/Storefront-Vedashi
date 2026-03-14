@@ -60,7 +60,7 @@ export default function Footer() {
     const newsletter = data?.newsletter;
     const bottomBar = data?.bottom_bar;
 
-    if (pathname === '/login') return null;
+    if (pathname?.endsWith('/login') || pathname?.endsWith('/signup')) return null;
 
     return (
         <footer className="bg-[#FAFAF5] text-[#4a4a4a] border-t border-[#e8e8e0]">

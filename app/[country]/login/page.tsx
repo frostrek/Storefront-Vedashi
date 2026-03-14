@@ -188,6 +188,10 @@ function LoginContent() {
             toast.error('Please complete the CAPTCHA verification.');
             return;
         }
+        if (!agreeTerms) {
+            toast.error('You must agree to the Terms of Service and Privacy Policy to continue.');
+            return;
+        }
         setLoading(true);
         try {
             if (isRegister) {
@@ -571,9 +575,9 @@ function LoginContent() {
                                     </button>
                                     <p className="text-xs text-[#6b7b6b] leading-relaxed">
                                         I agree to the{' '}
-                                        <Link href="/terms" className="text-[#2d5a2d] font-semibold hover:underline cursor-pointer">Terms of Service</Link>
+                                        <Link href="/terms" target="_blank" className="text-[#2d5a2d] font-semibold hover:underline cursor-pointer">Terms of Service</Link>
                                         {' '}and{' '}
-                                        <Link href="/privacy" className="text-[#2d5a2d] font-semibold hover:underline cursor-pointer">Privacy Policy</Link>.
+                                        <Link href="/privacy" target="_blank" className="text-[#2d5a2d] font-semibold hover:underline cursor-pointer">Privacy Policy</Link>.
                                     </p>
                                 </div>
 

@@ -109,6 +109,7 @@ function ProductDetailContent({ params }: Props) {
     const [selectedCount, setSelectedCount] = useState<string | null>(null);
     const [selectedFlavor, setSelectedFlavor] = useState<string | null>(null);
     const [selectedPack, setSelectedPack] = useState<number | null>(null);
+    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
     const router = useRouter();
     const searchParams = useSearchParams();
     const { isAuthenticated } = useAuth();
@@ -883,7 +884,7 @@ function ProductDetailContent({ params }: Props) {
                         }
                     >
                         <section className="mt-16 pt-10">
-                            <div className="grid lg:grid-cols-[1fr_2fr] gap-10">
+                            <div className={`grid gap-10 ${product.intended_use ? 'lg:grid-cols-[1fr_2fr]' : 'lg:grid-cols-1 max-w-4xl mx-auto'}`}>
                                 {product.intended_use && (
                                     <div className="bg-gray-50 p-8 rounded-2xl h-max border border-gray-100">
                                         <div className="flex items-center gap-3 mb-6">
@@ -897,10 +898,20 @@ function ProductDetailContent({ params }: Props) {
                                 )}
                                 {product.description && (
                                     <div className="pt-4 lg:pt-0">
-                                        <h2 className="font-serif text-3xl font-bold text-gray-900 mb-6 hidden lg:block">Description</h2>
-                                        <p className="text-[15px] text-gray-600 leading-[1.85] whitespace-pre-line">
-                                            {product.description}
-                                        </p>
+                                        <h2 className={`font-serif text-3xl font-bold text-gray-900 mb-6 ${product.intended_use ? 'hidden lg:block' : ''}`}>Description</h2>
+                                        <div className="text-[15px] text-gray-600 leading-[1.85] whitespace-pre-line">
+                                            {isDescriptionExpanded || product.description.split(/\s+/).length <= 100
+                                                ? product.description
+                                                : product.description.split(/\s+/).slice(0, 100).join(' ') + '...'}
+                                        </div>
+                                        {product.description.split(/\s+/).length > 100 && (
+                                            <button 
+                                                onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                                                className="mt-6 text-[#3d5c3a] font-bold text-sm tracking-wide hover:underline flex items-center gap-2"
+                                            >
+                                                {isDescriptionExpanded ? 'Read Less' : 'Read More'}
+                                            </button>
+                                        )}
                                     </div>
                                 )}
                             </div>
