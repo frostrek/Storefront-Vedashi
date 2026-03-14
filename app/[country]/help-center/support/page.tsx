@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import {
     ChevronLeft, Plus, MessageSquare, Clock, AlertCircle,
@@ -50,6 +50,8 @@ export default function SupportPage() {
 }
 
 function SupportContent() {
+    const params = useParams();
+    const country = params?.country || 'in';
     const { isAuthenticated, user } = useAuth();
     const searchParams = useSearchParams();
     const urlOrderId = searchParams.get('orderId');
@@ -163,7 +165,7 @@ function SupportContent() {
                             You need to be logged in to submit and track your support tickets.
                         </p>
                         <Link 
-                            href="/login" 
+                            href={`/${country}/login`} 
                             className="inline-flex items-center gap-3 bg-[#4A5D23] text-white px-10 py-4 rounded-[20px] font-bold text-lg hover:bg-[#3a491b] hover:shadow-2xl hover:-translate-y-1 transition-all shadow-xl"
                         >
                             Sign In Now
@@ -177,9 +179,9 @@ function SupportContent() {
                     <div className="bg-white/80 backdrop-blur-md border-b border-[#4A5D23]/5 sticky top-0 z-50">
                         <div className="max-w-4xl mx-auto px-6 py-5">
                             <nav className="flex items-center gap-3 text-sm font-bold tracking-wide">
-                                <Link href="/help-center" className="text-[#5B4A31] hover:text-[#4A5D23] transition-colors">Help & Support</Link>
+                                <Link href={`/${country}/help-center`} className="text-[#5B4A31] hover:text-[#4A5D23] transition-colors">Help & Support</Link>
                                 <ChevronDown className="h-4 w-4 text-gray-300 -rotate-90" />
-                                <Link href="/help-center/support" onClick={(e) => { e.preventDefault(); setView('list'); }} className="text-[#5B4A31] hover:text-[#4A5D23] transition-colors cursor-pointer">Support Tickets</Link>
+                                <Link href={`/${country}/help-center/support`} onClick={(e) => { e.preventDefault(); setView('list'); }} className="text-[#5B4A31] hover:text-[#4A5D23] transition-colors cursor-pointer">Support Tickets</Link>
                                 <ChevronDown className="h-4 w-4 text-gray-300 -rotate-90" />
                                 <span className="text-[#4A5D23] font-black uppercase text-xs">Create Ticket</span>
                             </nav>
@@ -300,7 +302,7 @@ function SupportContent() {
                                 </button>
                                 <p className="text-sm font-bold text-[#5B4A31]/60 max-w-xs text-center sm:text-right">
                                     By creating a ticket, you agree to our{' '}
-                                    <Link href="/help-center" className="underline hover:text-[#4A5D23]">Support Terms</Link>.
+                                    <Link href={`/${country}/help-center`} className="underline hover:text-[#4A5D23]">Support Terms</Link>.
                                 </p>
                             </div>
                         </form>
@@ -467,7 +469,7 @@ function SupportContent() {
                         {/* Footer */}
                         <div className="mt-20 flex justify-center">
                             <Link
-                                href="/help-center"
+                                href={`/${country}/help-center`}
                                 className="inline-flex items-center gap-3 text-lg font-bold text-[#5B4A31] hover:text-[#4A5D23] transition-all group"
                             >
                                 <div className="w-12 h-12 rounded-2xl bg-white shadow-xl flex items-center justify-center group-hover:bg-[#4A5D23] group-hover:text-white transition-all">

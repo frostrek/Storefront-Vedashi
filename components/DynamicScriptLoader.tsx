@@ -6,12 +6,12 @@ import Script from 'next/script';
 export default function DynamicScriptLoader() {
     const { consent } = useCookieConsent();
 
-    if (!consent) return null;
+    if (!consent) return <></>;
 
     return (
         <>
             {/* Example Google Analytics Loader */}
-            {consent.analytics && (
+            {consent?.analytics && (
                 <>
                     <Script
                         src={`https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX`}
@@ -31,7 +31,7 @@ export default function DynamicScriptLoader() {
             )}
 
             {/* Example Meta Pixel Loader */}
-            {consent.marketing && (
+            {consent?.marketing && (
                 <Script id="meta-pixel" strategy="afterInteractive">
                     {`
                         !function(f,b,e,v,n,t,s)

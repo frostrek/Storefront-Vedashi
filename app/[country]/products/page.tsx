@@ -492,10 +492,10 @@ function ProductsContent() {
                     )}
                 </button>
 
-                <div className="lg:grid lg:grid-cols-[280px_1fr] lg:gap-8">
+                <div className="lg:grid lg:grid-cols-[280px_1fr] lg:gap-8 items-start">
                     {/* ─── Desktop Sidebar ─── */}
                     <aside className="hidden lg:block">
-                        <div className="sticky top-6 rounded-2xl border border-gray-100 bg-white px-5 py-5 shadow-sm">
+                        <div className="sticky top-24 h-[calc(100vh-96px)] overflow-y-auto rounded-2xl border border-gray-100 bg-white px-5 py-5 shadow-sm">
                             <h2 className="font-serif text-base font-bold text-gray-900 mb-1">Filters</h2>
                             <p className="text-xs text-gray-400 mb-4 flex items-center gap-2">
                                 <span className={`transition-opacity ${loading ? 'opacity-50' : 'opacity-100'}`}>

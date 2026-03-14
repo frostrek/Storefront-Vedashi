@@ -44,7 +44,8 @@ const VALID_TABS: Tab[] = ['overview', 'orders', 'wishlist', 'addresses', 'profi
 export default function AccountPage() {
     const { formatPrice } = useCurrency();
     const router = useRouter();
-    const params = useParams<{ tab?: string[] }>();
+    const params = useParams<{ country: string, tab?: string[] }>();
+    const country = params?.country || 'in';
     const { user, isAuthenticated, isLoading, logout } = useAuth();
     const { items: wishlistItems, removeItem: removeWishlistItem } = useWishlist();
     const { addItem: addCartItem } = useCart();
@@ -818,7 +819,7 @@ export default function AccountPage() {
                             {coreExperienceTabs.map(tab => (
                                 <li key={tab.id}>
                                     <button
-                                        onClick={() => router.push(`/account/${tab.id}`)}
+                                        onClick={() => router.push(`/${country}/account/${tab.id}`)}
                                         className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === tab.id
                                             ? 'bg-white/10 text-white shadow-sm'
                                             : 'text-white/70 hover:text-white hover:bg-white/5'
@@ -847,7 +848,7 @@ export default function AccountPage() {
                             {identityAccessTabs.map(tab => (
                                 <li key={tab.id}>
                                     <button
-                                        onClick={() => router.push(`/account/${tab.id}`)}
+                                        onClick={() => router.push(`/${country}/account/${tab.id}`)}
                                         className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === tab.id
                                             ? 'bg-[#A8B28B]/20 text-[#DCDFB3] font-bold shadow-sm border border-[#A8B28B]/20'
                                             : 'text-white/70 hover:text-white hover:bg-white/5'
@@ -886,7 +887,7 @@ export default function AccountPage() {
                         </div>
                         <p className="text-xs text-white/80 leading-relaxed mb-3">You currently possess the <strong className="text-white">{activeTier}</strong> ritualist rank.</p>
                         <button 
-                            onClick={() => router.push('/account/wallet')}
+                            onClick={() => router.push(`/${country}/account/wallet`)}
                             className="text-[10px] uppercase font-bold text-[#D4A847] flex items-center gap-1 hover:text-white transition-colors"
                         >
                             VIEW BENEFITS <ChevronRight className="h-3 w-3" />
@@ -1001,7 +1002,7 @@ export default function AccountPage() {
                                         </div>
                                     </div>
 
-                                    <div className="bg-white p-6 rounded-2xl border border-[#E8E1D5] shadow-sm flex items-start gap-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push('/account/wishlist')}>
+                                    <div className="bg-white p-6 rounded-2xl border border-[#E8E1D5] shadow-sm flex items-start gap-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push(`/${country}/account/wishlist`)}>
                                         <div className="h-12 w-12 rounded-xl bg-[#F8F5F0] flex items-center justify-center flex-shrink-0">
                                             <Heart className="h-6 w-6 text-[#36453A]" />
                                         </div>
@@ -1031,7 +1032,7 @@ export default function AccountPage() {
                                 <div className="mt-2">
                                     <h3 className="font-bold text-[#36453A] mb-4 text-sm tracking-wide">Common Actions</h3>
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <button onClick={() => router.push('/account/orders')} className="bg-white border border-[#E8E1D5] p-4 rounded-2xl flex items-center justify-between hover:border-[#36453A]/30 transition-colors group">
+                                        <button onClick={() => router.push(`/${country}/account/orders`)} className="bg-white border border-[#E8E1D5] p-4 rounded-2xl flex items-center justify-between hover:border-[#36453A]/30 transition-colors group">
                                             <div className="flex items-center gap-4">
                                                 <div className="bg-[#F8F5F0] p-2.5 rounded-lg group-hover:bg-[#36453A] transition-colors">
                                                     <List className="h-5 w-5 text-[#36453A] group-hover:text-white transition-colors" />
@@ -1044,7 +1045,7 @@ export default function AccountPage() {
                                             <ChevronRight className="h-4 w-4 text-warm-gray group-hover:text-[#36453A] transition-colors" />
                                         </button>
 
-                                        <button onClick={() => router.push('/account/addresses')} className="bg-white border border-[#E8E1D5] p-4 rounded-2xl flex items-center justify-between hover:border-[#36453A]/30 transition-colors group">
+                                        <button onClick={() => router.push(`/${country}/account/addresses`)} className="bg-white border border-[#E8E1D5] p-4 rounded-2xl flex items-center justify-between hover:border-[#36453A]/30 transition-colors group">
                                             <div className="flex items-center gap-4">
                                                 <div className="bg-[#F8F5F0] p-2.5 rounded-lg group-hover:bg-[#36453A] transition-colors">
                                                     <MapPin className="h-5 w-5 text-[#36453A] group-hover:text-white transition-colors" />
@@ -1057,7 +1058,7 @@ export default function AccountPage() {
                                             <ChevronRight className="h-4 w-4 text-warm-gray group-hover:text-[#36453A] transition-colors" />
                                         </button>
 
-                                        <button onClick={() => router.push('/account/profile')} className="bg-white border border-[#E8E1D5] p-4 rounded-2xl flex items-center justify-between hover:border-[#36453A]/30 transition-colors group">
+                                        <button onClick={() => router.push(`/${country}/account/profile`)} className="bg-white border border-[#E8E1D5] p-4 rounded-2xl flex items-center justify-between hover:border-[#36453A]/30 transition-colors group">
                                             <div className="flex items-center gap-4">
                                                 <div className="bg-[#F8F5F0] p-2.5 rounded-lg group-hover:bg-[#36453A] transition-colors">
                                                     <User className="h-5 w-5 text-[#36453A] group-hover:text-white transition-colors" />
@@ -1082,7 +1083,7 @@ export default function AccountPage() {
                                                 <h3 className="font-bold text-[#36453A] text-lg">Recent Orders Summary</h3>
                                                 <p className="text-xs text-warm-gray mt-1">Your latest transactions at Vedashi</p>
                                             </div>
-                                            <button onClick={() => router.push('/account/orders')} className="text-xs font-bold text-[#36453A] hover:underline hover:text-black">See Full History</button>
+                                            <button onClick={() => router.push(`/${country}/account/orders`)} className="text-xs font-bold text-[#36453A] hover:underline hover:text-black">See Full History</button>
                                         </div>
 
                                         <div className="overflow-x-auto">
@@ -2403,7 +2404,7 @@ export default function AccountPage() {
                                                 }
                                             </p>
                                             <button 
-                                                onClick={() => router.push('/account/wallet')}
+                                                onClick={() => router.push(`/${country}/account/wallet`)}
                                                 className="w-full rounded-xl bg-[#D4A847] text-[#1A2E1A] py-3 text-sm font-bold hover:bg-white transition-all transform active:scale-95 shadow-lg"
                                             >
                                                 Manage Rewards
@@ -2422,7 +2423,7 @@ export default function AccountPage() {
                                                     {profileData.is_email_verified ? (
                                                         <span className="text-xs font-bold text-green-600 bg-green-50 px-2.5 py-1 rounded-full flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Verified</span>
                                                     ) : (
-                                                        <button onClick={() => router.push('/verify-email')} className="text-xs font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-full transition-colors flex items-center gap-1"><AlertCircle className="h-3 w-3" /> Verify</button>
+                                                        <button onClick={() => router.push(`/${country}/verify-email`)} className="text-xs font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-full transition-colors flex items-center gap-1"><AlertCircle className="h-3 w-3" /> Verify</button>
                                                     )}
                                                 </div>
                                                 <div className="flex items-center justify-between">
@@ -2433,7 +2434,7 @@ export default function AccountPage() {
                                                     {profileData.is_mobile_verified ? (
                                                         <span className="text-xs font-bold text-green-600 bg-green-50 px-2.5 py-1 rounded-full flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Verified</span>
                                                     ) : (
-                                                        <button onClick={() => router.push('/verify-otp')} className="text-xs font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-full transition-colors flex items-center gap-1"><AlertCircle className="h-3 w-3" /> Verify</button>
+                                                        <button onClick={() => router.push(`/${country}/verify-otp`)} className="text-xs font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-full transition-colors flex items-center gap-1"><AlertCircle className="h-3 w-3" /> Verify</button>
                                                     )}
                                                 </div>
                                             </div>
@@ -2582,7 +2583,7 @@ export default function AccountPage() {
                                                         <p className="text-sm text-white/80 max-w-md">Our support team is here to help. You'll receive an email notification as soon as we reply.</p>
                                                     </div>
                                                     <button 
-                                                        onClick={() => router.push('/help-center/support')}
+                                                        onClick={() => router.push(`/${country}/help-center/support`)}
                                                         className="bg-[#D4A847] text-[#36453A] px-8 py-3 rounded-xl text-sm font-bold shadow-md hover:bg-[#B38720] transition-colors whitespace-nowrap"
                                                     >
                                                         Submit New Enquiry
@@ -2621,7 +2622,7 @@ export default function AccountPage() {
                                                     At Vedashi, we treat every enquiry with the same mindfulness as our product crafting. Thank you for your patience as we provide a soulful solution.
                                                 </p>
                                                 <button 
-                                                    onClick={() => router.push('/help-center')}
+                                                    onClick={() => router.push(`/${country}/help-center`)}
                                                     className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-[#E8E1D5] text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors"
                                                 >
                                                     <FileText className="h-3.5 w-3.5" /> View Help Center
