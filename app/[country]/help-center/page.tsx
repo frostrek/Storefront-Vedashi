@@ -2,10 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { Search, MessageSquare, HelpCircle, BookOpen, FileText, ChevronRight, Send } from 'lucide-react';
 import { getFaqs, getHelpArticles, searchFaqs, searchHelpArticles, searchKBArticles } from '@/lib/api';
 
 export default function HelpCenterPage() {
+    const params = useParams();
+    const country = params?.country || 'in';
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [searching, setSearching] = useState(false);
@@ -45,28 +48,28 @@ export default function HelpCenterPage() {
             title: 'FAQs',
             desc: 'Find quick answers to common questions about orders, payments, and more.',
             icon: HelpCircle,
-            href: '/help-center/faq',
+            href: `/${country}/help-center/faq`,
             color: '#722F37',
         },
         {
             title: 'Knowledge Base',
             desc: 'Browse detailed guides, tutorials, and documentation.',
             icon: BookOpen,
-            href: '/help-center/knowledge-base',
+            href: `/${country}/help-center/knowledge-base`,
             color: '#8B4513',
         },
         {
             title: 'Support Tickets',
             desc: 'Submit a support request or track your existing tickets.',
             icon: MessageSquare,
-            href: '/help-center/support',
+            href: `/${country}/help-center/support`,
             color: '#4b0f1a',
         },
         {
             title: 'Customer Enquiry',
             desc: 'Share your thoughts, report an issue or contact us.',
             icon: Send,
-            href: '/help-center/customer-enquiry',
+            href: `/${country}/help-center/customer-enquiry`,
             color: '#5B3A29',
         },
     ];
@@ -263,14 +266,14 @@ export default function HelpCenterPage() {
                         </p>
                         <div className="flex flex-col sm:flex-row gap-5 justify-center">
                             <Link
-                                href="/help-center/support"
+                                href={`/${country}/help-center/support`}
                                 className="inline-flex items-center justify-center gap-3 bg-[#4A5D23] text-white px-10 py-5 rounded-2xl font-bold text-lg hover:bg-[#3a491b] hover:shadow-2xl hover:-translate-y-1 transition-all"
                             >
                                 <MessageSquare className="h-6 w-6" />
                                 Submit a Ticket
                             </Link>
                             <Link
-                                href="/contact"
+                                href={`/${country}/contact`}
                                 className="inline-flex items-center justify-center gap-3 border-2 border-[#F2E8CF]/30 text-[#F2E8CF] px-10 py-5 rounded-2xl font-bold text-lg hover:bg-[#F2E8CF]/10 transition-all"
                             >
                                 Contact Us
