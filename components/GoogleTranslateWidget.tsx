@@ -67,7 +67,7 @@ function hideGoogleToolbar() {
   document.body.style.setProperty('position', '', '');
 }
 
-export default function GoogleTranslateWidget() {
+export default function GoogleTranslateWidget({ upward = false }: { upward?: boolean }) {
   const initialized = useRef(false);
   const [open, setOpen] = useState(false);
   const [activeLang, setActiveLang] = useState('en');
@@ -229,6 +229,7 @@ export default function GoogleTranslateWidget() {
           aria-label={`Translate — ${activeLabel}`}
           title={`Translate — ${activeLabel}`}
           type="button"
+          suppressHydrationWarning
         >
           <Globe
             style={{
@@ -259,7 +260,8 @@ export default function GoogleTranslateWidget() {
           <div
             style={{
               position: 'absolute',
-              top: 'calc(100% + 8px)',
+              bottom: upward ? 'calc(100% + 8px)' : 'auto',
+              top: upward ? 'auto' : 'calc(100% + 8px)',
               right: '-8px',
               width: '200px',
               background: '#fff',
@@ -268,6 +270,7 @@ export default function GoogleTranslateWidget() {
               boxShadow: '0 12px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.04)',
               padding: '10px',
               zIndex: 9999,
+              transformOrigin: upward ? 'bottom right' : 'top right',
             }}
           >
             <div

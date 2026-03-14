@@ -237,6 +237,8 @@ export default function Navbar() {
                 )}
               </button>
 
+              <NotificationCenter colors={colors} />
+
               <div className="flex items-center">
                 <Link href="/cart" className="relative p-2 group">
                   <ShoppingCart className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
@@ -299,16 +301,9 @@ export default function Navbar() {
                 )}
               </div>
 
-              <RegionSwitcher />
-              <GoogleTranslateWidget />
-
-              <Link href="/account" className="relative p-2 group">
+              <Link href="/account" className="relative p-2 group" suppressHydrationWarning>
                 <User className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
               </Link>
-
-              {isAuthenticated && (
-                <NotificationCenter colors={colors} />
-              )}
 
               {/* Mobile toggle */}
               <button suppressHydrationWarning onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2" style={{ color: colors.navbar_text }}>
