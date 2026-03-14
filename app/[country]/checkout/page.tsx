@@ -64,14 +64,13 @@ function CheckoutContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const isBuyNow = searchParams.get('buyNow') === 'true';
-    const { items, totalPrice, clearCart, cartId, couponCode, couponDiscount, couponType, removeCoupon, applyCoupon, totalItems } = useCart();
+    const { items, totalPrice, clearCart, cartId, couponCode, couponDiscount, couponType, removeCoupon, applyCoupon, totalItems, orderNotes, setOrderNotes } = useCart();
     const { user, isAuthenticated } = useAuth();
 
     const [step, setStep] = useState(1); // 1: Shipping, 2: Payment, 3: Review
     const [orderPlaced, setOrderPlaced] = useState(false);
     const [placing, setPlacing] = useState(false);
     const [orderId, setOrderId] = useState<string | null>(null);
-    const [orderNotes, setOrderNotes] = useState('');
 
     // Payment method selection
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('razorpay');
@@ -954,19 +953,6 @@ function CheckoutContent() {
                                     </div>
                                 </div>
 
-                                {/* Order Notes */}
-                                <div className="cart-item-card p-5 border-l-4 border-l-[#2D3B2D]">
-                                    <label className="block text-sm font-bold text-[#1A1A1A] mb-2">Ayurvedic Practitioner Notes <span className="text-[#8B7A3D] font-normal text-xs">(optional)</span></label>
-                                    <textarea
-                                        value={orderNotes}
-                                        onChange={e => setOrderNotes(e.target.value.slice(0, 200))}
-                                        maxLength={200}
-                                        rows={3}
-                                        placeholder="Add any specific allergies, preferences, or delivery instructions here..."
-                                        className="w-full rounded-lg border border-[#D4CFC0] bg-[#F5F4F0] px-4 py-3 text-sm focus:border-[#2D3B2D] focus:outline-none resize-none font-medium"
-                                    />
-                                    <p className="mt-1 text-[10px] text-[#6B6B60] text-right font-bold tracking-wider">{orderNotes.length}/200</p>
-                                </div>
                                 
                                 <div className="mt-8">
                                     <button onClick={handlePlaceOrder} disabled={placing || paymentProcessing} className="cart-checkout-btn w-full text-center flex items-center justify-center gap-2 py-4 text-base">

@@ -14,13 +14,18 @@ import {
     getMyEnquiries, replyToEnquiry, changePassword,
     requestEmailChange, verifyEmailChangeProfile,
     getLoyaltyWallet, getMyNotifications, getUnreadNotificationCount,
-    markNotificationAsRead, markAllNotificationsAsRead, deleteNotification
+    markNotificationAsRead, markAllNotificationsAsRead, deleteNotification,
+    lookupPostalCode
 } from '@/lib/api';
 import { Order, Address } from '@/types';
+import { COUNTRIES } from '@/lib/countries';
+import Select from 'react-select';
 import {
     Package, MapPin, Heart, LogOut, User, Plus, Pencil, Trash2,
     Loader2, ShieldOff, Camera, X, Check, Star, Phone, Calendar, Mail,
-    CheckCircle2, Smartphone, AlertCircle, Shield, FileText, MessageSquare, Send, Clock, User2, MessageCircle, Sparkles
+    CheckCircle2, Smartphone, AlertCircle, Shield, FileText, MessageSquare, Send, Clock, User2, MessageCircle, Sparkles,
+    Globe, ChevronRight, Lock, CreditCard, Banknote,
+    BadgeCheck, BellRing, Download, Search, ShoppingCart, LayoutGrid, List, Wallet, Eye, EyeOff
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import toast from 'react-hot-toast';
@@ -28,7 +33,6 @@ import PrivacyDashboard from '@/components/account/PrivacyDashboard';
 import ReviewForm from '@/components/reviews/ReviewForm';
 import NotificationPreferences from '@/components/account/NotificationPreferences';
 import ExportOrdersModal from '@/components/account/ExportOrdersModal';
-import { BadgeCheck, BellRing, Download, ChevronRight, Search, ShoppingCart, LayoutGrid, List, Wallet } from 'lucide-react';
 import MyWallet from '@/components/account/MyWallet';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { useCurrency } from '@/context/CurrencyContext';
@@ -40,7 +44,8 @@ const VALID_TABS: Tab[] = ['overview', 'orders', 'wishlist', 'addresses', 'profi
 export default function AccountPage() {
     const { formatPrice } = useCurrency();
     const router = useRouter();
-    const params = useParams<{ tab?: string[] }>();
+    const params = useParams<{ country: string, tab?: string[] }>();
+    const country = params?.country || 'in';
     const { user, isAuthenticated, isLoading, logout } = useAuth();
     const { items: wishlistItems, removeItem: removeWishlistItem } = useWishlist();
     const { addItem: addCartItem } = useCart();
@@ -125,8 +130,64 @@ export default function AccountPage() {
     const [editingAddress, setEditingAddress] = useState<Address | null>(null);
     const [addressForm, setAddressForm] = useState({
         address_line1: '', address_line2: '', city: '', state: '', pincode: '',
-        country: 'India', phone: '', label: '', is_default: false,
+        country: 'India', country_code: 'IN', phone: '', label: '', is_default: false,
     });
+    const [isLookupLoading, setIsLookupLoading] = useState(false);
+    const [manualEdits, setManualEdits] = useState({
+        city: false,
+        state: false
+    });
+
+    const countryOptions = COUNTRIES.map(c => ({
+        value: c.code,
+        label: `${c.flag} ${c.name}`,
+        name: c.name
+    }));
+
+    const customSelectStyles = {
+        control: (provided: any, state: any) => ({
+            ...provided,
+            borderRadius: '8px',
+            borderColor: state.isFocused ? '#6B8F5E' : '#D4CFC0',
+            boxShadow: 'none',
+            '&:hover': {
+                borderColor: '#6B8F5E',
+            },
+            backgroundColor: 'white',
+            paddingLeft: '34px',
+            minHeight: '44px',
+            fontSize: '14px',
+        }),
+        option: (provided: any, state: any) => ({
+            ...provided,
+            backgroundColor: state.isSelected ? '#6B8F5E' : state.isFocused ? '#DFE5D9' : 'white',
+            color: state.isSelected ? 'white' : '#1A1A1A',
+            '&:active': {
+                backgroundColor: '#6B8F5E',
+            },
+            fontSize: '14px',
+        }),
+    };
+
+    // Global Postal Code Auto-Fill
+    useEffect(() => {
+        if (addressForm.pincode.length >= 4 && showAddressForm) {
+            const timer = setTimeout(async () => {
+                setIsLookupLoading(true);
+                const res = await lookupPostalCode(addressForm.pincode, addressForm.country_code);
+                if (res.success && res.city && res.state) {
+                    setAddressForm(prev => ({
+                        ...prev,
+                        city: manualEdits.city ? prev.city : (res.city || prev.city),
+                        state: manualEdits.state ? prev.state : (res.state || prev.state),
+                        country: res.country || prev.country
+                    }));
+                }
+                setIsLookupLoading(false);
+            }, 300);
+            return () => clearTimeout(timer);
+        }
+    }, [addressForm.pincode, addressForm.country_code, showAddressForm, manualEdits.city, manualEdits.state]);
 
     // Profile state
     const [orderCount, setOrderCount] = useState(0);
@@ -192,10 +253,13 @@ export default function AccountPage() {
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
     const [passwordChanging, setPasswordChanging] = useState(false);
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     // Body scroll lock for modals
     useEffect(() => {
-        if (isTrackOrderModalOpen || showDeactivateModal || deletingAddressId || cancellingOrderId || reviewModal || showNotificationOverlay || showExportModal || showPasswordModal || showEmailOtpModal) {
+        if (selectedOrderDetails || isTrackOrderModalOpen || showDeactivateModal || deletingAddressId || cancellingOrderId || reviewModal || showNotificationOverlay || showExportModal || showPasswordModal || showEmailOtpModal) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = 'unset';
@@ -203,7 +267,7 @@ export default function AccountPage() {
         return () => {
             document.body.style.overflow = 'unset';
         };
-    }, [isTrackOrderModalOpen, showDeactivateModal, deletingAddressId, cancellingOrderId, reviewModal, showNotificationOverlay, showExportModal, showPasswordModal, showEmailOtpModal]);
+    }, [selectedOrderDetails, isTrackOrderModalOpen, showDeactivateModal, deletingAddressId, cancellingOrderId, reviewModal, showNotificationOverlay, showExportModal, showPasswordModal, showEmailOtpModal]);
 
     useEffect(() => {
         if (!isLoading && !isAuthenticated) {
@@ -252,6 +316,11 @@ export default function AccountPage() {
             const res = await getCustomerProfile(user.id);
             if (res.success && res.data) {
                 const fetchedEmail = res.data.email || '';
+                
+                // Important fix: handle truthy values explicitly or just rely on backend boolean.
+                // Assuming res.data.has_password is a boolean or 1/0
+                const hasPassword = Boolean(res.data.has_password);
+                
                 setProfileData({
                     full_name: res.data.full_name || '',
                     email: fetchedEmail,
@@ -259,7 +328,7 @@ export default function AccountPage() {
                     date_of_birth: res.data.date_of_birth ? res.data.date_of_birth.split('T')[0] : '',
                     is_email_verified: !!res.data.is_email_verified,
                     is_mobile_verified: !!res.data.is_mobile_verified,
-                    has_password: !!res.data.has_password,
+                    has_password: hasPassword,
                 });
                 setOriginalEmail(fetchedEmail);
             }
@@ -397,7 +466,7 @@ export default function AccountPage() {
             fetchProfile();
             fetchProfileImage();
         }
-    }, [activeTab, user?.id, fetchOrders, fetchAddresses, fetchProfile, fetchProfileImage, fetchEnquiries, fetchNotificationsData, fetchLoyaltyData]);
+    }, [activeTab, user?.id, fetchOrders, fetchAddresses, fetchProfile, fetchProfileImage, fetchEnquiries, fetchLoyaltyData]);
 
     const activeTier = loyaltyData?.tier?.tier_name || 'Bronze';
     const activePoints = loyaltyData?.wallet?.balance || 0;
@@ -426,7 +495,7 @@ export default function AccountPage() {
             // Strip out non-DB fields
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { has_password, is_email_verified, is_mobile_verified, email, ...updateData } = profileData;
-
+            
             const res = await updateCustomerProfile(user.id, updateData);
             if (res.success) {
                 toast.success('Profile updated successfully');
@@ -444,7 +513,7 @@ export default function AccountPage() {
 
     const handleResendEmailOtp = async () => {
         if (emailOtpResendTimer > 0) return;
-
+        
         try {
             const reqRes = await requestEmailChange(profileData.email);
             if (reqRes.success) {
@@ -463,7 +532,7 @@ export default function AccountPage() {
             toast.error('Please enter the OTP');
             return;
         }
-
+        
         setEmailOtpSubmitting(true);
         try {
             const res = await verifyEmailChangeProfile(emailOtpCode);
@@ -472,18 +541,18 @@ export default function AccountPage() {
                 setShowEmailOtpModal(false);
                 setEmailOtpCode('');
                 setEmailOtpResendTimer(0);
-
+                
                 // Continue to update the rest of the profile if it was being edited
                 if (!user?.id) return;
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const { has_password, is_email_verified, is_mobile_verified, email, ...updateData } = profileData;
                 const profileRes = await updateCustomerProfile(user.id, updateData);
-
+                
                 if (profileRes.success) {
                     toast.success('Profile all updated');
                     setProfileEditing(false);
                 }
-
+                
                 fetchProfile();
             } else {
                 toast.error(res.message || 'Invalid or expired OTP');
@@ -497,6 +566,12 @@ export default function AccountPage() {
 
     const handlePasswordChange = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        if (profileData.has_password && passwords.current === passwords.new) {
+            toast.error('New password cannot be the same as your current password');
+            return;
+        }
+
         if (passwords.new !== passwords.confirm) {
             toast.error('Passwords do not match');
             return;
@@ -513,6 +588,9 @@ export default function AccountPage() {
                 toast.success('Password updated successfully');
                 setShowPasswordModal(false);
                 setPasswords({ current: '', new: '', confirm: '' });
+                setShowCurrentPassword(false);
+                setShowNewPassword(false);
+                setShowConfirmPassword(false);
                 fetchProfile(); // refresh has_password status
             } else {
                 toast.error(res.message || 'Failed to update password');
@@ -652,10 +730,12 @@ export default function AccountPage() {
             state: addr.state || '',
             pincode: addr.pincode || '',
             country: addr.country || 'India',
+            country_code: (addr as any).country_code || 'IN',
             phone: addr.phone || '',
             label: addr.label || '',
             is_default: addr.is_default || false,
         });
+        setManualEdits({ city: true, state: true }); // Assume manual since it's existing data
         setShowAddressForm(true);
     };
 
@@ -664,8 +744,9 @@ export default function AccountPage() {
         setEditingAddress(null);
         setAddressForm({
             address_line1: '', address_line2: '', city: '', state: '', pincode: '',
-            country: 'India', phone: '', label: '', is_default: false,
+            country: 'India', country_code: 'IN', phone: '', label: '', is_default: false,
         });
+        setManualEdits({ city: false, state: false });
     };
 
     const handleViewOrderDetails = async (orderId: string) => {
@@ -727,21 +808,21 @@ export default function AccountPage() {
     ];
 
     return (
-        <div className="flex min-h-screen bg-cream font-sans overflow-x-hidden">
+        <div className="flex h-screen bg-[#F8F5F0] overflow-hidden">
             {/* Left Sidebar */}
-            <aside className="w-[280px] bg-[#36453A] text-white flex flex-col flex-shrink-0 z-20 shadow-[4px_0_24px_rgba(0,0,0,0.12)]">
-                <div className="flex-1 px-5 py-4">
+            <aside className="w-[280px] bg-[#36453A] text-white flex flex-col flex-shrink-0 relative z-20 shadow-[4px_0_24px_rgba(0,0,0,0.12)]">
+                <div className="flex-1 overflow-y-auto px-5 py-8 custom-scrollbar">
                     {/* CORE EXPERIENCE */}
-                    <div className="mb-4">
+                    <div className="mb-8">
                         <p className="text-[10px] font-bold tracking-[0.15em] text-white/50 mb-3 ml-3">CORE EXPERIENCE</p>
                         <ul className="space-y-1">
                             {coreExperienceTabs.map(tab => (
                                 <li key={tab.id}>
                                     <button
-                                        onClick={() => router.push(`/account/${tab.id}`)}
-                                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${activeTab === tab.id
-                                            ? 'bg-white/10 text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] border border-white/10'
-                                            : 'text-white/60 hover:text-white hover:bg-white/5 border border-transparent'
+                                        onClick={() => router.push(`/${country}/account/${tab.id}`)}
+                                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === tab.id
+                                            ? 'bg-white/10 text-white shadow-sm'
+                                            : 'text-white/70 hover:text-white hover:bg-white/5'
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">
@@ -749,7 +830,7 @@ export default function AccountPage() {
                                             {tab.label}
                                         </div>
                                         {tab.count !== undefined && tab.count > 0 && (
-                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-vedic-gold text-herbal-green' : 'bg-white/10 text-white/90'
+                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-[#D4A847] text-[#36453A]' : 'bg-white/10 text-white/90'
                                                 }`}>
                                                 {tab.count}
                                             </span>
@@ -761,24 +842,24 @@ export default function AccountPage() {
                     </div>
 
                     {/* IDENTITY & ACCESS */}
-                    <div className="mb-6">
-                        <p className="text-[10px] font-bold tracking-[0.15em] text-white/50 mb-3 ml-3 uppercase">Identity & Access</p>
+                    <div>
+                        <p className="text-[10px] font-bold tracking-[0.15em] text-white/50 mb-3 ml-3">IDENTITY & ACCESS</p>
                         <ul className="space-y-1">
                             {identityAccessTabs.map(tab => (
                                 <li key={tab.id}>
                                     <button
-                                        onClick={() => router.push(`/account/${tab.id}`)}
-                                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${activeTab === tab.id
-                                            ? 'bg-vedic-gold/15 text-vedic-gold-light border border-vedic-gold/20 shadow-sm'
-                                            : 'text-white/60 hover:text-white hover:bg-white/5 border border-transparent'
+                                        onClick={() => router.push(`/${country}/account/${tab.id}`)}
+                                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === tab.id
+                                            ? 'bg-[#A8B28B]/20 text-[#DCDFB3] font-bold shadow-sm border border-[#A8B28B]/20'
+                                            : 'text-white/70 hover:text-white hover:bg-white/5'
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">
-                                            <tab.icon className={`h-4 w-4 ${activeTab === tab.id ? 'opacity-100' : 'opacity-60'}`} />
+                                            <tab.icon className={`h-4 w-4 ${activeTab === tab.id ? 'opacity-100' : 'opacity-70'}`} />
                                             {tab.label}
                                         </div>
                                         {tab.count !== undefined && tab.count > 0 && (
-                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-vedic-gold text-herbal-green' : 'bg-white/10 text-white/90'
+                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-[#D4A847] text-[#36453A]' : 'bg-white/10 text-white/90'
                                                 }`}>
                                                 {tab.count}
                                             </span>
@@ -788,60 +869,61 @@ export default function AccountPage() {
                             ))}
                         </ul>
                     </div>
+                </div>
 
-
-                    {/* Elite Status & User Quick Access */}
-                    <div className="mt-10 pt-8 border-t border-white/10">
-                        <div className="bg-[#2A362D] rounded-[24px] border border-white/10 p-5 mb-5 relative overflow-hidden group shadow-lg">
-                            <div className="absolute -top-2 -right-2 p-3 opacity-[0.03] group-hover:opacity-10 transition-opacity">
-                                <Star className="h-16 w-16 text-vedic-gold fill-vedic-gold" />
-                            </div>
-                            <div className="flex items-center gap-2 mb-3">
-                                <div className="p-1.5 bg-vedic-gold/15 rounded-lg flex items-center justify-center border border-vedic-gold/20">
-                                    <Star className="h-3 w-3 text-vedic-gold fill-vedic-gold" />
-                                </div>
-                                <span className="text-[9px] font-black tracking-[0.2em] text-vedic-gold-light uppercase">{activeTier} STATUS</span>
-                            </div>
-                            <p className="text-[11px] text-white/60 leading-relaxed mb-4">You currently possess the <strong className="text-vedic-gold-light">{activeTier}</strong> ritualist rank.</p>
-                            <button 
-                                onClick={() => router.push('/account/wallet')}
-                                className="text-[10px] uppercase font-black text-vedic-gold flex items-center gap-1.5 hover:text-white transition-all group-hover:translate-x-1 tracking-widest"
-                            >
-                                VIEW BENEFITS <ChevronRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
-                            </button>
+                {/* Bottom Elite Status Card */}
+                <div className="p-5 mt-auto border-t border-white/10">
+                    <div className="bg-white/5 rounded-xl border border-white/10 p-4 mb-4 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-2 opacity-10">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" className="text-white">
+                                <path d="M12 22C17.5228 22 22 17.5228 22 12" stroke="currentColor" strokeWidth="2" />
+                            </svg>
                         </div>
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="p-1.5 bg-white/10 rounded-full flex items-center justify-center">
+                                <Star className="h-3 w-3 text-[#D4A847] fill-[#D4A847]" />
+                            </span>
+                            <span className="text-[10px] font-bold tracking-wider text-white uppercase">{activeTier} STATUS</span>
+                        </div>
+                        <p className="text-xs text-white/80 leading-relaxed mb-3">You currently possess the <strong className="text-white">{activeTier}</strong> ritualist rank.</p>
+                        <button 
+                            onClick={() => router.push(`/${country}/account/wallet`)}
+                            className="text-[10px] uppercase font-bold text-[#D4A847] flex items-center gap-1 hover:text-white transition-colors"
+                        >
+                            VIEW BENEFITS <ChevronRight className="h-3 w-3" />
+                        </button>
+                    </div>
 
-                        {/* User Snippet */}
-                        <div className="flex items-center gap-3 p-3 bg-black/20 rounded-2xl border border-white/5 shadow-inner">
-                            <div className="h-10 w-10 rounded-full bg-vedic-gold/10 flex items-center justify-center overflow-hidden border border-vedic-gold/20">
-                                {profileImageUrl ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img src={profileImageUrl} alt="Profile" className="h-full w-full object-cover" />
-                                ) : (
-                                    <span className="font-serif font-bold text-vedic-gold text-base">
-                                        {user?.name?.charAt(0).toUpperCase()}
-                                    </span>
-                                )}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <p className="text-sm font-bold text-white truncate leading-tight mb-0.5">{user?.name}</p>
-                                <p className="text-[9px] text-vedic-gold/60 font-black tracking-[0.1em] flex items-center gap-1 uppercase">
-                                    <Shield className="h-2 w-2" /> Verified Human
-                                </p>
-                            </div>
+                    {/* User Snippet */}
+                    <div className="flex items-center gap-3 p-3 bg-black/20 rounded-xl">
+                        <div className="h-9 w-9 rounded-full bg-white/10 flex items-center justify-center overflow-hidden border border-white/20">
+                            {profileImageUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={profileImageUrl} alt="Profile" className="h-full w-full object-cover" />
+                            ) : (
+                                <span className="font-serif font-bold text-white text-sm">
+                                    {user?.name?.charAt(0).toUpperCase()}
+                                </span>
+                            )}
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-sm font-bold text-white truncate">{user?.name}</p>
+                            <p className="text-[10px] text-white/50 tracking-wider flex items-center gap-1">
+                                <Shield className="h-2.5 w-2.5 text-[#D4A847]" /> VERIFIED HUMAN
+                            </p>
                         </div>
                     </div>
                 </div>
             </aside>
 
             {/* Main Content Area */}
-            <main className="flex-1 flex flex-col relative z-10">
+            <main className="flex-1 flex flex-col h-full relative z-10 overflow-hidden">
                 {/* Header */}
-                <header className="h-14 flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-light-border flex items-center justify-between px-8 xl:px-12 sticky top-0 z-20 shadow-sm">
-                    <div className="flex items-center gap-3 text-xs font-bold tracking-wider uppercase">
-                        <button onClick={() => router.push('/account')} className="text-warm-gray hover:text-herbal-green transition-colors">Account</button>
-                        <ChevronRight className="h-4 w-4 text-light-border" />
-                        <span className="text-herbal-green">
+                <header className="h-12 flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-[#E8E1D5] flex items-center justify-between px-8 xl:px-12 sticky top-0 z-20">
+                    <div className="flex items-center gap-3 text-sm font-medium">
+                        <button onClick={() => router.push('/account')} className="text-[#36453A]/60 hover:text-[#36453A] transition-colors">Account</button>
+                        <ChevronRight className="h-4 w-4 text-[#36453A]/30" />
+                        <span className="text-[#36453A] font-bold">
                             {activeTab === 'profile' ? 'Profile Settings' :
                                 activeTab === 'addresses' ? 'Delivery Rituals' :
                                     activeTab === 'privacy' ? 'Privacy Sanctuary' :
@@ -860,7 +942,7 @@ export default function AccountPage() {
                 </header>
 
                 {/* Content Roll */}
-                <div className="flex-1 px-4 py-8 md:px-8 xl:px-12">
+                <div className="flex-1 overflow-y-auto px-4 py-8 md:px-8 xl:px-12 custom-scrollbar">
                     <div className="max-w-6xl mx-auto">
 
                         {/* ═══════════════════ OVERVIEW TAB ═══════════════════ */}
@@ -920,7 +1002,7 @@ export default function AccountPage() {
                                         </div>
                                     </div>
 
-                                    <div className="bg-white p-6 rounded-2xl border border-[#E8E1D5] shadow-sm flex items-start gap-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push('/account/wishlist')}>
+                                    <div className="bg-white p-6 rounded-2xl border border-[#E8E1D5] shadow-sm flex items-start gap-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push(`/${country}/account/wishlist`)}>
                                         <div className="h-12 w-12 rounded-xl bg-[#F8F5F0] flex items-center justify-center flex-shrink-0">
                                             <Heart className="h-6 w-6 text-[#36453A]" />
                                         </div>
@@ -950,7 +1032,7 @@ export default function AccountPage() {
                                 <div className="mt-2">
                                     <h3 className="font-bold text-[#36453A] mb-4 text-sm tracking-wide">Common Actions</h3>
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <button onClick={() => router.push('/account/orders')} className="bg-white border border-[#E8E1D5] p-4 rounded-2xl flex items-center justify-between hover:border-[#36453A]/30 transition-colors group">
+                                        <button onClick={() => router.push(`/${country}/account/orders`)} className="bg-white border border-[#E8E1D5] p-4 rounded-2xl flex items-center justify-between hover:border-[#36453A]/30 transition-colors group">
                                             <div className="flex items-center gap-4">
                                                 <div className="bg-[#F8F5F0] p-2.5 rounded-lg group-hover:bg-[#36453A] transition-colors">
                                                     <List className="h-5 w-5 text-[#36453A] group-hover:text-white transition-colors" />
@@ -963,7 +1045,7 @@ export default function AccountPage() {
                                             <ChevronRight className="h-4 w-4 text-warm-gray group-hover:text-[#36453A] transition-colors" />
                                         </button>
 
-                                        <button onClick={() => router.push('/account/addresses')} className="bg-white border border-[#E8E1D5] p-4 rounded-2xl flex items-center justify-between hover:border-[#36453A]/30 transition-colors group">
+                                        <button onClick={() => router.push(`/${country}/account/addresses`)} className="bg-white border border-[#E8E1D5] p-4 rounded-2xl flex items-center justify-between hover:border-[#36453A]/30 transition-colors group">
                                             <div className="flex items-center gap-4">
                                                 <div className="bg-[#F8F5F0] p-2.5 rounded-lg group-hover:bg-[#36453A] transition-colors">
                                                     <MapPin className="h-5 w-5 text-[#36453A] group-hover:text-white transition-colors" />
@@ -976,7 +1058,7 @@ export default function AccountPage() {
                                             <ChevronRight className="h-4 w-4 text-warm-gray group-hover:text-[#36453A] transition-colors" />
                                         </button>
 
-                                        <button onClick={() => router.push('/account/profile')} className="bg-white border border-[#E8E1D5] p-4 rounded-2xl flex items-center justify-between hover:border-[#36453A]/30 transition-colors group">
+                                        <button onClick={() => router.push(`/${country}/account/profile`)} className="bg-white border border-[#E8E1D5] p-4 rounded-2xl flex items-center justify-between hover:border-[#36453A]/30 transition-colors group">
                                             <div className="flex items-center gap-4">
                                                 <div className="bg-[#F8F5F0] p-2.5 rounded-lg group-hover:bg-[#36453A] transition-colors">
                                                     <User className="h-5 w-5 text-[#36453A] group-hover:text-white transition-colors" />
@@ -1001,7 +1083,7 @@ export default function AccountPage() {
                                                 <h3 className="font-bold text-[#36453A] text-lg">Recent Orders Summary</h3>
                                                 <p className="text-xs text-warm-gray mt-1">Your latest transactions at Vedashi</p>
                                             </div>
-                                            <button onClick={() => router.push('/account/orders')} className="text-xs font-bold text-[#36453A] hover:underline hover:text-black">See Full History</button>
+                                            <button onClick={() => router.push(`/${country}/account/orders`)} className="text-xs font-bold text-[#36453A] hover:underline hover:text-black">See Full History</button>
                                         </div>
 
                                         <div className="overflow-x-auto">
@@ -1279,15 +1361,6 @@ export default function AccountPage() {
                                                                 >
                                                                     {isOrderLoading && selectedOrderDetails?.order_id === order.order_id ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : 'View Details'}
                                                                 </button>
-                                                                 <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        router.push('/help-center/support?orderId=' + order.order_id);
-                                                                    }}
-                                                                    className="rounded-xl px-5 py-2 text-xs font-bold bg-[#36453A]/5 text-[#36453A] border border-transparent hover:border-[#36453A]/20 transition-all whitespace-nowrap"
-                                                                >
-                                                                    Support Ticket
-                                                                </button>
                                                                 <button
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
@@ -1456,11 +1529,8 @@ export default function AccountPage() {
                                                         >
                                                             <Download className="h-3.5 w-3.5" /> Invoice
                                                         </button>
-                                                        <button 
-                                                            onClick={() => router.push('/help-center/support?orderId=' + selectedOrderDetails.order_id)}
-                                                            className="flex-1 flex justify-center items-center gap-2 border border-[#E8E1D5] bg-white rounded-xl py-2.5 text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors shadow-sm"
-                                                        >
-                                                            <MessageSquare className="h-3.5 w-3.5" /> Support
+                                                        <button className="flex-1 flex justify-center items-center gap-2 border border-[#E8E1D5] bg-white rounded-xl py-2.5 text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors shadow-sm">
+                                                            <Mail className="h-3.5 w-3.5" /> Support
                                                         </button>
                                                     </div>
 
@@ -1859,8 +1929,8 @@ export default function AccountPage() {
                                 {/* ── Rituals Header ── */}
                                 <div className="rounded-[40px] bg-[#F8F5F0] overflow-hidden relative shadow-sm border border-[#E8E1D5] py-16 px-12">
                                     {/* Abstract background shapes matching sanctuary aesthetic */}
-                                    <div className="absolute top-0 right-0 w-[60%] h-full bg-white opacity-40 mix-blend-overlay rounded-bl-[100px] pointer-events-none -mr-12 -mt-12"></div>
-                                    <div className="absolute bottom-0 left-[20%] w-[30%] h-[30%] bg-white opacity-30 mix-blend-overlay rounded-tr-[100px] pointer-events-none"></div>
+                                    <div className="absolute top-0 right-0 w-[60%] h-full bg-white opacity-40 mix-blend-overlay rounded-bl-[100px] pointer-events-none -mr-12 -mt-12" />
+                                    <div className="absolute bottom-0 left-[20%] w-[30%] h-[30%] bg-white opacity-30 mix-blend-overlay rounded-tr-[100px] pointer-events-none" />
 
                                     <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-12">
                                         <div className="max-w-xl">
@@ -1877,7 +1947,7 @@ export default function AccountPage() {
 
                                         {/* Add New Address Card */}
                                         {!showAddressForm && (
-                                            <button
+                                            <button 
                                                 onClick={() => { resetAddressForm(); setShowAddressForm(true); }}
                                                 className="bg-white rounded-3xl shadow-md border border-[#E8E1D5]/50 p-8 flex flex-col items-center justify-center min-w-[200px] relative z-20 group hover:border-[#36453A]/30 transition-all hover:shadow-lg"
                                             >
@@ -1893,9 +1963,7 @@ export default function AccountPage() {
 
                                 {/* Address Form (animated) */}
                                 {showAddressForm && (
-                                    <div
-                                        className="mb-12 rounded-[30px] border border-[#E8E1D5] bg-white overflow-hidden shadow-sm animate-fadeIn"
-                                    >
+                                    <div className="mb-12 rounded-[30px] border border-[#E8E1D5] bg-white overflow-hidden shadow-sm animate-fadeIn">
                                         {/* Form header accent */}
                                         <div className="h-1.5" style={{ background: 'linear-gradient(90deg, #36453A, #D4A847, #36453A)' }} />
                                         <div className="p-8 lg:p-10">
@@ -1910,96 +1978,155 @@ export default function AccountPage() {
                                                     <X className="h-5 w-5" />
                                                 </button>
                                             </div>
-
+                                            
                                             <div className="grid gap-6 sm:grid-cols-2">
                                                 <div className="sm:col-span-2">
-                                                    <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Address Line 1 *</label>
-                                                    <input type="text" value={addressForm.address_line1}
-                                                        onChange={e => setAddressForm({ ...addressForm, address_line1: e.target.value })}
-                                                        className="w-full rounded-xl border border-[#E8E1D5] bg-[#F8F5F0]/30 px-4 py-3 text-sm focus:border-[#36453A]/40 focus:ring-1 focus:ring-[#36453A]/20 focus:outline-none transition-all text-[#36453A] placeholder:text-warm-gray/40"
-                                                        placeholder="Street address or P.O. Box" />
-                                                </div>
-                                                <div className="sm:col-span-2">
-                                                    <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Address Line 2 (Optional)</label>
-                                                    <input type="text" value={addressForm.address_line2}
-                                                        onChange={e => setAddressForm({ ...addressForm, address_line2: e.target.value })}
-                                                        className="w-full rounded-xl border border-[#E8E1D5] bg-[#F8F5F0]/30 px-4 py-3 text-sm focus:border-[#36453A]/40 focus:ring-1 focus:ring-[#36453A]/20 focus:outline-none transition-all text-[#36453A] placeholder:text-warm-gray/40"
-                                                        placeholder="Apartment, suite, unit, floor, etc." />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">City *</label>
-                                                    <input type="text" value={addressForm.city}
-                                                        onChange={e => setAddressForm({ ...addressForm, city: e.target.value })}
-                                                        className="w-full rounded-xl border border-[#E8E1D5] bg-[#F8F5F0]/30 px-4 py-3 text-sm focus:border-[#36453A]/40 focus:ring-1 focus:ring-[#36453A]/20 focus:outline-none transition-all text-[#36453A] placeholder:text-warm-gray/40"
-                                                        placeholder="City" />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">State / Province *</label>
-                                                    <input type="text" value={addressForm.state}
-                                                        onChange={e => setAddressForm({ ...addressForm, state: e.target.value })}
-                                                        className="w-full rounded-xl border border-[#E8E1D5] bg-[#F8F5F0]/30 px-4 py-3 text-sm focus:border-[#36453A]/40 focus:ring-1 focus:ring-[#36453A]/20 focus:outline-none transition-all text-[#36453A] placeholder:text-warm-gray/40"
-                                                        placeholder="State" />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Pincode / ZIP *</label>
-                                                    <input type="text" value={addressForm.pincode}
-                                                        onChange={e => setAddressForm({ ...addressForm, pincode: e.target.value })}
-                                                        className="w-full rounded-xl border border-[#E8E1D5] bg-[#F8F5F0]/30 px-4 py-3 text-sm focus:border-[#36453A]/40 focus:ring-1 focus:ring-[#36453A]/20 focus:outline-none transition-all text-[#36453A] placeholder:text-warm-gray/40"
-                                                        placeholder="Pincode" />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Country</label>
-                                                    <input type="text" value={addressForm.country}
-                                                        onChange={e => setAddressForm({ ...addressForm, country: e.target.value })}
-                                                        className="w-full rounded-xl border border-[#E8E1D5] bg-[#F8F5F0]/30 px-4 py-3 text-sm focus:border-[#36453A]/40 focus:ring-1 focus:ring-[#36453A]/20 focus:outline-none transition-all text-[#36453A] placeholder:text-warm-gray/40"
-                                                        placeholder="Country" />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Contact Phone</label>
+                                                    <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5 ml-1">Country *</label>
                                                     <div className="relative">
-                                                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-warm-gray/60" />
-                                                        <input type="tel" value={addressForm.phone}
-                                                            onChange={e => setAddressForm({ ...addressForm, phone: e.target.value })}
-                                                            className="w-full rounded-xl border border-[#E8E1D5] bg-[#F8F5F0]/30 pl-11 pr-4 py-3 text-sm focus:border-[#36453A]/40 focus:ring-1 focus:ring-[#36453A]/20 focus:outline-none transition-all text-[#36453A] placeholder:text-warm-gray/40"
-                                                            placeholder="Phone number" />
+                                                        <Select
+                                                            options={countryOptions}
+                                                            value={countryOptions.find(opt => opt.value === addressForm.country_code)}
+                                                            onChange={(opt: any) => {
+                                                                if (opt) {
+                                                                    setAddressForm({ 
+                                                                        ...addressForm, 
+                                                                        country: opt.name, 
+                                                                        country_code: opt.value 
+                                                                    });
+                                                                }
+                                                            }}
+                                                            styles={customSelectStyles}
+                                                            placeholder="Select Country"
+                                                        />
+                                                        <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8B7A3D] z-10 pointer-events-none" />
                                                     </div>
                                                 </div>
+
+                                                <div className="sm:col-span-2">
+                                                    <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5 ml-1">Address Line 1 *</label>
+                                                    <input 
+                                                        type="text" 
+                                                        value={addressForm.address_line1}
+                                                        onChange={e => setAddressForm({ ...addressForm, address_line1: e.target.value })}
+                                                        className="w-full rounded-lg border border-[#D4CFC0] bg-white px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none transition-all text-[#1A1A1A] placeholder:text-warm-gray/40 shadow-sm"
+                                                        placeholder="Street address or P.O. Box" 
+                                                    />
+                                                </div>
+
+                                                <div className="sm:col-span-2">
+                                                    <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5 ml-1">Address Line 2 (Optional)</label>
+                                                    <input 
+                                                        type="text" 
+                                                        value={addressForm.address_line2}
+                                                        onChange={e => setAddressForm({ ...addressForm, address_line2: e.target.value })}
+                                                        className="w-full rounded-lg border border-[#D4CFC0] bg-white px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none transition-all text-[#1A1A1A] placeholder:text-warm-gray/40 shadow-sm"
+                                                        placeholder="Apartment, suite, unit, floor, etc." 
+                                                    />
+                                                </div>
+
                                                 <div>
-                                                    <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Space Label</label>
-                                                    <div className="flex gap-2">
+                                                    <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5 ml-1">Pincode / ZIP *</label>
+                                                    <div className="relative">
+                                                        <input 
+                                                            type="text" 
+                                                            value={addressForm.pincode}
+                                                            onChange={e => setAddressForm({ ...addressForm, pincode: e.target.value })}
+                                                            className="w-full rounded-lg border border-[#D4CFC0] bg-white px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none transition-all text-[#1A1A1A] placeholder:text-warm-gray/40 shadow-sm"
+                                                            placeholder="Pincode" 
+                                                        />
+                                                        {isLookupLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-[#6B8F5E]" />}
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5 ml-1">City *</label>
+                                                    <input 
+                                                        type="text" 
+                                                        value={addressForm.city}
+                                                        onChange={e => {
+                                                            setAddressForm({ ...addressForm, city: e.target.value });
+                                                            setManualEdits(prev => ({ ...prev, city: true }));
+                                                        }}
+                                                        className="w-full rounded-lg border border-[#D4CFC0] bg-white px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none transition-all text-[#1A1A1A] placeholder:text-warm-gray/40 shadow-sm"
+                                                        placeholder="City" 
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5 ml-1">State / Province *</label>
+                                                    <input 
+                                                        type="text" 
+                                                        value={addressForm.state}
+                                                        onChange={e => {
+                                                            setAddressForm({ ...addressForm, state: e.target.value });
+                                                            setManualEdits(prev => ({ ...prev, state: true }));
+                                                        }}
+                                                        className="w-full rounded-lg border border-[#D4CFC0] bg-white px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none transition-all text-[#1A1A1A] placeholder:text-warm-gray/40 shadow-sm"
+                                                        placeholder="State" 
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5 ml-1">Contact Phone</label>
+                                                    <div className="relative">
+                                                        <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8B7A3D]" />
+                                                        <input 
+                                                            type="tel" 
+                                                            value={addressForm.phone}
+                                                            onChange={e => setAddressForm({ ...addressForm, phone: e.target.value })}
+                                                            className="w-full rounded-lg border border-[#D4CFC0] bg-white pl-11 pr-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none transition-all text-[#1A1A1A] placeholder:text-warm-gray/40 shadow-sm"
+                                                            placeholder="Phone number" 
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="sm:col-span-2">
+                                                    <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5 ml-1">Space Label</label>
+                                                    <div className="flex gap-3">
                                                         {['Home', 'Office', 'Other'].map(l => (
-                                                            <button key={l} type="button"
+                                                            <button 
+                                                                key={l} 
+                                                                type="button"
                                                                 onClick={() => setAddressForm({ ...addressForm, label: l })}
-                                                                className={`flex-1 rounded-xl px-4 py-3 text-xs font-bold transition-all border
+                                                                className={`flex-1 rounded-lg px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider transition-all border
                                                                 ${addressForm.label === l
-                                                                        ? 'bg-[#36453A] text-white border-[#36453A] shadow-sm'
-                                                                        : 'bg-white text-[#36453A] border-[#E8E1D5] hover:border-[#36453A]/30 hover:bg-[#F8F5F0]'}`
-                                                                }>
+                                                                    ? 'bg-[#36453A] text-white border-[#36453A] shadow-md transform scale-[1.02]'
+                                                                    : 'bg-white text-[#6B6B60] border-[#D4CFC0] hover:border-[#6B8F5E] hover:bg-[#F8F5F0]'}`
+                                                                }
+                                                            >
                                                                 {l}
                                                             </button>
                                                         ))}
                                                     </div>
                                                 </div>
+
                                                 <div className="sm:col-span-2 pt-2">
                                                     <label className="flex items-center gap-3 cursor-pointer group w-fit">
                                                         <div className="relative flex items-center justify-center">
-                                                            <input type="checkbox" checked={addressForm.is_default}
+                                                            <input 
+                                                                type="checkbox" 
+                                                                checked={addressForm.is_default}
                                                                 onChange={e => setAddressForm({ ...addressForm, is_default: e.target.checked })}
-                                                                className="peer appearance-none w-5 h-5 rounded-md border-2 border-[#E8E1D5] checked:bg-[#36453A] checked:border-[#36453A] transition-colors cursor-pointer" />
+                                                                className="peer appearance-none w-5 h-5 rounded border-2 border-[#D4CFC0] checked:bg-[#6B8F5E] checked:border-[#6B8F5E] transition-colors cursor-pointer" 
+                                                            />
                                                             <Check className="absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100 pointer-events-none" strokeWidth={3} />
                                                         </div>
-                                                        <span className="text-sm font-bold text-[#36453A] group-hover:text-black transition-colors">Designate as Primary Ritual Space</span>
+                                                        <span className="text-sm font-bold text-[#6B6B60] group-hover:text-black transition-colors">Designate as Primary Ritual Space</span>
                                                     </label>
                                                 </div>
                                             </div>
-
+                                            
                                             <div className="mt-10 flex flex-col sm:flex-row gap-4">
-                                                <button onClick={handleAddressSubmit}
-                                                    className="flex-1 rounded-xl bg-[#36453A] px-8 py-4 text-sm font-bold text-white shadow-md hover:bg-[#2A362D] hover:shadow-lg transition-all flex items-center justify-center gap-2">
+                                                <button 
+                                                    onClick={handleAddressSubmit}
+                                                    className="flex-1 rounded-xl bg-[#36453A] px-8 py-4 text-sm font-bold text-white shadow-lg hover:bg-[#2A362D] hover:shadow-xl transition-all flex items-center justify-center gap-2 transform active:scale-95"
+                                                >
                                                     <CheckCircle2 className="h-4 w-4" /> {editingAddress ? 'Update Ritual Space' : 'Save Ritual Space'}
                                                 </button>
-                                                <button onClick={resetAddressForm}
-                                                    className="rounded-xl border border-[#E8E1D5] px-8 py-4 text-sm font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors">
+                                                <button 
+                                                    onClick={resetAddressForm}
+                                                    className="rounded-xl border border-[#D4CFC0] px-8 py-4 text-sm font-bold text-[#6B6B60] hover:bg-[#F8F5F0] transition-colors"
+                                                >
                                                     Cancel
                                                 </button>
                                             </div>
@@ -2027,47 +2154,47 @@ export default function AccountPage() {
                                     <div className="grid gap-6 sm:grid-cols-2">
                                         {addresses.map(addr => (
                                             <div key={addr.address_id}
-                                                className={`group relative rounded-[32px] border bg-white p-7 transition-all hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] ${addr.is_default ? 'border-vedic-gold ring-1 ring-vedic-gold/20 shadow-sm' : 'border-light-border hover:border-herbal-green/30'}`}
+                                                className={`group relative rounded-[24px] border bg-white p-6 transition-all hover:shadow-lg ${addr.is_default ? 'border-[#D4A847] ring-1 ring-[#D4A847]/20 shadow-sm' : 'border-[#E8E1D5]'}`}
                                             >
                                                 {/* Default badge */}
                                                 {addr.is_default && (
-                                                    <div className="absolute -top-3 left-8 flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[9px] font-bold text-white shadow-lg tracking-widest uppercase"
-                                                        style={{ background: 'linear-gradient(135deg, #3B5D3B, #2D4A2D)' }}>
-                                                        <Star className="h-3 w-3 fill-vedic-gold text-vedic-gold" /> PRIMARY RITUAL SPACE
+                                                    <div className="absolute -top-3 left-6 flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[10px] font-bold text-white shadow-md"
+                                                        style={{ background: 'linear-gradient(135deg, #36453A, #4A5D23)' }}>
+                                                        <Star className="h-3 w-3 fill-[#D4A847] text-[#D4A847]" /> PRIMARY RITUAL SPACE
                                                     </div>
                                                 )}
 
                                                 <div className="flex justify-between items-start">
                                                     <div className="pt-2">
-                                                        <div className="flex items-center gap-3 mb-5">
-                                                            <div className="h-11 w-11 rounded-2xl bg-cream flex items-center justify-center border border-light-border/40">
-                                                                <MapPin className="h-5 w-5 text-herbal-green" />
+                                                        <div className="flex items-center gap-3 mb-4">
+                                                            <div className="h-10 w-10 rounded-xl bg-[#F8F5F0] flex items-center justify-center border border-[#E8E1D5]">
+                                                                <MapPin className="h-5 w-5 text-[#36453A]" />
                                                             </div>
                                                             {addr.label && (
-                                                                <span className="bg-herbal-green/10 text-herbal-green px-3.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-[0.15em] border border-herbal-green/5">
+                                                                <span className="bg-[#36453A]/10 text-[#36453A] px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
                                                                     {addr.label}
                                                                 </span>
                                                             )}
                                                         </div>
-                                                        <div className="space-y-1.5">
-                                                            <p className="text-base font-bold text-herbal-green leading-tight">{addr.address_line1}</p>
+                                                        <div className="space-y-1">
+                                                            <p className="text-base font-bold text-[#36453A] leading-tight">{addr.address_line1}</p>
                                                             {addr.address_line2 && <p className="text-sm text-warm-gray font-medium">{addr.address_line2}</p>}
-                                                            <p className="text-sm text-warm-gray/80 font-medium tracking-wide">
+                                                            <p className="text-sm text-warm-gray font-medium tracking-wide">
                                                                 {addr.city}, {addr.state} {addr.pincode}
                                                             </p>
                                                             {addr.country && addr.country !== 'India' && (
-                                                                <p className="text-sm text-warm-gray/80 font-medium">{addr.country}</p>
+                                                                <p className="text-sm text-warm-gray font-medium">{addr.country}</p>
                                                             )}
                                                         </div>
-
+                                                        
                                                         {addr.phone && (
-                                                            <div className="mt-5 flex items-center gap-2 px-3.5 py-2 rounded-xl bg-cream/40 border border-light-border/30 w-fit">
+                                                            <div className="mt-5 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#F8F5F0] border border-[#E8E1D5] w-fit">
                                                                 <Phone className="h-3 w-3 text-warm-gray" />
-                                                                <span className="text-xs font-bold text-herbal-green">{addr.phone}</span>
+                                                                <span className="text-xs font-bold text-[#36453A]">{addr.phone}</span>
                                                             </div>
                                                         )}
                                                     </div>
-
+                                                    
                                                     <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
                                                         {!addr.is_default && (
                                                             <button onClick={() => handleSetDefault(addr)}
@@ -2105,15 +2232,14 @@ export default function AccountPage() {
                                             <path d="M50 0C50 0 100 20 100 50C100 80 50 100 50 100C50 100 0 80 0 50C0 20 50 0 50 0Z" />
                                         </svg>
                                     </div>
-                                    <div className="flex items-center gap-8 relative z-10">
+                                    <div className="flex items-center gap-6 relative z-10">
                                         <div className="relative group">
-                                            <div className="h-32 w-32 rounded-3xl border-4 border-white shadow-xl overflow-hidden bg-cream-dark flex items-center justify-center relative rotate-3 transition-transform hover:rotate-0">
-                                                <div className="absolute inset-0 bg-gradient-to-tr from-vedic-gold/10 to-transparent"></div>
+                                            <div className="h-28 w-28 rounded-full border-4 border-white shadow-md overflow-hidden bg-cream-dark flex items-center justify-center">
                                                 {profileImageUrl ? (
                                                     // eslint-disable-next-line @next/next/no-img-element
                                                     <img src={profileImageUrl} alt="Profile" className="h-full w-full object-cover" />
                                                 ) : (
-                                                    <span className="font-serif text-4xl font-bold text-herbal-green">
+                                                    <span className="font-serif text-3xl font-bold text-[#36453A]">
                                                         {user?.name?.charAt(0).toUpperCase()}
                                                     </span>
                                                 )}
@@ -2134,29 +2260,29 @@ export default function AccountPage() {
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-3 mb-1">
-                                                <h2 className="font-serif text-3xl font-bold text-herbal-green">{profileData.full_name || user?.name}</h2>
-                                                <span className="bg-vedic-gold/15 text-vedic-gold text-[9px] font-bold px-2.5 py-1 rounded-full border border-vedic-gold/10 uppercase tracking-widest">
+                                                <h2 className="font-serif text-3xl font-bold text-[#36453A]">{profileData.full_name || user?.name}</h2>
+                                                <span className="bg-[#D4A847]/20 text-[#B38720] text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
                                                     Lifetime Member
                                                 </span>
                                             </div>
-                                            <p className="text-sm text-warm-gray font-medium">Holistic Living Enthusiast • Cultivating since September 2021</p>
+                                            <p className="text-sm text-warm-gray font-medium">Holistic Living Enthusiast • Member since September 2021</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-8 relative z-10">
                                         <div className="text-center">
-                                            <p className="font-serif text-3xl font-bold text-herbal-green mb-1">{orderCount}</p>
-                                            <p className="text-[9px] font-bold text-warm-gray tracking-[0.2em] uppercase">Rituals Done</p>
+                                            <p className="font-serif text-3xl font-bold text-[#36453A] mb-1">{orderCount}</p>
+                                            <p className="text-[10px] font-bold text-warm-gray tracking-widest uppercase">Rituals Done</p>
                                         </div>
-                                        <div className="w-px h-12 bg-light-border/40"></div>
+                                        <div className="w-px h-12 bg-[#E8E1D5]"></div>
                                         <div className="text-center">
-                                            <p className="font-serif text-3xl font-bold text-herbal-green mb-1">{(user as any)?.reviews_count || 0}</p>
-                                            <p className="text-[9px] font-bold text-warm-gray tracking-[0.2em] uppercase">Soulful Reviews</p>
+                                            <p className="font-serif text-3xl font-bold text-[#36453A] mb-1">{(user as any)?.reviews_count || 0}</p>
+                                            <p className="text-[10px] font-bold text-warm-gray tracking-widest uppercase">Soulful Reviews</p>
                                         </div>
-                                        <div className="w-px h-12 bg-light-border/40"></div>
+                                        <div className="w-px h-12 bg-[#E8E1D5]"></div>
                                         <div className="text-center">
-                                            <p className="font-serif text-3xl font-bold text-vedic-gold mb-1">{(user as any)?.seed_points || 0}</p>
-                                            <p className="text-[9px] font-bold text-vedic-gold/70 tracking-[0.2em] uppercase flex items-center gap-1.5 justify-center">
-                                                <Star className="h-2.5 w-2.5 fill-vedic-gold/20" /> Seed Points
+                                            <p className="font-serif text-3xl font-bold text-[#D4A847] mb-1">{(user as any)?.seed_points || 0}</p>
+                                            <p className="text-[10px] font-bold text-[#D4A847]/70 tracking-widest uppercase flex items-center gap-1 justify-center">
+                                                <Star className="h-2.5 w-2.5" /> Seed Points
                                             </p>
                                         </div>
                                     </div>
@@ -2168,19 +2294,17 @@ export default function AccountPage() {
                                     {/* Left Column (Forms) */}
                                     <div className="lg:col-span-2 space-y-8">
                                         {/* Personal Essence */}
-                                        <section className="bg-white rounded-[40px] p-10 border border-light-border shadow-[0_4px_24px_rgba(0,0,0,0.03)] relative overflow-hidden">
-                                            <div className="absolute top-0 right-0 w-48 h-48 bg-cream border-l border-b border-light-border/30 rounded-bl-[80px] opacity-40 pointer-events-none"></div>
-                                            <h3 className="font-serif text-2xl font-bold text-herbal-green mb-8 flex items-center gap-3">
-                                                <div className="w-2 h-8 bg-vedic-gold rounded-full"></div>
+                                        <section className="bg-white rounded-3xl p-8 border border-[#E8E1D5] shadow-sm relative overflow-hidden">
+                                            <div className="absolute top-0 right-0 w-32 h-32 bg-[#F8F5F0] rounded-bl-full opacity-50 pointer-events-none"></div>
+                                            <h3 className="font-serif text-xl font-bold text-[#36453A] mb-6 flex items-center gap-2">
+                                                <span className="w-1.5 h-6 bg-[#36453A] rounded-full inline-block"></span>
                                                 Personal Essence
                                             </h3>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
                                                 <div>
-                                                    <label className="block flex items-center gap-2 text-[10px] font-bold text-warm-gray uppercase tracking-[0.2em] mb-3 ml-1">
-                                                        <User className="h-3 w-3 text-vedic-gold" /> Full Identity
-                                                    </label>
+                                                    <label className="block flex items-center gap-1.5 text-[11px] font-bold text-warm-gray uppercase tracking-widest mb-2"><User className="h-3 w-3" /> Full Identity</label>
                                                     <input type="text" value={profileData.full_name} onChange={e => setProfileData({ ...profileData, full_name: e.target.value })}
-                                                        className="w-full bg-cream/30 border border-light-border rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:border-herbal-green focus:ring-4 focus:ring-herbal-green/5 transition-all font-medium text-herbal-green placeholder:text-warm-gray/40" />
+                                                        className="w-full bg-[#F8F5F0] border border-[#E8E1D5] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#36453A] focus:ring-1 focus:ring-[#36453A]/20 transition-all font-medium text-[#36453A]" />
                                                 </div>
                                                 <div>
                                                     <label className="block flex items-center gap-1.5 text-[11px] font-bold text-warm-gray uppercase tracking-widest mb-2"><Mail className="h-3 w-3" /> Soulful Mail</label>
@@ -2212,42 +2336,34 @@ export default function AccountPage() {
                                             </div>
                                         </section>
 
-                                        {/* Security Sanctuary & Notification Preferences Row */}
+                                        {/* Security Sanctuary & Notification Harmony Row */}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                             {/* Security Sanctuary */}
-                                            <section className="bg-white rounded-[32px] p-8 border border-light-border shadow-sm relative overflow-hidden group">
-                                                <div className="absolute top-0 right-0 w-24 h-24 bg-cream rounded-bl-full opacity-50 pointer-events-none transition-transform group-hover:scale-110"></div>
-                                                <div className="relative z-10">
-                                                    <h3 className="font-serif text-xl font-bold text-herbal-green mb-4 flex items-center gap-3">
-                                                        <div className="w-1.5 h-6 bg-burgundy rounded-full"></div>
-                                                        Security Sanctuary
-                                                    </h3>
-                                                    <p className="text-sm text-warm-gray mb-6 leading-relaxed">Protect your inner sanctum with a strong, mindful password.</p>
-                                                    <button
-                                                        onClick={() => setShowPasswordModal(true)}
-                                                        className="w-full rounded-xl border border-[#E8E1D5] py-3.5 text-sm font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors flex items-center justify-center gap-2 mb-2"
-                                                    >
-                                                        {profileData.has_password ? 'Modify Access Password' : 'Set Access Password'} <ChevronRight className="h-4 w-4" />
-                                                    </button>
-                                                    {profileData.has_password && <p className="text-xs text-warm-gray text-center mt-3">Your account is secured</p>}
-                                                </div>
-                                            </section>
-
-                                            {/* Notification Preferences */}
                                             <section className="bg-white rounded-3xl p-8 border border-[#E8E1D5] shadow-sm relative overflow-hidden">
                                                 <div className="absolute top-0 right-0 w-24 h-24 bg-[#F8F5F0] rounded-bl-full opacity-50 pointer-events-none"></div>
-                                                <div className="relative z-10">
-                                                    <h3 className="font-serif text-xl font-bold text-[#36453A] mb-4 flex items-center gap-2">
-                                                        <span className="w-1.5 h-6 bg-[#36453A] rounded-full inline-block"></span>
-                                                        Notification Preferences
-                                                    </h3>
-                                                    <p className="text-sm text-warm-gray mb-6 leading-relaxed">Harmonize your alerts and seasonal wisdom to match your ritualistic lifestyle.</p>
-                                                    <button
-                                                        onClick={() => setShowNotificationOverlay(true)}
-                                                        className="w-full rounded-xl border border-[#E8E1D5] py-3.5 text-sm font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors flex items-center justify-center gap-2"
-                                                    >
-                                                        Configure Notification Rituals <ChevronRight className="h-4 w-4" />
-                                                    </button>
+                                                <h3 className="font-serif text-xl font-bold text-[#36453A] mb-4 flex items-center gap-2">
+                                                    <span className="w-1.5 h-6 bg-[#36453A] rounded-full inline-block"></span>
+                                                    Security Sanctuary
+                                                </h3>
+                                                <p className="text-sm text-warm-gray mb-6 leading-relaxed">Protect your inner sanctum with a strong, mindful password.</p>
+                                                <button 
+                                                    onClick={() => setShowPasswordModal(true)}
+                                                    className="w-full rounded-xl border border-[#E8E1D5] py-3.5 text-sm font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors flex items-center justify-center gap-2 mb-2"
+                                                >
+                                                    {profileData.has_password ? 'Modify Access Password' : 'Set Access Password'} <ChevronRight className="h-4 w-4" />
+                                                </button>
+                                                {profileData.has_password && <p className="text-xs text-warm-gray text-center mt-3">Your account is secured</p>}
+                                            </section>
+
+                                            {/* Notification Harmony */}
+                                            <section className="bg-white rounded-3xl p-8 border border-[#E8E1D5] shadow-sm relative overflow-hidden">
+                                                <div className="absolute top-0 right-0 w-24 h-24 bg-[#F8F5F0] rounded-bl-full opacity-50 pointer-events-none"></div>
+                                                <h3 className="font-serif text-xl font-bold text-[#36453A] mb-5 flex items-center gap-2">
+                                                    <span className="w-1.5 h-6 bg-[#36453A] rounded-full inline-block"></span>
+                                                    Notification Harmony
+                                                </h3>
+                                                <div className="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                                    <NotificationPreferences />
                                                 </div>
                                             </section>
                                         </div>
@@ -2257,14 +2373,14 @@ export default function AccountPage() {
                                     <div className="space-y-8">
 
                                         {/* Actions */}
-                                        <div className="bg-white rounded-[32px] p-6 border border-light-border shadow-sm text-center">
+                                        <div className="bg-white rounded-3xl p-6 border border-[#E8E1D5] shadow-sm text-center">
                                             <button
                                                 disabled={profileSaving}
                                                 onClick={handleProfileSave}
-                                                className="w-full bg-herbal-green text-white rounded-2xl py-4 text-sm font-bold shadow-lg hover:bg-herbal-green-dark hover:shadow-herbal-green/20 transition-all flex items-center justify-center gap-2 mb-4 active:scale-95"
+                                                className="w-full bg-[#36453A] text-white rounded-xl py-4 text-sm font-bold shadow-md hover:bg-[#2A362D] hover:shadow-lg transition-all flex items-center justify-center gap-2 mb-4"
                                             >
                                                 {profileSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                                                PRESERVE CHANGES
+                                                SAVE ALL CHANGES
                                             </button>
                                             <button
                                                 onClick={() => { fetchProfile(); toast.success('Modifications discarded'); }}
@@ -2282,13 +2398,13 @@ export default function AccountPage() {
                                             <p className="text-[10px] font-bold tracking-[0.2em] text-[#D4A847]/60 mb-2 uppercase">ACTIVE PLAN</p>
                                             <h3 className="font-serif text-2xl font-bold text-[#D4A847] mb-2">{activeTier} Ritualist</h3>
                                             <p className="text-sm text-white/70 leading-relaxed mb-6">
-                                                {loyaltyData?.tier?.benefits && Array.isArray(loyaltyData.tier.benefits) && loyaltyData.tier.benefits.length > 0
+                                                {loyaltyData?.tier?.benefits && Array.isArray(loyaltyData.tier.benefits) && loyaltyData.tier.benefits.length > 0 
                                                     ? loyaltyData.tier.benefits.join(', ')
                                                     : "Enhance your aura with every ritual to unlock exotic benefits and golden boons."
                                                 }
                                             </p>
-                                            <button
-                                                onClick={() => router.push('/account/wallet')}
+                                            <button 
+                                                onClick={() => router.push(`/${country}/account/wallet`)}
                                                 className="w-full rounded-xl bg-[#D4A847] text-[#1A2E1A] py-3 text-sm font-bold hover:bg-white transition-all transform active:scale-95 shadow-lg"
                                             >
                                                 Manage Rewards
@@ -2307,7 +2423,7 @@ export default function AccountPage() {
                                                     {profileData.is_email_verified ? (
                                                         <span className="text-xs font-bold text-green-600 bg-green-50 px-2.5 py-1 rounded-full flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Verified</span>
                                                     ) : (
-                                                        <button onClick={() => router.push('/verify-email')} className="text-xs font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-full transition-colors flex items-center gap-1"><AlertCircle className="h-3 w-3" /> Verify</button>
+                                                        <button onClick={() => router.push(`/${country}/verify-email`)} className="text-xs font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-full transition-colors flex items-center gap-1"><AlertCircle className="h-3 w-3" /> Verify</button>
                                                     )}
                                                 </div>
                                                 <div className="flex items-center justify-between">
@@ -2318,7 +2434,7 @@ export default function AccountPage() {
                                                     {profileData.is_mobile_verified ? (
                                                         <span className="text-xs font-bold text-green-600 bg-green-50 px-2.5 py-1 rounded-full flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Verified</span>
                                                     ) : (
-                                                        <button onClick={() => router.push('/verify-otp')} className="text-xs font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-full transition-colors flex items-center gap-1"><AlertCircle className="h-3 w-3" /> Verify</button>
+                                                        <button onClick={() => router.push(`/${country}/verify-otp`)} className="text-xs font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-full transition-colors flex items-center gap-1"><AlertCircle className="h-3 w-3" /> Verify</button>
                                                     )}
                                                 </div>
                                             </div>
@@ -2466,8 +2582,8 @@ export default function AccountPage() {
                                                         <h3 className="font-serif text-2xl font-bold text-[#D4A847] mb-2">Need to add more info?</h3>
                                                         <p className="text-sm text-white/80 max-w-md">Our support team is here to help. You'll receive an email notification as soon as we reply.</p>
                                                     </div>
-                                                    <button
-                                                        onClick={() => router.push('/help-center/support')}
+                                                    <button 
+                                                        onClick={() => router.push(`/${country}/help-center/support`)}
                                                         className="bg-[#D4A847] text-[#36453A] px-8 py-3 rounded-xl text-sm font-bold shadow-md hover:bg-[#B38720] transition-colors whitespace-nowrap"
                                                     >
                                                         Submit New Enquiry
@@ -2505,8 +2621,8 @@ export default function AccountPage() {
                                                 <p className="text-[11px] leading-relaxed text-warm-gray mb-4">
                                                     At Vedashi, we treat every enquiry with the same mindfulness as our product crafting. Thank you for your patience as we provide a soulful solution.
                                                 </p>
-                                                <button
-                                                    onClick={() => router.push('/help-center')}
+                                                <button 
+                                                    onClick={() => router.push(`/${country}/help-center`)}
                                                     className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-[#E8E1D5] text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors"
                                                 >
                                                     <FileText className="h-3.5 w-3.5" /> View Help Center
@@ -2547,7 +2663,7 @@ export default function AccountPage() {
                                                     </div>
                                                     <h3 className="font-serif text-2xl font-bold text-[#36453A] mb-2">No Past Enquiries</h3>
                                                     <p className="text-sm text-warm-gray max-w-xs mx-auto mb-8">Your path has been smooth! If you ever need help, our support team is just a message away.</p>
-                                                    <button
+                                                    <button 
                                                         onClick={() => router.push('/help-center/support')}
                                                         className="bg-[#36453A] text-white px-8 py-3 rounded-xl text-sm font-bold shadow-md hover:bg-[#2A362D] transition-colors"
                                                     >
@@ -2691,6 +2807,108 @@ export default function AccountPage() {
                             </div>
                         )}
 
+                        {/* ═══ Order Details Modal ═══ */}
+                        {selectedOrderDetails && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center px-4 p-4 sm:p-0" style={{ animation: 'fadeIn 0.2s ease-out' }}>
+                                <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setSelectedOrderDetails(null)} />
+                                <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl border border-light-border" style={{ animation: 'slideUp 0.25s ease-out' }}>
+                                    <div className="flex justify-between items-center mb-6">
+                                        <h3 className="font-serif text-xl font-bold text-charcoal">Order Details</h3>
+                                        <button onClick={() => setSelectedOrderDetails(null)} className="rounded-full p-2 hover:bg-cream transition-colors text-warm-gray">
+                                            <X className="h-5 w-5" />
+                                        </button>
+                                    </div>
+
+                                    <div className="space-y-6">
+                                        {/* Order Info */}
+                                        <div className="grid grid-cols-2 gap-4 bg-cream p-4 rounded-xl text-sm">
+                                            <div>
+                                                <p className="text-warm-gray mb-1">Order ID</p>
+                                                <p className="font-mono font-medium text-charcoal text-xs break-all">{(selectedOrderDetails as { order_id: string }).order_id}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-warm-gray mb-1">Date</p>
+                                                <p className="font-medium text-charcoal">{new Date((selectedOrderDetails as { created_at: string }).created_at).toLocaleString()}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-warm-gray mb-1">Order Status</p>
+                                                <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${getStatusColor((selectedOrderDetails as { order_status: string }).order_status)}`}>
+                                                    {(selectedOrderDetails as { order_status: string }).order_status}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <p className="text-warm-gray mb-1">Payment Status</p>
+                                                <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${(selectedOrderDetails as { payment_status?: string }).payment_status?.toLowerCase() === 'paid' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                                    {(selectedOrderDetails as { payment_status?: string }).payment_status || 'UNPAID'}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Items List */}
+                                        <div>
+                                            <h4 className="font-serif text-lg font-bold text-charcoal mb-4">Items</h4>
+                                            <div className="space-y-3">
+                                                {(selectedOrderDetails as { items: unknown[] }).items?.map((item: unknown) => (
+                                                    <div key={(item as { order_item_id: string }).order_item_id} className="flex gap-4 p-3 border border-light-border rounded-xl hover:border-burgundy/30 transition-colors">
+                                                        <div className="h-16 w-16 bg-cream rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden border border-light-border">
+                                                            {(item as { thumbnail_url?: string }).thumbnail_url ? (
+                                                                // eslint-disable-next-line @next/next/no-img-element
+                                                                <img src={(item as { thumbnail_url: string }).thumbnail_url} alt="Product" className="h-full w-full object-cover" />
+                                                            ) : (
+                                                                <Package className="h-6 w-6 text-warm-gray" />
+                                                            )}
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="font-medium text-charcoal truncate">{(item as { product?: { product_name?: string } }).product?.product_name || 'Product'}</p>
+                                                            <p className="text-xs text-warm-gray mt-1">Brand: {(item as { product?: { brand?: string } }).product?.brand || 'N/A'} | Size: {(item as { variant?: { size_label?: string } }).variant?.size_label || 'N/A'}</p>
+                                                            <div className="flex justify-between items-center mt-2">
+                                                                <p className="text-sm font-medium text-charcoal">Qty: {(item as { quantity: number }).quantity}</p>
+                                                                <p className="text-sm font-bold text-burgundy">{formatPrice(parseFloat((item as { line_total?: string, unit_price: number, quantity: number, tax_amount: number }).line_total || String((item as { unit_price: number, quantity: number, tax_amount: number }).unit_price * (item as { quantity: number }).quantity + (item as { tax_amount: number }).tax_amount)))}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Summary */}
+                                        <div className="border-t border-light-border pt-4 space-y-2 text-sm">
+                                            <div className="flex justify-between text-warm-gray">
+                                                <span>Subtotal</span>
+                                                <span>{formatPrice(parseFloat((selectedOrderDetails as { total_amount: string }).total_amount))}</span>
+                                            </div>
+                                            <div className="flex justify-between text-warm-gray">
+                                                <span>Tax</span>
+                                                <span>{formatPrice(parseFloat((selectedOrderDetails as { total_tax: string }).total_tax))}</span>
+                                            </div>
+                                            <div className="flex justify-between font-bold text-charcoal text-base mt-2 pt-2 border-t border-light-border">
+                                                <span>Grand Total</span>
+                                                <span className="text-burgundy">{formatPrice(parseFloat((selectedOrderDetails as { total_amount: string }).total_amount) + parseFloat((selectedOrderDetails as { total_tax: string }).total_tax))}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Download Invoice Button */}
+                                        <div className="pt-2">
+                                            <button
+                                                onClick={async () => {
+                                                    const toastId = toast.loading('Downloading invoice...');
+                                                    const res = await downloadInvoice((selectedOrderDetails as { order_id: string }).order_id);
+                                                    if (res.success) {
+                                                        toast.success('Invoice downloaded!', { id: toastId });
+                                                    } else {
+                                                        toast.error(res.message || 'Failed to download invoice', { id: toastId });
+                                                    }
+                                                }}
+                                                className="w-full rounded-xl bg-gradient-to-r from-[#722F37] to-[#8B3A42] px-4 py-3 text-sm font-semibold text-white hover:from-[#5E252C] hover:to-[#722F37] transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+                                            >
+                                                <FileText className="h-4 w-4" />
+                                                Download Invoice
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* ═══════════════════ WALLET TAB ═══════════════════ */}
                         {activeTab === 'wallet' && (
@@ -2713,7 +2931,7 @@ export default function AccountPage() {
                                         </div>
                                     </div>
                                     {notifications.length > 0 && (
-                                        <button
+                                        <button 
                                             onClick={handleMarkAllRead}
                                             className="px-4 py-2 bg-white border border-[#E8E1D5] rounded-xl text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors flex items-center gap-2"
                                         >
@@ -2737,18 +2955,18 @@ export default function AccountPage() {
                                 ) : (
                                     <div className="space-y-4">
                                         {notifications.map((n) => (
-                                            <div
+                                            <div 
                                                 key={n.notification_id}
-                                                className={`group flex items-start gap-4 p-5 rounded-2xl border transition-all ${n.is_read 
+                                                className={`group flex items-start gap-4 p-5 rounded-2xl border transition-all ${n.read_at 
                                                     ? 'bg-white/60 border-[#E8E1D5] opacity-75' 
                                                     : 'bg-white border-[#36453A]/20 shadow-sm border-l-4 border-l-[#36453A]'}`}
                                             >
-                                                <div className={`mt-1 h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 ${n.is_read ? 'bg-warm-gray/10' : 'bg-[#36453A]/10'}`}>
-                                                    {n.category === 'security' ? <Shield className="h-5 w-5 text-red-500" /> : <Sparkles className="h-5 w-5 text-[#D4A847]" />}
+                                                <div className={`mt-1 h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 ${n.read_at ? 'bg-warm-gray/10' : 'bg-[#36453A]/10'}`}>
+                                                    {n.type === 'security' ? <Shield className="h-5 w-5 text-red-500" /> : <Sparkles className="h-5 w-5 text-[#D4A847]" />}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center justify-between gap-2 mb-1">
-                                                        <h4 className={`text-sm font-bold ${n.is_read ? 'text-[#36453A]/60' : 'text-[#36453A]'}`}>{n.title}</h4>
+                                                        <h4 className={`text-sm font-bold ${n.read_at ? 'text-[#36453A]/60' : 'text-[#36453A]'}`}>{n.title}</h4>
                                                         <span className="text-[10px] font-medium text-warm-gray whitespace-nowrap">
                                                             {new Date(n.created_at).toLocaleDateString()}
                                                         </span>
@@ -2758,24 +2976,117 @@ export default function AccountPage() {
                                                     </p>
                                                     <div className="flex items-center gap-4">
                                                         {n.link_url && (
-                                                            <button
+                                                            <button 
                                                                 onClick={() => router.push(n.link_url as any)}
                                                                 className="text-[10px] font-black uppercase tracking-widest text-[#36453A] hover:underline"
                                                             >
                                                                 View Details
                                                             </button>
                                                         )}
-                                                        <button
+                                                        <button 
                                                             onClick={async () => {
-                                                                if (!n.is_read) {
+                                                                if (!n.read_at) {
                                                                     await markNotificationAsRead(n.notification_id);
                                                                     fetchNotificationsData();
                                                                 }
                                                             }}
-                                                            disabled={!!n.is_read}
-                                                            className={`text-[10px] font-black uppercase tracking-widest transition-colors ${n.is_read ? 'text-[#36453A]/30 cursor-default' : 'text-[#D4A847] hover:text-[#B38720]'}`}
+                                                            disabled={!!n.read_at}
+                                                            className={`text-[10px] font-black uppercase tracking-widest transition-colors ${n.read_at ? 'text-[#36453A]/30 cursor-default' : 'text-[#D4A847] hover:text-[#B38720]'}`}
                                                         >
-                                                            {n.is_read ? 'Seen' : 'Mark as Read'}
+                                                            {n.read_at ? 'Seen' : 'Mark as Read'}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <button 
+                                                    onClick={() => handleDeleteNotification(n.notification_id)}
+                                                    className="opacity-0 group-hover:opacity-100 p-2 text-warm-gray/40 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* ═══════════════════ NOTIFICATIONS TAB ═══════════════════ */}
+                        {activeTab === 'notifications' && (
+                            <div className="max-w-[900px] animate-fadeIn pb-12">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                                    <div className="flex items-center gap-4">
+                                        <div className="h-12 w-12 rounded-xl bg-white border border-[#E8E1D5] flex items-center justify-center shadow-sm">
+                                            <BellRing className="h-6 w-6 text-[#36453A]" />
+                                        </div>
+                                        <div>
+                                            <h1 className="font-serif text-3xl font-bold text-[#36453A]">Your Notifications</h1>
+                                            <p className="text-sm text-warm-gray">Security alerts and update rituals</p>
+                                        </div>
+                                    </div>
+                                    {notifications.length > 0 && (
+                                        <button 
+                                            onClick={handleMarkAllRead}
+                                            className="px-4 py-2 bg-white border border-[#E8E1D5] rounded-xl text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors flex items-center gap-2"
+                                        >
+                                            <Check className="h-3.5 w-3.5" /> Mark All as Read
+                                        </button>
+                                    )}
+                                </div>
+
+                                {notificationsLoading ? (
+                                    <div className="py-24 flex justify-center">
+                                        <Loader2 className="h-10 w-10 animate-spin text-[#36453A]" />
+                                    </div>
+                                ) : notifications.length === 0 ? (
+                                    <div className="bg-white rounded-[30px] border border-[#E8E1D5] py-20 px-6 text-center">
+                                        <div className="h-20 w-20 rounded-full bg-[#F8F5F0] border border-[#E8E1D5] flex items-center justify-center mx-auto mb-6">
+                                            <BellRing className="h-10 w-10 text-warm-gray/30" />
+                                        </div>
+                                        <h3 className="font-serif text-2xl font-bold text-[#36453A] mb-2">Inner Peace</h3>
+                                        <p className="text-warm-gray text-sm max-w-xs mx-auto">You have no new notifications at this moment. Stay mindful and enjoy your wellness journey.</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {notifications.map((n) => (
+                                            <div 
+                                                key={n.notification_id}
+                                                className={`group flex items-start gap-4 p-5 rounded-2xl border transition-all ${n.read_at 
+                                                    ? 'bg-white/60 border-[#E8E1D5] opacity-75' 
+                                                    : 'bg-white border-[#36453A]/20 shadow-sm border-l-4 border-l-[#36453A]'}`}
+                                            >
+                                                <div className={`mt-1 h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 ${n.read_at ? 'bg-warm-gray/10' : 'bg-[#36453A]/10'}`}>
+                                                    {n.type === 'security' ? <Shield className="h-5 w-5 text-red-500" /> : <Sparkles className="h-5 w-5 text-[#D4A847]" />}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center justify-between gap-2 mb-1">
+                                                        <h4 className={`text-sm font-bold ${n.read_at ? 'text-[#36453A]/60' : 'text-[#36453A]'}`}>{n.title}</h4>
+                                                        <span className="text-[10px] font-medium text-warm-gray whitespace-nowrap">
+                                                            {new Date(n.created_at).toLocaleDateString()}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-xs text-warm-gray leading-relaxed mb-3">
+                                                        {n.message}
+                                                    </p>
+                                                    <div className="flex items-center gap-4">
+                                                        {n.link_url && (
+                                                            <button 
+                                                                onClick={() => router.push(n.link_url as any)}
+                                                                className="text-[10px] font-black uppercase tracking-widest text-[#36453A] hover:underline"
+                                                            >
+                                                                View Details
+                                                            </button>
+                                                        )}
+                                                        <button 
+                                                            onClick={async () => {
+                                                                if (!n.read_at) {
+                                                                    await markNotificationAsRead(n.notification_id);
+                                                                    fetchNotificationsData();
+                                                                }
+                                                            }}
+                                                            disabled={!!n.read_at}
+                                                            className={`text-[10px] font-black uppercase tracking-widest transition-colors ${n.read_at ? 'text-[#36453A]/30 cursor-default' : 'text-[#D4A847] hover:text-[#B38720]'}`}
+                                                        >
+                                                            {n.read_at ? 'Seen' : 'Mark as Read'}
                                                         </button>
                                                     </div>
                                                 </div>
@@ -2815,6 +3126,49 @@ export default function AccountPage() {
                                     >
                                         Close
                                     </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ═══ Notification Preferences Overlay ═══ */}
+                        {showNotificationOverlay && (
+                            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6" style={{ animation: 'fadeIn 0.3s ease-out' }}>
+                                <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowNotificationOverlay(false)} />
+
+                                <div className="relative w-full max-w-3xl max-h-[90vh] flex flex-col rounded-2xl bg-white shadow-2xl overflow-hidden" style={{ animation: 'slideUp 0.35s ease-out' }}>
+                                    {/* Header Stripe */}
+                                    <div className="flex-shrink-0 h-1.5 w-full shrink-0" style={{ background: 'linear-gradient(90deg, #6B2737, #D4A847)' }} />
+
+                                    {/* Overlay Header */}
+                                    <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-light-border bg-white">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cream-dark">
+                                                <BellRing className="h-5 w-5 text-burgundy" />
+                                            </div>
+                                            <h2 className="font-serif text-xl font-bold text-charcoal">Manage Notifications</h2>
+                                        </div>
+                                        <button
+                                            onClick={() => setShowNotificationOverlay(false)}
+                                            className="p-2 rounded-lg text-warm-gray hover:bg-cream hover:text-charcoal transition-colors"
+                                        >
+                                            <X className="h-5 w-5" />
+                                        </button>
+                                    </div>
+
+                                    {/* Scrollable Content */}
+                                    <div className="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar">
+                                        <NotificationPreferences />
+                                    </div>
+
+                                    {/* Footer */}
+                                    <div className="flex-shrink-0 px-6 py-4 border-t border-light-border bg-gray-50 flex justify-end">
+                                        <button
+                                            onClick={() => setShowNotificationOverlay(false)}
+                                            className="rounded-lg bg-charcoal px-6 py-2.5 text-sm font-semibold text-white hover:bg-gray-800 transition-colors"
+                                        >
+                                            Done
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -2894,8 +3248,8 @@ export default function AccountPage() {
             {/* Email OTP Verification Modal */}
             {showEmailOtpModal && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-charcoal/50 backdrop-blur-md" onClick={() => setShowEmailOtpModal(false)}></div>
-                    <div className="relative w-full max-w-md bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 overflow-hidden animate-fadeIn">
+                    <div className="absolute inset-0 bg-charcoal/40 backdrop-blur-sm" onClick={() => setShowEmailOtpModal(false)}></div>
+                    <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-light-border overflow-hidden animate-fadeIn">
                         <div className="h-1.5" style={{ background: 'linear-gradient(90deg, #36453A, #D4A847, #36453A)' }}></div>
                         <div className="p-8">
                             <div className="flex items-center justify-between mb-6">
@@ -2906,7 +3260,7 @@ export default function AccountPage() {
                                     <X className="h-5 w-5" />
                                 </button>
                             </div>
-
+                            
                             <p className="text-sm text-warm-gray mb-6">
                                 We've sent a secure verification code to <strong className="text-charcoal font-semibold">{profileData.email}</strong>. Please enter the code below to confirm this change.
                             </p>
@@ -2914,16 +3268,16 @@ export default function AccountPage() {
                             <div className="space-y-5">
                                 <div>
                                     <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Secure Code (OTP)</label>
-                                    <input
-                                        type="text"
+                                    <input 
+                                        type="text" 
                                         value={emailOtpCode}
                                         onChange={(e) => setEmailOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                        placeholder="Enter the 6-digit code"
+                                        placeholder="Enter the 6-digit code" 
                                         className="w-full bg-white border border-[#D4A847] rounded-xl px-4 py-3.5 text-center text-xl font-bold tracking-[0.5em] focus:outline-none shadow-[0_0_15px_rgba(212,168,71,0.15)] focus:border-[#C49A3C] focus:ring-1 focus:ring-[#C49A3C] transition-all placeholder:tracking-normal placeholder:font-normal placeholder:text-base placeholder:text-gray-300 text-[#1C2B1A]"
                                     />
                                 </div>
                                 <div className="pt-2">
-                                    <button
+                                    <button 
                                         onClick={handleEmailOtpSubmit}
                                         disabled={emailOtpSubmitting || emailOtpCode.length < 4}
                                         className="w-full bg-[#1C2B1A] text-[#E8D5A3] rounded-xl py-3.5 text-sm font-bold shadow-xl hover:bg-[#2A3B28] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed border border-[#3A4B38]"
@@ -2933,7 +3287,7 @@ export default function AccountPage() {
                                     </button>
                                 </div>
                                 <div className="text-center pt-2">
-                                    <button
+                                    <button 
                                         type="button"
                                         onClick={handleResendEmailOtp}
                                         disabled={emailOtpResendTimer > 0}
@@ -2951,8 +3305,8 @@ export default function AccountPage() {
             {/* Password Change Modal */}
             {showPasswordModal && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-charcoal/50 backdrop-blur-md" onClick={() => setShowPasswordModal(false)}></div>
-                    <div className="relative w-full max-w-md bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 overflow-hidden animate-fadeIn">
+                    <div className="absolute inset-0 bg-charcoal/40 backdrop-blur-sm" onClick={() => setShowPasswordModal(false)}></div>
+                    <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-light-border overflow-hidden animate-fadeIn">
                         <div className="h-1.5" style={{ background: 'linear-gradient(90deg, #36453A, #D4A847, #36453A)' }}></div>
                         <div className="p-8">
                             <div className="flex items-center justify-between mb-6">
@@ -2963,44 +3317,73 @@ export default function AccountPage() {
                                     <X className="h-5 w-5" />
                                 </button>
                             </div>
-
+                            
                             <form onSubmit={handlePasswordChange} className="space-y-4">
-                                <div>
-                                    <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Current Password</label>
-                                    <input
-                                        type="password"
-                                        required
-                                        value={passwords.current}
-                                        onChange={e => setPasswords({ ...passwords, current: e.target.value })}
-                                        className="w-full rounded-xl border border-light-border bg-cream/20 px-4 py-3 text-sm focus:border-burgundy/40 focus:outline-none transition-all"
-                                        placeholder="••••••••"
-                                    />
-                                </div>
+                                {profileData.has_password && (
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Current Password</label>
+                                        <div className="relative">
+                                            <input 
+                                                type={showCurrentPassword ? "text" : "password"}
+                                                required
+                                                value={passwords.current}
+                                                onChange={e => setPasswords({ ...passwords, current: e.target.value })}
+                                                className="w-full rounded-xl border border-light-border bg-cream/20 pl-4 pr-12 py-3 text-sm focus:border-burgundy/40 focus:outline-none transition-all"
+                                                placeholder="••••••••"
+                                            />
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-warm-gray hover:text-[#36453A] transition-colors"
+                                            >
+                                                {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                                 <div className="space-y-4 pt-2">
                                     <div>
                                         <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">New Password</label>
-                                        <input
-                                            type="password"
-                                            required
-                                            value={passwords.new}
-                                            onChange={e => setPasswords({ ...passwords, new: e.target.value })}
-                                            className="w-full rounded-xl border border-light-border bg-cream/20 px-4 py-3 text-sm focus:border-burgundy/40 focus:outline-none transition-all"
-                                            placeholder="••••••••"
-                                        />
+                                        <div className="relative">
+                                            <input 
+                                                type={showNewPassword ? "text" : "password"}
+                                                required
+                                                value={passwords.new}
+                                                onChange={e => setPasswords({ ...passwords, new: e.target.value })}
+                                                className="w-full rounded-xl border border-light-border bg-cream/20 pl-4 pr-12 py-3 text-sm focus:border-burgundy/40 focus:outline-none transition-all"
+                                                placeholder="••••••••"
+                                            />
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setShowNewPassword(!showNewPassword)}
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-warm-gray hover:text-[#36453A] transition-colors"
+                                            >
+                                                {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                            </button>
+                                        </div>
                                     </div>
                                     <div>
                                         <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Confirm New Password</label>
-                                        <input
-                                            type="password"
-                                            required
-                                            value={passwords.confirm}
-                                            onChange={e => setPasswords({ ...passwords, confirm: e.target.value })}
-                                            className="w-full rounded-xl border border-light-border bg-cream/20 px-4 py-3 text-sm focus:border-burgundy/40 focus:outline-none transition-all"
-                                            placeholder="••••••••"
-                                        />
+                                        <div className="relative">
+                                            <input 
+                                                type={showConfirmPassword ? "text" : "password"}
+                                                required
+                                                value={passwords.confirm}
+                                                onChange={e => setPasswords({ ...passwords, confirm: e.target.value })}
+                                                className="w-full rounded-xl border border-light-border bg-cream/20 pl-4 pr-12 py-3 text-sm focus:border-burgundy/40 focus:outline-none transition-all"
+                                                placeholder="••••••••"
+                                            />
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-warm-gray hover:text-[#36453A] transition-colors"
+                                            >
+                                                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-
+                                
                                 <div className="pt-6">
                                     <button
                                         type="submit"
@@ -3021,58 +3404,6 @@ export default function AccountPage() {
                                     </button>
                                 </div>
                             </form>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* ═══ Notification Preferences Overlay ═══ */}
-            {showNotificationOverlay && (
-                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6" style={{ animation: 'fadeIn 0.3s ease-out' }}>
-                    <div className="absolute inset-0 bg-charcoal/40 backdrop-blur-sm" onClick={() => setShowNotificationOverlay(false)} />
-
-                    <div className="relative w-full max-w-3xl max-h-[90vh] flex flex-col rounded-[40px] bg-white/98 shadow-2xl border border-white/20 overflow-hidden" style={{ animation: 'slideUp 0.35s ease-out' }}>
-                        {/* Header Stripe */}
-                        <div className="flex-shrink-0 h-2 w-full shrink-0" style={{ background: 'linear-gradient(90deg, #3B5D3B, #8B7A3D, #3B5D3B)' }} />
-
-                        {/* Overlay Header */}
-                        <div className="flex-shrink-0 flex items-center justify-between px-8 py-3 border-b border-light-border/40 bg-white/50">
-                            <div className="flex items-center gap-4">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-herbal-green/5 border border-herbal-green/10 shadow-inner">
-                                    <BellRing className="h-5 w-5 text-herbal-green animate-pulse" />
-                                </div>
-                                <div>
-                                    <h2 className="font-serif text-xl font-bold text-herbal-green tracking-tight">Notification Rituals</h2>
-                                    <p className="text-[11px] font-medium text-warm-gray italic opacity-80">Rituals of awareness & seasonal wisdom</p>
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => setShowNotificationOverlay(false)}
-                                className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-cream transition-colors text-warm-gray"
-                            >
-                                <X className="h-5 w-5" />
-                            </button>
-                        </div>
-
-                        {/* Scrollable Content */}
-                        <div 
-                            className="flex-1 overflow-y-auto px-8 py-6 custom-scrollbar bg-white" 
-                            style={{ willChange: 'transform', transform: 'translateZ(0)' }}
-                        >
-                            <NotificationPreferences
-                                hideHeader={true}
-                                isMobileVerified={profileData.is_mobile_verified}
-                            />
-                        </div>
-
-                        {/* Footer */}
-                        <div className="flex-shrink-0 px-8 py-3 border-t border-light-border/40 bg-white flex justify-end">
-                            <button
-                                onClick={() => setShowNotificationOverlay(false)}
-                                className="rounded-xl bg-herbal-green px-6 py-2.5 text-xs font-bold text-white hover:bg-herbal-green/90 transition-all shadow-md hover:shadow-lg active:scale-[0.98] uppercase tracking-widest"
-                            >
-                                Ritual Complete
-                            </button>
                         </div>
                     </div>
                 </div>

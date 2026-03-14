@@ -39,6 +39,8 @@ interface CartContextType {
     couponError: string | null;
     applyCoupon: (code: string) => Promise<boolean>;
     removeCoupon: () => void;
+    orderNotes: string;
+    setOrderNotes: (notes: string) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -71,6 +73,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const [couponType, setCouponType] = useState<string | null>(null);
     const [couponError, setCouponError] = useState<string | null>(null);
     const [autoApplyDisabled, setAutoApplyDisabled] = useState(false);
+    const [orderNotes, setOrderNotes] = useState('');
     const { onAuthChange, isAuthenticated, user } = useAuth();
     const initDone = useRef(false);
 
@@ -205,6 +208,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         if (typeof window !== 'undefined') {
             localStorage.removeItem(GUEST_CART_KEY);
         }
+        setOrderNotes('');
     }, []);
 
     const applyCoupon = useCallback(async (code: string): Promise<boolean> => {
@@ -446,6 +450,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             totalItems, totalPrice,
             couponCode, couponDiscount, couponType, couponError,
             applyCoupon, removeCoupon,
+            orderNotes, setOrderNotes,
         }}>
             {children}
         </CartContext.Provider>

@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
-import { Minus, Plus, X, ShoppingCart, ArrowLeft, Loader2, Ticket, Bookmark, ArrowRight, Leaf, MapPin, Search, Info } from 'lucide-react';
+import { Minus, Plus, X, ShoppingCart, ArrowLeft, Loader2, Ticket, Bookmark, ArrowRight, Leaf, MapPin, Search, FileText, Info } from 'lucide-react';
 import { useCurrency } from '@/context/CurrencyContext';
 import toast from 'react-hot-toast';
 import ConfirmModal from '@/components/ui/ConfirmModal';
@@ -47,6 +47,7 @@ export default function CartPage() {
         items, savedItems, updateQuantity, removeItem, saveForLater, moveToCart,
         totalPrice, totalItems, loading, error,
         couponCode, couponDiscount, couponType, couponError, applyCoupon, removeCoupon,
+        orderNotes, setOrderNotes,
     } = useCart();
     const { isAuthenticated } = useAuth();
     const router = useRouter();
@@ -233,9 +234,28 @@ export default function CartPage() {
                             </div>
                         )}
 
-                        {/* Promo and Shipping Widgets */}
+                        {/* Promo, Shipping and Notes Widgets */}
                         {items.length > 0 && (
-                            <div className="grid sm:grid-cols-2 gap-4">
+                            <div className="flex flex-col gap-4">
+                                {/* Ayurvedic Practitioner Notes */}
+                                <div className="cart-item-card p-6 border-l-4 border-l-[#2D3B2D]">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <FileText className="h-5 w-5 text-[#2D3B2D]" />
+                                        <h4 className="font-serif text-lg font-bold text-[#1A1A1A]">Order Notes <span className="text-[#8B7A3D] font-normal text-xs">(optional)</span></h4>
+                                    </div>
+                                    <p className="text-[13px] text-[#6B6B60] mb-4">Add any specific allergies, preferences, or delivery instructions for our practitioners.</p>
+                                    <textarea
+                                        value={orderNotes}
+                                        onChange={e => setOrderNotes(e.target.value.slice(0, 200))}
+                                        maxLength={200}
+                                        rows={3}
+                                        placeholder="Type your notes here..."
+                                        className="w-full rounded-lg border border-[#D4CFC0] bg-[#F5F4F0] px-4 py-3 text-sm focus:border-[#2D3B2D] focus:outline-none resize-none font-medium"
+                                    />
+                                    <p className="mt-1 text-[10px] text-[#6B6B60] text-right font-bold tracking-wider">{orderNotes.length}/200</p>
+                                </div>
+
+                                <div className="grid sm:grid-cols-2 gap-4">
                                 <div className="cart-item-card p-6 border-t-4 border-t-[#8B7A3D]">
                                     <div className="flex items-center gap-2 mb-3">
                                         <Ticket className="h-5 w-5 text-[#8B7A3D]" />
@@ -305,6 +325,7 @@ export default function CartPage() {
                                             </button>
                                         </div>
                                     </div>
+                                </div>
                                 </div>
                             </div>
                         )}
