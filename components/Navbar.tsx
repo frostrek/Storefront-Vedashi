@@ -55,7 +55,8 @@ const DEFAULT_CONFIG: HeaderConfig = {
   },
   nav_links: [
     { label: 'Home', url: '/', enabled: true },
-    { label: 'Shop', url: '/products', enabled: true },
+    { label: 'Shop', url: '/shop', enabled: true },
+    { label: 'Products', url: '/products', enabled: true },
     { label: 'About Us', url: '/about', enabled: true },
     { label: 'Contact', url: '/contact', enabled: true },
     { label: 'Blog', url: '/blog', enabled: true },
