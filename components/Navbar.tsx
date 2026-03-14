@@ -219,13 +219,13 @@ export default function Navbar() {
                     </button>
                   </div>
                 ) : (
-                  <button onClick={() => setSearchOpen(true)} className="p-2 group" aria-label="Open search">
+                  <button suppressHydrationWarning onClick={() => setSearchOpen(true)} className="p-2 group" aria-label="Open search">
                     <Search className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
                   </button>
                 )}
               </div>
 
-              <button onClick={handleWishlistClick} className="relative p-2 group">
+              <button suppressHydrationWarning onClick={handleWishlistClick} className="relative p-2 group">
                 <Heart className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
                 {wishlistCount > 0 && (
                   <span
@@ -311,7 +311,7 @@ export default function Navbar() {
               )}
 
               {/* Mobile toggle */}
-              <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2" style={{ color: colors.navbar_text }}>
+              <button suppressHydrationWarning onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2" style={{ color: colors.navbar_text }}>
                 {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
             </div>

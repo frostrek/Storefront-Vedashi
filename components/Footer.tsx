@@ -157,13 +157,15 @@ export default function Footer() {
                         <p className="text-sm text-[#6b6b6b] leading-relaxed mb-4">
                             Join our community for weekly wellness rituals.
                         </p>
-                        <form onSubmit={e => e.preventDefault()} className="flex gap-2">
+                        <form onSubmit={e => e.preventDefault()} className="flex gap-2" suppressHydrationWarning>
                             <input
+                                suppressHydrationWarning
                                 type="email"
                                 placeholder="Your email"
                                 className="flex-1 min-w-0 rounded-md px-3 py-2 text-sm bg-white border border-[#d9d9d0] focus:outline-none focus:border-[#3B5D3B] focus:ring-1 focus:ring-[#3B5D3B]/20 placeholder:text-[#aaa] text-[#333] transition-all"
                             />
                             <button
+                                suppressHydrationWarning
                                 type="submit"
                                 className="px-5 py-2 bg-[#3B5D3B] text-white text-sm font-medium rounded-md hover:bg-[#2d472d] transition-colors whitespace-nowrap"
                             >

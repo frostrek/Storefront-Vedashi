@@ -65,6 +65,7 @@ export default function RegionSwitcher() {
   return (
     <div className="relative inline-block text-left" ref={dropdownRef}>
       <button
+        suppressHydrationWarning
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-1.5 p-2 rounded-lg hover:bg-gray-100 transition-colors group"
