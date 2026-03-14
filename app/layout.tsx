@@ -13,6 +13,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "react-hot-toast";
 import { CookieConsentProvider } from "@/context/CookieConsentContext";
 import CookieBanner from "@/components/CookieBanner";
+import LanguageSuggestionBanner from "@/components/LanguageSuggestionBanner";
 import DynamicScriptLoader from "@/components/DynamicScriptLoader";
 import MaintenancePage from "@/components/MaintenancePage";
 import { generateOrganizationJsonLd, generateWebSiteJsonLd } from "@/lib/seo";
@@ -144,6 +145,7 @@ export default async function RootLayout({
                   <main className="flex-1">{children}</main>
                   <Footer />
                   <CookieBanner />
+                  <LanguageSuggestionBanner />
                 </WishlistProvider>
               </CartProvider>
             </AuthProvider>
