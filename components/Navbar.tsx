@@ -70,7 +70,7 @@ const DEFAULT_CONFIG: HeaderConfig = {
   },
 };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
 
 export default function Navbar() {
   const router = useRouter();
