@@ -13,6 +13,8 @@ export interface Product {
     unit_of_measure?: string;
     intended_use?: string;
     country_of_origin?: string;
+    form?: string;
+    specialities?: string[];
 
     created_at?: string;
     updated_at?: string;

@@ -20,12 +20,12 @@ export default function BlogPostCard({ post, featured = false }: BlogPostCardPro
         >
             {/* Cover Image */}
             <div className={`relative overflow-hidden bg-cream-dark ${featured ? 'md:h-full h-52' : 'h-52'}`}>
-                {post.cover_image ? (
+                {post.featured_image || post.cover_image ? (
                     <img
-                        src={post.cover_image}
+                        src={post.featured_image || post.cover_image}
                         alt={post.title}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                        onError={(e) => { e.currentTarget.src = '/trust-lab.png'; }}
+                        onError={(e) => { e.currentTarget.src = '/hero-ayurveda.png'; }}
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-herbal-green/10 to-vedic-gold/10">

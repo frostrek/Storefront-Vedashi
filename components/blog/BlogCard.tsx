@@ -9,7 +9,7 @@ interface BlogCardProps {
 
 export default function BlogCard({ post }: BlogCardProps) {
     const slug = post.slug || `post-${post.post_id}`;
-    const image = post.featured_image || post.cover_image || '/trust-lab.png';
+    const image = post.featured_image || post.cover_image || '/hero-ayurveda.png';
     const categoryName = post.category_name || 'Wellness';
     const readTime = post.reading_time ? `${post.reading_time} min` : '5 min';
     
@@ -31,7 +31,7 @@ export default function BlogCard({ post }: BlogCardProps) {
                     src={image} 
                     alt={post.title}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    onError={(e) => { e.currentTarget.src = '/trust-lab.png'; }}
+                    onError={(e) => { e.currentTarget.src = '/hero-ayurveda.png'; }}
                 />
             </Link>
 
