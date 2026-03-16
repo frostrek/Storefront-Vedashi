@@ -1937,3 +1937,17 @@ export async function getLoyaltyTiers() {
         return json.success ? json.data : [];
     } catch { return []; }
 }
+
+/* ─── Legal Documents ─── */
+
+export async function getLegalDocument(slug: string) {
+    try {
+        const res = await fetch(`${API_URL}/api/legal/public/${slug}`, { credentials: 'include' });
+        if (!res.ok) return null;
+        const json: ApiResponse<any> = await res.json();
+        return json.success ? json.data : null;
+    } catch (error) {
+        console.warn(`[API] Failed to fetch legal document: ${slug}`);
+        return null;
+    }
+}

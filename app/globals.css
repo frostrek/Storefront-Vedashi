@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 /* === Vedashi â€” Premium Ayurvedic Wellness Theme === */
 
@@ -415,6 +416,76 @@ div.skiptranslate,
 /* Ayurveda gradient */
 .herbal-gradient {
   background: linear-gradient(135deg, #3B5D3B 0%, #2D4A2D 50%, #172B17 100%);
+}
+
+/* ─── Legal Content Rich Text Styling ─── */
+
+.legal-rich-text {
+  font-family: var(--font-sans);
+  line-height: 1.8;
+  color: #4A4A4A;
+}
+
+.legal-rich-text h1, 
+.legal-rich-text h2, 
+.legal-rich-text h3, 
+.legal-rich-text h4 {
+  color: #1A1A1A;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  margin-top: 2.5rem;
+  margin-bottom: 1.25rem;
+  line-height: 1.2;
+  display: block;
+}
+
+.legal-rich-text h1 { font-size: 2.5rem; }
+.legal-rich-text h2 { font-size: 2rem; border-bottom: 1px solid #E8E4DC; padding-bottom: 0.75rem; }
+.legal-rich-text h3 { font-size: 1.75rem; }
+.legal-rich-text h4 { font-size: 1.5rem; }
+
+.legal-rich-text p {
+  margin-bottom: 1.5rem;
+  display: block;
+}
+
+.legal-rich-text ul, 
+.legal-rich-text ol {
+  margin-bottom: 2rem;
+  padding-left: 2rem;
+  display: block;
+}
+
+.legal-rich-text ul { list-style-type: disc; }
+.legal-rich-text ol { list-style-type: decimal; }
+
+.legal-rich-text li {
+  margin-bottom: 0.75rem;
+  display: list-item;
+}
+
+.legal-rich-text strong, 
+.legal-rich-text b {
+  font-weight: 700;
+  color: #1A1A1A;
+}
+
+.legal-rich-text a {
+  color: #3B5D3B;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.legal-rich-text a:hover {
+  color: #8B7A3D;
+}
+
+.legal-rich-text hr {
+  margin: 4rem 0;
+  border: 0;
+  border-top: 1px solid #E8E4DC;
 }
 
 /* Vedic gold gradient */

@@ -146,8 +146,13 @@ export default function Footer() {
                                 </Link>
                             </li>
                             <li>
+                                <Link href="/terms" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
+                                    Terms of Service
+                                </Link>
+                            </li>
+                            <li>
                                 <Link href="/privacy" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
-                                    Privacy
+                                    Privacy Policy
                                 </Link>
                             </li>
                         </ul>

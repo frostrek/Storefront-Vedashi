@@ -1,5 +1,5 @@
 'use client';
-import { authFetch } from '@/lib/api';
+import { authFetch, getLegalDocument } from '@/lib/api';
 
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -11,6 +11,8 @@ import {
     Eye, EyeOff, Mail, Lock, Check, Leaf
 } from 'lucide-react';
 import SocialLoginButtons from '@/components/SocialLoginButtons';
+import LegalModal from '@/components/ui/LegalModal';
+import LegalContentRenderer from '@/components/ui/LegalContentRenderer';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? 'YOUR_SITE_KEY';
@@ -37,6 +39,23 @@ function LoginContent() {
     const [form, setForm] = useState({ name: '', email: '', password: '' });
     const [showPassword, setShowPassword] = useState(false);
     const [agreeTerms, setAgreeTerms] = useState(false);
+    const [showTermsModal, setShowTermsModal] = useState(false);
+    const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+    const [legalContent, setLegalContent] = useState<{ [key: string]: { title: string, content: string } }>({});
+
+    useEffect(() => {
+        const fetchLegal = async () => {
+            const [terms, privacy] = await Promise.all([
+                getLegalDocument('terms-of-service'),
+                getLegalDocument('privacy-policy')
+            ]);
+            setLegalContent({
+                'terms-of-service': terms ? { title: terms.title, content: terms.content } : { title: 'Terms of Service', content: '' },
+                'privacy-policy': privacy ? { title: privacy.title, content: privacy.content } : { title: 'Privacy Policy', content: '' }
+            });
+        };
+        fetchLegal();
+    }, []);
 
     const [phoneNumber, setPhoneNumber] = useState('');
     const [otpSent, setOtpSent] = useState(false);
@@ -575,11 +594,39 @@ function LoginContent() {
                                     </button>
                                     <p className="text-xs text-[#6b7b6b] leading-relaxed">
                                         I agree to the{' '}
-                                        <Link href="/terms" target="_blank" className="text-[#2d5a2d] font-semibold hover:underline cursor-pointer">Terms of Service</Link>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowTermsModal(true)}
+                                            className="text-[#2d5a2d] font-semibold hover:underline cursor-pointer bg-transparent border-none p-0 inline"
+                                        >
+                                            Terms of Service
+                                        </button>
                                         {' '}and{' '}
-                                        <Link href="/privacy" target="_blank" className="text-[#2d5a2d] font-semibold hover:underline cursor-pointer">Privacy Policy</Link>.
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPrivacyModal(true)}
+                                            className="text-[#2d5a2d] font-semibold hover:underline cursor-pointer bg-transparent border-none p-0 inline"
+                                        >
+                                            Privacy Policy
+                                        </button>.
                                     </p>
                                 </div>
+
+                                <LegalModal
+                                    isOpen={showTermsModal}
+                                    onClose={() => setShowTermsModal(false)}
+                                    title={legalContent['terms-of-service']?.title || "Terms of Service"}
+                                >
+                                    <LegalContentRenderer content={legalContent['terms-of-service']?.content || ''} />
+                                </LegalModal>
+
+                                <LegalModal
+                                    isOpen={showPrivacyModal}
+                                    onClose={() => setShowPrivacyModal(false)}
+                                    title={legalContent['privacy-policy']?.title || "Privacy Policy"}
+                                >
+                                    <LegalContentRenderer content={legalContent['privacy-policy']?.content || ''} />
+                                </LegalModal>
 
                                 {/* Cloudflare Turnstile */}
                                 <div ref={turnstileRef} className=" mb-3 flex justify-center" />
