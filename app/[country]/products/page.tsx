@@ -2,13 +2,14 @@
 
 import { useState, useEffect, Suspense, useCallback, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { getProducts, getCategories, getFilterOptions, getBestSellers, getNewArrivals, getFilteredProducts, searchProducts } from '@/lib/api';
+import { getCategories, getFilterOptions, getBestSellers, getNewArrivals, getFilteredProducts } from '@/lib/api';
 import { useCurrency } from '@/context/CurrencyContext';
 import { FilteredProduct, FilterMeta } from '@/types';
 import ProductCard from '@/components/ProductCard';
 import { SkeletonProductGrid } from '@/components/Skeleton';
+import SearchBar from '@/components/SearchBar';
 import {
-    SlidersHorizontal, Search, X, Leaf, Loader2,
+    SlidersHorizontal, X, Leaf, Loader2,
     Sparkles, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { useFilters } from '@/hooks/useFilters';
@@ -38,6 +39,8 @@ function ProductsContent() {
         setSubCategory,
         setBrands,
         setCountry,
+        setForm,
+        setSpecialities,
         setRatings,
         setPriceRange,
 
@@ -90,13 +93,16 @@ function ProductsContent() {
             limit: ITEMS_PER_PAGE,
         };
 
+        if (filters.search) params.search = filters.search;
         if (filters.sort) params.sort = filters.sort;
         if (filters.category) params.category = filters.category;
         if (filters.sub_category) params.sub_category = filters.sub_category;
-        if (filters.brands.length > 0) params.brand = filters.brands.join(','); // Backend now supports multiple if updated, or we send joined
+        if (filters.brands.length > 0) params.brand = filters.brands.join(',');
         if (filters.priceRange[0] !== 0) params.min_price = filters.priceRange[0];
         if (filters.priceRange[1] !== Infinity) params.max_price = filters.priceRange[1];
         if (filters.country) params.country = filters.country;
+        if (filters.form.length > 0) params.form = filters.form.join(',');
+        if (filters.specialities.length > 0) params.specialities = filters.specialities.join(',');
         if (filters.ratings.length > 0) {
             const ratingValues = filters.ratings.map(r => parseInt(r)).filter(n => !isNaN(n));
             if (ratingValues.length > 0) params.min_rating = Math.min(...ratingValues);
@@ -111,16 +117,6 @@ function ProductsContent() {
     const fetchPage = useCallback(async (page: number, cancelled: { value: boolean }) => {
         setLoading(true);
         setProducts([]);
-
-        if (filters.search) {
-            const data = await searchProducts(filters.search);
-            if (!cancelled.value) {
-                setProducts(data as FilteredProduct[]);
-                setMeta(null);
-                setLoading(false);
-            }
-            return;
-        }
 
         if (filters.bestSellers) {
             const bsParams: Record<string, any> = { limit: ITEMS_PER_PAGE, page };
@@ -154,6 +150,7 @@ function ProductsContent() {
             return;
         }
 
+        // All other cases (including search) go through filter endpoint
         const params = buildParams(page);
         const result = await getFilteredProducts(params as any);
         if (!cancelled.value) {
@@ -218,13 +215,7 @@ function ProductsContent() {
     }, [mobileOpen]);
 
     /* ─── Search bar state ─── */
-    const [searchInput, setSearchInput] = useState(filters.search);
-    useEffect(() => { setSearchInput(filters.search); }, [filters.search]);
-
-    const handleSearchSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        setSearch(searchInput);
-    };
+    // (managed inside SearchBar component; we just call setSearch)
 
     /* ─── Sidebar content (shared between desktop & mobile) ─── */
     const sidebarContent = (
@@ -340,6 +331,22 @@ function ProductsContent() {
                 </div>
             </FilterSection>
 
+            <FilterSection title="Form" defaultOpen={false}>
+                <CheckboxGroup
+                    options={['Capsules', 'Tablets', 'Powder', 'Syrup', 'Oil', 'Churna']}
+                    selected={filters.form}
+                    onChange={setForm}
+                />
+            </FilterSection>
+
+            <FilterSection title="Specialities" defaultOpen={false}>
+                <CheckboxGroup
+                    options={['Drug Free', 'Allergen Free', '100% Natural', 'Vegan', 'Ayurvedic', 'No Added Sugar']}
+                    selected={filters.specialities}
+                    onChange={setSpecialities}
+                />
+            </FilterSection>
+
             {filterAttributes.map((attr: any) => (
                 <FilterSection key={attr.attribute_id} title={attr.attribute_name} defaultOpen={false}>
                     <CheckboxGroup
@@ -388,56 +395,46 @@ function ProductsContent() {
     );
 
     return (
-        <div className="min-h-screen bg-[#FAF7F2]">
+        <div className="min-h-screen bg-[#FDFCFB]" style={{ backgroundImage: "url('/botanical-page-bg.png')", backgroundAttachment: 'fixed', backgroundSize: '600px' }}>
             {/* ═══════ HERO SECTION ═══════ */}
             <section 
-                className="relative overflow-hidden py-12 md:py-16 px-6 bg-cover bg-center"
+                className="relative overflow-hidden py-12 md:py-16 px-6 bg-cover bg-center border-b border-[#3d5c3a]/10"
                 style={{ backgroundImage: "url('/ayurvedic-texture.png')" }}
             >
-                <div className="absolute inset-0 bg-black/20" /> {/* Subtle overlay for text readability if needed */}
+                <div className="absolute inset-0 bg-[#3d5c3a]/40 mix-blend-multiply" /> {/* Herbal depth overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1a2e1a]/60 to-transparent" />
 
                 <div className="max-w-xl mx-auto text-center relative z-10">
-                    <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 mb-4">
+                    <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-1.5 mb-4 shadow-xl">
                         <Leaf className="h-3.5 w-3.5 text-[#c8d8a0]" />
                         <span className="text-[10px] font-bold tracking-widest uppercase text-white/90">Refine Collection</span>
                     </div>
 
-                    <h1 className="text-3xl md:text-4xl font-serif font-bold text-white mb-3 italic">
+                    <h1 className="text-3xl md:text-5xl font-serif font-bold text-white mb-3 italic tracking-tight drop-shadow-lg">
                         Ancient Remedies
                     </h1>
-                    <p className="text-sm text-white/70 mb-6 max-w-md mx-auto">
-                        Explore our curated collection of authentic Ayurvedic wellness products
+                    <p className="text-sm md:text-base text-white/80 mb-8 max-w-md mx-auto font-medium leading-relaxed">
+                        Explore our curated collection of authentic Ayurvedic wellness products, 
+                        harvested from the heart of the Himalayas.
                     </p>
 
-                    {/* Search Bar */}
-                    <form onSubmit={handleSearchSubmit} className="relative max-w-md mx-auto">
-                        <input
-                            type="text"
-                            value={searchInput}
-                            onChange={(e) => setSearchInput(e.target.value)}
-                            placeholder="Search products, brands, or categories..."
-                            className="w-full px-5 py-3 pl-12 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 text-white text-sm placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 focus:bg-white/20"
-                        />
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60" />
-                        {searchInput && (
-                            <button
-                                type="button"
-                                onClick={() => { setSearchInput(''); setSearch(''); }}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-white/10 cursor-pointer"
-                            >
-                                <X className="h-4 w-4 text-white/60" />
-                            </button>
-                        )}
-                    </form>
+                    {/* Advanced Search Bar */}
+                    <SearchBar
+                        value={filters.search}
+                        onSearch={setSearch}
+                        variant="hero"
+                        className="max-w-md mx-auto"
+                        placeholder="Search products, brands, or categories..."
+                    />
                 </div>
             </section>
 
             {/* ═══════ MAIN CONTENT ═══════ */}
-            <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-8">
+            <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-12 relative z-10">
                 {/* Mobile Filter Button */}
                 <button
                     onClick={() => setMobileOpen(true)}
-                    className="mb-5 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:shadow-md transition-shadow lg:hidden cursor-pointer"
+                    className="mb-8 flex items-center gap-2 rounded-xl border border-gray-200 bg-white/80 backdrop-blur-sm px-5 py-3 text-sm font-semibold text-gray-700 shadow-sm hover:shadow-md transition-all lg:hidden cursor-pointer"
                 >
                     <SlidersHorizontal className="h-4 w-4 text-[#3d5c3a]" />
                     Filters
@@ -448,10 +445,10 @@ function ProductsContent() {
                     )}
                 </button>
 
-                <div className="lg:grid lg:grid-cols-[280px_1fr] lg:gap-8 items-start">
+                <div className="lg:grid lg:grid-cols-[300px_1fr] lg:gap-12 items-start">
                     {/* ─── Desktop Sidebar ─── */}
                     <aside className="hidden lg:block">
-                        <div className="sticky top-24 h-[calc(100vh-96px)] overflow-y-auto rounded-2xl border border-gray-100 bg-white px-5 py-5 shadow-sm">
+                        <div className="sticky top-28 h-[calc(100vh-120px)] overflow-y-auto rounded-3xl border border-[#3d5c3a]/5 bg-white/90 backdrop-blur-md px-6 py-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] custom-scrollbar">
                             <h2 className="font-serif text-base font-bold text-gray-900 mb-1">Filters</h2>
                             <p className="text-xs text-gray-400 mb-4 flex items-center gap-2">
                                 <span className={`transition-opacity ${loading ? 'opacity-50' : 'opacity-100'}`}>
@@ -589,9 +586,13 @@ function ProductsContent() {
                             </>
                         ) : (
                             <div className="rounded-2xl border border-gray-100 bg-white py-20 text-center shadow-sm">
-                                <Search className="h-12 w-12 mx-auto text-gray-200 mb-4" />
+                                <div className="h-16 w-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+                                    <span className="text-3xl">🌿</span>
+                                </div>
                                 <p className="font-serif text-xl text-gray-700">No products found</p>
-                                <p className="mt-2 text-sm text-gray-400">Try adjusting your filters or search</p>
+                                <p className="mt-2 text-sm text-gray-400">Try adjusting your filters or search
+                                    {filters.search && <> for &ldquo;<strong>{filters.search}</strong>&rdquo;</>}
+                                </p>
                                 {activeChips.length > 0 && (
                                     <button
                                         onClick={clearAll}

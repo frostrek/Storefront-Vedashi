@@ -1,6 +1,6 @@
 'use client';
 
-import { useSignIn, useSignUp } from '@clerk/nextjs';
+import { useSignIn, useSignUp, useAuth } from '@clerk/nextjs';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
@@ -44,6 +44,7 @@ const AppleIcon = () => (
 export default function SocialLoginButtons({ onLoadingChange, disabled }: SocialLoginButtonsProps) {
     const { signIn, isLoaded: signInLoaded } = useSignIn();
     const { signUp, isLoaded: signUpLoaded } = useSignUp();
+    const { isSignedIn } = useAuth();
     const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
 
     const isReady = signInLoaded && signUpLoaded;
@@ -58,6 +59,15 @@ export default function SocialLoginButtons({ onLoadingChange, disabled }: Social
         setLoadingProvider(providerName);
         onLoadingChange?.(true);
 
+        const currentPath = window.location.pathname; // e.g. /in/login
+        const baseUrl = window.location.origin;
+
+        if (isSignedIn) {
+            // Already authenticated in Clerk, just redirect to sync with backend
+            window.location.href = currentPath + '/sso-callback';
+            return;
+        }
+
         try {
             // Use signUp.authenticateWithRedirect for OAuth:
             // - For NEW users: creates Clerk account via OAuth (goes DIRECTLY to Google)
@@ -65,28 +75,40 @@ export default function SocialLoginButtons({ onLoadingChange, disabled }: Social
             // This avoids Clerk's hosted sign-up form entirely
             await signUp.authenticateWithRedirect({
                 strategy,
-                redirectUrl: '/login/sso-callback',
-                redirectUrlComplete: '/login/sso-complete',
+                redirectUrl: baseUrl + currentPath + '/sso-callback',
+                redirectUrlComplete: baseUrl + currentPath + '/sso-complete',
             });
-        } catch (err: unknown) {
+        } catch (err: any) {
+            // If already signed in, just try to go to the callback page
+            const message = err?.message || '';
+            if (message.includes('signed in') || message.toLowerCase().includes('already')) {
+                window.location.href = currentPath + '/sso-callback';
+                return;
+            }
+
             // If user already exists in Clerk, fall back to signIn
             const clerkError = err as { errors?: Array<{ code: string }> };
             if (clerkError?.errors?.[0]?.code === 'form_identifier_exists') {
                 try {
                     await signIn.authenticateWithRedirect({
                         strategy,
-                        redirectUrl: '/login/sso-callback',
-                        redirectUrlComplete: '/login/sso-complete',
+                        redirectUrl: baseUrl + currentPath + '/sso-callback',
+                        redirectUrlComplete: baseUrl + currentPath + '/sso-complete',
                     });
                     return;
-                } catch (signInErr) {
+                } catch (signInErr: any) {
+                    const msg = signInErr?.message || '';
+                    if (msg.includes('signed in') || msg.toLowerCase().includes('already')) {
+                        window.location.href = currentPath + '/sso-callback';
+                        return;
+                    }
                     console.error(`[Social Login] signIn fallback failed:`, signInErr);
                 }
             }
 
             console.error(`[Social Login] ${providerName} error:`, err);
-            const message = err instanceof Error ? err.message : 'Social login failed';
-            toast.error(message);
+            const displayMessage = err instanceof Error ? err.message : 'Social login failed';
+            toast.error(displayMessage);
             setLoadingProvider(null);
             onLoadingChange?.(false);
         }

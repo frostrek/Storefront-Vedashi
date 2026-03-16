@@ -5,10 +5,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
-import {
-    checkoutOrder, directCheckout, getAddresses,
-    createPaymentOrder, verifyPayment, lookupPostalCode, getLoyaltyWallet
-} from '@/lib/api';
+import { getCart, clearCart as clearCartApi, checkoutOrder, getAddresses, directCheckout, createPaymentOrder, verifyPayment, initiatePaymentCheckout, lookupPostalCode, getLoyaltyWallet } from '@/lib/api';
 import { useCurrency } from '@/context/CurrencyContext';
 import { Address } from '@/types';
 import { COUNTRIES } from '@/lib/countries';
@@ -330,12 +327,22 @@ function CheckoutContent() {
 
     /* ─── Razorpay Checkout Handler ──────────────────────────── */
 
-    const openRazorpayCheckout = async (platformOrderId: string) => {
+    const openRazorpayCheckout = async (orderId: string | null, checkoutData?: any) => {
         setPaymentProcessing(true);
 
         try {
-            const payRes = await createPaymentOrder(platformOrderId);
-            if (!payRes.success) throw new Error(payRes.message || 'Failed to create payment order');
+            let payRes;
+            if (orderId) {
+                // Retry for existing order
+                payRes = await createPaymentOrder(orderId);
+            } else if (checkoutData) {
+                // Initial checkout (no order yet)
+                payRes = await initiatePaymentCheckout(checkoutData);
+            } else {
+                throw new Error('Missing order ID or checkout data');
+            }
+
+            if (!payRes.success) throw new Error(payRes.message || 'Failed to initiate payment');
 
             const { razorpay_order_id, razorpay_key_id, amount, currency } = payRes.data;
 
@@ -344,7 +351,7 @@ function CheckoutContent() {
                 amount,
                 currency,
                 name: 'Vedashi Holistic Wellness',
-                description: `Order #${platformOrderId.slice(0, 8)}`,
+                description: orderId ? `Order #${orderId.slice(0, 8)}` : 'Checkout Ritual',
                 order_id: razorpay_order_id,
                 prefill: {
                     name: user?.name || '',
@@ -357,7 +364,7 @@ function CheckoutContent() {
                         setPaymentProcessing(false);
                         setPaymentFailed(true);
                         setStep(2); // Go back to payment step
-                        setFailedOrderId(platformOrderId);
+                        if (orderId) setFailedOrderId(orderId);
                         toast.error('Payment was not completed. You can retry anytime.');
                     },
                 },
@@ -367,11 +374,12 @@ function CheckoutContent() {
                             razorpay_order_id: response.razorpay_order_id,
                             razorpay_payment_id: response.razorpay_payment_id,
                             razorpay_signature: response.razorpay_signature,
-                            order_id: platformOrderId,
+                            order_id: orderId || undefined,
                         });
 
                         if (verifyRes.success) {
-                            setOrderId(platformOrderId);
+                            const platformOrderId = verifyRes.data?.order_id || orderId;
+                            setOrderId(platformOrderId || null);
                             if (!isBuyNow) { await clearCart(true); removeCoupon(); }
                             sessionStorage.removeItem('ksp_buy_now_item');
                             setOrderPlaced(true);
@@ -380,13 +388,13 @@ function CheckoutContent() {
                         } else {
                             setPaymentFailed(true);
                             setStep(2);
-                            setFailedOrderId(platformOrderId);
+                            if (orderId) setFailedOrderId(orderId);
                             toast.error(verifyRes.message || 'Payment verification failed');
                         }
                     } catch {
                         setPaymentFailed(true);
                         setStep(2);
-                        setFailedOrderId(platformOrderId);
+                        if (orderId) setFailedOrderId(orderId);
                         toast.error('Payment verification failed. Please contact support.');
                     }
                     setPaymentProcessing(false);
@@ -408,7 +416,7 @@ function CheckoutContent() {
                 setPaymentProcessing(false);
                 setPaymentFailed(true);
                 setStep(2);
-                setFailedOrderId(platformOrderId);
+                setFailedOrderId(orderId);
                 toast.error(response.error?.description || 'Payment failed. Please try again.');
             });
             rzp.open();
@@ -436,6 +444,61 @@ function CheckoutContent() {
         setPaymentFailed(false);
 
         try {
+            // NEW RAZORPAY FLOW:
+            if (paymentMethod === 'razorpay') {
+                setPlacing(false);
+                
+                // Construct checkout data for backend to create order LATER
+                let checkoutData: any;
+                if (isBuyNow && buyNowItem) {
+                    checkoutData = {
+                        customer_id: user?.id || undefined,
+                        customer_name: user?.name || undefined,
+                        customer_email: user?.email || contactEmail || undefined,
+                        items: [{ product_id: buyNowItem.product_id, variant_id: buyNowItem.variant_id, quantity: buyNowItem.quantity, unit_price: buyNowItem.unit_price }],
+                        shipping_address_id: useNewAddress ? undefined : selectedAddressId || undefined,
+                        shipping_address: useNewAddress ? newAddress : undefined,
+                        billing_address_id: billingSameAsShipping ? (useNewAddress ? undefined : selectedAddressId || undefined) : (useNewBillingAddress ? undefined : selectedBillingAddressId || undefined),
+                        billing_address: !billingSameAsShipping && useNewBillingAddress ? newBillingAddress : (billingSameAsShipping && useNewAddress ? newAddress : undefined),
+                        order_notes: orderNotes.trim() || undefined,
+                        redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
+                        final_total: grandTotal, // We pass the total for initial order creation
+                        currency: 'INR'
+                    };
+                } else if (isAuthenticated && cartId && user?.id) {
+                    checkoutData = {
+                        cart_id: cartId,
+                        customer_id: user.id,
+                        shipping_address_id: useNewAddress ? undefined : selectedAddressId || undefined,
+                        shipping_address: useNewAddress ? newAddress : undefined,
+                        billing_address_id: billingSameAsShipping ? (useNewAddress ? undefined : selectedAddressId || undefined) : (useNewBillingAddress ? undefined : selectedBillingAddressId || undefined),
+                        billing_address: !billingSameAsShipping && useNewBillingAddress ? newBillingAddress : (billingSameAsShipping && useNewAddress ? newAddress : undefined),
+                        coupon_code: couponCode || undefined,
+                        order_notes: orderNotes.trim() || undefined,
+                        redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
+                        final_total: grandTotal,
+                        currency: 'INR'
+                    };
+                } else {
+                    checkoutData = {
+                        customer_id: user?.id || undefined,
+                        customer_name: user?.name || undefined,
+                        customer_email: user?.email || contactEmail || undefined,
+                        items: checkoutItems.map(item => ({ product_id: (item as any).product_id || '', variant_id: (item as any).variant_id, quantity: item.quantity, unit_price: Number((item as any).price || (item as any).unit_price) || 0 })),
+                        shipping_address: useNewAddress ? newAddress : undefined,
+                        billing_address: !billingSameAsShipping && useNewBillingAddress ? newBillingAddress : (billingSameAsShipping && useNewAddress ? newAddress : undefined),
+                        coupon_code: couponCode || undefined,
+                        order_notes: orderNotes.trim() || undefined,
+                        redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
+                        final_total: grandTotal,
+                        currency: 'INR'
+                    };
+                }
+
+                await openRazorpayCheckout(null, checkoutData);
+                return;
+            }
+
             let result;
             if (isBuyNow && buyNowItem) {
                 result = await directCheckout({
@@ -481,15 +544,10 @@ function CheckoutContent() {
 
             if (result.success) {
                 const createdOrderId = result.data?.order_id;
-                if (paymentMethod === 'razorpay' && createdOrderId) {
-                    setPlacing(false);
-                    await openRazorpayCheckout(createdOrderId);
-                } else {
-                    setOrderId(createdOrderId || null);
-                    if (!isBuyNow) { await clearCart(true); removeCoupon(); }
-                    sessionStorage.removeItem('ksp_buy_now_item');
-                    setOrderPlaced(true);
-                }
+                setOrderId(createdOrderId || null);
+                if (!isBuyNow) { await clearCart(true); removeCoupon(); }
+                sessionStorage.removeItem('ksp_buy_now_item');
+                setOrderPlaced(true);
             } else {
                 toast.error(result.message || 'Failed to place order');
             }

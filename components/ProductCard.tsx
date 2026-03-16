@@ -121,6 +121,14 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
 
             setAddingToCart(true);
             try {
+                // Trigger Butterfly Animation
+                const rect = e.currentTarget.getBoundingClientRect();
+                const startX = rect.left + rect.width / 2;
+                const startY = rect.top + rect.height / 2;
+                window.dispatchEvent(new CustomEvent('add-to-cart-butterfly', {
+                    detail: { startX, startY }
+                }));
+
                 const variantIdToUse = (product as any).default_variant_id || null;
                 await addItem(product.product_id, variantIdToUse, 1);
                 toast.success(`${product.product_name} added to cart!`);
@@ -162,7 +170,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
     }, [product.product_id, variants, selectedVariant, hasVariants, items]);
 
     // Unified add to cart from modal
-    const handleModalAddToCart = async () => {
+    const handleModalAddToCart = async (e: React.MouseEvent) => {
         if (hasVariants && !selectedVariant) return;
 
         const maxStock = hasVariants
@@ -176,6 +184,14 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
 
         setAddingToCart(true);
         try {
+            // Trigger Butterfly Animation
+            const rect = e.currentTarget.getBoundingClientRect();
+            const startX = rect.left + rect.width / 2;
+            const startY = rect.top + rect.height / 2;
+            window.dispatchEvent(new CustomEvent('add-to-cart-butterfly', {
+                detail: { startX, startY }
+            }));
+
             const variantIdToUse = hasVariants ? selectedVariant.variant_id : ((product as any).default_variant_id || null);
             await addItem(product.product_id, variantIdToUse, quantity);
             toast.success(`${product.product_name} added to cart!`);
@@ -248,7 +264,6 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                 {/* ═══════ FRONT OF CARD (Link) ═══════ */}
                 <Link href={productUrl} className="block h-full">
                     <div className="h-full flex flex-col overflow-hidden rounded-2xl bg-white border border-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-                        {/* Image Section */}
                         <div className="relative overflow-hidden bg-gradient-to-br from-[#f5f2ed] to-[#ece6dd]" style={{ aspectRatio: '1 / 1' }}>
                             <div className="absolute inset-0 flex items-center justify-center p-4">
                                 {isBase64 ? (
@@ -539,7 +554,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                             )}
                             {!isInCart ? (
                                 <button
-                                    onClick={handleModalAddToCart}
+                                    onClick={(e) => handleModalAddToCart(e)}
                                     disabled={(hasVariants && !selectedVariant) || addingToCart || cartLoading || justAdded || (hasVariants && selectedVariant?.stock_quantity <= 0) || (!hasVariants && (product as any).stock_quantity <= 0)}
                                     className={`w-full py-3.5 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2 transition-all duration-300 disabled:opacity-50 cursor-pointer shadow-lg ${justAdded ? 'bg-[#2a4d2e] shadow-[#2a4d2e]/20' : 'bg-[#3d5c3a] hover:bg-[#2d4a2a] shadow-[#3d5c3a]/20 hover:shadow-[#3d5c3a]/40'}`}
                                 >

@@ -2,72 +2,62 @@
 
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 
-const LeafIcon = ({ color = '#4F7942', size = 40, className = "" }: { color?: string; size?: number; className?: string }) => (
-  <svg 
-    width={size} 
-    height={size} 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    xmlns="http://www.w3.org/2000/svg"
+const LeafIcon = ({ size = 40, className = "" }: { size?: number; className?: string }) => (
+  <div 
     className={className}
-    style={{ filter: 'drop-shadow(0px 4px 12px rgba(0,0,0,0.08))' }}
+    style={{ filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.05))' }}
   >
-    <path 
-      d="M12 22C12 22 12 18 17 13C22 8 18 2 12 2C6 2 2 8 7 13C12 18 12 22 12 22Z" 
-      fill={color} 
-      fillOpacity="0.35"
-      stroke={color}
-      strokeWidth="0.8"
+    <Image
+      src="/botanical-leaf.png"
+      alt="Vedic Leaf Doodle"
+      width={size}
+      height={size}
+      className="object-contain"
+      priority={false}
     />
-    <path 
-      d="M12 2V22" 
-      stroke={color} 
-      strokeWidth="0.8" 
-      strokeLinecap="round"
-    />
-    <path 
-      d="M12 7L15 10" 
-      stroke={color} 
-      strokeWidth="0.8" 
-      strokeLinecap="round"
-    />
-    <path 
-      d="M12 12L9 15" 
-      stroke={color} 
-      strokeWidth="0.8" 
-      strokeLinecap="round"
-    />
-  </svg>
+  </div>
 );
 
-const Leaf = ({ delay = 0, xPos = "10%", rotationStart = 0, speed = 1, size = 64 }) => {
+const Leaf = ({ xPos = "10%", rotationStart = 0, speed = 1, size = 64, offset = 0 }) => {
   const { scrollYProgress } = useScroll();
   
-  // Adjusted for a more "floating" feel (higher damping, lower stiffness)
+  // Slow spring physics
   const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 40,
-    damping: 30,
+    stiffness: 15,
+    damping: 35,
     restDelta: 0.001
   });
 
-  // Vertical movement - ensuring they start falling from the very top
-  // Scroll 0 = -100px (just off-screen or peeking)
-  // Scroll 1 = footer area
-  const y = useTransform(smoothProgress, [0, 1], ["-50px", `${85 * speed}vh`]);
+  // Number of times the leaves loop as you scroll the entire page
+  const loops = 4; 
+
+  const y = useTransform(smoothProgress, (p) => {
+    // Continuous loop: (p * loops * multiplier + initial_offset) % 1
+    // We use a base multiplier (0.5) to keep it slow
+    const progress = (p * loops * speed * 0.5 + offset) % 1;
+    // Map 0-1 progress to -30vh to 110vh travel
+    return `${progress * 140 - 30}vh`;
+  });
   
-  // Swaying movement
-  const xOffset = useTransform(
-    smoothProgress, 
-    [0, 0.2, 0.4, 0.6, 0.8, 1], 
-    ["0px", "40px", "-40px", "40px", "-40px", "0px"]
-  );
+  const xOffset = useTransform(smoothProgress, (p) => {
+    const progress = (p * loops * speed * 0.5 + offset) % 1;
+    return Math.sin(progress * Math.PI * 2) * 40 + "px";
+  });
   
-  // Rotation - slowed down significantly
-  const rotate = useTransform(smoothProgress, [0, 1], [rotationStart, rotationStart + 360 * speed]);
+  const rotate = useTransform(smoothProgress, (p) => {
+    const progress = (p * loops * speed * 0.5 + offset) % 1;
+    return rotationStart + progress * 240;
+  });
   
-  // Opacity - visible from the very start of the scroll
-  const opacity = useTransform(smoothProgress, [0, 0.1, 0.9, 1], [0.4, 0.5, 0.5, 0]);
+  const opacity = useTransform(smoothProgress, (p) => {
+    const progress = (p * loops * speed * 0.5 + offset) % 1;
+    // Fade in/out at edges
+    if (progress < 0.1) return progress * 3;
+    if (progress > 0.9) return (1 - progress) * 3;
+    return 0.35;
+  });
 
   return (
     <motion.div
@@ -99,16 +89,21 @@ export default function FallingLeafBackground() {
 
   return (
     <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
-      {/* Strategic placement of leaves */}
-      {/* Strategic placement of leaves with gentler speed multipliers */}
-      <Leaf xPos="5%" rotationStart={45} speed={0.8} size={120} />
-      <Leaf xPos="12%" rotationStart={120} speed={0.5} size={70} />
-      <Leaf xPos="30%" rotationStart={10} speed={1.1} size={90} />
-      <Leaf xPos="45%" rotationStart={180} speed={0.7} size={65} />
-      <Leaf xPos="60%" rotationStart={280} speed={0.9} size={85} />
-      <Leaf xPos="75%" rotationStart={190} speed={0.6} size={100} />
-      <Leaf xPos="88%" rotationStart={320} speed={1.2} size={80} />
-      <Leaf xPos="95%" rotationStart={60} speed={0.8} size={95} />
+      {/* 
+          Infinite Waterfall of Leaves (Slowed Down):
+          - xPos: horizontal position
+          - offset: vertical start position (ensures they are on-screen immediately)
+          - speed: relative speed multiplier
+          - size: enlarged doodle scale
+      */}
+      <Leaf xPos="-5%" offset={0.1} speed={0.6} size={320} rotationStart={15} />
+      <Leaf xPos="12%" offset={0.6} speed={0.4} size={180} rotationStart={120} />
+      <Leaf xPos="25%" offset={0.3} speed={0.7} size={250} rotationStart={45} />
+      <Leaf xPos="45%" offset={0.8} speed={0.5} size={150} rotationStart={180} />
+      <Leaf xPos="60%" offset={0.25} speed={0.6} size={220} rotationStart={280} />
+      <Leaf xPos="78%" offset={0.55} speed={0.4} size={280} rotationStart={190} />
+      <Leaf xPos="88%" offset={0.9} speed={0.8} size={200} rotationStart={320} />
+      <Leaf xPos="95%" offset={0.15} speed={0.6} size={260} rotationStart={60} />
     </div>
   );
 }

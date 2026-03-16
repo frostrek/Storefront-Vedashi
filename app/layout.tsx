@@ -17,6 +17,7 @@ import LanguageSuggestionBanner from "@/components/LanguageSuggestionBanner";
 import DynamicScriptLoader from "@/components/DynamicScriptLoader";
 import MaintenancePage from "@/components/MaintenancePage";
 import { generateOrganizationJsonLd, generateWebSiteJsonLd } from "@/lib/seo";
+import ButterflyEffect from "@/components/animations/ButterflyEffect";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -145,6 +146,7 @@ export default async function RootLayout({
                   <PromoBanner />
                   <main className="flex-1">{children}</main>
                   <Footer />
+                  <ButterflyEffect />
                   <CookieBanner />
                   <LanguageSuggestionBanner />
                 </WishlistProvider>
