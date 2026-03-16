@@ -138,10 +138,10 @@ export default function HelpCenterPage() {
                                     key={i}
                                     href={
                                         item._type === 'faq'
-                                            ? '/help-center/faq'
+                                            ? `/${country}/help-center/faq`
                                             : item._type === 'help'
-                                                ? `/help-center/${item.slug || ''}`
-                                                : `/help-center/knowledge-base/${item.slug || ''}`
+                                                ? `/${country}/help-center/${item.slug || ''}`
+                                                : `/${country}/help-center/knowledge-base/${item.slug || ''}`
                                     }
                                     className="block bg-white/60 backdrop-blur-sm rounded-2xl p-5 border border-[#4A5D23]/5 hover:border-[#4A5D23]/30 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 group"
                                 >
@@ -223,7 +223,7 @@ export default function HelpCenterPage() {
                         {popularFaqs.map((faq: any) => (
                             <Link
                                 key={faq.faq_id}
-                                href="/help-center/faq"
+                                href={`/${country}/help-center/faq`}
                                 className="flex items-center justify-between bg-white rounded-2xl p-6 border border-[#4A5D23]/5 hover:border-[#4A5D23]/20 hover:shadow-md transition-all group"
                             >
                                 <div className="flex items-center gap-4">
@@ -240,7 +240,7 @@ export default function HelpCenterPage() {
                     </div>
                     <div className="text-center mt-10">
                         <Link
-                            href="/help-center/faq"
+                            href={`/${country}/help-center/faq`}
                             className="inline-flex items-center gap-2 py-3 px-8 rounded-full border-2 border-[#4A5D23] text-[#4A5D23] font-bold hover:bg-[#4A5D23] hover:text-white transition-all"
                         >
                             View all FAQs

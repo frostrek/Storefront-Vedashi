@@ -66,7 +66,7 @@ export default async function RootLayout({
   let isMaintenance = false;
   let maintenanceMessage = "";
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
     const res = await fetch(`${apiUrl}/health`, { next: { revalidate: 10 } });
     const data = await res.json();
     if (data?.maintenance?.enabled) {

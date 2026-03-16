@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import RegionSwitcher from './RegionSwitcher';
 import GoogleTranslateWidget from './GoogleTranslateWidget';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
 
 interface FooterData {
     company?: {

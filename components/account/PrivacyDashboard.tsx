@@ -15,7 +15,7 @@ export default function PrivacyDashboard() {
 
     const fetchRequests = async () => {
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/gdpr/data-request`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000'}/api/gdpr/data-request`, {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('user_token')}` },
                 credentials: 'include'
             });
@@ -33,7 +33,7 @@ export default function PrivacyDashboard() {
     const handleExport = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/gdpr/export`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000'}/api/gdpr/export`, {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('user_token')}` },
                 credentials: 'include'
             });
@@ -66,7 +66,7 @@ export default function PrivacyDashboard() {
 
         setLoading(true);
         try {
-            const res = await authFetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/gdpr/erasure`, {
+            const res = await authFetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000'}/api/gdpr/erasure`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('user_token')}` },
                 credentials: 'include'

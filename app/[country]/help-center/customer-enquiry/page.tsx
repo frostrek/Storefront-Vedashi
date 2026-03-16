@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { 
     Send, MessageSquare, Sparkles, AlertCircle, 
@@ -20,6 +21,8 @@ const CATEGORIES = [
 ];
 
 export default function CustomerEnquiryPage() {
+    const params = useParams();
+    const country = params?.country || 'in';
     const { user, isAuthenticated } = useAuth();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
@@ -87,14 +90,14 @@ export default function CustomerEnquiryPage() {
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <Link 
-                            href="/help-center" 
+                            href={`/${country}/help-center`} 
                             className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-[#4A5D23] text-white font-bold hover:bg-[#3a491b] transition-all shadow-xl hover:-translate-y-1"
                         >
                             Back to Help Center
                         </Link>
                         {isAuthenticated && (
                             <Link 
-                                href="/account/support" 
+                                href={`/${country}/account/support`} 
                                 className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-white border border-[#4A5D23]/20 text-[#4A5D23] font-bold hover:bg-[#4A5D23]/5 transition-all shadow-sm"
                             >
                                 Track in My Account <ArrowRight className="h-4 w-4" />
@@ -122,7 +125,7 @@ export default function CustomerEnquiryPage() {
                 
                 <div className="max-w-4xl mx-auto text-center relative z-10">
                     <Link 
-                        href="/help-center" 
+                        href={`/${country}/help-center`} 
                         className="inline-flex items-center gap-2 text-[#4A5D23] font-bold text-sm uppercase tracking-widest mb-8 hover:gap-3 transition-all"
                     >
                         <ChevronLeft className="h-4 w-4" /> Help Center
@@ -264,7 +267,7 @@ export default function CustomerEnquiryPage() {
                                     </div>
                                     <div>
                                         <h4 className="text-xs font-black uppercase text-[#1a2408] mb-1">Check FAQs</h4>
-                                        <p className="text-xs text-[#5B4A31] leading-relaxed">Your question might already have an <Link href="/help-center/faq" className="text-[#4A5D23] underline font-bold">answer here</Link>.</p>
+                                        <p className="text-xs text-[#5B4A31] leading-relaxed">Your question might already have an <Link href={`/${country}/help-center/faq`} className="text-[#4A5D23] underline font-bold">answer here</Link>.</p>
                                     </div>
                                 </div>
                                 <div className="flex gap-4">
@@ -273,7 +276,7 @@ export default function CustomerEnquiryPage() {
                                     </div>
                                     <div>
                                         <h4 className="text-xs font-black uppercase text-[#1a2408] mb-1">Order Issues</h4>
-                                        <p className="text-xs text-[#5B4A31] leading-relaxed">For specific orders, use our <Link href="/help-center/support" className="text-[#4A5D23] underline font-bold">Ticket System</Link>.</p>
+                                        <p className="text-xs text-[#5B4A31] leading-relaxed">For specific orders, use our <Link href={`/${country}/help-center/support`} className="text-[#4A5D23] underline font-bold">Ticket System</Link>.</p>
                                     </div>
                                 </div>
                             </div>
@@ -287,14 +290,14 @@ export default function CustomerEnquiryPage() {
                                 </p>
                                 {!isAuthenticated ? (
                                     <Link 
-                                        href="/login" 
+                                        href={`/${country}/login`} 
                                         className="inline-flex items-center gap-2 text-xs font-black uppercase bg-white text-[#1a2408] px-6 py-3 rounded-xl hover:bg-[#F2E8CF] transition-all"
                                     >
                                         Log In Now <ArrowRight className="h-3.5 w-3.5" />
                                     </Link>
                                 ) : (
                                     <Link 
-                                        href="/account/support" 
+                                        href={`/${country}/account/support`} 
                                         className="inline-flex items-center gap-2 text-xs font-black uppercase bg-[#4A5D23] text-white px-6 py-3 rounded-xl hover:bg-[#3a491b] transition-all"
                                     >
                                         View My Dashboard <ArrowRight className="h-3.5 w-3.5" />

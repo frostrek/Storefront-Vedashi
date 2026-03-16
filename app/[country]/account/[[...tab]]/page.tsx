@@ -196,6 +196,7 @@ export default function AccountPage() {
     const [profileData, setProfileData] = useState({
         full_name: '', email: '', phone: '', date_of_birth: '',
         is_email_verified: false, is_mobile_verified: false, has_password: false,
+        created_at: '',
     });
     const [originalEmail, setOriginalEmail] = useState('');
 
@@ -329,6 +330,7 @@ export default function AccountPage() {
                     is_email_verified: !!res.data.is_email_verified,
                     is_mobile_verified: !!res.data.is_mobile_verified,
                     has_password: hasPassword,
+                    created_at: res.data.created_at || '',
                 });
                 setOriginalEmail(fetchedEmail);
             }
@@ -2265,7 +2267,7 @@ export default function AccountPage() {
                                                     Lifetime Member
                                                 </span>
                                             </div>
-                                            <p className="text-sm text-warm-gray font-medium">Holistic Living Enthusiast • Member since September 2021</p>
+                                            <p className="text-sm text-warm-gray font-medium">Holistic Living Enthusiast • Member since {profileData.created_at ? new Date(profileData.created_at).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) : 'September 2021'}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-8 relative z-10">
