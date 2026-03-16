@@ -10,6 +10,8 @@ export interface FilterState {
     sub_category: string;
     brands: string[];
     country: string;
+    form: string[];
+    specialities: string[];
     ratings: string[];
     priceRange: [number, number];
     alcoholRange: [number, number];
@@ -27,6 +29,8 @@ const DEFAULTS: FilterState = {
     sub_category: '',
     brands: [],
     country: '',
+    form: [],
+    specialities: [],
     ratings: [],
     priceRange: [0, Infinity],
     alcoholRange: [0, 100],
@@ -73,6 +77,8 @@ export function useFilters() {
             sub_category: searchParams.get('sub_category') || DEFAULTS.sub_category,
             brands: parseArray(searchParams.get('brand')),
             country: searchParams.get('country') || DEFAULTS.country,
+            form: parseArray(searchParams.get('form')),
+            specialities: parseArray(searchParams.get('specialities')),
             ratings: parseArray(searchParams.get('rating')),
             priceRange: parseRange(searchParams.get('price'), DEFAULTS.priceRange),
             alcoholRange: parseRange(searchParams.get('alcohol'), DEFAULTS.alcoholRange),
@@ -107,6 +113,8 @@ export function useFilters() {
     const setSubCategory = useCallback((val: string) => setParam({ sub_category: val || null }), [setParam]);
     const setBrands = useCallback((val: string[]) => setParam({ brand: val.length ? val.join(',') : null }), [setParam]);
     const setCountry = useCallback((val: string) => setParam({ country: val || null }), [setParam]);
+    const setForm = useCallback((val: string[]) => setParam({ form: val.length ? val.join(',') : null }), [setParam]);
+    const setSpecialities = useCallback((val: string[]) => setParam({ specialities: val.length ? val.join(',') : null }), [setParam]);
     const setRatings = useCallback((val: string[]) => setParam({ rating: val.length ? val.join(',') : null }), [setParam]);
     const setPriceRange = useCallback((val: [number, number], maxPriceInStore?: number) => {
         const pMax = maxPriceInStore ?? Infinity;
@@ -141,6 +149,8 @@ export function useFilters() {
         switch (key) {
             case 'brand': setBrands(filters.brands.filter(b => b !== value)); break;
             case 'country': setCountry(''); break;
+            case 'form': setForm(filters.form.filter(f => f !== value)); break;
+            case 'specialities': setSpecialities(filters.specialities.filter(s => s !== value)); break;
             case 'rating': setRatings(filters.ratings.filter(r => r !== value)); break;
             case 'category': setParam({ category: null, sub_category: null }); break;
             case 'sub_category': setSubCategory(''); break;
@@ -163,6 +173,8 @@ export function useFilters() {
         if (filters.sub_category) chips.push({ key: 'sub_category', label: 'Subcategory', value: filters.sub_category });
         filters.brands.forEach(b => chips.push({ key: 'brand', label: 'Brand', value: b }));
         if (filters.country) chips.push({ key: 'country', label: 'Country', value: filters.country });
+        filters.form.forEach(f => chips.push({ key: 'form', label: 'Form', value: f }));
+        filters.specialities.forEach(s => chips.push({ key: 'specialities', label: 'Speciality', value: s }));
         filters.ratings.forEach(r => chips.push({ key: 'rating', label: 'Rating', value: r }));
         const pMax = filters.priceRange[1] === Infinity ? 'Max' : `$${filters.priceRange[1]}`;
         if (filters.priceRange[0] !== 0 || filters.priceRange[1] !== Infinity) {
@@ -192,6 +204,8 @@ export function useFilters() {
         setSubCategory,
         setBrands,
         setCountry,
+        setForm,
+        setSpecialities,
         setRatings,
         setPriceRange,
         setAlcoholRange,

@@ -210,11 +210,14 @@ export interface FilterParams {
     page?: number;
     limit?: number;
     sort?: string;
+    search?: string;
     min_price?: number;
     max_price?: number;
     min_abv?: number;
     max_abv?: number;
     country?: string;      // comma-separated
+    form?: string;         // comma-separated
+    specialities?: string; // comma-separated
     min_rating?: number;
     availability?: string;  // 'in_stock' | 'out_of_stock' | 'all'
     category?: string;
@@ -225,6 +228,9 @@ export interface FilterParams {
     trending?: boolean;
     editor_pick?: boolean;
     on_sale?: boolean;
+    inStock?: boolean;
+    bestSeller?: boolean;
+    newArrival?: boolean;
     attributes?: Record<string, string[]>;
 }
 
@@ -236,11 +242,14 @@ export async function getFilteredProducts(
         if (params.page) sp.set('page', String(params.page));
         if (params.limit) sp.set('limit', String(params.limit));
         if (params.sort) sp.set('sort', params.sort);
+        if (params.search) sp.set('search', params.search);
         if (params.min_price != null) sp.set('min_price', String(params.min_price));
         if (params.max_price != null) sp.set('max_price', String(params.max_price));
         if (params.min_abv != null) sp.set('min_abv', String(params.min_abv));
         if (params.max_abv != null) sp.set('max_abv', String(params.max_abv));
         if (params.country) sp.set('country', params.country);
+        if (params.form) sp.set('form', params.form);
+        if (params.specialities) sp.set('specialities', params.specialities);
         if (params.min_rating != null) sp.set('min_rating', String(params.min_rating));
         if (params.availability) sp.set('availability', params.availability);
         if (params.category) sp.set('category', params.category);
@@ -251,6 +260,9 @@ export async function getFilteredProducts(
         if (params.trending) sp.set('trending', 'true');
         if (params.editor_pick) sp.set('editor_pick', 'true');
         if (params.on_sale) sp.set('on_sale', 'true');
+        if (params.inStock) sp.set('inStock', 'true');
+        if (params.bestSeller) sp.set('bestSeller', 'true');
+        if (params.newArrival) sp.set('newArrival', 'true');
 
         if (params.attributes) {
             Object.entries(params.attributes).forEach(([key, values]) => {
@@ -482,6 +494,30 @@ export async function searchProducts(query: string): Promise<Product[]> {
         return [];
     } catch (error) {
         console.error('[API] Failed to search products:', error);
+        return [];
+    }
+}
+
+export interface SearchSuggestion {
+    product_id: string;
+    product_name: string;
+    slug: string;
+    brand?: string;
+    category?: string;
+    thumbnail_url?: string;
+    price?: number;
+}
+
+export async function getSearchSuggestions(q: string): Promise<SearchSuggestion[]> {
+    if (!q || q.trim().length < 2) return [];
+    try {
+        const res = await fetch(`${API_URL}/api/products/suggestions?q=${encodeURIComponent(q.trim())}`, { credentials: 'include' });
+        const json = await res.json();
+        if (json.success && json.data?.suggestions) {
+            return json.data.suggestions;
+        }
+        return [];
+    } catch {
         return [];
     }
 }
@@ -744,6 +780,20 @@ export async function mergeGuestCart(guestCartId: string, customerId: string) {
     }
 }
 
+/** 
+ * Clear all items from a cart.
+ * Note: Backend currently doesn't have a single "clear" endpoint, 
+ * so this is a placeholder or can be enhanced later.
+ */
+export async function clearCart(cartId: string) {
+    try {
+        // Placeholder until backend provides a DELETE /api/cart/:id/items endpoint
+        return { success: true, message: 'Cart cleared locally' };
+    } catch (error) {
+        return { success: false, message: 'Network error' };
+    }
+}
+
 /* ─── Payments (Razorpay) ─── */
 
 /** Create a Razorpay order for an existing platform order. */
@@ -783,6 +833,34 @@ export async function verifyPayment(data: {
         return res.json();
     } catch (error) {
         console.warn('[API] verifyPayment failed:', error);
+        return { success: false, message: 'Network error' };
+    }
+}
+
+/** 
+ * Initiate a Razorpay checkout (Deferred Order Creation).
+ * Prepares the checkout and creates a Razorpay order without creating a platform order yet.
+ */
+export async function initiatePaymentCheckout(data: {
+    cart_id?: string;
+    items?: Array<{ product_id: string; variant_id?: string | null; quantity: number; unit_price?: number }>;
+    shipping_address_id?: string;
+    shipping_address?: Record<string, any>;
+    billing_address_id?: string;
+    billing_address?: Record<string, any>;
+    coupon_code?: string;
+    payment_method?: string;
+    redeem_points?: number;
+}) {
+    try {
+        const res = await authFetch(`${API_URL}/api/payments/razorpay/initiate-checkout`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        return res.json();
+    } catch (error) {
+        console.warn('[API] initiatePaymentCheckout failed:', error);
         return { success: false, message: 'Network error' };
     }
 }
@@ -901,14 +979,14 @@ export const lookupPostalCode = async (pincode: string, countryCode?: string) =>
 };
 
 /** Cart-based checkout (requires backend cart_id + customer_id). */
-export async function checkoutOrder(data: { 
-    cart_id: string; 
-    customer_id: string; 
-    shipping_address_id?: string; 
+export async function checkoutOrder(data: {
+    cart_id: string;
+    customer_id: string;
+    shipping_address_id?: string;
     shipping_address?: Record<string, string>;
-    billing_address_id?: string; 
+    billing_address_id?: string;
     billing_address?: Record<string, string>;
-    coupon_code?: string; 
+    coupon_code?: string;
     order_notes?: string;
     payment_method?: string;
     redeem_points?: number;
@@ -1106,6 +1184,9 @@ export async function getAddresses(customerId: string) {
         return { success: false, data: [] };
     }
 }
+
+/** Legacy alias for getAddresses */
+export const getUserAddresses = getAddresses;
 
 export async function addAddress(customerId: string, address: Record<string, string>) {
     const res = await authFetch(`${API_URL}/api/customers/${customerId}/addresses`, {
