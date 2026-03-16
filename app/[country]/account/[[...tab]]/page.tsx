@@ -2,6 +2,7 @@
 
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useClerk } from '@clerk/nextjs';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCart } from '@/context/CartContext';
 import ProductCard from '@/components/ProductCard';
@@ -47,6 +48,7 @@ export default function AccountPage() {
     const params = useParams<{ country: string, tab?: string[] }>();
     const country = params?.country || 'in';
     const { user, isAuthenticated, isLoading, logout } = useAuth();
+    const { signOut: clerkSignOut } = useClerk();
     const { items: wishlistItems, removeItem: removeWishlistItem } = useWishlist();
     const { addItem: addCartItem } = useCart();
 
@@ -935,7 +937,7 @@ export default function AccountPage() {
 
                     <div className="flex items-center gap-5">
                         <button
-                            onClick={() => { logout(); toast.success('Signed out'); router.push('/'); }}
+                            onClick={() => { clerkSignOut().catch(()=>{}); logout(); toast.success('Signed out'); router.push('/'); }}
                             className="bg-white border border-[#E8E1D5] text-[#36453A] px-4 py-1.5 rounded-full text-xs font-bold shadow-sm hover:shadow-md hover:border-[#36453A]/30 transition-all flex items-center gap-2"
                         >
                             Sign Out
@@ -2762,6 +2764,7 @@ export default function AccountPage() {
                                                     const res = await deactivateAccount(deactivatePassword);
                                                     if (res.success) {
                                                         setShowDeactivateModal(false);
+                                                        clerkSignOut().catch(()=>{});
                                                         logout();
                                                         toast.success('Account deactivated. You can reactivate anytime.');
                                                         router.push('/');

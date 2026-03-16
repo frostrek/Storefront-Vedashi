@@ -2,6 +2,7 @@
 import { authFetch } from '@/lib/api';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { Mail, RefreshCw, ArrowLeft, ShieldCheck } from 'lucide-react';
 
@@ -22,6 +23,8 @@ export default function VerifySocialOTPPage() {
     const [isResending, setIsResending] = useState(false);
     const [cooldown, setCooldown] = useState(0);
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+    const params = useParams();
+    const country = params.country as string || 'in';
 
     // Load data from sessionStorage
     useEffect(() => {
@@ -30,12 +33,12 @@ export default function VerifySocialOTPPage() {
             try {
                 setOtpData(JSON.parse(raw));
             } catch {
-                window.location.href = '/login';
+                window.location.href = `/${country}/login`;
             }
         } else {
-            window.location.href = '/login';
+            window.location.href = `/${country}/login`;
         }
-    }, []);
+    }, [country]);
 
     // Cooldown timer
     useEffect(() => {
@@ -146,8 +149,8 @@ export default function VerifySocialOTPPage() {
                 toast.success('Email verified! Welcome to Vedashi.');
 
                 // Full page reload → AuthContext reads from localStorage → user is logged in
-                console.log('[OTP Debug] 🚀 Redirecting to /account NOW...');
-                window.location.href = '/account';
+                console.log(`[OTP Debug] 🚀 Redirecting to /${country} NOW...`);
+                window.location.href = `/${country}`;
             } else {
                 console.error('[OTP Debug] ❌ Verification failed:', json.message);
                 toast.error(json.message || 'Invalid OTP code.');
@@ -297,7 +300,7 @@ export default function VerifySocialOTPPage() {
                             <button
                                 onClick={() => {
                                     sessionStorage.removeItem('social_otp_data');
-                                    window.location.href = '/login';
+                                    window.location.href = `/${country}/login`;
                                 }}
                                 className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 transition-colors"
                             >

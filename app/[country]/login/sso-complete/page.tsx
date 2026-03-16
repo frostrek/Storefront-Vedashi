@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSession, useClerk } from '@clerk/nextjs';
 import { useAuth } from '@/context/AuthContext';
+import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { Leaf } from 'lucide-react';
 
@@ -23,6 +24,8 @@ export default function SSOCompletePage() {
     const { session, isLoaded: sessionLoaded } = useSession();
     const { signOut } = useClerk();
     const { socialLogin } = useAuth();
+    const params = useParams();
+    const country = params.country as string || 'in';
     const processedRef = useRef(false);
     const [status, setStatus] = useState('Connecting to your account...');
 
@@ -35,7 +38,7 @@ export default function SSOCompletePage() {
             try {
                 if (!session) {
                     toast.error('No active session found. Please try again.');
-                    window.location.href = '/login';
+                    window.location.href = `/${country}/login`;
                     return;
                 }
 
@@ -46,7 +49,7 @@ export default function SSOCompletePage() {
 
                 if (!clerkToken) {
                     toast.error('Failed to get authentication token. Please try again.');
-                    window.location.href = '/login';
+                    window.location.href = `/${country}/login`;
                     return;
                 }
 
@@ -69,7 +72,9 @@ export default function SSOCompletePage() {
                     }));
                     setStatus('Redirecting to verification...');
                     // Use window.location for clean redirect — no flash
-                    window.location.href = '/login/verify-social-otp';
+                    setTimeout(() => {
+                        window.location.href = `/${country}/login/verify-social-otp`;
+                    }, 1500);
                 } else if (result.success) {
                     // RETURNING USER → JWT issued, logged in
                     setStatus('Welcome back! Redirecting...');
@@ -79,15 +84,17 @@ export default function SSOCompletePage() {
                         toast.success('Welcome back!');
                     }
                     // Full page load ensures AuthContext initializes from localStorage
-                    window.location.href = '/account';
+                    setTimeout(() => {
+                        window.location.href = `/${country}`;
+                    }, 1500);
                 } else {
                     toast.error(result.error || 'Social login failed.');
-                    window.location.href = '/login';
+                    window.location.href = `/${country}/login`;
                 }
             } catch (err) {
                 console.error('[SSO Complete] Error:', err);
                 toast.error('Something went wrong during social login.');
-                window.location.href = '/login';
+                window.location.href = `/${country}/login`;
             }
         };
 
