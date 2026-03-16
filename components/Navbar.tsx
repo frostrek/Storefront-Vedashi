@@ -241,7 +241,7 @@ export default function Navbar() {
               <NotificationCenter colors={colors} />
 
               <div className="flex items-center">
-                <Link href="/cart" className="relative p-2 group">
+                <Link id="navbar-cart-icon" href="/cart" className="relative p-2 group">
                   <ShoppingCart className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
                   {totalItems > 0 && (
                     <span

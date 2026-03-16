@@ -395,25 +395,27 @@ function ProductsContent() {
     );
 
     return (
-        <div className="min-h-screen bg-[#FAF7F2]">
+        <div className="min-h-screen bg-[#FDFCFB]" style={{ backgroundImage: "url('/botanical-page-bg.png')", backgroundAttachment: 'fixed', backgroundSize: '600px' }}>
             {/* ═══════ HERO SECTION ═══════ */}
             <section 
-                className="relative py-12 md:py-16 px-6 bg-cover bg-center"
+                className="relative overflow-hidden py-12 md:py-16 px-6 bg-cover bg-center border-b border-[#3d5c3a]/10"
                 style={{ backgroundImage: "url('/ayurvedic-texture.png')" }}
             >
-                <div className="absolute inset-0 bg-black/20" /> {/* Subtle overlay for text readability if needed */}
+                <div className="absolute inset-0 bg-[#3d5c3a]/40 mix-blend-multiply" /> {/* Herbal depth overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1a2e1a]/60 to-transparent" />
 
                 <div className="max-w-xl mx-auto text-center relative z-10">
-                    <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 mb-4">
+                    <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-1.5 mb-4 shadow-xl">
                         <Leaf className="h-3.5 w-3.5 text-[#c8d8a0]" />
                         <span className="text-[10px] font-bold tracking-widest uppercase text-white/90">Refine Collection</span>
                     </div>
 
-                    <h1 className="text-3xl md:text-4xl font-serif font-bold text-white mb-3 italic">
+                    <h1 className="text-3xl md:text-5xl font-serif font-bold text-white mb-3 italic tracking-tight drop-shadow-lg">
                         Ancient Remedies
                     </h1>
-                    <p className="text-sm text-white/70 mb-6 max-w-md mx-auto">
-                        Explore our curated collection of authentic Ayurvedic wellness products
+                    <p className="text-sm md:text-base text-white/80 mb-8 max-w-md mx-auto font-medium leading-relaxed">
+                        Explore our curated collection of authentic Ayurvedic wellness products, 
+                        harvested from the heart of the Himalayas.
                     </p>
 
                     {/* Advanced Search Bar */}
@@ -428,11 +430,11 @@ function ProductsContent() {
             </section>
 
             {/* ═══════ MAIN CONTENT ═══════ */}
-            <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-8">
+            <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-12 relative z-10">
                 {/* Mobile Filter Button */}
                 <button
                     onClick={() => setMobileOpen(true)}
-                    className="mb-5 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:shadow-md transition-shadow lg:hidden cursor-pointer"
+                    className="mb-8 flex items-center gap-2 rounded-xl border border-gray-200 bg-white/80 backdrop-blur-sm px-5 py-3 text-sm font-semibold text-gray-700 shadow-sm hover:shadow-md transition-all lg:hidden cursor-pointer"
                 >
                     <SlidersHorizontal className="h-4 w-4 text-[#3d5c3a]" />
                     Filters
@@ -443,10 +445,10 @@ function ProductsContent() {
                     )}
                 </button>
 
-                <div className="lg:grid lg:grid-cols-[280px_1fr] lg:gap-8 items-start">
+                <div className="lg:grid lg:grid-cols-[300px_1fr] lg:gap-12 items-start">
                     {/* ─── Desktop Sidebar ─── */}
                     <aside className="hidden lg:block">
-                        <div className="sticky top-24 h-[calc(100vh-96px)] overflow-y-auto rounded-2xl border border-gray-100 bg-white px-5 py-5 shadow-sm">
+                        <div className="sticky top-28 h-[calc(100vh-120px)] overflow-y-auto rounded-3xl border border-[#3d5c3a]/5 bg-white/90 backdrop-blur-md px-6 py-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] custom-scrollbar">
                             <h2 className="font-serif text-base font-bold text-gray-900 mb-1">Filters</h2>
                             <p className="text-xs text-gray-400 mb-4 flex items-center gap-2">
                                 <span className={`transition-opacity ${loading ? 'opacity-50' : 'opacity-100'}`}>

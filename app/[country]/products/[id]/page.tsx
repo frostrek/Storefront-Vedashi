@@ -192,7 +192,7 @@ function ProductDetailContent({ params }: Props) {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#FAF7F2]">
+            <div className="min-h-screen bg-[#FDFCFB]" style={{ backgroundImage: "url('/botanical-page-bg.png')", backgroundAttachment: 'fixed', backgroundSize: '600px' }}>
                 <div className="mx-auto max-w-7xl px-4 py-8">
                     <div className="grid gap-10 lg:grid-cols-2">
                         <div className="aspect-square rounded-2xl animate-shimmer" />
@@ -242,8 +242,17 @@ function ProductDetailContent({ params }: Props) {
         setPageQuantity(prev => Math.min(maxQty, prev + 1));
     };
 
-    const handleAddToCart = async () => {
+    const handleAddToCart = async (e: React.MouseEvent<HTMLButtonElement>) => {
         if (!product || isOutOfStock) return;
+
+        // Trigger Butterfly Animation
+        const rect = e.currentTarget.getBoundingClientRect();
+        const startX = rect.left + rect.width / 2;
+        const startY = rect.top + rect.height / 2;
+        
+        window.dispatchEvent(new CustomEvent('add-to-cart-butterfly', {
+            detail: { startX, startY }
+        }));
 
         await addItem(
             product.product_id,
@@ -279,7 +288,7 @@ function ProductDetailContent({ params }: Props) {
     };
 
     return (
-        <div className="bg-white min-h-screen pb-16">
+        <div className="min-h-screen bg-[#FDFCFB] pb-16" style={{ backgroundImage: "url('/botanical-page-bg.png')", backgroundAttachment: 'fixed', backgroundSize: '600px' }}>
             {/* Structured Data */}
             <script
                 type="application/ld+json"
@@ -754,7 +763,7 @@ function ProductDetailContent({ params }: Props) {
 
                             <div className="grid grid-cols-2 gap-3">
                                 <button
-                                    onClick={handleAddToCart}
+                                    onClick={(e) => handleAddToCart(e)}
                                     disabled={isUnavailable || cartLoading}
                                     className={`w-full rounded-xl py-4 flex justify-center items-center gap-2 transition-all font-semibold ${isUnavailable
                                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
