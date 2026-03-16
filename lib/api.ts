@@ -822,7 +822,7 @@ export async function verifyPayment(data: {
     razorpay_order_id: string;
     razorpay_payment_id: string;
     razorpay_signature: string;
-    order_id: string;
+    order_id?: string;
 }) {
     try {
         const res = await authFetch(`${API_URL}/api/payments/verify`, {

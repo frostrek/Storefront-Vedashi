@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export const runtime = 'edge';
+export const runtime = 'experimental-edge';
 
 // ─── Supported Countries ────────────────────────────────────────────
 const SUPPORTED_COUNTRIES = ['in', 'us', 'gb', 'ae', 'ca', 'au', 'ru', 'kr'] as const;
