@@ -6,6 +6,7 @@ import { ArrowRight, Star, Sparkles, Leaf, ShieldCheck, Beaker, Heart, Stethosco
 import { getBestSellers, getFeaturedProducts as fetchFeatured } from '@/lib/api';
 import { Product } from '@/types';
 import ProductCard from '@/components/ProductCard';
+import ProductReel from '@/components/ProductReel';
 import HeroSection from '@/components/HeroSection';
 import { SkeletonProductGrid } from '@/components/Skeleton';
 import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
@@ -17,14 +18,22 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getBestSellers({ limit: 8 }).then(res => {
-      setBestSellers(res.data);
-      setLoading(false);
-    });
-    fetchFeatured().then(products => {
-      setFeaturedProducts(products);
-      setFeaturedLoading(false);
-    });
+    async function loadData() {
+      try {
+        const [bestRes, featuredRes] = await Promise.all([
+          getBestSellers({ limit: 12 }),
+          fetchFeatured()
+        ]);
+        setBestSellers(bestRes.data);
+        setFeaturedProducts(featuredRes);
+      } catch (err) {
+        console.error('Failed to load home data', err);
+      } finally {
+        setLoading(false);
+        setFeaturedLoading(false);
+      }
+    }
+    loadData();
   }, []);
 
   const allProducts = featuredProducts.length > 0 ? featuredProducts : bestSellers;
@@ -97,50 +106,6 @@ export default function HomePage() {
         </AnimateOnScroll>
       </section>
 
-      {/* ═══ 3. APOTHECARY STAPLES ═══ */}
-      <section className="py-12 sm:py-20 lg:py-24 px-4 bg-white">
-        <div className="mx-auto max-w-7xl">
-          <AnimateOnScroll animation="fadeUp">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 sm:mb-14 gap-3">
-              <div>
-                <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C2C2C]">
-                  Apothecary Staples
-                </h2>
-                <p className="mt-2 text-[#6B6B60] text-base">
-                  Our most sought-after clinical formulations, trusted by practitioners worldwide.
-                </p>
-              </div>
-              <Link href="/products" className="hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-[#3B5D3B] hover:text-[#2D4A2D] transition-colors">
-                View All Products <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </AnimateOnScroll>
-
-          <AnimateOnScroll animation="fadeUp" delay={0.15}>
-            {productsLoading ? (
-              <SkeletonProductGrid count={4} />
-            ) : allProducts.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
-                {allProducts.slice(0, 4).map(product => (
-                  <ProductCard key={product.product_id} product={product} />
-                ))}
-              </div>
-            ) : (
-              <div className="rounded-2xl border border-light-border bg-[#F5F2E8] py-16 text-center">
-                <img src="/herbal_placeholder.png" alt="Coming Soon" className="h-20 w-20 mx-auto mb-4 opacity-40 mix-blend-multiply" />
-                <p className="font-serif text-xl text-charcoal">Formulations coming soon</p>
-                <p className="mt-2 text-sm text-warm-gray">Add products via the admin panel</p>
-              </div>
-            )}
-          </AnimateOnScroll>
-
-          <div className="mt-8 text-center sm:hidden">
-            <Link href="/products" className="inline-flex items-center gap-2 text-sm font-semibold text-[#3B5D3B]">
-              View All Products <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
 
       {/* ═══ 4. TRUST & SCIENCE ═══ */}
       <section className="py-12 sm:py-20 lg:py-24 px-4 relative overflow-hidden bg-cream">

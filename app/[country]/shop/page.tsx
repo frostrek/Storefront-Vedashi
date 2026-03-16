@@ -20,35 +20,30 @@ import {
 } from 'lucide-react';
 import HeroCarousel from '@/components/HeroCarousel';
 import { Product } from '@/types';
-import { getBestSellers, getNewArrivals } from '@/lib/api';
+import { getBestSellers, getNewArrivals, getCategories } from '@/lib/api';
 import ProductCard from '@/components/ProductCard';
+import ProductReel from '@/components/ProductReel';
 import { SkeletonProductGrid } from '@/components/Skeleton';
 import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
-
-const categories = [
-  { name: 'Herbal Supplements', color: 'bg-[#EBF3EB]', slug: 'herbal-supplements' },
-  { name: 'Ayurvedic Herbs', color: 'bg-[#EBF3EB]', slug: 'ayurvedic-herbs' },
-  { name: 'Health Conditions', color: 'bg-[#EBF3EB]', slug: 'health-conditions' },
-  { name: 'Skin Care', color: 'bg-[#EBF3EB]', slug: 'skin-care' },
-  { name: 'Hair Care', color: 'bg-[#EBF3EB]', slug: 'hair-care' },
-  { name: 'Natural Foods', color: 'bg-[#EBF3EB]', slug: 'natural-foods' },
-  { name: 'Personal Care', color: 'bg-[#EBF3EB]', slug: 'personal-care' },
-];
 
 export default function ShopPage() {
   const [bestSellers, setBestSellers] = useState<Product[]>([]);
   const [newArrivals, setNewArrivals] = useState<Product[]>([]);
+  const [dbCategories, setDbCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [bestRes, newRes] = await Promise.all([
-          getBestSellers({ limit: 4 }),
-          getNewArrivals({ limit: 4 })
+        const [bestRes, newRes, catRes] = await Promise.all([
+          getBestSellers({ limit: 10 }),
+          getNewArrivals({ limit: 10 }),
+          getCategories()
         ]);
         setBestSellers(bestRes.data);
         setNewArrivals(newRes.data);
+        // Only take top-level categories for the hero section
+        setDbCategories(catRes.filter((c: any) => !c.parent_id));
       } catch (err) {
         console.error('Failed to load shop data', err);
       } finally {
@@ -57,6 +52,17 @@ export default function ShopPage() {
     }
     loadData();
   }, []);
+
+  // Map of category slugs to colors for consistent aesthetic
+  const categoryColors: Record<string, string> = {
+    'herbal-supplement': 'bg-[#EBF3EB]',
+    'Ayurvedic-Herbs': 'bg-[#EBF3EB]', // DB slug for Ayurvedic Herbs
+    'health-condition': 'bg-[#EBF3EB]',
+    'skin-care': 'bg-[#EBF3EB]',
+    'hair-care': 'bg-[#EBF3EB]',
+    'Natural-Foods': 'bg-[#EBF3EB]',
+    'Personal-Care': 'bg-[#EBF3EB]',
+  };
 
   return (
     <div className="bg-[#FAF9F6] min-h-screen relative overflow-hidden">
@@ -72,10 +78,10 @@ export default function ShopPage() {
         <HeroCarousel />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8 py-16 space-y-24">
+      <div className="relative z-10 mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8 pt-0 pb-16 space-y-16">
 
         {/* 2. SHOP BY CATEGORY - FULL WIDTH GRID */}
-        <section className="relative py-24 px-4 sm:px-8 -mx-4 sm:-mx-8 overflow-hidden bg-white/40">
+        <section className="relative pt-16 pb-16 px-4 sm:px-8 -mx-4 sm:-mx-8 overflow-hidden bg-white/40">
           {/* Layered Luxury Pattern */}
           <div
             className="absolute inset-0 opacity-[0.07] pointer-events-none"
@@ -109,17 +115,21 @@ export default function ShopPage() {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-6 lg:gap-8">
-              {categories.map((cat, i) => (
+              {dbCategories.slice(0, 7).map((cat, i) => (
                 <Link
-                  key={cat.name}
+                  key={cat.category_id}
                   href={`/products?category=${encodeURIComponent(cat.name)}`}
                   className="group flex flex-col items-center gap-6 transition-all duration-500 hover:-translate-y-2"
                 >
-                  <div className={`relative w-full aspect-square rounded-full ${cat.color} flex items-center justify-center shadow-sm group-hover:shadow-[0_20px_50px_rgba(59,93,59,0.12)] group-hover:bg-[#E2F0E2] transition-all duration-700 overflow-hidden isolate`}>
-                    {/* Icon Render - Complete Illustration */}
+                  <div className={`relative w-full aspect-square rounded-full ${categoryColors[cat.slug] || 'bg-[#F2F4F2]'} flex items-center justify-center shadow-sm group-hover:shadow-[0_20px_50px_rgba(59,93,59,0.12)] group-hover:bg-[#E2F0E2] transition-all duration-700 overflow-hidden isolate`}>
+                    {/* Icon Render - Dynamic mapping to local icons */}
                     <img
                       src={`/icons/shop/${cat.slug}.png`}
                       alt={cat.name}
+                      onError={(e) => {
+                        // Fallback if icon for new category doesn't exist
+                        (e.target as HTMLImageElement).src = '/icons/shop/category-sprite.png';
+                      }}
                       className="w-[85%] h-[85%] object-contain relative z-10 mix-blend-multiply opacity-95 group-hover:opacity-100 transition-all duration-[800ms] cubic-bezier(0.34,1.56,0.64,1) group-hover:scale-110 pointer-events-none"
                     />
 
@@ -138,53 +148,29 @@ export default function ShopPage() {
           </div>
         </section>
 
-        {/* 3. TRENDING NOW SECTION - LUXURY PATTERN */}
-        <section className="relative -mx-4 px-4 sm:-mx-8 sm:px-8 py-24 overflow-hidden">
-          {/* Rich Texture Background */}
-          <div className="absolute inset-0 bg-[#F5F2E8]/60" />
+        {/* 3. BEST SELLERS REEL SECTION */}
+        <section className="relative -mx-4 sm:-mx-8 py-20 overflow-hidden bg-[#FBF9F2]">
+          {/* Layered Luxury Pattern */}
           <div
-            className="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-multiply"
+            className="absolute inset-0 opacity-[0.12] pointer-events-none"
             style={{
-              backgroundImage: 'url(/ayurvedic-texture.png)',
+              backgroundImage: 'url(/backgrounds/bg1.png)',
               backgroundSize: '1000px',
               backgroundPosition: 'center',
               backgroundRepeat: 'repeat'
             }}
           />
 
-          <AnimateOnScroll animation="fadeUp">
-            <div className="relative z-10">
-              <div className="flex flex-col items-center mb-16">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="h-[1px] w-12 bg-[#8B7A3D]" />
-                  <span className="text-[#8B7A3D] text-xs font-black uppercase tracking-[0.4em]">Trending Now</span>
-                  <div className="h-[1px] w-12 bg-[#8B7A3D]" />
-                </div>
-                <h2 className="text-4xl font-bold text-gray-900 font-serif text-center mb-2">The Golden Collection</h2>
-                <p className="text-gray-500 font-medium italic">Our most revered daily essentials</p>
-              </div>
-
-              {loading ? (
-                <SkeletonProductGrid count={4} />
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                  {bestSellers.map((product) => (
-                    <ProductCard key={product.product_id} product={product} />
-                  ))}
-                </div>
-              )}
-
-              <div className="mt-16 text-center">
-                <Link
-                  href="/products?sort=popular"
-                  className="group inline-flex items-center gap-3 px-8 py-4 bg-[#3B5D3B] text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-[#2D4A2D] transition-all shadow-xl hover:shadow-[0_20px_40px_rgba(59,93,59,0.3)]"
-                >
-                  Explore Entire Repository
-                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </div>
-            </div>
-          </AnimateOnScroll>
+          <div className="max-w-[1440px] mx-auto relative z-10 pb-8">
+            <ProductReel
+              products={bestSellers}
+              loading={loading}
+              title="Best Sellers"
+              subtitle="Shop our most loved essentials"
+              viewAllLink="/products?sort=popular&bestSellers=true"
+              viewAllText="Explore our Best Sellers"
+            />
+          </div>
         </section>
 
         {/* 4. PROMO GRID - MODERN LUXURY */}
@@ -256,31 +242,14 @@ export default function ShopPage() {
           />
 
           <div className="relative z-10">
-            <AnimateOnScroll animation="fadeUp">
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-                <div>
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-[#3B5D3B] text-[10px] font-bold uppercase tracking-widest rounded-full mb-4">
-                    <Leaf className="h-3 w-3" /> Still Warm From The Lab
-                  </div>
-                  <h2 className="text-4xl font-bold text-gray-900 font-serif">Apothecary Newness</h2>
-                  <p className="text-gray-500 font-medium italic mt-2">Freshly formulated for your constitutional balance</p>
-                </div>
-                <Link href="/products?sort=newest" className="group flex items-center gap-2 text-sm font-bold text-[#3B5D3B] hover:text-[#8B7A3D] transition-colors">
-                  Observe All Innovations
-                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </div>
-
-              {loading ? (
-                <SkeletonProductGrid count={4} />
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                  {newArrivals.map((product) => (
-                    <ProductCard key={product.product_id} product={product} />
-                  ))}
-                </div>
-              )}
-            </AnimateOnScroll>
+            <ProductReel
+              products={newArrivals}
+              loading={loading}
+              title="New Arrivals"
+              subtitle="Discover the newest additions to our natural wellness collection."
+              viewAllLink="/products?newArrivals=true"
+              viewAllText="Shop New Arrivals"
+            />
           </div>
         </section>
 

@@ -13,6 +13,7 @@ import SearchAutocomplete from './SearchAutocomplete';
 import GoogleTranslateWidget from './GoogleTranslateWidget';
 import RegionSwitcher from './RegionSwitcher';
 import NotificationCenter from './account/NotificationCenter';
+import SecondaryNavbar from './SecondaryNavbar';
 
 interface Category {
   category_id: string;
@@ -133,7 +134,7 @@ export default function Navbar() {
         isFirstCount.current = false;
         return;
       }
-      
+
       if (totalItems > prevTotalItems && totalItems > 0) {
         setShowCartReminder(true);
       }
@@ -257,14 +258,14 @@ export default function Navbar() {
                 {showCartReminder && (
                   <div className="absolute top-full right-0 mt-3 w-80 bg-white rounded-[30px] shadow-2xl border border-[#4A5D23]/10 overflow-hidden z-[110] animate-in slide-in-from-top-4 fade-in duration-300">
                     {/* Background Texture */}
-                    <div 
+                    <div
                       className="absolute inset-0 z-0 opacity-[0.08] pointer-events-none"
-                      style={{ 
+                      style={{
                         backgroundImage: "url('/ayurvedic-texture.png')",
                         backgroundSize: '200px'
                       }}
                     ></div>
-                    
+
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -314,6 +315,9 @@ export default function Navbar() {
           </div>
         </div>
       </div>
+
+      {/* ═══════════════ SECONDARY NAVBAR ═══════════════ */}
+      <SecondaryNavbar />
 
       {/* ═══════════════ STRIP BAR ═══════════════ */}
       {strip.enabled && (

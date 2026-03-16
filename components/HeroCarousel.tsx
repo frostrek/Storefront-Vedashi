@@ -128,8 +128,8 @@ export default function HeroCarousel() {
 
     if (loading) {
         return (
-            <section className="relative overflow-hidden bg-neutral-200/50 animate-pulse">
-                <div className="relative z-20 mx-auto max-w-7xl px-4 py-28 sm:py-36 lg:py-44 min-h-[400px]"></div>
+            <section className="relative overflow-hidden bg-neutral-200/50 animate-pulse h-[350px] sm:h-[450px] lg:h-[500px]">
+                <div className="relative z-20 mx-auto max-w-7xl px-4 h-full"></div>
             </section>
         );
     }
@@ -168,7 +168,7 @@ export default function HeroCarousel() {
 
     return (
         <section
-            className="relative overflow-hidden group"
+            className="relative overflow-hidden group h-[350px] sm:h-[450px] lg:h-[500px] flex items-center justify-center"
             onMouseEnter={() => { setPaused(true); setHovering(true); }}
             onMouseLeave={() => { setPaused(false); setHovering(false); }}
         >
@@ -192,7 +192,7 @@ export default function HeroCarousel() {
             ))}
 
             {/* ── Content ── */}
-            <div className="relative z-20 mx-auto max-w-7xl px-4 py-28 sm:py-36 lg:py-44 text-center">
+            <div className="relative z-20 mx-auto max-w-7xl px-4 py-16 text-center w-full">
                 {/* Dynamic Headings */}
                 <div className="animate-fade-in-up space-y-2 mb-6 shadow-black/20 drop-shadow-2xl font-serif">
                     {slide.headings?.map(h => {
