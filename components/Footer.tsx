@@ -65,7 +65,7 @@ export default function Footer() {
     if (pathname?.endsWith('/login') || pathname?.endsWith('/signup')) return null;
 
     return (
-        <footer className="bg-[#FAFAF5] text-[#4a4a4a] border-t border-[#e8e8e0]">
+        <footer className="bg-cream text-[#4a4a4a] border-t border-[#e8e8e0] relative z-10">
             {/* ── Main footer body ── */}
             <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12 py-10">
                 <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">

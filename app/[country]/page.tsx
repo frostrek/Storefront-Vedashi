@@ -32,8 +32,8 @@ export default function HomePage() {
 
   return (
     <div className="bg-cream relative">
-      {/* Ayurvedic Botanical Texture Background */}
-      <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.10]" style={{
+      {/* Ayurvedic Botanical Texture Background - Absolute ensures it doesn't overlap global footer */}
+      <div className="absolute inset-0 pointer-events-none z-0 opacity-[0.10]" style={{
         backgroundImage: `url("/ayurvedic-texture.png")`,
         backgroundSize: '400px 400px',
         backgroundRepeat: 'repeat'
