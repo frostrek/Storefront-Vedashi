@@ -1,7 +1,7 @@
 'use client';
 
-import { useSignIn, useSignUp, useClerk } from '@clerk/nextjs';
-import type { SignInResource, SignUpResource } from '@clerk/types';
+import { useSignIn, useSignUp } from '@clerk/nextjs/legacy';
+import { useClerk } from '@clerk/nextjs';
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -46,12 +46,8 @@ const AppleIcon = () => (
 );
 
 export default function SocialLoginButtons({ onLoadingChange, disabled }: SocialLoginButtonsProps) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { signIn: signInRaw, isLoaded: signInLoaded } = useSignIn() as any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { signUp: signUpRaw, isLoaded: signUpLoaded } = useSignUp() as any;
-    const signIn = signInRaw as SignInResource | undefined;
-    const signUp = signUpRaw as SignUpResource | undefined;
+    const { signIn, isLoaded: signInLoaded } = useSignIn();
+    const { signUp, isLoaded: signUpLoaded } = useSignUp();
     const { session } = useClerk();
     const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
     const params = useParams();
