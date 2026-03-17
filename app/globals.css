@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@plugin "../node_modules/@tailwindcss/typography";
+@plugin "@tailwindcss/typography";
 
 /* === Vedashi â€” Premium Ayurvedic Wellness Theme === */
 
@@ -589,52 +589,81 @@ div.skiptranslate,
 }
 
 /* Promo Banner Animations */
-@keyframes marqueeLeft {
+
+/* Marquee: scrolls the entire flex container left by 50% (half = one copy) */
+@keyframes promoMarqueeLeft {
   0% {
-    transform: translateX(100vw);
+    transform: translateX(0);
   }
-
   100% {
-    transform: translateX(-100%);
+    transform: translateX(-50%);
   }
 }
 
-@keyframes marqueeRight {
+@keyframes promoMarqueeRight {
   0% {
-    transform: translateX(-100%);
+    transform: translateX(-50%);
   }
-
   100% {
-    transform: translateX(100vw);
+    transform: translateX(0);
   }
 }
 
-@keyframes blinkText {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0;
-  }
+@keyframes promoBlinkText {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 
-.animate-marquee-left {
-  display: inline-block;
-  white-space: nowrap;
-  animation: marqueeLeft 20s linear infinite;
+@keyframes promoFade {
+  0%, 100% { opacity: 1; }
+  40% { opacity: 0.2; }
+  60% { opacity: 0.2; }
 }
 
-.animate-marquee-right {
-  display: inline-block;
-  white-space: nowrap;
-  animation: marqueeRight 20s linear infinite;
+@keyframes promoTypewriter {
+  0% { clip-path: inset(0 100% 0 0); }
+  80% { clip-path: inset(0 0 0 0); }
+  100% { clip-path: inset(0 0 0 0); }
 }
 
-.animate-blink {
-  animation: blinkText 1.5s ease-in-out infinite;
+@keyframes promoBounce {
+  0%, 100% { transform: translateY(0); }
+  25% { transform: translateY(-4px); }
+  50% { transform: translateY(0); }
+  75% { transform: translateY(-2px); }
+}
+
+@keyframes promoGlow {
+  0%, 100% { text-shadow: 0 0 4px currentColor, 0 0 8px currentColor; }
+  50% { text-shadow: 0 0 12px currentColor, 0 0 24px currentColor, 0 0 36px currentColor; }
+}
+
+.animate-promo-marquee-left {
+  animation: promoMarqueeLeft 18s linear infinite;
+}
+
+.animate-promo-marquee-right {
+  animation: promoMarqueeRight 18s linear infinite;
+}
+
+.animate-promo-blink {
+  animation: promoBlinkText 1.5s ease-in-out infinite;
+}
+
+.animate-promo-fade {
+  animation: promoFade 3s ease-in-out infinite;
+}
+
+.animate-promo-typewriter {
+  animation: promoTypewriter 4s steps(40, end) infinite;
+}
+
+.animate-promo-bounce {
+  animation: promoBounce 2s ease-in-out infinite;
+}
+
+.animate-promo-glow {
+  animation: promoGlow 2.5s ease-in-out infinite;
 }
 
 /* ============================================
