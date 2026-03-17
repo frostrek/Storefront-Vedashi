@@ -1,0 +1,104 @@
+
+> storefront@0.1.0 build
+> next build
+
+??? Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+node.exe : ??? The 
+"middleware" file convention 
+is deprecated. Please use 
+"proxy" instead. Learn more: 
+https://nextjs.org/docs/messa
+ges/middleware-to-proxy
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
+    + CategoryInfo           
+   : NotSpecified: (??? The  
+   "middle...leware-to-pro   
+ xy:String) [], RemoteExc    
+eption
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 
+  Creating an optimized production build ...
+??? Compiled successfully in 9.6s
+  Running TypeScript ...
+  Collecting page data using 11 workers ...
+??? You are using an 
+experimental edge runtime, 
+the API might change.
+  Generating static pages using 11 workers (0/5) ...
+  Generating static pages using 11 workers (1/5) 
+  Generating static pages using 11 workers (2/5) 
+  Generating static pages using 11 workers (3/5) 
+Sitemap generation failed to 
+fetch from API: TypeError: 
+fetch failed
+    at ignore-listed frames {
+  [cause]: AggregateError: 
+      at ignore-listed 
+frames {
+    code: 'ECONNREFUSED'
+  }
+}
+TypeError: fetch failed
+    at ignore-listed frames {
+  [cause]: AggregateError: 
+      at ignore-listed 
+frames {
+    code: 'ECONNREFUSED'
+  }
+}
+??? Generating static pages using 11 workers (5/5) in 307.3ms
+  Finalizing page optimization ...
+
+Route (app)                                       Revalidate  Expire
+??? ??? /_not-found                                          10s      1y
+??? ?? /[country]
+??? ?? /[country]/about
+??? ?? /[country]/account/[[...tab]]
+??? ?? /[country]/blog
+??? ?? /[country]/blog/[slug]
+??? ?? /[country]/blog/category/[slug]
+??? ?? /[country]/cart
+??? ?? /[country]/checkout
+??? ?? /[country]/collections/[slug]
+??? ?? /[country]/contact
+??? ?? /[country]/forgot-password
+??? ?? /[country]/help-center
+??? ?? /[country]/help-center/customer-enquiry
+??? ?? /[country]/help-center/faq
+??? ?? /[country]/help-center/knowledge-base
+??? ?? /[country]/help-center/knowledge-base/[slug]
+??? ?? /[country]/help-center/support
+??? ?? /[country]/help-center/support/[ticketId]
+??? ?? /[country]/login
+??? ?? /[country]/login/sso-callback
+??? ?? /[country]/login/sso-complete
+??? ?? /[country]/login/verify-social-otp
+??? ?? /[country]/privacy
+??? ?? /[country]/privacy-policy
+??? ?? /[country]/products
+??? ?? /[country]/products/[id]
+??? ?? /[country]/reset-password
+??? ?? /[country]/search
+??? ?? /[country]/shop
+??? ?? /[country]/terms
+??? ?? /[country]/verify-email
+??? ?? /[country]/verify-otp
+??? ??? /robots.txt
+??? ??? /sitemap.xml                                          1h      1y
+
+
+?? Proxy (Middleware)
+
+???  (Static)   prerendered as static content
+??  (Dynamic)  server-rendered on demand
+

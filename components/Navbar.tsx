@@ -178,7 +178,7 @@ export default function Navbar() {
           : 'bg-white border-gray-200 shadow-sm'
           }`}
       >
-        <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
+        <div className="mx-auto max-w-[1600px] px-4">
           <div className="flex h-16 items-center justify-between relative">
 
             {/* Logo */}
@@ -322,7 +322,7 @@ export default function Navbar() {
       {/* ═══════════════ STRIP BAR ═══════════════ */}
       {strip.enabled && (
         <div className="hidden md:block" style={{ backgroundColor: colors.strip_bg }}>
-          <div className="mx-auto max-w-[1400px] px-6">
+          <div className="mx-auto max-w-[1600px] px-4">
             <div className="flex items-center justify-between h-9 text-[12px] tracking-wide">
 
               {/* LEFT */}

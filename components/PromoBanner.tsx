@@ -67,7 +67,7 @@ export default function PromoBanner() {
 
     return (
         <div style={{ backgroundColor: banner.background_color || '#EAE4D3', color: banner.text_color || '#4F1A24' }} className="text-[12px] overflow-hidden py-2 border-b border-[#D5CAA4]">
-            <div className={`relative w-full px-6 mx-auto max-w-[1400px]`}>
+            <div className={`relative w-full px-4 mx-auto max-w-[1600px]`}>
                 <div className={contentClass}>
                     {renderMessage()}
                 </div>
