@@ -1,6 +1,7 @@
 'use client';
 
 import { AuthenticateWithRedirectCallback } from '@clerk/nextjs';
+import { useParams } from 'next/navigation';
 import { Leaf } from 'lucide-react';
 
 /**
@@ -18,15 +19,18 @@ import { Leaf } from 'lucide-react';
  */
 
 export default function SSOCallbackPage() {
+    const params = useParams();
+    const country = (params?.country as string) || 'in';
+
     return (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-cream/90 backdrop-blur-md">
             {/* Clerk processes the OAuth callback automatically.
                 Both signIn and signUp redirect URLs point to sso-complete. */}
             <AuthenticateWithRedirectCallback
-                signInForceRedirectUrl="/login/sso-complete"
-                signUpForceRedirectUrl="/login/sso-complete"
-                signInFallbackRedirectUrl="/login/sso-complete"
-                signUpFallbackRedirectUrl="/login/sso-complete"
+                signInForceRedirectUrl={`/${country}/login/sso-complete`}
+                signUpForceRedirectUrl={`/${country}/login/sso-complete`}
+                signInFallbackRedirectUrl={`/${country}/login/sso-complete`}
+                signUpFallbackRedirectUrl={`/${country}/login/sso-complete`}
             />
 
             {/* Loading UI while Clerk processes */}

@@ -1,7 +1,8 @@
 'use client';
 
-import { useSignIn, useSignUp, useAuth } from '@clerk/nextjs';
+import { useSignIn, useSignUp, useClerk } from '@clerk/nextjs';
 import { useState } from 'react';
+import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 /**
@@ -12,7 +13,9 @@ import toast from 'react-hot-toast';
  * Key: Uses signUp.authenticateWithRedirect (NOT signIn) because:
  *   - signIn fails if user doesn't have a Clerk account → shows Clerk's sign-up form
  *   - signUp with OAuth strategy goes DIRECTLY to Google (no Clerk form)
- *   - If user already has a Clerk account, Clerk auto-transfers to signIn
+ *   - If user already has a Clerk account, Clerk auto-detects and transfers to signIn
+ * 
+ * Fix: Bypasses the redirect flow if a Clerk session already exists to avoid "You're already signed in" errors.
  */
 
 interface SocialLoginButtonsProps {
@@ -44,8 +47,10 @@ const AppleIcon = () => (
 export default function SocialLoginButtons({ onLoadingChange, disabled }: SocialLoginButtonsProps) {
     const { signIn, isLoaded: signInLoaded } = useSignIn();
     const { signUp, isLoaded: signUpLoaded } = useSignUp();
-    const { isSignedIn } = useAuth();
+    const { session } = useClerk();
     const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
+    const params = useParams();
+    const country = (params?.country as string) || 'in';
 
     const isReady = signInLoaded && signUpLoaded;
 
@@ -62,9 +67,11 @@ export default function SocialLoginButtons({ onLoadingChange, disabled }: Social
         const currentPath = window.location.pathname; // e.g. /in/login
         const baseUrl = window.location.origin;
 
-        if (isSignedIn) {
-            // Already authenticated in Clerk, just redirect to sync with backend
-            window.location.href = currentPath + '/sso-callback';
+        // If there's an active Clerk session but our custom backend doesn't think so,
+        // we can simply use the existing Clerk session to log them back into Vedashi.
+        // This avoids the "You're already signed in" error entirely.
+        if (session) {
+            window.location.href = currentPath + '/sso-complete';
             return;
         }
 

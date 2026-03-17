@@ -4,6 +4,7 @@ import { authFetch, getLegalDocument } from '@/lib/api';
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useClerk } from '@clerk/nextjs';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import {
@@ -23,14 +24,18 @@ type AuthMethod = 'email' | 'phone';
 function LoginContent() {
     const router = useRouter();
     const { login, register, isAuthenticated, user, logout, loginFromVerification } = useAuth();
+    const { signOut: clerkSignOut } = useClerk();
     const searchParams = useSearchParams();
 
     useEffect(() => {
         if (searchParams.get('logout') === 'true') {
-            logout();
-            router.replace('/login');
+            logout(); // local Vedashi logout
+            // Sign out of Clerk as well to prevent "already signed in" errors
+            clerkSignOut().catch(() => {}).finally(() => {
+                router.replace('/login');
+            });
         }
-    }, [searchParams, logout, router]);
+    }, [searchParams, logout, router, clerkSignOut]);
 
     const [authMethod, setAuthMethod] = useState<AuthMethod>('email');
     const [isRegister, setIsRegister] = useState(false);

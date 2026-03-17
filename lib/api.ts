@@ -6,7 +6,10 @@
 
 import { Product, FilteredProduct, FilterMeta, ProductWithDetails, ProductAsset, ApiResponse } from '@/types';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
+let API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
+if (typeof window !== 'undefined' && (API_URL.includes('localhost') || API_URL.includes('127.0.0.1'))) {
+    API_URL = `${window.location.protocol}//${window.location.hostname}:5000`;
+}
 const TOKEN_KEY = 'vedashi_token';
 
 /** Read the JWT stored by AuthContext after login/register */
