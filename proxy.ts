@@ -1,11 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-<<<<<<< HEAD
-=======
-
-
->>>>>>> 75c3138a969d3ea6e6ce8a5fd7ae4814be5ba7c4
 
 // ─── Supported Countries ────────────────────────────────────────────
 const SUPPORTED_COUNTRIES = ['in', 'us', 'gb', 'ae', 'ca', 'au', 'ru', 'kr'] as const;
