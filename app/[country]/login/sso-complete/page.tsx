@@ -74,7 +74,7 @@ export default function SSOCompletePage() {
                     // Use window.location for clean redirect — no flash
                     setTimeout(() => {
                         window.location.href = `/${country}/login/verify-social-otp`;
-                    }, 1500);
+                    }, 100);
                 } else if (result.success) {
                     // RETURNING USER → JWT issued, logged in
                     setStatus('Welcome back! Redirecting...');
@@ -86,7 +86,7 @@ export default function SSOCompletePage() {
                     // Full page load ensures AuthContext initializes from localStorage
                     setTimeout(() => {
                         window.location.href = `/${country}`;
-                    }, 1500);
+                    }, 100);
                 } else {
                     toast.error(result.error || 'Social login failed.');
                     window.location.href = `/${country}/login`;
