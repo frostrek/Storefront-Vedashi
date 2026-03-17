@@ -195,18 +195,24 @@ export default function Navbar() {
 
             {/* Center Nav Links */}
             <nav className="hidden md:flex flex-shrink-0 items-center justify-center gap-8 mx-4">
-              {visibleLinks.map(link => (
-                <Link
-                  key={link.label}
-                  href={link.url}
-                  className="text-[13px] font-semibold uppercase tracking-widest transition-colors duration-200"
-                  style={{ color: colors.navbar_text }}
-                  onMouseEnter={e => (e.currentTarget.style.color = colors.navbar_hover)}
-                  onMouseLeave={e => (e.currentTarget.style.color = colors.navbar_text)}
-                >
-                  {link.label}
-                </Link>
-              ))}
+              {visibleLinks.map(link => {
+                const isActive = link.url === '/' 
+                  ? pathname === '/' || pathname === `/${pathname?.split('/')[1]}`
+                  : pathname?.includes(link.url);
+                  
+                return (
+                  <Link
+                    key={link.label}
+                    href={link.url}
+                    className={`text-[13px] font-semibold uppercase tracking-widest transition-colors duration-200 relative before:content-[''] before:absolute before:-bottom-1 before:left-0 before:w-full before:h-0.5 before:bg-current before:transition-transform before:duration-300 ${isActive ? 'before:scale-x-100' : 'before:scale-x-0'}`}
+                    style={{ color: isActive ? colors.navbar_hover : colors.navbar_text }}
+                    onMouseEnter={e => (e.currentTarget.style.color = colors.navbar_hover)}
+                    onMouseLeave={e => (e.currentTarget.style.color = isActive ? colors.navbar_hover : colors.navbar_text)}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
             </nav>
 
             {/* Right Icons + Search */}
@@ -431,25 +437,34 @@ export default function Navbar() {
             </div>
 
             {/* Main links (from config, filtered to enabled) */}
-            {visibleLinks.map(link => (
-              <Link
-                key={link.label}
-                href={link.url}
-                onClick={() => setMobileOpen(false)}
-                className="py-2.5 px-3 rounded-lg font-semibold text-sm uppercase tracking-wide transition-colors"
-                style={{ color: colors.navbar_text }}
-                onMouseEnter={e => {
-                  (e.currentTarget as HTMLElement).style.backgroundColor = `${colors.navbar_hover}12`;
-                  (e.currentTarget as HTMLElement).style.color = colors.navbar_hover;
-                }}
-                onMouseLeave={e => {
-                  (e.currentTarget as HTMLElement).style.backgroundColor = '';
-                  (e.currentTarget as HTMLElement).style.color = colors.navbar_text;
-                }}
-              >
-                {link.label}
-              </Link>
-            ))}
+            {visibleLinks.map(link => {
+              const isActive = link.url === '/' 
+                ? pathname === '/' || pathname === `/${pathname?.split('/')[1]}`
+                : pathname?.includes(link.url);
+                
+              return (
+                <Link
+                  key={link.label}
+                  href={link.url}
+                  onClick={() => setMobileOpen(false)}
+                  className="py-2.5 px-3 rounded-lg font-semibold text-sm uppercase tracking-wide transition-colors"
+                  style={{ 
+                    color: isActive ? colors.navbar_hover : colors.navbar_text,
+                    backgroundColor: isActive ? `${colors.navbar_hover}12` : 'transparent'
+                  }}
+                  onMouseEnter={e => {
+                    (e.currentTarget as HTMLElement).style.backgroundColor = `${colors.navbar_hover}12`;
+                    (e.currentTarget as HTMLElement).style.color = colors.navbar_hover;
+                  }}
+                  onMouseLeave={e => {
+                    (e.currentTarget as HTMLElement).style.backgroundColor = isActive ? `${colors.navbar_hover}12` : 'transparent';
+                    (e.currentTarget as HTMLElement).style.color = isActive ? colors.navbar_hover : colors.navbar_text;
+                  }}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
 
             {strip.show_track_orders && (
               <Link
