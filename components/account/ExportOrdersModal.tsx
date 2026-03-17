@@ -14,7 +14,7 @@ interface ExportOrdersModalProps {
     userEmail?: string;
 }
 
-// ─── Colour palette (matches the storefront burgundy/gold theme) ───────────
+// ─── Colour palette  (matches the storefront burgundy/gold theme) ───────────
 const BURGUNDY = [59, 93, 59] as [number, number, number];
 const GOLD = [181, 149, 47] as [number, number, number];
 const CREAM = [250, 246, 240] as [number, number, number];
