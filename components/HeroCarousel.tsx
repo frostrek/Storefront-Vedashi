@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
 
 interface TextElement {
     id: string;
@@ -52,11 +52,33 @@ export default function HeroCarousel() {
     useEffect(() => {
         // Fetch active slides and settings in parallel
         Promise.all([
-            fetch(`${API_URL}/api/media/hero/active`).then(r => r.json()),
-            fetch(`${API_URL}/api/media/hero/settings`).then(r => r.json())
+            fetch(`${API_URL}/api/media/hero/active`, { credentials: 'include' }).then(r => r.json()),
+            fetch(`${API_URL}/api/media/hero/settings`, { credentials: 'include' }).then(r => r.json())
         ])
             .then(([slidesData, settingsData]) => {
-                if (slidesData.success && slidesData.data?.length > 0) setSlides(slidesData.data);
+                if (slidesData.success && slidesData.data?.length > 0) {
+                    setSlides(slidesData.data);
+                } else {
+                    // Fallback to beautiful default slides if backend is empty
+                    setSlides([
+                        {
+                            id: 'default-1',
+                            image_url: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&q=80&w=2000',
+                            headings: [{ id: 'h1', text: 'Radiant Skin,', color: '#FFFFFF', fontSize: '64' }, { id: 'h2', text: 'Naturally.', color: '#C9B87A', fontSize: '64' }],
+                            subheadings: [{ id: 's1', text: 'Discover our premium Ayurvedic skincare collection.', color: '#FFFFFF', fontSize: '24' }],
+                            buttons: [{ id: 'b1', label: 'Shop Skincare', url: '/products?category=Skin Care', bgColor: '#C9B87A', textColor: '#000000', size: 'lg' }],
+                            overlay_opacity: 0.4
+                        },
+                        {
+                            id: 'default-2',
+                            image_url: 'https://images.unsplash.com/photo-1544367567-0f2fc100a867?auto=format&fit=crop&q=80&w=2000',
+                            headings: [{ id: 'h1', text: 'Holistic Wellness', color: '#FFFFFF', fontSize: '64' }],
+                            subheadings: [{ id: 's1', text: 'Authentic remedies for mind, body and soul.', color: '#FFFFFF', fontSize: '24' }],
+                            buttons: [{ id: 'b1', label: 'Explore Remedies', url: '/products', bgColor: '#3B5D3B', textColor: '#FFFFFF', size: 'lg' }],
+                            overlay_opacity: 0.4
+                        }
+                    ]);
+                }
                 if (settingsData.success && settingsData.data) setSettings(settingsData.data);
             })
             .catch(() => { })
@@ -106,8 +128,8 @@ export default function HeroCarousel() {
 
     if (loading) {
         return (
-            <section className="relative overflow-hidden bg-neutral-200/50 animate-pulse">
-                <div className="relative z-20 mx-auto max-w-7xl px-4 py-28 sm:py-36 lg:py-44 min-h-[400px]"></div>
+            <section className="relative overflow-hidden bg-neutral-200/50 animate-pulse h-[350px] sm:h-[450px] lg:h-[500px]">
+                <div className="relative z-20 mx-auto max-w-7xl px-4 h-full"></div>
             </section>
         );
     }
@@ -146,7 +168,7 @@ export default function HeroCarousel() {
 
     return (
         <section
-            className="relative overflow-hidden group"
+            className="relative overflow-hidden group h-[350px] sm:h-[450px] lg:h-[500px] flex items-center justify-center"
             onMouseEnter={() => { setPaused(true); setHovering(true); }}
             onMouseLeave={() => { setPaused(false); setHovering(false); }}
         >
@@ -170,7 +192,7 @@ export default function HeroCarousel() {
             ))}
 
             {/* ── Content ── */}
-            <div className="relative z-20 mx-auto max-w-7xl px-4 py-28 sm:py-36 lg:py-44 text-center">
+            <div className="relative z-20 mx-auto max-w-7xl px-4 py-16 text-center w-full">
                 {/* Dynamic Headings */}
                 <div className="animate-fade-in-up space-y-2 mb-6 shadow-black/20 drop-shadow-2xl font-serif">
                     {slide.headings?.map(h => {
@@ -259,7 +281,7 @@ export default function HeroCarousel() {
                                     goTo(targetIndex);
                                 }}
                                 className={`rounded-full transition-all duration-300 ${isActive
-                                    ? 'bg-wine-gold w-6 h-2'
+                                    ? 'bg-vedic-gold w-6 h-2'
                                     : 'bg-white/40 hover:bg-white/70 w-2 h-2'
                                     }`}
                             />

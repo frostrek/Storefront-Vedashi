@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
 
 interface BannerData {
     message: string;
@@ -13,28 +14,37 @@ interface BannerData {
 }
 
 export default function PromoBanner() {
+    const pathname = usePathname();
     const [banner, setBanner] = useState<BannerData | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        // Skip fetching on auth pages
+        if (pathname?.endsWith('/login') || pathname?.endsWith('/signup')) {
+            setLoading(false);
+            return;
+        }
+
         const fetchBanner = async () => {
             try {
-                const res = await fetch(`${API_URL}/api/promo-banners/active`);
+                const res = await fetch(`${API_URL}/api/promo-banners/active`, { credentials: 'include' });
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                 const data = await res.json();
                 if (data.success && data.data) {
                     setBanner(data.data);
                 }
             } catch (err) {
-                console.error('Error fetching promo banner:', err);
+                // Silent error to avoid console noise, just hide banner
+                console.warn('Promo banner unavailable (background fetch failed)');
             } finally {
                 setLoading(false);
             }
         };
 
         fetchBanner();
-    }, []);
+    }, [pathname]);
 
-    if (loading || !banner) return null;
+    if (loading || !banner || pathname?.endsWith('/login') || pathname?.endsWith('/signup')) return null;
 
     let contentClass = 'text-center font-bold tracking-[0.2em]';
 
@@ -57,7 +67,7 @@ export default function PromoBanner() {
 
     return (
         <div style={{ backgroundColor: banner.background_color || '#EAE4D3', color: banner.text_color || '#4F1A24' }} className="text-[12px] overflow-hidden py-2 border-b border-[#D5CAA4]">
-            <div className={`relative w-full px-6 mx-auto max-w-[1400px]`}>
+            <div className={`relative w-full px-4 mx-auto max-w-[1600px]`}>
                 <div className={contentClass}>
                     {renderMessage()}
                 </div>

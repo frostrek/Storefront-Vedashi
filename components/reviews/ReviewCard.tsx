@@ -87,57 +87,56 @@ export default function ReviewCard({ review }: ReviewCardProps) {
     });
 
     return (
-        <div className="border-b border-neutral-100 py-6 last:border-0 group">
+        <div className="bg-white p-6 rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] group mb-4">
             {/* Header */}
-            <div className="flex items-start justify-between gap-4">
-                <div>
-                    <StarRating value={review.rating} size="sm" />
-                    {review.title && (
-                        <p className="mt-1.5 font-serif text-sm font-semibold text-neutral-800">
-                            {review.title}
-                        </p>
-                    )}
-                </div>
+            <div className="flex items-center justify-between gap-4 mb-4">
+                <StarRating value={review.rating} size="sm" />
+                <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">{dateStr}</span>
             </div>
 
             {/* Body */}
             {review.body && (
-                <p className="mt-2 text-sm text-neutral-600 leading-relaxed">
-                    {review.body}
+                <p className="text-[15px] font-medium text-gray-800 leading-relaxed italic">
+                    "{review.body}"
                 </p>
             )}
 
             {/* Admin Reply */}
             {review.admin_reply && (
-                <div className="mt-4 ml-4 bg-neutral-50 p-4 rounded-md border-l-2 border-[#C5A46D]">
+                <div className="mt-4 ml-4 bg-[#3d5c3a]/5 p-4 rounded-xl border-l-2 border-[#3d5c3a]">
                     <div className="flex items-center gap-2 mb-1">
-                        <CornerDownRight size={14} className="text-[#C5A46D]" />
-                        <span className="text-xs font-semibold text-neutral-800">KSP Wines Response</span>
+                        <CornerDownRight size={14} className="text-[#3d5c3a]" />
+                        <span className="text-xs font-bold uppercase tracking-wider text-[#3d5c3a]">Vedashi Response</span>
                         {review.admin_reply_at && (
-                            <span className="text-xs text-neutral-400 font-medium ml-1">
+                            <span className="text-xs text-gray-500 font-medium ml-1">
                                 {new Date(review.admin_reply_at).toLocaleDateString('en-US', {
                                     month: 'short', day: 'numeric', year: 'numeric'
                                 })}
                             </span>
                         )}
                     </div>
-                    <p className="text-sm text-neutral-600 ml-5 leading-relaxed">
+                    <p className="text-[14px] text-gray-600 ml-5 leading-relaxed">
                         {review.admin_reply}
                     </p>
                 </div>
             )}
 
             {/* Footer */}
-            <div className="mt-4 flex items-center flex-wrap gap-4 text-xs text-neutral-400">
-                <span className="font-medium text-neutral-500">{review.reviewer_name}</span>
-                <span>{dateStr}</span>
-
-                {review.is_verified_purchase && (
-                    <span className="flex items-center gap-1 text-emerald-600 font-medium">
-                        <BadgeCheck size={13} />
-                        Verified Purchase
-                    </span>
-                )}
+            <div className="mt-6 flex items-center justify-between gap-4 pt-4 border-t border-gray-100">
+                <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-full bg-[#3d5c3a] text-white flex items-center justify-center text-xs font-bold shadow-sm">
+                        {review.reviewer_name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                        <span className="block text-sm font-bold text-gray-900">{review.reviewer_name}</span>
+                        {review.is_verified_purchase && (
+                            <span className="flex items-center gap-1 text-[10px] text-gray-500 font-medium">
+                                <BadgeCheck size={12} className="text-[#3d5c3a]" />
+                                Verified Purchase
+                            </span>
+                        )}
+                    </div>
+                </div>
 
                 <div className="ml-auto flex items-center gap-3">
                     {/* Helpful up/down votes */}

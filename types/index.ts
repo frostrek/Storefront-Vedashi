@@ -13,7 +13,9 @@ export interface Product {
     unit_of_measure?: string;
     intended_use?: string;
     country_of_origin?: string;
-    alcohol_percentage?: number;
+    form?: string;
+    specialities?: string[];
+
     created_at?: string;
     updated_at?: string;
     /* Extended fields (may not exist in all DB rows) */
@@ -36,7 +38,7 @@ export interface Product {
 
 /** Shape returned by GET /api/products/filter */
 export interface FilteredProduct extends Product {
-    alcohol_percentage?: number;
+
     country_of_origin?: string;
     avg_rating?: number;
     review_count?: number;
@@ -117,6 +119,12 @@ export interface ProductVariant {
     weight_kg?: number;
     barcode?: string;
     status?: 'Active' | 'Inactive';
+    weight_g?: number;
+    strength?: string;
+    strength_unit?: string;
+    units_count?: number;
+    form_factor?: string;
+    flavor?: string;
 }
 
 export interface ProductCompliance {
@@ -253,6 +261,7 @@ export interface WishlistItem {
 export interface Order {
     order_id: string;
     customer_id?: string;
+    billing_address_id?: string;
     customer_name?: string;
     customer_email?: string;
     // Legacy fields (kept for backward compat)

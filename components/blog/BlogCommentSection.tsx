@@ -8,7 +8,7 @@ interface CommentSectionProps {
     initialComments: BlogComment[];
 }
 
-function Comment({ comment, postId, onReply }: { comment: BlogComment; postId: string; onReply: () => void }) {
+function Comment({ comment, postId, onReply }: { comment: BlogComment; postId: string; onReply: (newComment?: BlogComment) => void }) {
     const [showReply, setShowReply] = useState(false);
     const [replyBody, setReplyBody] = useState('');
     const [replyName, setReplyName] = useState('');
@@ -17,7 +17,7 @@ function Comment({ comment, postId, onReply }: { comment: BlogComment; postId: s
     const handleReply = async () => {
         if (!replyBody.trim()) return;
         setSubmitting(true);
-        await postBlogComment(postId, {
+        const res = await postBlogComment(postId, {
             body: replyBody,
             parent_id: comment.comment_id,
             commenter_name: replyName || undefined,
@@ -26,7 +26,7 @@ function Comment({ comment, postId, onReply }: { comment: BlogComment; postId: s
         setReplyName('');
         setShowReply(false);
         setSubmitting(false);
-        onReply();
+        onReply(res?.success && res.data ? res.data : undefined);
     };
 
     return (
@@ -110,6 +110,26 @@ export default function BlogCommentSection({ postId, initialComments }: CommentS
         setComments(fresh);
     };
 
+    const appendReplyOptimistically = (newComment: BlogComment, list: BlogComment[]): BlogComment[] => {
+        return list.map(c => {
+            if (c.comment_id === newComment.parent_id) {
+                return { ...c, children: [...(c.children || []), newComment] };
+            }
+            if (c.children && c.children.length > 0) {
+                return { ...c, children: appendReplyOptimistically(newComment, c.children) };
+            }
+            return c;
+        });
+    };
+
+    const handleReplyDone = async (newComment?: BlogComment) => {
+        if (newComment) {
+            setComments(prev => appendReplyOptimistically(newComment, prev));
+        } else {
+            await refresh();
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!body.trim()) return;
@@ -125,7 +145,11 @@ export default function BlogCommentSection({ postId, initialComments }: CommentS
             setName('');
             setEmail('');
             setMessage(res.message || 'Comment posted!');
-            await refresh();
+            if (res.data) {
+                setComments(prev => [res.data, ...prev]);
+            } else {
+                await refresh();
+            }
         } else {
             setMessage(res.message || 'Failed to post comment');
         }
@@ -184,7 +208,7 @@ export default function BlogCommentSection({ postId, initialComments }: CommentS
                     <p className="text-center text-warm-gray py-8">No comments yet. Be the first to share your thoughts!</p>
                 ) : (
                     comments.map(comment => (
-                        <Comment key={comment.comment_id} comment={comment} postId={postId} onReply={refresh} />
+                        <Comment key={comment.comment_id} comment={comment} postId={postId} onReply={handleReplyDone} />
                     ))
                 )}
             </div>

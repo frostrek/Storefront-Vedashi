@@ -2,7 +2,7 @@
  * Centralized filter configuration.
  * Adding a new filter = adding one entry here. Zero UI changes needed.
  */
-import { formatVND } from './api';
+
 
 export type FilterType = 'checkbox' | 'range' | 'toggle' | 'rating';
 
@@ -39,20 +39,10 @@ export const FILTER_CONFIGS: FilterConfig[] = [
         min: 0,
         max: 500,
         step: 5,
-        formatLabel: (v: number) => formatVND(v),
+        formatLabel: (v: number) => `₹${v}`,
         defaultValue: [0, 500],
     },
-    {
-        key: 'alcohol',
-        label: 'Alcohol %',
-        type: 'range',
-        urlParam: 'alcohol',
-        min: 0,
-        max: 100,
-        step: 1,
-        formatLabel: (v: number) => `${v}%`,
-        defaultValue: [0, 100],
-    },
+
     {
         key: 'country',
         label: 'Country',
@@ -94,12 +84,13 @@ export const FILTER_CONFIGS: FilterConfig[] = [
 
 /** Sort options (mapped to backend sort values) */
 export const SORT_OPTIONS = [
-    { label: 'Default', value: '' },
+    { label: 'Featured', value: '' },
     { label: 'Price: Low to High', value: 'price_asc' },
     { label: 'Price: High to Low', value: 'price_desc' },
-    { label: 'Alcohol: Low to High', value: 'alcohol_asc' },
-    { label: 'Alcohol: High to Low', value: 'alcohol_desc' },
     { label: 'Newest First', value: 'newest' },
+    { label: 'Best Selling', value: 'best_selling' },
+    { label: 'Highest Rated', value: 'rating_desc' },
+    { label: 'Highest Discount', value: 'discount_desc' },
     { label: 'Name: A–Z', value: 'name_asc' },
     { label: 'Name: Z–A', value: 'name_desc' },
 ];

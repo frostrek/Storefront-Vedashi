@@ -37,12 +37,13 @@ interface UserInfo {
     is_age_verified?: boolean;
     is_email_verified?: boolean;
     is_mobile_verified?: boolean;
+    phone?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://ecommerce-backend-h23p.onrender.com';
-const USER_KEY = 'ksp_wines_user';
-const TOKEN_KEY = 'ksp_wines_token';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
+const USER_KEY = 'vedashi_user';
+const TOKEN_KEY = 'vedashi_token';
 
 /** Map backend customer shape → frontend UserInfo */
 function toUserInfo(customer: Record<string, unknown>): UserInfo {
@@ -56,6 +57,7 @@ function toUserInfo(customer: Record<string, unknown>): UserInfo {
         is_age_verified: !!(customer.is_age_verified),
         is_email_verified: !!(customer.is_email_verified),
         is_mobile_verified: !!(customer.is_mobile_verified),
+        phone: (customer.phone ?? customer.mobile_phone ?? '') as string,
     };
 }
 

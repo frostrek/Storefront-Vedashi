@@ -17,7 +17,7 @@ interface ProductImageGalleryProps {
     category?: string;
 }
 
-const FALLBACK_IMAGE = '/card-drink.webp';
+const FALLBACK_IMAGE = '/herbal_placeholder.png';
 
 /**
  * Resolve ProductAsset[] → GalleryImage[]

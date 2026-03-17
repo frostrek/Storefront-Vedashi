@@ -1,15 +1,19 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import { ShoppingCart, User, Menu, X, Heart, ChevronDown, Search, ArrowRight } from 'lucide-react';
+import { useRouter, usePathname } from 'next/navigation';
+import { useState, useEffect, useRef } from 'react';
+import { ShoppingCart, User, Menu, X, Heart, ChevronDown, Search, ArrowRight, Leaf, Sparkles } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useAuth } from '@/context/AuthContext';
 import { getCategories } from '@/lib/api';
 import toast from 'react-hot-toast';
 import SearchAutocomplete from './SearchAutocomplete';
+import GoogleTranslateWidget from './GoogleTranslateWidget';
+import RegionSwitcher from './RegionSwitcher';
+import NotificationCenter from './account/NotificationCenter';
+import SecondaryNavbar from './SecondaryNavbar';
 
 interface Category {
   category_id: string;
@@ -18,6 +22,7 @@ interface Category {
 }
 
 interface HeaderConfig {
+  settings?: { use_backend_navbar: boolean; };
   branding: { logo_url: string; logo_alt: string; };
   colors: {
     navbar_bg: string;
@@ -39,37 +44,40 @@ interface HeaderConfig {
 }
 
 const DEFAULT_CONFIG: HeaderConfig = {
-  branding: { logo_url: '', logo_alt: 'KSP Wines' },
+  branding: { logo_url: '', logo_alt: 'Vedashi' },
   colors: {
     navbar_bg: '#ffffff',
     navbar_text: '#374151',
-    navbar_hover: '#4b0f1a',
-    strip_bg: '#4b0f1a',
-    strip_text: '#C6A75E',
-    strip_accent: '#FFD700',
-    cart_badge_bg: '#4b0f1a',
+    navbar_hover: '#3B5D3B',
+    strip_bg: '#3B5D3B',
+    strip_text: '#E8DCAF',
+    strip_accent: '#C9B87A',
+    cart_badge_bg: '#3B5D3B',
   },
   nav_links: [
     { label: 'Home', url: '/', enabled: true },
-    { label: 'Shop', url: '/products', enabled: true },
+    { label: 'Shop', url: '/shop', enabled: true },
+    { label: 'Products', url: '/products', enabled: true },
     { label: 'About Us', url: '/about', enabled: true },
     { label: 'Contact', url: '/contact', enabled: true },
     { label: 'Blog', url: '/blog', enabled: true },
     { label: 'Help', url: '/help-center', enabled: true },
   ],
   strip: {
-    enabled: true,
-    center_message: '✦ Thank You for Choosing Us ✦',
-    hotline: '090 202 5806',
-    show_track_orders: true,
-    show_categories: true,
+    enabled: false,
+    center_message: '',
+    hotline: '',
+    show_track_orders: false,
+    show_categories: false,
   },
 };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
 
 export default function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
+
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const { totalItems, loading: cartLoading } = useCart();
@@ -77,7 +85,18 @@ export default function Navbar() {
   const { isAuthenticated } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [showCartReminder, setShowCartReminder] = useState(false);
+  const [prevTotalItems, setPrevTotalItems] = useState(0);
+  const [scrolled, setScrolled] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<HeaderConfig>(DEFAULT_CONFIG);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleWishlistClick = () => {
     if (isAuthenticated) {
@@ -88,30 +107,53 @@ export default function Navbar() {
     }
   };
 
-  // Fetch header config from API
   useEffect(() => {
-    fetch(`${API_URL}/api/header`)
+    fetch(`${API_URL}/api/header`, { credentials: 'include' })
       .then(r => r.json())
       .then(data => {
         if (data.success && data.data) {
-          setConfig(prev => ({ ...DEFAULT_CONFIG, ...data.data }));
+          if (data.data.settings?.use_backend_navbar === false) {
+            // Revert/Keep default hardcoded config
+            setConfig(DEFAULT_CONFIG);
+          } else {
+            // Overlay backend config on defaults
+            setConfig(prev => ({ ...DEFAULT_CONFIG, ...data.data }));
+          }
         }
       })
-      .catch(() => { /* stay with defaults */ });
+      .catch(() => { /* stay with defaults */ })
+      .finally(() => setLoading(false));
   }, []);
 
+  // 1. Trigger when a new product is added (but not on initial load)
+  const isFirstCount = useRef(true);
   useEffect(() => {
-    if (!cartLoading && totalItems > 0) {
-      const hasShown = sessionStorage.getItem('cartReminderShown');
-      if (!hasShown) {
-        const timer = setTimeout(() => {
-          setShowCartReminder(true);
-          sessionStorage.setItem('cartReminderShown', 'true');
-        }, 1500);
-        return () => clearTimeout(timer);
+    if (!cartLoading) {
+      if (isFirstCount.current) {
+        setPrevTotalItems(totalItems);
+        isFirstCount.current = false;
+        return;
       }
+
+      if (totalItems > prevTotalItems && totalItems > 0) {
+        setShowCartReminder(true);
+      }
+      setPrevTotalItems(totalItems);
     }
-  }, [totalItems, cartLoading]);
+  }, [totalItems, cartLoading, prevTotalItems]);
+
+  // 2. Trigger when customer logs in
+  useEffect(() => {
+    if (isAuthenticated && !cartLoading && totalItems > 0) {
+      const hasShownOnLogin = sessionStorage.getItem('cartReminderLoginShown');
+      if (!hasShownOnLogin) {
+        setShowCartReminder(true);
+        sessionStorage.setItem('cartReminderLoginShown', 'true');
+      }
+    } else if (!isAuthenticated) {
+      sessionStorage.removeItem('cartReminderLoginShown');
+    }
+  }, [isAuthenticated, totalItems, cartLoading]);
 
   useEffect(() => {
     getCategories().then(cats => {
@@ -123,26 +165,36 @@ export default function Navbar() {
   const { colors, nav_links, strip, branding } = config;
   const visibleLinks = nav_links.filter(l => l.enabled);
 
+  // Hide navbar on login page (handling localized routes like /[country]/login)
+  if (pathname?.endsWith('/login') || pathname?.endsWith('/signup')) return null;
+
   return (
-    <header className="w-full sticky top-0 z-[100]">
+    <header className={`w-full sticky top-0 z-[100] transition-all duration-500 ${scrolled ? 'shadow-lg' : ''}`}>
 
       {/* ═══════════════ MAIN NAVBAR ═══════════════ */}
-      <div style={{ backgroundColor: colors.navbar_bg }} className="border-b border-gray-200 shadow-sm">
-        <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
-          <div className="flex h-16 items-center justify-between">
+      <div
+        className={`border-b transition-all duration-500 ${scrolled
+          ? 'bg-white/80 backdrop-blur-xl border-[#3B5D3B]/10 shadow-[0_2px_20px_rgba(59,93,59,0.08)]'
+          : 'bg-white border-gray-200 shadow-sm'
+          }`}
+      >
+        <div className="mx-auto max-w-[1600px] px-4">
+          <div className="flex h-16 items-center justify-between relative">
 
             {/* Logo */}
-            <Link href="/" className="flex-shrink-0 flex items-center gap-2">
-              {branding.logo_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={branding.logo_url} alt={branding.logo_alt} className="h-14 sm:h-16 md:h-20 w-auto object-contain" />
-              ) : (
-                <img src="/KSP-Wines-logo.png" alt={branding.logo_alt} className="h-14 sm:h-16 md:h-20 w-auto" />
-              )}
-            </Link>
+            <div className="flex-1 flex items-center justify-start">
+              <Link href="/" className="flex-shrink-0 flex items-center gap-2">
+                {branding.logo_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={branding.logo_url} alt={branding.logo_alt} className="h-14 sm:h-16 md:h-20 w-auto object-contain" />
+                ) : (
+                  <img src="/vedashi-logo.png" alt="Vedashi" className="h-14 sm:h-16 md:h-20 w-auto object-contain" />
+                )}
+              </Link>
+            </div>
 
             {/* Center Nav Links */}
-            <nav className="hidden md:flex items-center gap-8">
+            <nav className="hidden md:flex flex-shrink-0 items-center justify-center gap-8 mx-4">
               {visibleLinks.map(link => (
                 <Link
                   key={link.label}
@@ -158,7 +210,7 @@ export default function Navbar() {
             </nav>
 
             {/* Right Icons + Search */}
-            <div className="flex items-center gap-1 sm:gap-2 relative">
+            <div className="flex-1 flex items-center justify-end gap-1 sm:gap-2 relative">
               {/* Desktop Search */}
               <div className="hidden md:block relative">
                 {searchOpen ? (
@@ -169,13 +221,13 @@ export default function Navbar() {
                     </button>
                   </div>
                 ) : (
-                  <button onClick={() => setSearchOpen(true)} className="p-2 group" aria-label="Open search">
+                  <button suppressHydrationWarning onClick={() => setSearchOpen(true)} className="p-2 group" aria-label="Open search">
                     <Search className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
                   </button>
                 )}
               </div>
 
-              <button onClick={handleWishlistClick} className="relative p-2 group">
+              <button suppressHydrationWarning onClick={handleWishlistClick} className="relative p-2 group">
                 <Heart className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
                 {wishlistCount > 0 && (
                   <span
@@ -187,8 +239,10 @@ export default function Navbar() {
                 )}
               </button>
 
+              <NotificationCenter colors={colors} />
+
               <div className="flex items-center">
-                <Link href="/cart" className="relative p-2 group">
+                <Link id="navbar-cart-icon" href="/cart" className="relative p-2 group">
                   <ShoppingCart className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
                   {totalItems > 0 && (
                     <span
@@ -202,42 +256,59 @@ export default function Navbar() {
 
                 {/* Cart Reminder Popup */}
                 {showCartReminder && (
-                  <div className="absolute top-full right-0 mt-3 w-72 bg-white rounded-xl shadow-2xl border border-gray-100 p-4 z-50 animate-in slide-in-from-top-4 fade-in duration-300">
+                  <div className="absolute top-full right-0 mt-3 w-80 bg-white rounded-[30px] shadow-2xl border border-[#4A5D23]/10 overflow-hidden z-[110] animate-in slide-in-from-top-4 fade-in duration-300">
+                    {/* Background Texture */}
+                    <div
+                      className="absolute inset-0 z-0 opacity-[0.08] pointer-events-none"
+                      style={{
+                        backgroundImage: "url('/ayurvedic-texture.png')",
+                        backgroundSize: '200px'
+                      }}
+                    ></div>
+
                     <button
-                      onClick={() => setShowCartReminder(false)}
-                      className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-gray-600 transition-colors rounded-full hover:bg-gray-100"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowCartReminder(false);
+                      }}
+                      className="absolute top-3 right-3 p-2 text-[#5B4A31]/40 hover:text-[#4A5D23] transition-all hover:bg-[#4A5D23]/5 rounded-full z-50"
                     >
                       <X className="h-4 w-4" />
                     </button>
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${colors.navbar_hover}18` }}>
-                        <ShoppingCart className="h-5 w-5" style={{ color: colors.strip_text }} />
-                      </div>
-                      <div className="pr-4">
-                        <h4 className="text-sm font-bold text-gray-900 mb-1">Items left in cart</h4>
-                        <p className="text-xs text-gray-600 leading-relaxed mb-3">
-                          You previously left {totalItems} {totalItems === 1 ? 'item' : 'items'} in your cart. Checkout fast before they go out of stock!
-                        </p>
-                        <Link
-                          href="/cart"
-                          onClick={() => setShowCartReminder(false)}
-                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-white px-4 py-2 rounded-lg transition-all shadow-sm hover:shadow-md"
-                          style={{ backgroundColor: colors.navbar_hover }}
-                        >
-                          Go to Cart <ArrowRight className="h-3 w-3" />
-                        </Link>
+                    <div className="relative z-10 p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-[#4A5D23]/10 flex items-center justify-center flex-shrink-0 animate-pulse text-[#4A5D23]">
+                          <Leaf className="h-6 w-6" />
+                        </div>
+                        <div className="pr-2">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="text-base font-serif font-bold text-[#1a2408]">Items left in cart</h4>
+                            <Sparkles className="h-3 w-3 text-[#c8a84e]" />
+                          </div>
+                          <p className="text-xs text-[#5B4A31] leading-relaxed mb-4 font-medium italic">
+                            You previously left {totalItems} {totalItems === 1 ? 'item' : 'items'} in your cart. Checkout fast before they go out of stock!
+                          </p>
+                          <Link
+                            href="/cart"
+                            onClick={() => setShowCartReminder(false)}
+                            className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white px-5 py-2.5 rounded-xl transition-all shadow-xl hover:-translate-y-0.5 active:translate-y-0"
+                            style={{ backgroundColor: '#4A5D23' }}
+                          >
+                            Go to Cart <ArrowRight className="h-3.5 w-3.5" />
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   </div>
                 )}
               </div>
 
-              <Link href="/account" className="relative p-2 group">
+              <Link href="/account" className="relative p-2 group" suppressHydrationWarning>
                 <User className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
               </Link>
 
               {/* Mobile toggle */}
-              <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2" style={{ color: colors.navbar_text }}>
+              <button suppressHydrationWarning onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2" style={{ color: colors.navbar_text }}>
                 {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
             </div>
@@ -245,15 +316,18 @@ export default function Navbar() {
         </div>
       </div>
 
+      {/* ═══════════════ SECONDARY NAVBAR ═══════════════ */}
+      <SecondaryNavbar />
+
       {/* ═══════════════ STRIP BAR ═══════════════ */}
       {strip.enabled && (
         <div className="hidden md:block" style={{ backgroundColor: colors.strip_bg }}>
-          <div className="mx-auto max-w-[1400px] px-6">
+          <div className="mx-auto max-w-[1600px] px-4">
             <div className="flex items-center justify-between h-9 text-[12px] tracking-wide">
 
               {/* LEFT */}
               <div className="flex items-center gap-5">
-                {strip.show_track_orders && (
+                {strip.show_track_orders && !loading && (
                   <Link
                     href="/account"
                     className="font-medium transition-colors duration-200"
@@ -270,7 +344,7 @@ export default function Navbar() {
                 )}
 
                 {/* Categories with Mega Dropdown */}
-                {strip.show_categories && (
+                {strip.show_categories && !loading && (
                   <div className="relative group flex items-center h-9">
                     <button
                       className="flex items-center gap-1 font-medium cursor-pointer transition-colors duration-200"
@@ -353,7 +427,7 @@ export default function Navbar() {
 
             {/* Mobile Search */}
             <div className="mb-3">
-              <SearchAutocomplete className="w-full" onClose={() => setMobileOpen(false)} placeholder="Search wines…" />
+              <SearchAutocomplete className="w-full" onClose={() => setMobileOpen(false)} placeholder="Search remedies…" />
             </div>
 
             {/* Main links (from config, filtered to enabled) */}

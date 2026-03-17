@@ -31,7 +31,7 @@ const defaultConsent: ConsentCategories = {
 const CookieConsentContext = createContext<CookieConsentContextType | undefined>(undefined);
 
 // API URL from env
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
 
 export function CookieConsentProvider({ children }: { children: ReactNode }) {
     const [consent, setConsent] = useState<ConsentCategories | null>(null);

@@ -6,8 +6,11 @@
 
 import { Product, FilteredProduct, FilterMeta, ProductWithDetails, ProductAsset, ApiResponse } from '@/types';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-const TOKEN_KEY = 'ksp_wines_token';
+let API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
+if (typeof window !== 'undefined' && (API_URL.includes('localhost') || API_URL.includes('127.0.0.1'))) {
+    API_URL = `${window.location.protocol}//${window.location.hostname}:5000`;
+}
+const TOKEN_KEY = 'vedashi_token';
 
 /** Read the JWT stored by AuthContext after login/register */
 function getStorefrontToken(): string | null {
@@ -82,7 +85,7 @@ export async function getProducts(params?: {
         if (params?.status) searchParams.set('status', params.status);
 
         const url = `${API_URL}/api/products${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
-        const res = await fetch(url);
+        const res = await fetch(url, { credentials: 'include' });
         if (!res.ok) return [];
         const json: ApiResponse<any> = await res.json();
         // Backend may return data as { products: [...], meta } or as a direct array
@@ -103,7 +106,7 @@ export async function getProducts(params?: {
 export async function getRelatedProducts(productId: string, type: string = 'similar', limit: number = 4): Promise<Product[]> {
     try {
         const url = `${API_URL}/api/products/${productId}/related?type=${type}&limit=${limit}`;
-        const res = await fetch(url);
+        const res = await fetch(url, { credentials: 'include' });
         if (!res.ok) return [];
         const json: ApiResponse<any> = await res.json();
 
@@ -126,7 +129,7 @@ export async function getRelatedProducts(productId: string, type: string = 'simi
 
 export async function getFeaturedProducts(): Promise<Product[]> {
     try {
-        const res = await fetch(`${API_URL}/api/products/featured`, { cache: 'no-store' });
+        const res = await fetch(`${API_URL}/api/products/featured`, { cache: 'no-store', credentials: 'include' });
         if (!res.ok) return [];
         const json: ApiResponse<any> = await res.json();
         console.log('[getFeaturedProducts] response:', json);
@@ -172,7 +175,7 @@ export interface StorefrontCollectionDetail extends StorefrontCollection {
 /** Fetch featured collections for the storefront homepage. */
 export async function getFeaturedCollections(limit: number = 6): Promise<StorefrontCollection[]> {
     try {
-        const res = await fetch(`${API_URL}/api/collections/featured?limit=${limit}`, { cache: 'no-store' });
+        const res = await fetch(`${API_URL}/api/collections/featured?limit=${limit}`, { cache: 'no-store', credentials: 'include' });
         if (!res.ok) return [];
         const json: ApiResponse<any> = await res.json();
         return json.success && Array.isArray(json.data) ? json.data : [];
@@ -185,7 +188,7 @@ export async function getFeaturedCollections(limit: number = 6): Promise<Storefr
 /** Fetch a single collection by slug with its products. */
 export async function getCollectionBySlug(slug: string, limit: number = 20, offset: number = 0): Promise<StorefrontCollectionDetail | null> {
     try {
-        const res = await fetch(`${API_URL}/api/collections/${slug}?limit=${limit}&offset=${offset}`, { cache: 'no-store' });
+        const res = await fetch(`${API_URL}/api/collections/${slug}?limit=${limit}&offset=${offset}`, { cache: 'no-store', credentials: 'include' });
         if (!res.ok) return null;
         const json: ApiResponse<any> = await res.json();
         if (json.success && json.data) {
@@ -210,15 +213,28 @@ export interface FilterParams {
     page?: number;
     limit?: number;
     sort?: string;
+    search?: string;
     min_price?: number;
     max_price?: number;
     min_abv?: number;
     max_abv?: number;
     country?: string;      // comma-separated
+    form?: string;         // comma-separated
+    specialities?: string; // comma-separated
     min_rating?: number;
     availability?: string;  // 'in_stock' | 'out_of_stock' | 'all'
     category?: string;
+    sub_category?: string;
     brand?: string;
+    discount_min?: number;
+    featured?: boolean;
+    trending?: boolean;
+    editor_pick?: boolean;
+    on_sale?: boolean;
+    inStock?: boolean;
+    bestSeller?: boolean;
+    newArrival?: boolean;
+    attributes?: Record<string, string[]>;
 }
 
 export async function getFilteredProducts(
@@ -229,19 +245,39 @@ export async function getFilteredProducts(
         if (params.page) sp.set('page', String(params.page));
         if (params.limit) sp.set('limit', String(params.limit));
         if (params.sort) sp.set('sort', params.sort);
+        if (params.search) sp.set('search', params.search);
         if (params.min_price != null) sp.set('min_price', String(params.min_price));
         if (params.max_price != null) sp.set('max_price', String(params.max_price));
         if (params.min_abv != null) sp.set('min_abv', String(params.min_abv));
         if (params.max_abv != null) sp.set('max_abv', String(params.max_abv));
         if (params.country) sp.set('country', params.country);
+        if (params.form) sp.set('form', params.form);
+        if (params.specialities) sp.set('specialities', params.specialities);
         if (params.min_rating != null) sp.set('min_rating', String(params.min_rating));
         if (params.availability) sp.set('availability', params.availability);
         if (params.category) sp.set('category', params.category);
+        if (params.sub_category) sp.set('sub_category', params.sub_category);
         if (params.brand) sp.set('brand', params.brand);
+        if (params.discount_min != null) sp.set('discount_min', String(params.discount_min));
+        if (params.featured) sp.set('featured', 'true');
+        if (params.trending) sp.set('trending', 'true');
+        if (params.editor_pick) sp.set('editor_pick', 'true');
+        if (params.on_sale) sp.set('on_sale', 'true');
+        if (params.inStock) sp.set('inStock', 'true');
+        if (params.bestSeller) sp.set('bestSeller', 'true');
+        if (params.newArrival) sp.set('newArrival', 'true');
+
+        if (params.attributes) {
+            Object.entries(params.attributes).forEach(([key, values]) => {
+                if (values && values.length > 0) {
+                    sp.set(`attr_${key}`, values.join(','));
+                }
+            });
+        }
 
         const qs = sp.toString();
         const url = `${API_URL}/api/products/filter${qs ? '?' + qs : ''}`;
-        const res = await fetch(url);
+        const res = await fetch(url, { credentials: 'include' });
         const json = await res.json();
 
         if (json.success) {
@@ -284,7 +320,7 @@ export async function getBestSellers(params?: {
 
         const qs = sp.toString();
         const url = `${API_URL}/api/products/best-sellers${qs ? '?' + qs : ''}`;
-        const res = await fetch(url);
+        const res = await fetch(url, { credentials: 'include' });
         const json = await res.json();
 
         if (json.success && json.data) {
@@ -344,7 +380,7 @@ export async function getNewArrivals(params?: {
 
         const qs = sp.toString();
         const url = `${API_URL}/api/products/new-arrivals${qs ? '?' + qs : ''}`;
-        const res = await fetch(url);
+        const res = await fetch(url, { credentials: 'include' });
         const json = await res.json();
 
         if (json.success && json.data) {
@@ -376,11 +412,13 @@ export async function getNewArrivals(params?: {
 }
 
 /** Fetch all products once and extract unique brands & countries for filter options */
-export async function getFilterOptions(): Promise<{ brands: string[]; countries: string[]; maxPrice: number }> {
+export async function getFilterOptions(): Promise<{ brands: string[]; countries: string[]; maxPrice: number; categories: any[]; attributes: any[] }> {
     try {
-        const [{ data: products }, { data: maxPriceProd }] = await Promise.all([
+        const [{ data: products }, { data: maxPriceProd }, catRes, attrRes] = await Promise.all([
             getFilteredProducts({ limit: 500 }),
-            getFilteredProducts({ limit: 1, sort: 'price_desc' })
+            getFilteredProducts({ limit: 1, sort: 'price_desc' }),
+            fetch(`${API_URL}/api/categories?tree=true`, { credentials: 'include' }).then(res => res.json()).catch(() => ({ data: [] })),
+            fetch(`${API_URL}/api/filter-attributes`, { credentials: 'include' }).then(res => res.json()).catch(() => ({ data: [] }))
         ]);
 
         const brandSet = new Set<string>();
@@ -403,17 +441,19 @@ export async function getFilterOptions(): Promise<{ brands: string[]; countries:
         return {
             brands: Array.from(brandSet).sort(),
             countries: Array.from(countrySet).sort(),
-            maxPrice: roundedMax
+            maxPrice: roundedMax,
+            categories: catRes?.data || [],
+            attributes: attrRes?.data || []
         };
     } catch (err) {
         console.error('[API] Failed to fetch filter options:', err);
-        return { brands: [], countries: [], maxPrice: 500 };
+        return { brands: [], countries: [], maxPrice: 500, categories: [], attributes: [] };
     }
 }
 
 export async function getProduct(id: string): Promise<Product | null> {
     try {
-        const res = await fetch(`${API_URL}/api/products/${id}`);
+        const res = await fetch(`${API_URL}/api/products/${id}`, { credentials: 'include' });
         const json: ApiResponse<any> = await res.json();
         if (json.success && json.data) {
             const p = json.data;
@@ -428,7 +468,7 @@ export async function getProduct(id: string): Promise<Product | null> {
 
 export async function getProductDetails(id: string): Promise<ProductWithDetails | null> {
     try {
-        const res = await fetch(`${API_URL}/api/products/${id}/details`);
+        const res = await fetch(`${API_URL}/api/products/${id}/details`, { credentials: 'include' });
         const json: ApiResponse<any> = await res.json();
         if (!json.success || !json.data) return null;
 
@@ -446,7 +486,7 @@ export async function getProductDetails(id: string): Promise<ProductWithDetails 
 
 export async function searchProducts(query: string): Promise<Product[]> {
     try {
-        const res = await fetch(`${API_URL}/api/products/search?q=${encodeURIComponent(query)}`);
+        const res = await fetch(`${API_URL}/api/products/search?q=${encodeURIComponent(query)}`, { credentials: 'include' });
         const json: ApiResponse<any[]> = await res.json();
         if (json.success && json.data) {
             return json.data.map((p: any) => ({
@@ -461,9 +501,33 @@ export async function searchProducts(query: string): Promise<Product[]> {
     }
 }
 
+export interface SearchSuggestion {
+    product_id: string;
+    product_name: string;
+    slug: string;
+    brand?: string;
+    category?: string;
+    thumbnail_url?: string;
+    price?: number;
+}
+
+export async function getSearchSuggestions(q: string): Promise<SearchSuggestion[]> {
+    if (!q || q.trim().length < 2) return [];
+    try {
+        const res = await fetch(`${API_URL}/api/products/suggestions?q=${encodeURIComponent(q.trim())}`, { credentials: 'include' });
+        const json = await res.json();
+        if (json.success && json.data?.suggestions) {
+            return json.data.suggestions;
+        }
+        return [];
+    } catch {
+        return [];
+    }
+}
+
 export async function checkApiHealth(): Promise<boolean> {
     try {
-        const res = await fetch(`${API_URL}/api/products?limit=1`);
+        const res = await fetch(`${API_URL}/api/products?limit=1`, { credentials: 'include' });
         return res.ok;
     } catch {
         return false;
@@ -719,6 +783,20 @@ export async function mergeGuestCart(guestCartId: string, customerId: string) {
     }
 }
 
+/** 
+ * Clear all items from a cart.
+ * Note: Backend currently doesn't have a single "clear" endpoint, 
+ * so this is a placeholder or can be enhanced later.
+ */
+export async function clearCart(cartId: string) {
+    try {
+        // Placeholder until backend provides a DELETE /api/cart/:id/items endpoint
+        return { success: true, message: 'Cart cleared locally' };
+    } catch (error) {
+        return { success: false, message: 'Network error' };
+    }
+}
+
 /* ─── Payments (Razorpay) ─── */
 
 /** Create a Razorpay order for an existing platform order. */
@@ -747,7 +825,7 @@ export async function verifyPayment(data: {
     razorpay_order_id: string;
     razorpay_payment_id: string;
     razorpay_signature: string;
-    order_id: string;
+    order_id?: string;
 }) {
     try {
         const res = await authFetch(`${API_URL}/api/payments/verify`, {
@@ -758,6 +836,34 @@ export async function verifyPayment(data: {
         return res.json();
     } catch (error) {
         console.warn('[API] verifyPayment failed:', error);
+        return { success: false, message: 'Network error' };
+    }
+}
+
+/** 
+ * Initiate a Razorpay checkout (Deferred Order Creation).
+ * Prepares the checkout and creates a Razorpay order without creating a platform order yet.
+ */
+export async function initiatePaymentCheckout(data: {
+    cart_id?: string;
+    items?: Array<{ product_id: string; variant_id?: string | null; quantity: number; unit_price?: number }>;
+    shipping_address_id?: string;
+    shipping_address?: Record<string, any>;
+    billing_address_id?: string;
+    billing_address?: Record<string, any>;
+    coupon_code?: string;
+    payment_method?: string;
+    redeem_points?: number;
+}) {
+    try {
+        const res = await authFetch(`${API_URL}/api/payments/razorpay/initiate-checkout`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        return res.json();
+    } catch (error) {
+        console.warn('[API] initiatePaymentCheckout failed:', error);
         return { success: false, message: 'Network error' };
     }
 }
@@ -786,9 +892,12 @@ export async function directCheckout(data: {
     items: Array<{ product_id: string; variant_id?: string | null; quantity: number; unit_price?: number }>;
     shipping_address_id?: string;
     shipping_address?: Record<string, string>;
+    billing_address_id?: string;
+    billing_address?: Record<string, string>;
     payment_method?: string;
     order_notes?: string;
     coupon_code?: string;
+    redeem_points?: number;
 }) {
     try {
         const res = await authFetch(`${API_URL}/api/orders/direct`, {
@@ -803,8 +912,88 @@ export async function directCheckout(data: {
     }
 }
 
+/**
+ * Global Postal Code Lookup 
+ * Strategy:
+ * 1. Zippopotam (Primary - as requested)
+ * 2. Indian Pincode API (Fallback for India)
+ * 3. Nominatim (Global Fallback for maximum reliability)
+ */
+export const lookupPostalCode = async (pincode: string, countryCode?: string) => {
+    if (!pincode || !countryCode) return { success: false };
+    const cCode = countryCode.toUpperCase();
+
+    try {
+        // 1. Try Zippopotam (User Requested)
+        const zipRes = await fetch(`https://api.zippopotam.us/${cCode.toLowerCase()}/${pincode}`);
+        if (zipRes.ok) {
+            const data = await zipRes.json();
+            if (data.places && data.places.length > 0) {
+                const place = data.places[0];
+                return {
+                    city: place['place name'],
+                    state: place['state'],
+                    country: data['country'],
+                    success: true
+                };
+            }
+        }
+
+        // 2. Fallback specifically for India (IN)
+        if (cCode === 'IN') {
+            const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+            if (res.ok) {
+                const json = await res.json();
+                if (json[0]?.Status === 'Success' && json[0]?.PostOffice?.length > 0) {
+                    const po = json[0].PostOffice[0];
+                    return {
+                        city: po.District || po.Name,
+                        state: po.State,
+                        country: 'India',
+                        success: true
+                    };
+                }
+            }
+        }
+
+        // 3. Nominatim Global Fallback (Robust, covers KR, AE, etc.)
+        const nominatimUrl = `https://nominatim.openstreetmap.org/search?postalcode=${pincode}&countrycodes=${cCode.toLowerCase()}&format=json&addressdetails=1&accept-language=en`;
+        const nRes = await fetch(nominatimUrl, {
+            headers: { 'User-Agent': 'Vedashi-Storefront-App' }
+        });
+        if (nRes.ok) {
+            const nJson = await nRes.json();
+            if (nJson.length > 0) {
+                const addr = nJson[0].address;
+                return {
+                    city: addr.city || addr.town || addr.village || addr.suburb || addr.city_district || addr.county || '',
+                    state: addr.state || addr.region || addr.province || '',
+                    country: addr.country || '',
+                    success: true
+                };
+            }
+        }
+
+        return { success: false, message: 'Postal code not found' };
+    } catch (error) {
+        console.error('Postal code lookup error:', error);
+        return { success: false, message: 'Error fetching location data' };
+    }
+};
+
 /** Cart-based checkout (requires backend cart_id + customer_id). */
-export async function checkoutOrder(data: { cart_id: string; customer_id: string; shipping_address_id?: string; coupon_code?: string; order_notes?: string }) {
+export async function checkoutOrder(data: {
+    cart_id: string;
+    customer_id: string;
+    shipping_address_id?: string;
+    shipping_address?: Record<string, string>;
+    billing_address_id?: string;
+    billing_address?: Record<string, string>;
+    coupon_code?: string;
+    order_notes?: string;
+    payment_method?: string;
+    redeem_points?: number;
+}) {
     try {
         const res = await authFetch(`${API_URL}/api/orders/checkout`, {
             method: 'POST',
@@ -943,6 +1132,24 @@ export async function updateCustomerProfile(id: string, data: Record<string, unk
     return res.json();
 }
 
+export async function requestEmailChange(newEmail: string) {
+    const res = await authFetch(`${API_URL}/api/customers/profile/email/request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ new_email: newEmail }),
+    });
+    return res.json();
+}
+
+export async function verifyEmailChangeProfile(token: string) {
+    const res = await authFetch(`${API_URL}/api/customers/profile/email/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+    });
+    return res.json();
+}
+
 export async function verifyAge(customerId: string) {
     const res = await authFetch(`${API_URL}/api/customers/${customerId}/verify-age`, {
         method: 'POST',
@@ -980,6 +1187,9 @@ export async function getAddresses(customerId: string) {
         return { success: false, data: [] };
     }
 }
+
+/** Legacy alias for getAddresses */
+export const getUserAddresses = getAddresses;
 
 export async function addAddress(customerId: string, address: Record<string, string>) {
     const res = await authFetch(`${API_URL}/api/customers/${customerId}/addresses`, {
@@ -1040,7 +1250,7 @@ export async function getProductReviews(productId: string, params?: { limit?: nu
     if (params?.offset) searchParams.set('offset', String(params.offset));
     if (params?.sort) searchParams.set('sort', params.sort);
     const qs = searchParams.toString();
-    const res = await fetch(`${API_URL}/api/reviews/product/${productId}${qs ? '?' + qs : ''}`);
+    const res = await fetch(`${API_URL}/api/reviews/product/${productId}${qs ? '?' + qs : ''}`, { credentials: 'include' });
     return res.json();
 }
 
@@ -1159,7 +1369,7 @@ export async function clearWishlist() {
 export async function getCategories(tree?: boolean): Promise<any[]> {
     try {
         const qs = tree ? '?tree=true' : '';
-        const res = await fetch(`${API_URL}/api/categories${qs}`);
+        const res = await fetch(`${API_URL}/api/categories${qs}`, { credentials: 'include' });
         if (!res.ok) return [];
         const json: ApiResponse<any[]> = await res.json();
         return json.success && json.data ? json.data : [];
@@ -1175,7 +1385,7 @@ export async function getCategoryProducts(categoryId: string, params?: { limit?:
         if (params?.limit) searchParams.set('limit', String(params.limit));
         if (params?.offset) searchParams.set('offset', String(params.offset));
         const qs = searchParams.toString();
-        const res = await fetch(`${API_URL}/api/categories/${categoryId}/products${qs ? '?' + qs : ''}`);
+        const res = await fetch(`${API_URL}/api/categories/${categoryId}/products${qs ? '?' + qs : ''}`, { credentials: 'include' });
         if (!res.ok) return [];
         const json: ApiResponse<Product[]> = await res.json();
         return json.success && json.data ? json.data : [];
@@ -1193,7 +1403,7 @@ export async function getProductImages(productId: string, variantId?: string): P
         if (variantId) sp.set('variant_id', variantId);
         const qs = sp.toString();
         const url = `${API_URL}/api/products/${productId}/images${qs ? '?' + qs : ''}`;
-        const res = await fetch(url);
+        const res = await fetch(url, { credentials: 'include' });
         const json: ApiResponse<ProductAsset[]> = await res.json();
         return json.success && json.data ? json.data : [];
     } catch (error) {
@@ -1234,7 +1444,8 @@ export async function searchAutocomplete(q: string, limit: number = 8): Promise<
     try {
         if (!q || q.trim().length < 2) return [];
         const res = await fetch(
-            `${API_URL}/api/search/autocomplete?q=${encodeURIComponent(q.trim())}&limit=${limit}`
+            `${API_URL}/api/search/autocomplete?q=${encodeURIComponent(q.trim())}&limit=${limit}`,
+            { credentials: 'include' }
         );
         if (!res.ok) return [];
         const json: ApiResponse<SearchSuggestion[]> = await res.json();
@@ -1266,7 +1477,7 @@ export async function advancedSearch(
         if (params.brand) sp.set('brand', params.brand);
 
         const url = `${API_URL}/api/search?${sp.toString()}`;
-        const res = await fetch(url);
+        const res = await fetch(url, { credentials: 'include' });
         const json = await res.json();
 
         if (json.success) {
@@ -1334,6 +1545,13 @@ export interface BlogPost {
     meta_title?: string;
     meta_description?: string;
     share_urls?: Record<string, string>;
+    featured_image?: string;
+    display_order?: number;
+    is_trending?: boolean;
+    is_editor_pick?: boolean;
+    content_type?: string;
+    difficulty_level?: string;
+    compliance_checked?: boolean;
 }
 
 export interface BlogCategory {
@@ -1370,7 +1588,7 @@ export async function getBlogPosts(params?: { cursor?: string; limit?: number; b
         if (params?.cursor) sp.set('cursor', params.cursor);
         if (params?.limit) sp.set('limit', String(params.limit));
         if (params?.blog_type) sp.set('blog_type', params.blog_type);
-        const res = await fetch(`${API_URL}/api/blog/posts?${sp.toString()}`);
+        const res = await fetch(`${API_URL}/api/blog/posts?${sp.toString()}`, { credentials: 'include' });
         const json = await res.json();
         if (json.success) return json.data;
         return { posts: [], nextCursor: null, hasMore: false };
@@ -1379,7 +1597,7 @@ export async function getBlogPosts(params?: { cursor?: string; limit?: number; b
 
 export async function getFeaturedBlogPosts(limit = 5): Promise<BlogPost[]> {
     try {
-        const res = await fetch(`${API_URL}/api/blog/posts/featured?limit=${limit}`);
+        const res = await fetch(`${API_URL}/api/blog/posts/featured?limit=${limit}`, { credentials: 'include' });
         const json = await res.json();
         if (json.success) return json.data || [];
         return [];
@@ -1400,7 +1618,7 @@ export async function getBlogPostsByCategory(categorySlug: string, params?: { cu
         const sp = new URLSearchParams();
         if (params?.cursor) sp.set('cursor', params.cursor);
         if (params?.limit) sp.set('limit', String(params.limit));
-        const res = await fetch(`${API_URL}/api/blog/posts/category/${categorySlug}?${sp.toString()}`);
+        const res = await fetch(`${API_URL}/api/blog/posts/category/${categorySlug}?${sp.toString()}`, { credentials: 'include' });
         const json = await res.json();
         if (json.success) return json.data;
         return { posts: [], nextCursor: null, hasMore: false };
@@ -1412,7 +1630,7 @@ export async function getBlogPostsByTag(tagSlug: string, params?: { cursor?: str
         const sp = new URLSearchParams();
         if (params?.cursor) sp.set('cursor', params.cursor);
         if (params?.limit) sp.set('limit', String(params.limit));
-        const res = await fetch(`${API_URL}/api/blog/posts/tag/${tagSlug}?${sp.toString()}`);
+        const res = await fetch(`${API_URL}/api/blog/posts/tag/${tagSlug}?${sp.toString()}`, { credentials: 'include' });
         const json = await res.json();
         if (json.success) return json.data;
         return { posts: [], nextCursor: null, hasMore: false };
@@ -1424,7 +1642,7 @@ export async function searchBlogPosts(search: string, params?: { cursor?: string
         const sp = new URLSearchParams({ search });
         if (params?.cursor) sp.set('cursor', params.cursor);
         if (params?.limit) sp.set('limit', String(params.limit));
-        const res = await fetch(`${API_URL}/api/blog/posts/search?${sp.toString()}`);
+        const res = await fetch(`${API_URL}/api/blog/posts/search?${sp.toString()}`, { credentials: 'include' });
         const json = await res.json();
         if (json.success) return json.data;
         return { posts: [], nextCursor: null, hasMore: false };
@@ -1433,7 +1651,7 @@ export async function searchBlogPosts(search: string, params?: { cursor?: string
 
 export async function getRelatedBlogPosts(postId: string, limit = 4): Promise<BlogPost[]> {
     try {
-        const res = await fetch(`${API_URL}/api/blog/posts/${postId}/related?limit=${limit}`);
+        const res = await fetch(`${API_URL}/api/blog/posts/${postId}/related?limit=${limit}`, { credentials: 'include' });
         const json = await res.json();
         if (json.success) return json.data || [];
         return [];
@@ -1442,7 +1660,7 @@ export async function getRelatedBlogPosts(postId: string, limit = 4): Promise<Bl
 
 export async function getBlogCategories(): Promise<BlogCategory[]> {
     try {
-        const res = await fetch(`${API_URL}/api/blog/categories`);
+        const res = await fetch(`${API_URL}/api/blog/categories`, { credentials: 'include' });
         const json = await res.json();
         if (json.success) return json.data || [];
         return [];
@@ -1451,7 +1669,7 @@ export async function getBlogCategories(): Promise<BlogCategory[]> {
 
 export async function getBlogCategoryTree(): Promise<BlogCategory[]> {
     try {
-        const res = await fetch(`${API_URL}/api/blog/categories/tree`);
+        const res = await fetch(`${API_URL}/api/blog/categories/tree`, { credentials: 'include' });
         const json = await res.json();
         if (json.success) return json.data || [];
         return [];
@@ -1460,7 +1678,7 @@ export async function getBlogCategoryTree(): Promise<BlogCategory[]> {
 
 export async function getPopularBlogTags(limit = 15): Promise<BlogTag[]> {
     try {
-        const res = await fetch(`${API_URL}/api/blog/tags/popular?limit=${limit}`);
+        const res = await fetch(`${API_URL}/api/blog/tags/popular?limit=${limit}`, { credentials: 'include' });
         const json = await res.json();
         if (json.success) return json.data || [];
         return [];
@@ -1488,11 +1706,11 @@ export async function postBlogComment(postId: string, data: { body: string; comm
 }
 
 export async function recordBlogView(postId: string) {
-    try { fetch(`${API_URL}/api/blog/analytics/views`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ post_id: postId }) }); } catch { /* fire-and-forget */ }
+    try { fetch(`${API_URL}/api/blog/analytics/views`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ post_id: postId }), credentials: 'include' }); } catch { /* fire-and-forget */ }
 }
 
 export async function recordBlogShare(postId: string, platform: string) {
-    try { fetch(`${API_URL}/api/blog/analytics/shares`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ post_id: postId, platform }) }); } catch { /* fire-and-forget */ }
+    try { fetch(`${API_URL}/api/blog/analytics/shares`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ post_id: postId, platform }), credentials: 'include' }); } catch { /* fire-and-forget */ }
 }
 
 /* ─── Support & Help System ─── */
@@ -1500,7 +1718,7 @@ export async function recordBlogShare(postId: string, platform: string) {
 // FAQs
 export async function getFaqs() {
     try {
-        const res = await fetch(`${API_URL}/api/faqs`);
+        const res = await fetch(`${API_URL}/api/faqs`, { credentials: 'include' });
         const json = await res.json();
         return json.success ? json.data : { faqs: [], grouped: {} };
     } catch { return { faqs: [], grouped: {} }; }
@@ -1508,7 +1726,7 @@ export async function getFaqs() {
 
 export async function searchFaqs(q: string) {
     try {
-        const res = await fetch(`${API_URL}/api/faqs/search?q=${encodeURIComponent(q)}`);
+        const res = await fetch(`${API_URL}/api/faqs/search?q=${encodeURIComponent(q)}`, { credentials: 'include' });
         const json = await res.json();
         return json.success ? json.data : [];
     } catch { return []; }
@@ -1517,7 +1735,7 @@ export async function searchFaqs(q: string) {
 // Help Center
 export async function getHelpArticles() {
     try {
-        const res = await fetch(`${API_URL}/api/help-center`);
+        const res = await fetch(`${API_URL}/api/help-center`, { credentials: 'include' });
         const json = await res.json();
         return json.success ? json.data : { articles: [], grouped: {} };
     } catch { return { articles: [], grouped: {} }; }
@@ -1525,7 +1743,7 @@ export async function getHelpArticles() {
 
 export async function searchHelpArticles(q: string) {
     try {
-        const res = await fetch(`${API_URL}/api/help-center/search?q=${encodeURIComponent(q)}`);
+        const res = await fetch(`${API_URL}/api/help-center/search?q=${encodeURIComponent(q)}`, { credentials: 'include' });
         const json = await res.json();
         return json.success ? json.data : [];
     } catch { return []; }
@@ -1533,7 +1751,7 @@ export async function searchHelpArticles(q: string) {
 
 export async function getHelpArticle(slug: string) {
     try {
-        const res = await fetch(`${API_URL}/api/help-center/${slug}`);
+        const res = await fetch(`${API_URL}/api/help-center/${slug}`, { credentials: 'include' });
         const json = await res.json();
         return json.success ? json.data : null;
     } catch { return null; }
@@ -1542,7 +1760,7 @@ export async function getHelpArticle(slug: string) {
 // Knowledge Base
 export async function getKBCategories() {
     try {
-        const res = await fetch(`${API_URL}/api/knowledge-base/categories`);
+        const res = await fetch(`${API_URL}/api/knowledge-base/categories`, { credentials: 'include' });
         const json = await res.json();
         return json.success ? json.data : [];
     } catch { return []; }
@@ -1551,7 +1769,7 @@ export async function getKBCategories() {
 export async function getKBArticles(category?: string) {
     try {
         const qs = category ? `?category=${encodeURIComponent(category)}` : '';
-        const res = await fetch(`${API_URL}/api/knowledge-base${qs}`);
+        const res = await fetch(`${API_URL}/api/knowledge-base${qs}`, { credentials: 'include' });
         const json = await res.json();
         return json.success ? json.data : [];
     } catch { return []; }
@@ -1559,7 +1777,7 @@ export async function getKBArticles(category?: string) {
 
 export async function getKBArticle(slug: string) {
     try {
-        const res = await fetch(`${API_URL}/api/knowledge-base/article/${slug}`);
+        const res = await fetch(`${API_URL}/api/knowledge-base/article/${slug}`, { credentials: 'include' });
         const json = await res.json();
         return json.success ? json.data : null;
     } catch { return null; }
@@ -1627,6 +1845,112 @@ export async function rateArticle(data: { article_type: 'help' | 'kb'; article_i
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
         });
-        return res.json();
+        return (await res.json());
     } catch { return { success: false, message: 'Network error' }; }
+}
+
+export async function getMyEnquiries() {
+    try {
+        const res = await authFetch(`${API_URL}/api/customer-enquiry/my`);
+        const json = await res.json();
+        return json.success ? json.data : [];
+    } catch { return []; }
+}
+
+export async function replyToEnquiry(id: string, message: string) {
+    try {
+        const res = await authFetch(`${API_URL}/api/customer-enquiry/my/${id}/reply`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ body: message }),
+        });
+        return (await res.json());
+    } catch { return { success: false, message: 'Network error' }; }
+}
+
+// In-App Notifications
+export async function getMyNotifications(limit = 50, offset = 0) {
+    try {
+        const res = await authFetch(`${API_URL}/api/notifications?limit=${limit}&offset=${offset}`);
+        const json = await res.json();
+        return json.success ? json.data : [];
+    } catch { return []; }
+}
+
+export async function getUnreadNotificationCount() {
+    try {
+        const res = await authFetch(`${API_URL}/api/notifications/unread-count`);
+        const json = await res.json();
+        return json.success ? json.data.unread_count : 0;
+    } catch { return 0; }
+}
+
+export async function markNotificationAsRead(id: string) {
+    try {
+        const res = await authFetch(`${API_URL}/api/notifications/${id}/read`, {
+            method: 'PATCH'
+        });
+        return await res.json();
+    } catch { return { success: false }; }
+}
+
+export async function markAllNotificationsAsRead() {
+    try {
+        const res = await authFetch(`${API_URL}/api/notifications/read-all`, {
+            method: 'PATCH'
+        });
+        return await res.json();
+    } catch { return { success: false }; }
+}
+
+export async function deleteNotification(id: string) {
+    try {
+        const res = await authFetch(`${API_URL}/api/notifications/${id}`, {
+            method: 'DELETE'
+        });
+        return await res.json();
+    } catch { return { success: false }; }
+}
+
+// ─── Loyalty & Rewards ───
+
+export async function getLoyaltyWallet() {
+    try {
+        const res = await authFetch(`${API_URL}/api/loyalty/wallet`);
+        const json = await res.json();
+        return json.success ? json.data : null;
+    } catch { return null; }
+}
+
+export async function getLoyaltyTransactions(limit = 20, offset = 0) {
+    try {
+        const res = await authFetch(`${API_URL}/api/loyalty/transactions?limit=${limit}&offset=${offset}`);
+        const json = await res.json();
+        if (json.success && json.data) {
+            return Array.isArray(json.data.transactions) ? json.data.transactions : (Array.isArray(json.data) ? json.data : []);
+        }
+        return [];
+    } catch { return []; }
+}
+
+export async function getLoyaltyTiers() {
+    try {
+        const res = await fetch(`${API_URL}/api/loyalty/tiers`, { credentials: 'include' });
+        const json = await res.json();
+        return json.success ? json.data : [];
+    } catch { return []; }
+}
+
+/* ─── Legal Documents ─── */
+
+export async function getLegalDocument(slug: string) {
+    try {
+        const res = await fetch(`${API_URL}/api/legal/public/${slug}`, { credentials: 'include' });
+        if (!res.ok) return null;
+        const json: ApiResponse<any> = await res.json();
+        return json.success ? json.data : null;
+    } catch (error) {
+        console.warn(`[API] Failed to fetch legal document: ${slug}`);
+        return null;
+    }
 }

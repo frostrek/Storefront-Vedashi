@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -29,7 +29,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ];
 
     const productUrls: MetadataRoute.Sitemap = products.map((p) => ({
-        url: `${SITE_URL}/product/${p.slug}`,
+        url: `${SITE_URL}/products/${p.slug}`,
         lastModified: new Date(p.updated_at || new Date()),
         changeFrequency: 'weekly',
         priority: 0.8,
