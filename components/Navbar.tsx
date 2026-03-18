@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
-import { ShoppingCart, User, Menu, X, Heart, ChevronDown, Search, ArrowRight, Leaf, Sparkles } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, Heart, ChevronDown, Search, ArrowRight, Leaf, Sparkles, LogOut, Settings, Package, UserPlus, LogIn } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useAuth } from '@/context/AuthContext';
@@ -82,7 +82,7 @@ export default function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const { totalItems, loading: cartLoading } = useCart();
   const { totalItems: wishlistCount } = useWishlist();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [showCartReminder, setShowCartReminder] = useState(false);
   const [prevTotalItems, setPrevTotalItems] = useState(0);
@@ -309,9 +309,72 @@ export default function Navbar() {
                 )}
               </div>
 
-              <Link href="/account" className="relative p-2 group" suppressHydrationWarning>
-                <User className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
-              </Link>
+              {/* Profile / Account Dropdown */}
+              <div className="relative group flex items-center" suppressHydrationWarning>
+                <Link href={isAuthenticated ? "/account" : "/login"} className="relative p-2 block group-hover:text-[#3B5D3B] transition-colors">
+                  {isAuthenticated && user?.avatar_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <div className="h-[22px] w-[22px] rounded-full overflow-hidden ring-1 ring-[#D4A847]/30 group-hover:ring-[#D4A847] transition-all">
+                        <img src={user.avatar_url} alt="Profile" className="h-full w-full object-cover" />
+                    </div>
+                  ) : (
+                    <User className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
+                  )}
+                </Link>
+                
+                {/* Account Dropdown Desktop */}
+                <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[120] transform origin-top-right scale-95 group-hover:scale-100 overflow-hidden">
+                  <div className="py-2">
+                    {isAuthenticated ? (
+                       <>
+                          <div className="px-5 py-4 border-b border-gray-50 bg-[#3B5D3B]/5">
+                            <p className="text-sm font-bold text-gray-800 truncate">{user?.name || 'My Account'}</p>
+                            <p className="text-xs text-gray-500 truncate mt-0.5">{user?.email}</p>
+                          </div>
+                          <div className="p-2 space-y-1">
+                            <Link href="/account" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:text-[#3B5D3B] hover:bg-[#3B5D3B]/5 transition-all">
+                               <Settings className="h-4 w-4" /> Account Settings
+                            </Link>
+                            <Link href="/account/orders" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:text-[#3B5D3B] hover:bg-[#3B5D3B]/5 transition-all">
+                               <Package className="h-4 w-4" /> My Orders
+                            </Link>
+                            <Link href="/account/wishlist" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:text-[#3B5D3B] hover:bg-[#3B5D3B]/5 transition-all">
+                               <Heart className="h-4 w-4" /> My Wishlist
+                            </Link>
+                          </div>
+                          <div className="border-t border-gray-100 my-1"></div>
+                          <div className="p-2">
+                            <button 
+                              onClick={() => {
+                                logout();
+                                toast.success('Logged out successfully');
+                                router.push('/');
+                              }} 
+                              className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-all font-semibold"
+                            >
+                               <LogOut className="h-4 w-4" /> Sign Out
+                            </button>
+                          </div>
+                       </>
+                    ) : (
+                       <>
+                          <div className="px-5 py-4 border-b border-gray-50 bg-[#3B5D3B]/5">
+                             <p className="text-sm font-bold text-gray-800">Welcome to Vedashi</p>
+                             <p className="text-xs text-gray-500 mt-0.5">Sign in to easily track orders, save items, and more.</p>
+                          </div>
+                          <div className="p-2 space-y-1">
+                            <Link href="/login" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-white bg-[#3B5D3B] hover:bg-[#4A724A] transition-all shadow-md shadow-[#3B5D3B]/20">
+                               <LogIn className="h-4 w-4" /> Sign In
+                            </Link>
+                            <Link href="/signup" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-all">
+                               <UserPlus className="h-4 w-4" /> Create Account
+                            </Link>
+                          </div>
+                       </>
+                    )}
+                  </div>
+                </div>
+              </div>
 
               {/* Mobile toggle */}
               <button suppressHydrationWarning onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2" style={{ color: colors.navbar_text }}>
@@ -523,6 +586,77 @@ export default function Navbar() {
                 ))}
               </div>
             ))}
+
+            {/* Profile Section */}
+            <div className="border-t border-gray-100 my-2" />
+            <p className="px-3 text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-2">My Account</p>
+            {isAuthenticated ? (
+              <div className="flex flex-col gap-1 px-2">
+                <div className="px-3 py-2 bg-[#3B5D3B]/5 rounded-lg mb-1 flex items-center gap-3">
+                  {user?.avatar_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={user.avatar_url} alt="Profile" className="h-[36px] w-[36px] rounded-full object-cover ring-1 ring-[#D4A847]/30" />
+                  ) : (
+                      <div className="h-[36px] w-[36px] rounded-full bg-[#3B5D3B]/10 flex items-center justify-center flex-shrink-0">
+                          <User className="h-[18px] w-[18px] text-[#3B5D3B]" />
+                      </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-gray-800 truncate">{user?.name}</p>
+                    <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                  </div>
+                </div>
+                <Link
+                  href="/account"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 py-2.5 px-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-[#3B5D3B]/5 transition-colors"
+                >
+                  <Settings className="h-4 w-4" /> Account Settings
+                </Link>
+                <Link
+                  href="/account/orders"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 py-2.5 px-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-[#3B5D3B]/5 transition-colors"
+                >
+                  <Package className="h-4 w-4" /> My Orders
+                </Link>
+                <Link
+                  href="/account/wishlist"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 py-2.5 px-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-[#3B5D3B]/5 transition-colors"
+                >
+                  <Heart className="h-4 w-4" /> My Wishlist
+                </Link>
+                <button
+                  onClick={() => {
+                    setMobileOpen(false);
+                    logout();
+                    toast.success('Logged out successfully');
+                    router.push('/');
+                  }}
+                  className="flex items-center gap-3 py-2.5 px-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors mt-2"
+                >
+                  <LogOut className="h-4 w-4" /> Sign Out
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2 px-3 pb-2 pt-1">
+                <Link
+                  href="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium text-white bg-[#3B5D3B] hover:bg-[#4A724A] transition-colors shadow-md shadow-[#3B5D3B]/20"
+                >
+                  <LogIn className="h-4 w-4" /> Sign In
+                </Link>
+                <Link
+                  href="/signup"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-colors"
+                >
+                  <UserPlus className="h-4 w-4" /> Create Account
+                </Link>
+              </div>
+            )}
 
             {/* Hotline */}
             <div className="border-t border-gray-100 my-2" />

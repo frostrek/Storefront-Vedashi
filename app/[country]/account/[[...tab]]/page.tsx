@@ -47,7 +47,7 @@ export default function AccountPage() {
     const router = useRouter();
     const params = useParams<{ country: string, tab?: string[] }>();
     const country = params?.country || 'in';
-    const { user, isAuthenticated, isLoading, logout } = useAuth();
+    const { user, isAuthenticated, isLoading, logout, updateUser } = useAuth();
     const { signOut: clerkSignOut } = useClerk();
     const { items: wishlistItems, removeItem: removeWishlistItem } = useWishlist();
     const { addItem: addCartItem } = useCart();
@@ -221,6 +221,7 @@ export default function AccountPage() {
     // Profile image state
     const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
     const [imageUploading, setImageUploading] = useState(false);
+    const [isZoomModalOpen, setIsZoomModalOpen] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Deactivation state
@@ -348,11 +349,16 @@ export default function AccountPage() {
             const res = await getProfileImage(user.id);
             if (res.success && res.data?.profile_image) {
                 const imgData = res.data.profile_image;
-                if (imgData.startsWith('data:')) {
-                    setProfileImageUrl(imgData);
-                } else {
+                let parsedResult = imgData;
+                if (!imgData.startsWith('data:')) {
                     const mime = res.data.mime_type || 'image/jpeg';
-                    setProfileImageUrl(`data:${mime};base64,${imgData}`);
+                    parsedResult = `data:${mime};base64,${imgData}`;
+                }
+                setProfileImageUrl(parsedResult);
+                
+                // Keep global AuthContext user state synced without triggering unnecessary rerenders
+                if (user?.avatar_url !== parsedResult) {
+                    updateUser({ avatar_url: parsedResult });
                 }
             }
         } catch {
@@ -458,17 +464,31 @@ export default function AccountPage() {
         }
     }, []);
 
+    // Prevent scroll when zoom modal is open
+    useEffect(() => {
+        if (isZoomModalOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => { document.body.style.overflow = ''; };
+    }, [isZoomModalOpen]);
+
     useEffect(() => {
         if (!user?.id) return;
+        
+        // Always fetch profile details and image for the sidebar and header
+        fetchProfile();
+        fetchProfileImage();
+
+        // Tab-specific fetching
         if (activeTab === 'orders') fetchOrders();
         if (activeTab === 'addresses') fetchAddresses();
         if (activeTab === 'support') fetchEnquiries();
         if (activeTab === 'notifications') fetchNotificationsData();
         if (activeTab === 'wallet' || activeTab === 'overview') fetchLoyaltyData();
-        if (activeTab === 'profile') {
+        if (activeTab === 'profile' || activeTab === 'overview') {
             fetchOrders(); // for order count
-            fetchProfile();
-            fetchProfileImage();
         }
     }, [activeTab, user?.id, fetchOrders, fetchAddresses, fetchProfile, fetchProfileImage, fetchEnquiries, fetchLoyaltyData]);
 
@@ -626,6 +646,7 @@ export default function AccountPage() {
                     const res = await uploadProfileImage(user.id, base64);
                     if (res.success) {
                         toast.success('Profile photo updated!');
+                        updateUser({ avatar_url: base64 });
                     } else {
                         toast.error(res.message || 'Failed to upload image');
                         setProfileImageUrl(null);
@@ -653,6 +674,7 @@ export default function AccountPage() {
             const res = await removeProfileImage(user.id);
             if (res.success) {
                 setProfileImageUrl(null);
+                updateUser({ avatar_url: undefined });
                 toast.success('Profile photo removed');
             } else {
                 toast.error(res.message || 'Failed to remove image');
@@ -920,6 +942,34 @@ export default function AccountPage() {
                 </div>
             </aside>
 
+            {/* Hidden file input for profile image upload from any tab */}
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+
+            {/* Fullscreen Image Zoom Modal */}
+            {isZoomModalOpen && profileImageUrl && (
+                <div 
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md"
+                    onClick={() => setIsZoomModalOpen(false)}
+                >
+                    <button 
+                        className="fixed top-6 right-6 text-white/70 hover:text-white transition-all hover:rotate-90 duration-300 z-[110] bg-white/10 hover:bg-white/20 p-2 rounded-full backdrop-blur-md border border-white/10"
+                        onClick={(e) => { e.stopPropagation(); setIsZoomModalOpen(false); }}
+                        title="Close (Esc)"
+                    >
+                        <X className="h-6 w-6" />
+                    </button>
+
+                    <div className="relative max-w-[95vw] max-h-[95vh] animate-in zoom-in-95 duration-300 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img 
+                            src={profileImageUrl} 
+                            alt="Profile Zoomed" 
+                            className="max-w-full max-h-[90vh] object-contain rounded-2xl ring-1 ring-white/20 shadow-[0_0_50px_rgba(0,0,0,0.5)]" 
+                        />
+                    </div>
+                </div>
+            )}
+
             {/* Main Content Area */}
             <main className="flex-1 flex flex-col h-full relative z-10 overflow-hidden">
                 {/* Header */}
@@ -978,15 +1028,37 @@ export default function AccountPage() {
                                         </div>
                                     </div>
 
-                                    {/* Aesthetic Plant Image Sphere */}
-                                    <div className="relative w-48 h-48 md:w-64 md:h-64 flex-shrink-0 z-10 hidden md:block">
+                                    {/* Aesthetic Profile Image Sphere */}
+                                    <div className="relative w-48 h-48 md:w-64 md:h-64 flex-shrink-0 z-10 group mt-6 md:mt-0 mx-auto md:mx-0">
                                         <div className="absolute inset-0 bg-gradient-radial from-white to-[#F8F5F0] rounded-full shadow-[0_0_40px_rgba(212,168,71,0.15)] blur-md"></div>
-                                        <div className="relative w-full h-full rounded-full border-4 border-white overflow-hidden shadow-xl">
-                                            <div className="w-full h-full bg-[#E8E1D5] flex items-center justify-center">
-                                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                <img src="https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?q=80&w=800&auto=format&fit=crop" alt="Wellness Botanical" className="w-full h-full object-cover opacity-90" />
-                                            </div>
+                                        <div className="relative w-full h-full rounded-full border-4 border-white overflow-hidden shadow-xl bg-[#E8E1D5] flex items-center justify-center">
+                                            {profileImageUrl ? (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img 
+                                                    src={profileImageUrl} 
+                                                    alt="Profile" 
+                                                    className="h-full w-full object-cover cursor-pointer hover:scale-110 transition-transform duration-500" 
+                                                    onClick={() => setIsZoomModalOpen(true)}
+                                                />
+                                            ) : (
+                                                <span className="font-serif text-6xl md:text-8xl font-bold text-[#36453A]">
+                                                    {user?.name?.charAt(0).toUpperCase() || 'U'}
+                                                </span>
+                                            )}
+                                            {imageUploading && (
+                                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-full">
+                                                    <Loader2 className="h-10 w-10 animate-spin text-white" />
+                                                </div>
+                                            )}
                                         </div>
+                                        <button
+                                            onClick={() => fileInputRef.current?.click()}
+                                            disabled={imageUploading}
+                                            title="Upload Profile Photo"
+                                            className="absolute bottom-4 right-4 md:bottom-6 md:right-6 h-12 w-12 md:h-14 md:w-14 rounded-full bg-[#36453A] text-white flex items-center justify-center shadow-lg hover:bg-[#2A362D] transition-transform hover:scale-110 disabled:opacity-50 z-20 group-hover:bg-[#D4A847] focus:outline-none focus:ring-4 focus:ring-[#D4A847]/30"
+                                        >
+                                            <Camera className="h-5 w-5 md:h-6 md:w-6" />
+                                        </button>
                                     </div>
 
                                     {/* Abstract Wave decorative background */}
@@ -2241,7 +2313,12 @@ export default function AccountPage() {
                                             <div className="h-28 w-28 rounded-full border-4 border-white shadow-md overflow-hidden bg-cream-dark flex items-center justify-center">
                                                 {profileImageUrl ? (
                                                     // eslint-disable-next-line @next/next/no-img-element
-                                                    <img src={profileImageUrl} alt="Profile" className="h-full w-full object-cover" />
+                                                    <img 
+                                                        src={profileImageUrl} 
+                                                        alt="Profile" 
+                                                        className="h-full w-full object-cover cursor-pointer hover:scale-110 transition-transform duration-500" 
+                                                        onClick={() => setIsZoomModalOpen(true)}
+                                                    />
                                                 ) : (
                                                     <span className="font-serif text-3xl font-bold text-[#36453A]">
                                                         {user?.name?.charAt(0).toUpperCase()}
@@ -2256,11 +2333,10 @@ export default function AccountPage() {
                                             <button
                                                 onClick={() => fileInputRef.current?.click()}
                                                 disabled={imageUploading}
-                                                className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-[#36453A] text-white flex items-center justify-center shadow-md hover:bg-[#2A362D] transition-transform hover:scale-110 disabled:opacity-50"
+                                                className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-[#36453A] text-white flex items-center justify-center shadow-md hover:bg-[#2A362D] transition-transform hover:scale-110 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#36453A]/30"
                                             >
                                                 <Camera className="h-3.5 w-3.5" />
                                             </button>
-                                            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-3 mb-1">
