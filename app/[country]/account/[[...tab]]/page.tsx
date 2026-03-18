@@ -1700,7 +1700,7 @@ export default function AccountPage() {
                                                             <Download className="h-3.5 w-3.5" /> Invoice
                                                         </button>
                                                         <button
-                                                            onClick={() => router.push(`/${country}/help-center/support?orderId=${selectedOrderDetails.order_id}`)}
+                                                            onClick={() => router.push(`/${country}/help-center/support?orderId=${selectedOrderDetails.order_id.split('-')[0].toUpperCase()}`)}
                                                             className="flex-1 flex justify-center items-center gap-2 border border-[#E8E1D5] bg-white rounded-xl py-2.5 text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors shadow-sm"
                                                         >
                                                             <Mail className="h-3.5 w-3.5" /> Support
