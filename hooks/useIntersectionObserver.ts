@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 
 interface UseIntersectionObserverOptions {
-    /** Margin around the root (viewport). Default '200px' — triggers 200px before entering viewport. */
+    /** Margin around  the root (viewport). Default '200px' — triggers 200px before entering viewport. */
     rootMargin?: string;
     /** Visibility threshold (0–1). Default 0.1. */
     threshold?: number;
