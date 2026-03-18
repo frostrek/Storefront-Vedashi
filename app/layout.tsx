@@ -84,7 +84,7 @@ export default async function RootLayout({
       maintenanceMessage = data.maintenance.message || "The Vedashi experience is currently undergoing routine maintenance.";
     }
   } catch (error) {
-    // Ignore network errors here
+    // Ignore network errors her
   }
 
   if (isMaintenance) {
