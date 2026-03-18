@@ -14,7 +14,7 @@ interface AuthContextType {
     socialLogin: (clerkToken: string) => Promise<{ success: boolean; error?: string; is_new_user?: boolean; account_linked?: boolean; pending_verification?: boolean; customer_id?: string; email?: string; full_name?: string }>;
     logout: () => void;
     verifyUserAge: (dateOfBirth: string) => Promise<{ success: boolean; error?: string }>;
-    /** Register callbacks that run after login/logout so Cart + Wishlist can react */
+    /** Register callbacks that run after login/logout so Carts + Wishlist can react */
     onAuthChange: (cb: AuthChangeCallback) => () => void;
 }
 
