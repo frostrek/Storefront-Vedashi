@@ -30,7 +30,7 @@ export default function ConfirmModal({
         setIsMounted(true);
     }, []);
 
-    // Prevent scrolling when modal is open
+    // Prevent scrolling when modal is open 
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = 'hidden';
@@ -49,7 +49,7 @@ export default function ConfirmModal({
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-charcoal/50 backdrop-blur-md animate-in fade-in duration-300">
             <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all scale-100 animate-in zoom-in-95 duration-300 border border-white/20">
                 <div className="p-6">
-                    <h3 className="font-serif text-xl font-bold text-[#1A1A1A] mb-2">{title}</h3>
+                    <h3 className="text-xl font-bold text-[#1A1A1A] mb-2">{title}</h3>
                     <p className="text-[#4A4A4A] text-sm leading-relaxed">{message}</p>
                 </div>
                 <div className="bg-[#F5F4F0] px-6 py-4 flex items-center justify-end gap-3 rounded-b-xl border-t border-[#E8E4DC]">

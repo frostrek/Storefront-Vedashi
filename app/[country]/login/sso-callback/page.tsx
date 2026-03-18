@@ -41,7 +41,7 @@ export default function SSOCallbackPage() {
                 </div>
             </div>
             <div className="mt-8 flex flex-col items-center space-y-2">
-                <h2 className="font-serif text-2xl font-bold text-charcoal tracking-tight">
+                <h2 className="text-2xl font-bold text-charcoal tracking-tight">
                     Verifying your account...
                 </h2>
                 <p className="text-sm font-medium text-warm-gray animate-pulse">

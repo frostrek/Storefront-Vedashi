@@ -47,7 +47,7 @@ export default function AccountPage() {
     const router = useRouter();
     const params = useParams<{ country: string, tab?: string[] }>();
     const country = params?.country || 'in';
-    const { user, isAuthenticated, isLoading, logout } = useAuth();
+    const { user, isAuthenticated, isLoading, logout, updateUser } = useAuth();
     const { signOut: clerkSignOut } = useClerk();
     const { items: wishlistItems, removeItem: removeWishlistItem } = useWishlist();
     const { addItem: addCartItem } = useCart();
@@ -221,6 +221,7 @@ export default function AccountPage() {
     // Profile image state
     const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
     const [imageUploading, setImageUploading] = useState(false);
+    const [isZoomModalOpen, setIsZoomModalOpen] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Deactivation state
@@ -404,11 +405,16 @@ export default function AccountPage() {
             const res = await getProfileImage(user.id);
             if (res.success && res.data?.profile_image) {
                 const imgData = res.data.profile_image;
-                if (imgData.startsWith('data:')) {
-                    setProfileImageUrl(imgData);
-                } else {
+                let parsedResult = imgData;
+                if (!imgData.startsWith('data:')) {
                     const mime = res.data.mime_type || 'image/jpeg';
-                    setProfileImageUrl(`data:${mime};base64,${imgData}`);
+                    parsedResult = `data:${mime};base64,${imgData}`;
+                }
+                setProfileImageUrl(parsedResult);
+                
+                // Keep global AuthContext user state synced without triggering unnecessary rerenders
+                if (user?.avatar_url !== parsedResult) {
+                    updateUser({ avatar_url: parsedResult });
                 }
             }
         } catch {
@@ -544,20 +550,31 @@ export default function AccountPage() {
         }
     }, []);
 
+    // Prevent scroll when zoom modal is open
+    useEffect(() => {
+        if (isZoomModalOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => { document.body.style.overflow = ''; };
+    }, [isZoomModalOpen]);
+
     useEffect(() => {
         if (!user?.id) return;
+        
+        // Always fetch profile details and image for the sidebar and header
+        fetchProfile();
+        fetchProfileImage();
+
+        // Tab-specific fetching
         if (activeTab === 'orders') fetchOrders();
         if (activeTab === 'addresses') fetchAddresses();
         if (activeTab === 'support') fetchEnquiries();
         if (activeTab === 'notifications') fetchNotificationsData();
-        if (activeTab === 'wallet' || activeTab === 'overview') {
-            fetchLoyaltyData();
-            if (activeTab === 'overview') fetchOrders();
-        }
-        if (activeTab === 'profile') {
-            fetchOrders(); // for order count
-            fetchProfile();
-            fetchProfileImage();
+        if (activeTab === 'wallet' || activeTab === 'overview') fetchLoyaltyData();
+        if (activeTab === 'profile' || activeTab === 'overview') {
+            fetchOrders();
         }
     }, [activeTab, user?.id, fetchOrders, fetchAddresses, fetchProfile, fetchProfileImage, fetchEnquiries, fetchLoyaltyData]);
 
@@ -723,6 +740,7 @@ export default function AccountPage() {
                     const res = await uploadProfileImage(user.id, base64);
                     if (res.success) {
                         toast.success('Profile photo updated!');
+                        updateUser({ avatar_url: base64 });
                     } else {
                         toast.error(res.message || 'Failed to upload image');
                         setProfileImageUrl(null);
@@ -750,6 +768,7 @@ export default function AccountPage() {
             const res = await removeProfileImage(user.id);
             if (res.success) {
                 setProfileImageUrl(null);
+                updateUser({ avatar_url: undefined });
                 toast.success('Profile photo removed');
             } else {
                 toast.error(res.message || 'Failed to remove image');
@@ -1002,7 +1021,7 @@ export default function AccountPage() {
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img src={profileImageUrl} alt="Profile" className="h-full w-full object-cover" />
                             ) : (
-                                <span className="font-serif font-bold text-white text-sm">
+                                <span className="font-bold text-white text-sm">
                                     {user?.name?.charAt(0).toUpperCase()}
                                 </span>
                             )}
@@ -1016,6 +1035,34 @@ export default function AccountPage() {
                     </div>
                 </div>
             </aside>
+
+            {/* Hidden file input for profile image upload from any tab */}
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+
+            {/* Fullscreen Image Zoom Modal */}
+            {isZoomModalOpen && profileImageUrl && (
+                <div 
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md"
+                    onClick={() => setIsZoomModalOpen(false)}
+                >
+                    <button 
+                        className="fixed top-6 right-6 text-white/70 hover:text-white transition-all hover:rotate-90 duration-300 z-[110] bg-white/10 hover:bg-white/20 p-2 rounded-full backdrop-blur-md border border-white/10"
+                        onClick={(e) => { e.stopPropagation(); setIsZoomModalOpen(false); }}
+                        title="Close (Esc)"
+                    >
+                        <X className="h-6 w-6" />
+                    </button>
+
+                    <div className="relative max-w-[95vw] max-h-[95vh] animate-in zoom-in-95 duration-300 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img 
+                            src={profileImageUrl} 
+                            alt="Profile Zoomed" 
+                            className="max-w-full max-h-[90vh] object-contain rounded-2xl ring-1 ring-white/20 shadow-[0_0_50px_rgba(0,0,0,0.5)]" 
+                        />
+                    </div>
+                </div>
+            )}
 
             {/* Main Content Area */}
             <main className="flex-1 flex flex-col h-full relative z-10 overflow-hidden">
@@ -1053,7 +1100,7 @@ export default function AccountPage() {
                                 <div className="bg-white rounded-3xl border border-[#E8E1D5] p-8 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden shadow-sm">
                                     <div className="flex-1 relative z-10">
                                         <span className="inline-block bg-[#E8E1D5]/50 text-[#36453A] text-[10px] font-bold tracking-widest px-3 py-1 rounded-full mb-6 uppercase">Account Overview</span>
-                                        <h1 className="font-serif text-4xl md:text-5xl font-bold text-[#36453A] mb-4">
+                                        <h1 className="text-4xl md:text-5xl font-bold text-[#36453A] mb-4">
                                             Namaste, {user?.name?.split(' ')[0] || 'Guest'}.
                                         </h1>
                                         <p className="text-warm-gray leading-relaxed max-w-md mb-8">
@@ -1075,15 +1122,37 @@ export default function AccountPage() {
                                         </div>
                                     </div>
 
-                                    {/* Aesthetic Plant Image Sphere */}
-                                    <div className="relative w-48 h-48 md:w-64 md:h-64 flex-shrink-0 z-10 hidden md:block">
+                                    {/* Aesthetic Profile Image Sphere */}
+                                    <div className="relative w-48 h-48 md:w-64 md:h-64 flex-shrink-0 z-10 group mt-6 md:mt-0 mx-auto md:mx-0">
                                         <div className="absolute inset-0 bg-gradient-radial from-white to-[#F8F5F0] rounded-full shadow-[0_0_40px_rgba(212,168,71,0.15)] blur-md"></div>
-                                        <div className="relative w-full h-full rounded-full border-4 border-white overflow-hidden shadow-xl">
-                                            <div className="w-full h-full bg-[#E8E1D5] flex items-center justify-center">
-                                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                <img src="https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?q=80&w=800&auto=format&fit=crop" alt="Wellness Botanical" className="w-full h-full object-cover opacity-90" />
-                                            </div>
+                                        <div className="relative w-full h-full rounded-full border-4 border-white overflow-hidden shadow-xl bg-[#E8E1D5] flex items-center justify-center">
+                                            {profileImageUrl ? (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img 
+                                                    src={profileImageUrl} 
+                                                    alt="Profile" 
+                                                    className="h-full w-full object-cover cursor-pointer hover:scale-110 transition-transform duration-500" 
+                                                    onClick={() => setIsZoomModalOpen(true)}
+                                                />
+                                            ) : (
+                                                <span className="font-serif text-6xl md:text-8xl font-bold text-[#36453A]">
+                                                    {user?.name?.charAt(0).toUpperCase() || 'U'}
+                                                </span>
+                                            )}
+                                            {imageUploading && (
+                                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-full">
+                                                    <Loader2 className="h-10 w-10 animate-spin text-white" />
+                                                </div>
+                                            )}
                                         </div>
+                                        <button
+                                            onClick={() => fileInputRef.current?.click()}
+                                            disabled={imageUploading}
+                                            title="Upload Profile Photo"
+                                            className="absolute bottom-4 right-4 md:bottom-6 md:right-6 h-12 w-12 md:h-14 md:w-14 rounded-full bg-[#36453A] text-white flex items-center justify-center shadow-lg hover:bg-[#2A362D] transition-transform hover:scale-110 disabled:opacity-50 z-20 group-hover:bg-[#D4A847] focus:outline-none focus:ring-4 focus:ring-[#D4A847]/30"
+                                        >
+                                            <Camera className="h-5 w-5 md:h-6 md:w-6" />
+                                        </button>
                                     </div>
 
                                     {/* Abstract Wave decorative background */}
@@ -1098,7 +1167,7 @@ export default function AccountPage() {
                                         </div>
                                         <div>
                                             <p className="text-xs font-bold text-warm-gray uppercase tracking-wider mb-1">Recent Orders</p>
-                                            <h3 className="font-serif text-2xl font-bold text-[#36453A] mb-1">{orders.length} Total</h3>
+                                            <h3 className="text-2xl font-bold text-[#36453A] mb-1">{orders.length} Total</h3>
                                             <p className="text-[11px] text-[#A8B28B] font-medium">{orders.filter((o: any) => o.status === 'SHIPPED').length} currently in transit</p>
                                         </div>
                                     </div>
@@ -1109,7 +1178,7 @@ export default function AccountPage() {
                                         </div>
                                         <div>
                                             <p className="text-xs font-bold text-warm-gray uppercase tracking-wider mb-1">Saved Items</p>
-                                            <h3 className="font-serif text-2xl font-bold text-[#36453A] mb-1">{wishlistItems.length} Items</h3>
+                                            <h3 className="text-2xl font-bold text-[#36453A] mb-1">{wishlistItems.length} Items</h3>
                                             <p className="text-[11px] text-warm-gray font-medium">Waitlisting {wishlistItems.filter((i: any) => i.stock_status === 'OUT_OF_STOCK').length} items</p>
                                         </div>
                                     </div>
@@ -1123,7 +1192,7 @@ export default function AccountPage() {
                                         </div>
                                         <div className="relative z-10">
                                             <p className="text-xs font-bold text-warm-gray uppercase tracking-wider mb-1">Loyalty Points</p>
-                                            <h3 className="font-serif text-2xl font-bold text-[#36453A] mb-1">{activePoints} Pts</h3>
+                                            <h3 className="text-2xl font-bold text-[#36453A] mb-1">{activePoints} Pts</h3>
                                             <p className="text-[11px] text-[#A8B28B] font-medium">{activeTier} Tier Multiplier: {loyaltyData?.tier?.points_multiplier || 1}x</p>
                                         </div>
                                     </div>
@@ -1279,7 +1348,7 @@ export default function AccountPage() {
 
                                             <div className="relative z-10">
                                                 <p className="text-[10px] font-bold tracking-widest text-[#D4A847] uppercase mb-1">Vedashi Wallet</p>
-                                                <h3 className="font-serif text-3xl font-bold mb-1">${(Number((user as any)?.wallet_balance || 0)).toFixed(2)}</h3>
+                                                <h3 className="text-3xl font-bold mb-1">${(Number((user as any)?.wallet_balance || 0)).toFixed(2)}</h3>
                                                 <p className="text-[10px] text-white/70 tracking-wide">Available balance for quick checkout</p>
                                             </div>
 
@@ -1299,7 +1368,7 @@ export default function AccountPage() {
                                 {/* ── Orders Header ── */}
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                                     <div className="flex items-center gap-4">
-                                        <h2 className="font-serif text-3xl font-bold text-[#36453A]">Orders List</h2>
+                                        <h2 className="text-3xl font-bold text-[#36453A]">Orders List</h2>
                                         <span className="bg-[#E7F0E9] text-[#2D5A3A] text-xs font-bold px-3 py-1 rounded-full">
                                             {filteredAndSortedOrders.length} {filteredAndSortedOrders.length !== orders.length ? `of ${orders.length}` : ''} Total
                                         </span>
@@ -1375,7 +1444,7 @@ export default function AccountPage() {
                                             {!ordersLoading && filteredAndSortedOrders.length === 0 && (
                                                 <div className="rounded-3xl border border-[#E8E1D5] bg-white py-16 text-center shadow-sm">
                                                     <Package className="mx-auto h-12 w-12 text-warm-gray/30 mb-4" />
-                                                    <p className="font-serif text-xl font-bold text-[#36453A]">No orders found</p>
+                                                    <p className="text-xl font-bold text-[#36453A]">No orders found</p>
                                                     <p className="mt-2 text-sm text-warm-gray">{orderSearch || orderStatusFilter !== 'All' ? 'Try adjusting your filters.' : "You haven't placed any orders yet."}</p>
                                                 </div>
                                             )}
@@ -1423,7 +1492,7 @@ export default function AccountPage() {
                                                         {/* Order Info */}
                                                         <div className="flex-1 space-y-3 min-w-0">
                                                             <div className="flex items-center gap-2">
-                                                                <h3 className="font-serif text-xl font-bold text-[#36453A] line-clamp-1">
+                                                                <h3 className="text-xl font-bold text-[#36453A] line-clamp-1">
                                                                     {order.order_id.split('-')[0].toUpperCase()}
                                                                 </h3>
                                                             </div>
@@ -1449,7 +1518,7 @@ export default function AccountPage() {
                                                         <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-4 border-t sm:border-t-0 sm:border-l border-[#E8E1D5] pt-4 sm:pt-0 sm:pl-6">
                                                             <div className="flex flex-col items-start sm:items-end w-full">
                                                                 <span className="text-[10px] font-bold tracking-widest text-warm-gray uppercase mb-1">Total Amount</span>
-                                                                <span className="font-serif text-2xl font-bold text-[#36453A]">
+                                                                <span className="text-2xl font-bold text-[#36453A]">
                                                                     {formatPrice(order.final_total || order.total_amount)}
                                                                 </span>
                                                             </div>
@@ -1500,7 +1569,7 @@ export default function AccountPage() {
                                                 {/* Header Bar */}
                                                 <div className="px-6 py-5 border-b border-[#E8E1D5] flex items-center justify-between">
                                                     <div>
-                                                        <h3 className="font-serif text-xl font-bold text-[#36453A]">Order Details</h3>
+                                                        <h3 className="text-xl font-bold text-[#36453A]">Order Details</h3>
                                                         <p className="text-xs font-medium text-warm-gray mt-1">Order ID: {selectedOrderDetails.order_id.split('-')[0].toUpperCase()}</p>
                                                     </div>
                                                     <button onClick={() => setSelectedOrderDetails(null)} className="p-2 text-warm-gray hover:text-[#36453A] hover:bg-[#F8F5F0] rounded-full transition-colors">
@@ -1525,7 +1594,7 @@ export default function AccountPage() {
                                                             <p className="text-xs font-medium opacity-70 mb-1">
                                                                 {selectedOrderDetails.order_status === 'DELIVERED' ? 'Delivered On' : 'Estimated Delivery'}
                                                             </p>
-                                                            <p className="font-serif text-2xl font-bold">
+                                                            <p className="text-2xl font-bold">
                                                                 {selectedOrderDetails.order_status === 'DELIVERED'
                                                                     ? new Date(selectedOrderDetails.updated_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
                                                                     : new Date(new Date(selectedOrderDetails.created_at).getTime() + 5 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
@@ -1610,7 +1679,7 @@ export default function AccountPage() {
                                                             </div>
                                                             <div className="pt-3 border-t border-[#E8E1D5] flex items-center justify-between">
                                                                 <span className="text-sm font-bold text-[#36453A]">Total</span>
-                                                                <span className="font-serif text-lg font-bold text-[#36453A]">{formatPrice(selectedOrderDetails.final_total || selectedOrderDetails.total_amount || 0)}</span>
+                                                                <span className="text-lg font-bold text-[#36453A]">{formatPrice(selectedOrderDetails.final_total || selectedOrderDetails.total_amount || 0)}</span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1649,7 +1718,7 @@ export default function AccountPage() {
                                             {/* Empty detail state placeholder to preserve grid mapping */}
                                             <div className="bg-[#F8F5F0] border-2 border-dashed border-[#E8E1D5] rounded-3xl h-[600px] flex flex-col items-center justify-center text-center p-8 opacity-70 sticky top-32">
                                                 <Package className="h-12 w-12 text-warm-gray/30 mb-4" />
-                                                <h3 className="font-serif text-xl font-bold text-[#36453A] mb-2">Select an Order</h3>
+                                                <h3 className="text-xl font-bold text-[#36453A] mb-2">Select an Order</h3>
                                                 <p className="text-sm text-warm-gray leading-relaxed">Choose an order from the list to view tracking, items, and billing details here.</p>
                                             </div>
                                         </div>
@@ -1667,7 +1736,7 @@ export default function AccountPage() {
                                             <X className="h-5 w-5 text-red-600" />
                                         </div>
                                         <div>
-                                            <h3 className="font-serif font-bold text-charcoal text-lg">Cancel Order?</h3>
+                                            <h3 className="font-bold text-charcoal text-lg">Cancel Order?</h3>
                                             <p className="text-sm text-warm-gray">This action cannot be undone. Stock will be restored.</p>
                                         </div>
                                     </div>
@@ -1729,7 +1798,7 @@ export default function AccountPage() {
                                         <div className="flex items-center justify-between mb-4">
                                             <div className="flex items-center gap-2">
                                                 <BadgeCheck className="h-5 w-5 text-emerald-600" />
-                                                <h3 className="font-serif font-bold text-charcoal text-lg">Verified Purchase Review</h3>
+                                                <h3 className="font-bold text-charcoal text-lg">Verified Purchase Review</h3>
                                             </div>
                                             <button
                                                 onClick={() => setReviewModal(null)}
@@ -1773,7 +1842,7 @@ export default function AccountPage() {
                                             <span className="inline-block bg-white border border-[#E8E1D5] rounded-full px-4 py-1.5 text-[10px] font-bold text-[#36453A] uppercase tracking-widest mb-6">
                                                 My Sanctuary
                                             </span>
-                                            <h2 className="font-serif text-5xl font-bold text-[#36453A] leading-tight mb-4">
+                                            <h2 className="text-5xl font-bold text-[#36453A] leading-tight mb-4">
                                                 Your Personal Wellness <br className="hidden sm:block" /> Wishlist
                                             </h2>
                                             <p className="text-warm-gray text-base leading-relaxed">
@@ -1786,7 +1855,7 @@ export default function AccountPage() {
                                             <div className="h-16 w-16 bg-[#F8F5F0] rounded-2xl flex items-center justify-center mb-4">
                                                 <Heart className="h-7 w-7 text-[#36453A]" />
                                             </div>
-                                            <p className="font-serif text-4xl font-bold text-[#36453A] mb-1">{wishlistItems.length}</p>
+                                            <p className="text-4xl font-bold text-[#36453A] mb-1">{wishlistItems.length}</p>
                                             <p className="text-[10px] font-bold text-warm-gray uppercase tracking-widest">TOTAL ITEMS SAVED</p>
                                         </div>
                                     </div>
@@ -1854,7 +1923,7 @@ export default function AccountPage() {
                                 {sortedWishlistItems.length === 0 ? (
                                     <div className="rounded-[30px] border border-[#E8E1D5] bg-white py-24 text-center">
                                         <Heart className="mx-auto h-16 w-16 text-warm-gray/30 mb-4" />
-                                        <p className="font-serif text-2xl font-bold text-[#36453A]">Your sanctuary is empty</p>
+                                        <p className="text-2xl font-bold text-[#36453A]">Your sanctuary is empty</p>
                                         <p className="mt-2 text-warm-gray text-lg">{wishlistItems.length > 0 ? "No matches found for your current sort." : "Save your favorite organic rituals here."}</p>
                                     </div>
                                 ) : (
@@ -1862,7 +1931,7 @@ export default function AccountPage() {
                                         {sortedWishlistItems.map((prod) => {
                                             const product = prod as any;
                                             const isSelected = selectedWishlistItems.has(product.product_id);
-                                            const inStock = product.stock_status !== 'out_of_stock' && product.stock_quantity !== 0 && product.quantity !== 0;
+                                            const inStock = product.stock_status === 'in_stock';
                                             const addDate = product.created_at ? new Date(product.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'Recently';
 
                                             return (
@@ -1906,7 +1975,7 @@ export default function AccountPage() {
                                                     {/* Details */}
                                                     <div className="flex flex-col flex-1 px-1">
                                                         <div className="flex items-start justify-between gap-3 mb-1">
-                                                            <h3 className="font-serif text-base font-bold text-[#36453A] leading-snug cursor-pointer hover:underline" onClick={() => router.push(`/products/${product.slug || product.product_id}`)}>
+                                                            <h3 className="text-base font-bold text-[#36453A] leading-snug cursor-pointer hover:underline" onClick={() => router.push(`/products/${product.slug || product.product_id}`)}>
                                                                 {product.product_name}
                                                             </h3>
                                                             <span className="font-bold text-[#36453A] whitespace-nowrap">${product.price}</span>
@@ -1960,7 +2029,7 @@ export default function AccountPage() {
                                             <div className="h-12 w-12 rounded-full border-2 border-[#E8E1D5] flex items-center justify-center bg-white group-hover:border-[#36453A] group-hover:text-[#36453A] text-warm-gray transition-colors mb-6 shadow-sm">
                                                 <Plus className="h-5 w-5" />
                                             </div>
-                                            <h3 className="font-serif text-xl font-bold text-[#36453A] mb-2">Find More Treasures</h3>
+                                            <h3 className="text-xl font-bold text-[#36453A] mb-2">Find More Treasures</h3>
                                             <p className="text-xs text-warm-gray leading-relaxed mb-6 max-w-[200px]">Continue exploring our organic collections.</p>
                                             <button
                                                 onClick={() => router.push('/shop')}
@@ -1977,7 +2046,7 @@ export default function AccountPage() {
                                     <div className="pt-12 border-t border-[#E8E1D5]">
                                         <div className="flex items-end justify-between mb-8">
                                             <div>
-                                                <h3 className="font-serif text-2xl font-bold text-[#36453A] mb-1">Recommended Rituals</h3>
+                                                <h3 className="text-2xl font-bold text-[#36453A] mb-1">Recommended Rituals</h3>
                                                 <p className="text-sm font-medium text-warm-gray">Based on your saved wellness essentials</p>
                                             </div>
                                             <button className="text-[11px] font-bold text-[#36453A] uppercase tracking-widest flex items-center gap-1 hover:opacity-70 transition-opacity">
@@ -2011,7 +2080,7 @@ export default function AccountPage() {
 
                                                     {/* Details */}
                                                     <div className="pt-3 px-1">
-                                                        <h4 className="font-serif text-[13px] font-bold text-[#36453A] leading-snug line-clamp-2 min-h-[38px]">
+                                                        <h4 className="text-[13px] font-bold text-[#36453A] leading-snug line-clamp-2 min-h-[38px]">
                                                             {product.product_name}
                                                         </h4>
                                                         <p className="font-bold text-[#36453A] text-xs mt-1">${product.price}</p>
@@ -2038,7 +2107,7 @@ export default function AccountPage() {
                                             <span className="inline-block bg-white border border-[#E8E1D5] rounded-full px-4 py-1.5 text-[10px] font-bold text-[#36453A] uppercase tracking-widest mb-6">
                                                 Delivery Rituals
                                             </span>
-                                            <h2 className="font-serif text-5xl font-bold text-[#36453A] leading-tight mb-4">
+                                            <h2 className="text-5xl font-bold text-[#36453A] leading-tight mb-4">
                                                 Your Sacred <br className="hidden sm:block" /> Delivery Spaces
                                             </h2>
                                             <p className="text-warm-gray text-base leading-relaxed">
@@ -2055,7 +2124,7 @@ export default function AccountPage() {
                                                 <div className="h-16 w-16 bg-[#F8F5F0] rounded-2xl flex items-center justify-center mb-4 group-hover:bg-[#36453A] transition-colors">
                                                     <Plus className="h-7 w-7 text-[#36453A] group-hover:text-white transition-colors" />
                                                 </div>
-                                                <p className="font-serif text-xl font-bold text-[#36453A] mb-1">Add Ritual Space</p>
+                                                <p className="text-xl font-bold text-[#36453A] mb-1">Add Ritual Space</p>
                                                 <p className="text-[10px] font-bold text-warm-gray uppercase tracking-widest">New Delivery Address</p>
                                             </button>
                                         )}
@@ -2070,7 +2139,7 @@ export default function AccountPage() {
                                         <div className="p-8 lg:p-10">
                                             <div className="flex items-center justify-between mb-8">
                                                 <div>
-                                                    <h3 className="font-serif text-2xl font-bold text-[#36453A]">
+                                                    <h3 className="text-2xl font-bold text-[#36453A]">
                                                         {editingAddress ? 'Revise Ritual Space' : 'New Delivery Ritual'}
                                                     </h3>
                                                     <p className="text-xs text-warm-gray mt-1">Provide the details for your sacred delivery destination.</p>
@@ -2242,7 +2311,7 @@ export default function AccountPage() {
                                 ) : addresses.length === 0 && !showAddressForm ? (
                                     <div className="rounded-[30px] border border-[#E8E1D5] bg-white py-24 text-center">
                                         <MapPin className="mx-auto h-16 w-16 text-warm-gray/30 mb-4" />
-                                        <p className="font-serif text-2xl font-bold text-[#36453A]">No saved rituals</p>
+                                        <p className="text-2xl font-bold text-[#36453A]">No saved rituals</p>
                                         <p className="mt-2 text-warm-gray text-lg">Define your first delivery space to begin your journey.</p>
                                         <button
                                             onClick={() => { resetAddressForm(); setShowAddressForm(true); }}
@@ -2338,9 +2407,14 @@ export default function AccountPage() {
                                             <div className="h-28 w-28 rounded-full border-4 border-white shadow-md overflow-hidden bg-cream-dark flex items-center justify-center">
                                                 {profileImageUrl ? (
                                                     // eslint-disable-next-line @next/next/no-img-element
-                                                    <img src={profileImageUrl} alt="Profile" className="h-full w-full object-cover" />
+                                                    <img 
+                                                        src={profileImageUrl} 
+                                                        alt="Profile" 
+                                                        className="h-full w-full object-cover cursor-pointer hover:scale-110 transition-transform duration-500" 
+                                                        onClick={() => setIsZoomModalOpen(true)}
+                                                    />
                                                 ) : (
-                                                    <span className="font-serif text-3xl font-bold text-[#36453A]">
+                                                    <span className="text-3xl font-bold text-[#36453A]">
                                                         {user?.name?.charAt(0).toUpperCase()}
                                                     </span>
                                                 )}
@@ -2353,15 +2427,14 @@ export default function AccountPage() {
                                             <button
                                                 onClick={() => fileInputRef.current?.click()}
                                                 disabled={imageUploading}
-                                                className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-[#36453A] text-white flex items-center justify-center shadow-md hover:bg-[#2A362D] transition-transform hover:scale-110 disabled:opacity-50"
+                                                className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-[#36453A] text-white flex items-center justify-center shadow-md hover:bg-[#2A362D] transition-transform hover:scale-110 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#36453A]/30"
                                             >
                                                 <Camera className="h-3.5 w-3.5" />
                                             </button>
-                                            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-3 mb-1">
-                                                <h2 className="font-serif text-3xl font-bold text-[#36453A]">{profileData.full_name || user?.name}</h2>
+                                                <h2 className="text-3xl font-bold text-[#36453A]">{profileData.full_name || user?.name}</h2>
                                                 <span className="bg-[#D4A847]/20 text-[#B38720] text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
                                                     Lifetime Member
                                                 </span>
@@ -2371,17 +2444,17 @@ export default function AccountPage() {
                                     </div>
                                     <div className="flex items-center gap-8 relative z-10">
                                         <div className="text-center">
-                                            <p className="font-serif text-3xl font-bold text-[#36453A] mb-1">{orderCount}</p>
+                                            <p className="text-3xl font-bold text-[#36453A] mb-1">{orderCount}</p>
                                             <p className="text-[10px] font-bold text-warm-gray tracking-widest uppercase">Rituals Done</p>
                                         </div>
                                         <div className="w-px h-12 bg-[#E8E1D5]"></div>
                                         <div className="text-center">
-                                            <p className="font-serif text-3xl font-bold text-[#36453A] mb-1">{(user as any)?.reviews_count || 0}</p>
+                                            <p className="text-3xl font-bold text-[#36453A] mb-1">{(user as any)?.reviews_count || 0}</p>
                                             <p className="text-[10px] font-bold text-warm-gray tracking-widest uppercase">Soulful Reviews</p>
                                         </div>
                                         <div className="w-px h-12 bg-[#E8E1D5]"></div>
                                         <div className="text-center">
-                                            <p className="font-serif text-3xl font-bold text-[#D4A847] mb-1">{(user as any)?.seed_points || 0}</p>
+                                            <p className="text-3xl font-bold text-[#D4A847] mb-1">{(user as any)?.seed_points || 0}</p>
                                             <p className="text-[10px] font-bold text-[#D4A847]/70 tracking-widest uppercase flex items-center gap-1 justify-center">
                                                 <Star className="h-2.5 w-2.5" /> Seed Points
                                             </p>
@@ -2397,7 +2470,7 @@ export default function AccountPage() {
                                         {/* Personal Essence */}
                                         <section className="bg-white rounded-3xl p-8 border border-[#E8E1D5] shadow-sm relative overflow-hidden">
                                             <div className="absolute top-0 right-0 w-32 h-32 bg-[#F8F5F0] rounded-bl-full opacity-50 pointer-events-none"></div>
-                                            <h3 className="font-serif text-xl font-bold text-[#36453A] mb-6 flex items-center gap-2">
+                                            <h3 className="text-xl font-bold text-[#36453A] mb-6 flex items-center gap-2">
                                                 <span className="w-1.5 h-6 bg-[#36453A] rounded-full inline-block"></span>
                                                 Personal Essence
                                             </h3>
@@ -2442,7 +2515,7 @@ export default function AccountPage() {
                                             {/* Security Sanctuary */}
                                             <section className="bg-white rounded-3xl p-8 border border-[#E8E1D5] shadow-sm relative overflow-hidden">
                                                 <div className="absolute top-0 right-0 w-24 h-24 bg-[#F8F5F0] rounded-bl-full opacity-50 pointer-events-none"></div>
-                                                <h3 className="font-serif text-xl font-bold text-[#36453A] mb-4 flex items-center gap-2">
+                                                <h3 className="text-xl font-bold text-[#36453A] mb-4 flex items-center gap-2">
                                                     <span className="w-1.5 h-6 bg-[#36453A] rounded-full inline-block"></span>
                                                     Security Sanctuary
                                                 </h3>
@@ -2459,7 +2532,7 @@ export default function AccountPage() {
                                             {/* Notification Harmony */}
                                             <section className="bg-white rounded-3xl p-8 border border-[#E8E1D5] shadow-sm relative overflow-hidden">
                                                 <div className="absolute top-0 right-0 w-24 h-24 bg-[#F8F5F0] rounded-bl-full opacity-50 pointer-events-none"></div>
-                                                <h3 className="font-serif text-xl font-bold text-[#36453A] mb-5 flex items-center gap-2">
+                                                <h3 className="text-xl font-bold text-[#36453A] mb-5 flex items-center gap-2">
                                                     <span className="w-1.5 h-6 bg-[#36453A] rounded-full inline-block"></span>
                                                     Notification Harmony
                                                 </h3>
@@ -2497,7 +2570,7 @@ export default function AccountPage() {
                                                 <Star className="h-16 w-16 text-[#D4A847]" />
                                             </div>
                                             <p className="text-[10px] font-bold tracking-[0.2em] text-[#D4A847]/60 mb-2 uppercase">ACTIVE PLAN</p>
-                                            <h3 className="font-serif text-2xl font-bold text-[#D4A847] mb-2">{activeTier} Ritualist</h3>
+                                            <h3 className="text-2xl font-bold text-[#D4A847] mb-2">{activeTier} Ritualist</h3>
                                             <p className="text-sm text-white/70 leading-relaxed mb-6">
                                                 {loyaltyData?.tier?.benefits && Array.isArray(loyaltyData.tier.benefits) && loyaltyData.tier.benefits.length > 0 
                                                     ? loyaltyData.tier.benefits.join(', ')
@@ -2563,7 +2636,7 @@ export default function AccountPage() {
                                             <MessageSquare className="h-6 w-6 text-[#36453A]" />
                                         </div>
                                         <div>
-                                            <h1 className="font-serif text-3xl font-bold text-[#36453A]">Support & Enquiries</h1>
+                                            <h1 className="text-3xl font-bold text-[#36453A]">Support & Enquiries</h1>
                                             <p className="text-sm text-warm-gray">View and manage your support tickets and enquiries</p>
                                         </div>
                                     </div>
@@ -2592,7 +2665,7 @@ export default function AccountPage() {
                                                                 <span className="h-1 w-1 rounded-full bg-[#E8E1D5]"></span>
                                                                 <span className="text-[10px] font-bold text-warm-gray uppercase tracking-widest">{new Date(selectedEnquiry.created_at).toLocaleDateString()}</span>
                                                             </div>
-                                                            <h2 className="font-serif text-2xl font-bold text-[#36453A] capitalize">{selectedEnquiry.subject || 'No Subject'}</h2>
+                                                            <h2 className="text-2xl font-bold text-[#36453A] capitalize">{selectedEnquiry.subject || 'No Subject'}</h2>
                                                         </div>
                                                         <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${selectedEnquiry.status === 'resolved' ? 'bg-green-100 text-green-700' : 'bg-[#D4A847]/20 text-[#B38720]'
                                                             }`}>
@@ -2680,7 +2753,7 @@ export default function AccountPage() {
                                                 </div>
                                                 <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
                                                     <div>
-                                                        <h3 className="font-serif text-2xl font-bold text-[#D4A847] mb-2">Need to add more info?</h3>
+                                                        <h3 className="text-2xl font-bold text-[#D4A847] mb-2">Need to add more info?</h3>
                                                         <p className="text-sm text-white/80 max-w-md">Our support team is here to help. You'll receive an email notification as soon as we reply.</p>
                                                     </div>
                                                     <button 
@@ -2696,7 +2769,7 @@ export default function AccountPage() {
                                         {/* Sidebar Info Area */}
                                         <div className="space-y-6">
                                             <div className="bg-white rounded-3xl border border-[#E8E1D5] p-6 shadow-sm">
-                                                <h3 className="font-serif text-lg font-bold text-[#36453A] mb-4">Ticket Insight</h3>
+                                                <h3 className="text-lg font-bold text-[#36453A] mb-4">Ticket Insight</h3>
                                                 <div className="space-y-4">
                                                     <div className="flex justify-between items-center text-xs pb-3 border-b border-[#F8F5F0]">
                                                         <span className="text-warm-gray font-medium">Ticket ID</span>
@@ -2718,7 +2791,7 @@ export default function AccountPage() {
                                             </div>
 
                                             <div className="bg-white rounded-3xl border border-[#E8E1D5] p-6 shadow-sm">
-                                                <h3 className="font-serif text-lg font-bold text-[#36453A] mb-4">Support Philosophy</h3>
+                                                <h3 className="text-lg font-bold text-[#36453A] mb-4">Support Philosophy</h3>
                                                 <p className="text-[11px] leading-relaxed text-warm-gray mb-4">
                                                     At Vedashi, we treat every enquiry with the same mindfulness as our product crafting. Thank you for your patience as we provide a soulful solution.
                                                 </p>
@@ -2736,7 +2809,7 @@ export default function AccountPage() {
                                     <div className="bg-white rounded-3xl border border-[#E8E1D5] shadow-sm overflow-hidden animate-fadeIn">
                                         <div className="p-6 md:p-8 border-b border-[#E8E1D5] flex items-center justify-between bg-[#36453A]/5">
                                             <div>
-                                                <h2 className="font-serif text-xl font-bold text-[#36453A]">Harmony Support History</h2>
+                                                <h2 className="text-xl font-bold text-[#36453A]">Harmony Support History</h2>
                                                 <p className="text-xs text-warm-gray mt-1">Timeline of your past interactions and resolutions</p>
                                             </div>
                                             <div className="flex items-center gap-4">
@@ -2762,7 +2835,7 @@ export default function AccountPage() {
                                                     <div className="h-20 w-20 rounded-full bg-[#F8F5F0] flex items-center justify-center mx-auto mb-6 border border-[#E8E1D5]">
                                                         <MessageSquare className="h-10 w-10 text-warm-gray/40" />
                                                     </div>
-                                                    <h3 className="font-serif text-2xl font-bold text-[#36453A] mb-2">No Past Enquiries</h3>
+                                                    <h3 className="text-2xl font-bold text-[#36453A] mb-2">No Past Enquiries</h3>
                                                     <p className="text-sm text-warm-gray max-w-xs mx-auto mb-8">Your path has been smooth! If you ever need help, our support team is just a message away.</p>
                                                     <button 
                                                         onClick={() => router.push('/help-center/support')}
@@ -2819,7 +2892,7 @@ export default function AccountPage() {
                                                                         {new Date(enquiry.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
                                                                     </span>
                                                                 </div>
-                                                                <h3 className="font-serif text-lg font-bold text-[#36453A] group-hover:text-black transition-colors truncate capitalize">
+                                                                <h3 className="text-lg font-bold text-[#36453A] group-hover:text-black transition-colors truncate capitalize">
                                                                     {enquiry._source === 'ticket' && enquiry._ticket_number ? `${enquiry._ticket_number} — ` : ''}{enquiry.subject || 'Standard Enquiry'}
                                                                 </h3>
                                                                 <p className="text-sm text-warm-gray truncate mt-1">
@@ -2829,7 +2902,7 @@ export default function AccountPage() {
 
                                                             <div className="flex items-center gap-6 flex-shrink-0">
                                                                 <div className="text-center hidden md:block">
-                                                                    <p className="font-serif text-xl font-bold text-[#36453A]">{enquiry._source === 'ticket' ? (enquiry._message_count || 0) : (enquiry.replies?.length || 0)}</p>
+                                                                    <p className="text-xl font-bold text-[#36453A]">{enquiry._source === 'ticket' ? (enquiry._message_count || 0) : (enquiry.replies?.length || 0)}</p>
                                                                     <p className="text-[10px] font-bold text-warm-gray uppercase tracking-widest">Messages</p>
                                                                 </div>
                                                                 <div className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${enquiry.replies?.some((r: any) => r.type === 'admin')
@@ -2863,7 +2936,7 @@ export default function AccountPage() {
                                     <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full" style={{ background: 'rgba(107, 39, 55, 0.1)' }}>
                                         <ShieldOff className="h-7 w-7" style={{ color: '#6B2737' }} />
                                     </div>
-                                    <h2 className="text-center font-serif text-xl font-bold text-charcoal mb-2">Confirm Deactivation</h2>
+                                    <h2 className="text-center text-xl font-bold text-charcoal mb-2">Confirm Deactivation</h2>
                                     <p className="text-center text-sm text-warm-gray mb-6">
                                         Please enter your password to confirm account deactivation.
                                     </p>
@@ -2923,7 +2996,7 @@ export default function AccountPage() {
                                     <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
                                         <Trash2 className="h-5 w-5 text-red-500" />
                                     </div>
-                                    <h3 className="text-center font-serif text-lg font-bold text-charcoal mb-1">Delete Address?</h3>
+                                    <h3 className="text-center text-lg font-bold text-charcoal mb-1">Delete Address?</h3>
                                     <p className="text-center text-sm text-warm-gray mb-5">This action cannot be undone.</p>
                                     <div className="flex gap-3">
                                         <button onClick={() => setDeletingAddressId(null)}
@@ -2945,7 +3018,7 @@ export default function AccountPage() {
                                 <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setSelectedOrderDetails(null)} />
                                 <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl border border-light-border" style={{ animation: 'slideUp 0.25s ease-out' }}>
                                     <div className="flex justify-between items-center mb-6">
-                                        <h3 className="font-serif text-xl font-bold text-charcoal">Order Details</h3>
+                                        <h3 className="text-xl font-bold text-charcoal">Order Details</h3>
                                         <button onClick={() => setSelectedOrderDetails(null)} className="rounded-full p-2 hover:bg-cream transition-colors text-warm-gray">
                                             <X className="h-5 w-5" />
                                         </button>
@@ -2978,7 +3051,7 @@ export default function AccountPage() {
 
                                         {/* Items List */}
                                         <div>
-                                            <h4 className="font-serif text-lg font-bold text-charcoal mb-4">Items</h4>
+                                            <h4 className="text-lg font-bold text-charcoal mb-4">Items</h4>
                                             <div className="space-y-3">
                                                 {(selectedOrderDetails as { items: unknown[] }).items?.map((item: unknown) => (
                                                     <div key={(item as { order_item_id: string }).order_item_id} className="flex gap-4 p-3 border border-light-border rounded-xl hover:border-burgundy/30 transition-colors">
@@ -3058,7 +3131,7 @@ export default function AccountPage() {
                                             <BellRing className="h-6 w-6 text-[#36453A]" />
                                         </div>
                                         <div>
-                                            <h1 className="font-serif text-3xl font-bold text-[#36453A]">Your Notifications</h1>
+                                            <h1 className="text-3xl font-bold text-[#36453A]">Your Notifications</h1>
                                             <p className="text-sm text-warm-gray">Security alerts and update rituals</p>
                                         </div>
                                     </div>
@@ -3081,7 +3154,7 @@ export default function AccountPage() {
                                         <div className="h-20 w-20 rounded-full bg-[#F8F5F0] border border-[#E8E1D5] flex items-center justify-center mx-auto mb-6">
                                             <BellRing className="h-10 w-10 text-warm-gray/30" />
                                         </div>
-                                        <h3 className="font-serif text-2xl font-bold text-[#36453A] mb-2">Inner Peace</h3>
+                                        <h3 className="text-2xl font-bold text-[#36453A] mb-2">Inner Peace</h3>
                                         <p className="text-warm-gray text-sm max-w-xs mx-auto">You have no new notifications at this moment. Stay mindful and enjoy your wellness journey.</p>
                                     </div>
                                 ) : (
@@ -3155,7 +3228,7 @@ export default function AccountPage() {
                                     <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-cream">
                                         <Package className="h-8 w-8 text-burgundy" />
                                     </div>
-                                    <h3 className="font-serif text-2xl font-bold text-charcoal mb-2">Track Order</h3>
+                                    <h3 className="text-2xl font-bold text-charcoal mb-2">Track Order</h3>
                                     <p className="font-mono text-sm font-semibold text-warm-gray mb-4">#{trackOrderId?.split('-')[0].toUpperCase()}</p>
                                     <div className="bg-light-border/30 rounded-xl p-4 mb-6 relative overflow-hidden">
                                         <div className="absolute top-0 left-0 w-1 h-full bg-burgundy"></div>
@@ -3189,7 +3262,7 @@ export default function AccountPage() {
                                             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cream-dark">
                                                 <BellRing className="h-5 w-5 text-burgundy" />
                                             </div>
-                                            <h2 className="font-serif text-xl font-bold text-charcoal">Manage Notifications</h2>
+                                            <h2 className="text-xl font-bold text-charcoal">Manage Notifications</h2>
                                         </div>
                                         <button
                                             onClick={() => setShowNotificationOverlay(false)}
@@ -3297,7 +3370,7 @@ export default function AccountPage() {
                         <div className="h-1.5" style={{ background: 'linear-gradient(90deg, #36453A, #D4A847, #36453A)' }}></div>
                         <div className="p-8">
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="font-serif text-2xl font-bold text-[#36453A]">
+                                <h3 className="text-2xl font-bold text-[#36453A]">
                                     Verify Email Change
                                 </h3>
                                 <button onClick={() => setShowEmailOtpModal(false)} className="p-2 rounded-full hover:bg-cream/50 transition-colors text-warm-gray hover:text-[#36453A]">
@@ -3354,7 +3427,7 @@ export default function AccountPage() {
                         <div className="h-1.5" style={{ background: 'linear-gradient(90deg, #36453A, #D4A847, #36453A)' }}></div>
                         <div className="p-8">
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="font-serif text-2xl font-bold text-[#36453A]">
+                                <h3 className="text-2xl font-bold text-[#36453A]">
                                     {profileData.has_password ? 'Modify Password' : 'Set Password'}
                                 </h3>
                                 <button onClick={() => setShowPasswordModal(false)} className="p-2 rounded-full hover:bg-cream/50 transition-colors text-warm-gray hover:text-[#36453A]">

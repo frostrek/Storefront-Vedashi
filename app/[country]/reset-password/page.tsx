@@ -62,7 +62,7 @@ function ResetPasswordContent() {
                     <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-red-100 flex items-center justify-center">
                         <KeyRound className="w-8 h-8 text-red-600" />
                     </div>
-                    <h1 className="font-serif text-3xl font-bold text-charcoal mb-4">
+                    <h1 className="text-3xl font-bold text-charcoal mb-4">
                         Invalid Link
                     </h1>
                     <p className="text-sm text-warm-gray mb-8">
@@ -87,7 +87,7 @@ function ResetPasswordContent() {
                     <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-burgundy/10 flex items-center justify-center">
                         <KeyRound className="w-8 h-8 text-burgundy" />
                     </div>
-                    <h1 className="font-serif text-3xl font-bold text-charcoal">
+                    <h1 className="text-3xl font-bold text-charcoal">
                         Set New Password
                     </h1>
                     <p className="mt-2 text-sm text-warm-gray">

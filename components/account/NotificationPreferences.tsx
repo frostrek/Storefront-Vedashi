@@ -126,7 +126,7 @@ export default function NotificationPreferences({
             {/* Header */}
             {!hideHeader && (
                 <div>
-                    <h2 className="font-serif text-lg font-bold text-charcoal">Notification Preferences</h2>
+                    <h2 className="text-lg font-bold text-charcoal">Notification Preferences</h2>
                     <p className="text-sm text-warm-gray mt-0.5">
                         Manage how you&apos;d like to receive alerts and updates from us
                     </p>
@@ -136,54 +136,67 @@ export default function NotificationPreferences({
             {/* ── Receive Notifications Via ── */}
             <div className="rounded-3xl border border-light-border bg-white overflow-hidden shadow-sm">
                 <div className="px-6 py-4 border-b border-light-border bg-cream/50">
-                    <h3 className="font-serif text-base font-bold text-herbal-green">Receive notifications via:</h3>
+                    <h3 className="text-base font-bold text-herbal-green">Receive notifications via:</h3>
                     <p className="text-[10px] font-bold text-warm-gray uppercase tracking-widest mt-1">Select the channels for your periodic awareness</p>
                 </div>
-                <div className="px-6 py-5 flex flex-wrap sm:flex-nowrap items-center gap-6 md:gap-10">
+                <div className="flex flex-col divide-y divide-light-border/50">
                     {/* SMS — active if verified */}
-                    <div className={`flex items-center gap-2 cursor-default select-none ${!isMobileVerified ? 'opacity-40' : ''}`}>
-                        <span
-                            className="relative flex h-5 w-5 items-center justify-center rounded-lg border-2"
-                            style={{ 
-                                borderColor: isMobileVerified ? '#3B5D3B' : '#D4CFC0', 
-                                backgroundColor: isMobileVerified ? '#3B5D3B' : '#F8F5F0' 
-                            }}
-                        >
-                            {isMobileVerified && (
-                                <svg className="h-3 w-3 text-white" viewBox="0 0 12 12" fill="none">
-                                    <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                            )}
-                        </span>
-                        <Smartphone className="h-4 w-4 shrink-0" style={{ color: isMobileVerified ? '#3B5D3B' : '#BDB7A3' }} />
-                        <span className="text-[13px] font-bold text-herbal-green whitespace-nowrap">SMS</span>
-                        {isMobileVerified && (
-                            <span className="rounded-full bg-herbal-green/10 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-herbal-green border border-herbal-green/10">Active</span>
+                    <div className={`flex items-center justify-between px-6 py-4 cursor-default select-none ${!isMobileVerified ? 'opacity-40' : 'bg-cream/20'}`}>
+                        <div className="flex items-center gap-3">
+                            <span
+                                className="relative flex h-5 w-5 items-center justify-center rounded-md border-2"
+                                style={{ 
+                                    borderColor: isMobileVerified ? '#3B5D3B' : '#D4CFC0', 
+                                    backgroundColor: isMobileVerified ? '#3B5D3B' : '#F8F5F0' 
+                                }}
+                            >
+                                {isMobileVerified && (
+                                    <svg className="h-3 w-3 text-white" viewBox="0 0 12 12" fill="none">
+                                        <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                )}
+                            </span>
+                            <div className="flex items-center gap-2">
+                                <Smartphone className="h-4 w-4 shrink-0" style={{ color: isMobileVerified ? '#3B5D3B' : '#BDB7A3' }} />
+                                <span className="text-sm font-bold text-herbal-green">SMS</span>
+                            </div>
+                        </div>
+                        {isMobileVerified ? (
+                            <span className="rounded-full bg-herbal-green/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-herbal-green border border-herbal-green/10">Active</span>
+                        ) : (
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-warm-gray/60">Unverified</span>
                         )}
                     </div>
 
                     {/* Email — active */}
-                    <div className="flex items-center gap-2 cursor-default select-none">
-                        <span
-                            className="relative flex h-5 w-5 items-center justify-center rounded-lg border-2"
-                            style={{ borderColor: '#3B5D3B', backgroundColor: '#3B5D3B' }}
-                        >
-                            <svg className="h-3 w-3 text-white" viewBox="0 0 12 12" fill="none">
-                                <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                        </span>
-                        <Mail className="h-4 w-4 shrink-0" style={{ color: '#3B5D3B' }} />
-                        <span className="text-[13px] font-bold text-herbal-green whitespace-nowrap">Email</span>
-                        <span className="rounded-full bg-herbal-green/10 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-herbal-green border border-herbal-green/10">Active</span>
+                    <div className="flex items-center justify-between px-6 py-4 cursor-default select-none bg-cream/20">
+                        <div className="flex items-center gap-3">
+                            <span
+                                className="relative flex h-5 w-5 items-center justify-center rounded-md border-2"
+                                style={{ borderColor: '#3B5D3B', backgroundColor: '#3B5D3B' }}
+                            >
+                                <svg className="h-3 w-3 text-white" viewBox="0 0 12 12" fill="none">
+                                    <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            </span>
+                            <div className="flex items-center gap-2">
+                                <Mail className="h-4 w-4 shrink-0" style={{ color: '#3B5D3B' }} />
+                                <span className="text-sm font-bold text-herbal-green">Email</span>
+                            </div>
+                        </div>
+                        <span className="rounded-full bg-herbal-green/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-herbal-green border border-herbal-green/10">Active</span>
                     </div>
 
                     {/* WhatsApp — coming soon */}
-                    <div className="flex items-center gap-2 cursor-not-allowed select-none opacity-40">
-                        <span className="relative flex h-5 w-5 items-center justify-center rounded-lg border-2 border-light-border bg-cream/30">
-                        </span>
-                        <MessageSquare className="h-4 w-4 shrink-0 text-warm-gray" />
-                        <span className="text-[13px] font-bold text-warm-gray/60 whitespace-nowrap">WhatsApp</span>
-                        <span className="rounded-full bg-cream px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-warm-gray/50 border border-light-border/40">Soon</span>
+                    <div className="flex items-center justify-between px-6 py-4 cursor-not-allowed select-none opacity-50">
+                        <div className="flex items-center gap-3">
+                            <span className="relative flex h-5 w-5 items-center justify-center rounded-md border-2 border-light-border bg-cream/30"></span>
+                            <div className="flex items-center gap-2">
+                                <MessageSquare className="h-4 w-4 shrink-0 text-warm-gray" />
+                                <span className="text-sm font-bold text-warm-gray/80">WhatsApp</span>
+                            </div>
+                        </div>
+                        <span className="rounded-full bg-light-border/40 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-warm-gray/70">Soon</span>
                     </div>
                 </div>
             </div>
@@ -211,7 +224,7 @@ export default function NotificationPreferences({
                                     <Icon className="h-5 w-5" style={{ color: isChannelDisabled ? '#9CA3AF' : meta.color }} />
                                 </div>
                                 <div>
-                                    <h3 className="font-serif text-lg font-bold text-herbal-green">{meta.label}</h3>
+                                    <h3 className="text-lg font-bold text-herbal-green">{meta.label}</h3>
                                     <p className="text-[11px] font-medium text-warm-gray">{meta.description}</p>
                                 </div>
                             </div>

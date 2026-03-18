@@ -158,7 +158,7 @@ function SupportContent() {
                         <div className="w-24 h-24 rounded-[30px] bg-[#4A5D23]/10 backdrop-blur-sm border border-[#4A5D23]/20 flex items-center justify-center mx-auto mb-8 shadow-2xl">
                             <AlertCircle className="h-12 w-12 text-[#4A5D23]" />
                         </div>
-                        <h1 className="text-4xl md:text-5xl font-serif font-bold text-[#1a2408] mb-6 leading-tight">
+                        <h1 className="text-4xl md:text-5xl font-bold text-[#1a2408] mb-6 leading-tight">
                             Sign in to access <span className="text-[#4A5D23]">support</span>
                         </h1>
                         <p className="text-[#5B4A31] text-lg mb-10 font-medium max-w-sm mx-auto">
@@ -193,7 +193,7 @@ function SupportContent() {
                             <div className="p-10 md:p-14">
                                 <div className="flex items-center justify-between mb-10">
                                     <div>
-                                        <h2 className="text-3xl md:text-4xl font-serif font-bold text-[#1a2408] mb-2">Create New Ticket</h2>
+                                        <h2 className="text-3xl md:text-4xl font-bold text-[#1a2408] mb-2">Create New Ticket</h2>
                                         <div className="w-16 h-1 bg-[#4A5D23] rounded-full opacity-30"></div>
                                     </div>
                                     <MessageSquare className="h-10 w-10 text-[#4A5D23]/20" />
@@ -319,7 +319,7 @@ function SupportContent() {
                                     <Ticket className="h-8 w-8 text-[#4A5D23]" />
                                 </div>
                                 <div>
-                                    <h1 className="text-3xl font-serif font-bold text-[#1a2408]">Support Tickets</h1>
+                                    <h1 className="text-3xl font-bold text-[#1a2408]">Support Tickets</h1>
                                     <p className="text-base text-[#5B4A31] font-medium mt-1">Manage and track your Vedic support inquiries.</p>
                                 </div>
                             </div>
@@ -349,7 +349,7 @@ function SupportContent() {
                                             <Icon className="h-6 w-6" style={{ color: stat.color }} />
                                         </div>
                                         <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">{stat.label}</p>
-                                        <p className="text-4xl font-serif font-bold text-[#1a2408]">{stat.value}</p>
+                                        <p className="text-4xl font-bold text-[#1a2408]">{stat.value}</p>
                                     </div>
                                 );
                             })}

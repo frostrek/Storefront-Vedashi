@@ -31,13 +31,13 @@ export default function TrendingList() {
                 <svg className="w-5 h-5 text-vedic-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                 </svg>
-                <h3 className="font-serif text-lg font-bold text-charcoal">Trending Rituals</h3>
+                <h3 className="text-lg font-bold text-charcoal">Trending Rituals</h3>
             </div>
             
             <ul className="space-y-6">
                 {posts.map((post, index) => (
                     <li key={post.post_id} className="group flex gap-4">
-                        <span className="font-serif text-3xl font-bold text-vedic-gold/50 group-hover:text-vedic-gold transition-colors duration-300">
+                        <span className="text-3xl font-bold text-vedic-gold/50 group-hover:text-vedic-gold transition-colors duration-300">
                             {String(index + 1).padStart(2, '0')}
                         </span>
                         <Link href={`/blog/${post.slug}`} className="pt-1.5 flex-1">

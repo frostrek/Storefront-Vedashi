@@ -83,7 +83,7 @@ export default function CustomerEnquiryPage() {
                         <Leaf className="h-12 w-12 text-[#4A5D23] animate-bounce" />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#4A5D23]/5 to-transparent"></div>
                     </div>
-                    <h2 className="text-3xl md:text-4xl font-serif font-bold text-[#1a2408] mb-6">Enquiry Received</h2>
+                    <h2 className="text-3xl md:text-4xl font-bold text-[#1a2408] mb-6">Enquiry Received</h2>
                     <p className="text-[#5B4A31] text-lg mb-10 leading-relaxed font-medium">
                         Thank you for reaching out. Your enquiry has been registered in our harmony system. 
                         Our team will review it and respond shortly.
@@ -130,7 +130,7 @@ export default function CustomerEnquiryPage() {
                     >
                         <ChevronLeft className="h-4 w-4" /> Help Center
                     </Link>
-                    <h1 className="text-4xl md:text-6xl font-serif font-bold text-[#1a2408] mb-6 tracking-tight">
+                    <h1 className="text-4xl md:text-6xl font-bold text-[#1a2408] mb-6 tracking-tight">
                         Customer <span className="text-[#4A5D23]">Enquiry</span>
                     </h1>
                     <p className="text-[#5B4A31] text-lg max-w-2xl mx-auto font-medium leading-relaxed">
@@ -250,7 +250,7 @@ export default function CustomerEnquiryPage() {
                     {/* Right: Info Sidebar */}
                     <div className="space-y-8">
                         <div className="bg-[#4A5D23]/5 rounded-[32px] p-8 border border-[#4A5D23]/10">
-                            <h3 className="text-xl font-serif font-bold text-[#1a2408] mb-6">Support Guidance</h3>
+                            <h3 className="text-xl font-bold text-[#1a2408] mb-6">Support Guidance</h3>
                             <div className="space-y-6">
                                 <div className="flex gap-4">
                                     <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
@@ -284,7 +284,7 @@ export default function CustomerEnquiryPage() {
 
                         <div className="bg-[#1a2408] rounded-[32px] p-8 text-white relative overflow-hidden group">
                             <div className="relative z-10">
-                                <h3 className="text-lg font-serif font-bold text-[#D4A847] mb-4">Are you a member?</h3>
+                                <h3 className="text-lg font-bold text-[#D4A847] mb-4">Are you a member?</h3>
                                 <p className="text-xs text-white/70 mb-6 leading-relaxed">
                                     Logged-in users can track their enquiries and view replies directly from their dashboard.
                                 </p>

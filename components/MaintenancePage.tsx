@@ -48,7 +48,7 @@ export default function MaintenancePage({ message }: { message?: string }) {
 
                 {/* Headline */}
                 <h1 style={{
-                    fontFamily: 'var(--font-playfair), Georgia, serif',
+                    fontFamily: 'var(--font-roboto), Roboto, sans-serif',
                     fontSize: 'clamp(2rem, 5vw, 3rem)',
                     fontWeight: 700,
                     color: '#FAF7F2',

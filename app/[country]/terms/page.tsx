@@ -17,7 +17,7 @@ export default async function TermsPage() {
                     <Link href="/">
                         <img src="/vedashi-logo.png" alt="Vedashi" className="h-16 w-auto object-contain mb-8" />
                     </Link>
-                    <h1 className="font-serif text-4xl lg:text-5xl font-bold text-gray-900 tracking-tight mb-4">
+                    <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 tracking-tight mb-4">
                         {doc?.title || 'Terms of Service'}
                     </h1>
                     {doc?.published_at && (

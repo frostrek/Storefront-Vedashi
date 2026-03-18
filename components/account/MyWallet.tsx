@@ -50,7 +50,7 @@ export default function MyWallet({ customerId }: MyWalletProps) {
                 <div className="w-20 h-20 bg-[#FDFBF7] rounded-full flex items-center justify-center mx-auto mb-6 border border-[#2D4F1E]/10">
                     <Wallet className="h-10 w-10 text-[#2D4F1E]/30" />
                 </div>
-                <h3 className="text-2xl font-serif font-bold text-[#1A2E1A]">Sanctuary Not Activated</h3>
+                <h3 className="text-2xl font-bold text-[#1A2E1A]">Sanctuary Not Activated</h3>
                 <p className="text-[#4A5D4A] mt-2 max-w-sm mx-auto">Embrace the path of wellness. Your ritual journal begins with your first soulful purchase.</p>
                 <button 
                     onClick={() => window.location.href = '/shop'}
@@ -74,7 +74,7 @@ export default function MyWallet({ customerId }: MyWalletProps) {
                         <Wallet className="h-6 w-6" />
                     </div>
                     <div>
-                        <h2 className="font-serif text-3xl font-bold text-[#1A2E1A] tracking-tight">Vedic Ritual Rewards</h2>
+                        <h2 className="text-3xl font-bold text-[#1A2E1A] tracking-tight">Vedic Ritual Rewards</h2>
                         <p className="text-sm text-[#4A5D4A] font-medium flex items-center gap-1.5 mt-1">
                             <Star className="h-3.5 w-3.5 text-[#D4A847] fill-[#D4A847]" />
                             Your journey towards holistic wellness, rewarded.
@@ -97,7 +97,7 @@ export default function MyWallet({ customerId }: MyWalletProps) {
                              <p className="text-white/60 text-[10px] font-bold tracking-[0.3em] uppercase">Active Plan</p>
                              <div className="h-2 w-2 rounded-full bg-[#D4A847] shadow-[0_0_10px_#D4A847] animate-pulse" />
                         </div>
-                        <h3 className="font-serif text-4xl md:text-5xl font-bold text-[#D4A847] mb-4 tracking-tight">
+                        <h3 className="text-4xl md:text-5xl font-bold text-[#D4A847] mb-4 tracking-tight">
                             {tier_name || 'Bronze Ritualist'}
                         </h3>
                         {benefits && Array.isArray(benefits) && benefits.length > 0 ? (
@@ -115,7 +115,7 @@ export default function MyWallet({ customerId }: MyWalletProps) {
                         <div>
                              <p className="text-[10px] uppercase font-bold text-white/50 tracking-[0.2em] mb-1">Aura Balance</p>
                              <div className="flex items-baseline gap-2">
-                                <span className="text-5xl font-serif font-black text-white">{balance || 0}</span>
+                                <span className="text-5xl font-black text-white">{balance || 0}</span>
                                 <span className="text-xs font-bold text-[#D4A847] uppercase tracking-tighter">Points</span>
                              </div>
                         </div>
@@ -133,7 +133,7 @@ export default function MyWallet({ customerId }: MyWalletProps) {
                             <ArrowUpRight className="h-6 w-6 text-[#2D4F1E] group-hover:text-white transition-colors duration-500" />
                         </div>
                         <div>
-                            <h3 className="font-serif text-2xl font-bold text-[#1A2E1A] mb-0.5">{lifetime_earned || 0}</h3>
+                            <h3 className="text-2xl font-bold text-[#1A2E1A] mb-0.5">{lifetime_earned || 0}</h3>
                             <p className="text-[9px] font-bold text-[#4A5D4A] uppercase tracking-widest">Gained Aura</p>
                         </div>
                     </div>
@@ -144,7 +144,7 @@ export default function MyWallet({ customerId }: MyWalletProps) {
                             <ArrowDownRight className="h-6 w-6 text-[#8B3A42] group-hover:text-white transition-colors duration-500" />
                         </div>
                         <div>
-                            <h3 className="font-serif text-2xl font-bold text-[#1A2E1A] mb-0.5">{Math.abs(lifetime_redeemed || 0)}</h3>
+                            <h3 className="text-2xl font-bold text-[#1A2E1A] mb-0.5">{Math.abs(lifetime_redeemed || 0)}</h3>
                             <p className="text-[9px] font-bold text-[#4A5D4A] uppercase tracking-widest">Shared Blessings</p>
                         </div>
                     </div>
@@ -175,7 +175,7 @@ export default function MyWallet({ customerId }: MyWalletProps) {
             <div className="pt-4 flex items-center justify-between border-b border-[#F0EAD6] pb-4">
                 <div className="flex items-center gap-3">
                     <History className="h-5 w-5 text-[#D4A847]" />
-                    <h3 className="font-serif text-xl font-bold text-[#1A2E1A]">Ritual Journal</h3>
+                    <h3 className="text-xl font-bold text-[#1A2E1A]">Ritual Journal</h3>
                 </div>
                 <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#4A5D4A] uppercase tracking-widest">
                     <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" /> Real-time History
@@ -189,7 +189,7 @@ export default function MyWallet({ customerId }: MyWalletProps) {
                         <div className="w-16 h-16 bg-[#FDFBF7] rounded-full flex items-center justify-center mx-auto mb-4 border border-[#F0EAD6]">
                             <History className="h-8 w-8 text-[#D4A847]/40" />
                         </div>
-                        <h4 className="font-serif text-lg font-bold text-[#1A2E1A]">Empty Journal</h4>
+                        <h4 className="text-lg font-bold text-[#1A2E1A]">Empty Journal</h4>
                         <p className="text-sm text-[#4A5D4A] max-w-xs mx-auto mt-2">
                             Your journey has just begun. Manifest points by engaging in rituals and reviews.
                         </p>
@@ -209,7 +209,7 @@ export default function MyWallet({ customerId }: MyWalletProps) {
                                                 {isCredit ? <ArrowUpRight className="h-5 w-5" /> : <ArrowDownRight className="h-5 w-5" />}
                                             </div>
                                             <div>
-                                                <p className="font-serif font-bold text-[#1A2E1A] text-base capitalize tracking-tight">
+                                                <p className="font-bold text-[#1A2E1A] text-base capitalize tracking-tight">
                                                     {txn.transaction_type.replace(/_/g, ' ')}
                                                 </p>
                                                 <div className="flex items-center gap-3 mt-1">
@@ -236,7 +236,7 @@ export default function MyWallet({ customerId }: MyWalletProps) {
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <p className={`font-serif font-black text-xl tracking-tighter ${isCredit ? 'text-[#2D4F1E]' : 'text-charcoal'}`}>
+                                            <p className={`font-black text-xl tracking-tighter ${isCredit ? 'text-[#2D4F1E]' : 'text-charcoal'}`}>
                                                 {isCredit ? '+' : ''}{txn.points}
                                             </p>
                                             <div className="flex items-center justify-end gap-1 mt-1">
@@ -259,7 +259,7 @@ export default function MyWallet({ customerId }: MyWalletProps) {
                  </div>
                  <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div className="max-w-md">
-                        <h4 className="font-serif text-2xl font-bold mb-2 text-[#D4A847]">The Essence of Reciprocity</h4>
+                        <h4 className="text-2xl font-bold mb-2 text-[#D4A847]">The Essence of Reciprocity</h4>
                         <p className="text-sm text-white/80 leading-relaxed italic">
                             "In Nature, everything given returns in abundance. Your loyalty reflects the harmony of our shared values."
                         </p>

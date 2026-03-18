@@ -105,7 +105,7 @@ export default function TicketDetailPage() {
                     <div className="w-24 h-24 rounded-[30px] bg-[#4A5D23]/10 flex items-center justify-center mx-auto mb-10">
                         <MessageSquare className="h-10 w-10 text-[#4A5D23]" />
                     </div>
-                    <h2 className="text-3xl font-serif font-bold text-[#1a2408] mb-4">Inquiry Not Found</h2>
+                    <h2 className="text-3xl font-bold text-[#1a2408] mb-4">Inquiry Not Found</h2>
                     <p className="text-[#5B4A31] mb-10 font-medium">This scroll seems to have vanished from our records.</p>
                     <Link href="/help-center/support" className="inline-flex items-center gap-3 bg-[#4A5D23] text-white px-10 py-5 rounded-[20px] font-black uppercase tracking-widest text-sm hover:bg-[#3a491b] transition-all shadow-xl">
                         <ChevronLeft className="h-5 w-5" /> Back to Tickets
@@ -148,7 +148,7 @@ export default function TicketDetailPage() {
                         My Support Tickets
                     </Link>
 
-                    <h1 className="text-3xl md:text-4xl font-serif font-bold text-[#1a2408] mb-6 leading-tight">
+                    <h1 className="text-3xl md:text-4xl font-bold text-[#1a2408] mb-6 leading-tight">
                         {ticket.subject}
                     </h1>
 

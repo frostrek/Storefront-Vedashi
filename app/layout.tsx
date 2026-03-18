@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Inter } from "next/font/google";
+import { Roboto } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
@@ -19,15 +19,10 @@ import MaintenancePage from "@/components/MaintenancePage";
 import { generateOrganizationJsonLd, generateWebSiteJsonLd } from "@/lib/seo";
 import ButterflyEffect from "@/components/animations/ButterflyEffect";
 
-const playfair = Playfair_Display({
+const roboto = Roboto({
   subsets: ["latin"],
-  variable: "--font-playfair",
-  display: "swap",
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
+  weight: ["400", "500", "700"],
+  variable: "--font-roboto",
   display: "swap",
 });
 
@@ -80,7 +75,7 @@ export default async function RootLayout({
 
   if (isMaintenance) {
     return (
-      <html lang="en" className={`${playfair.variable} ${inter.variable}`} suppressHydrationWarning>
+      <html lang="en" className={roboto.variable} suppressHydrationWarning>
         <body className="min-h-screen bg-[#1A1814]">
           <MaintenancePage message={maintenanceMessage} />
         </body>
@@ -89,7 +84,7 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="en" className={`${playfair.variable} ${inter.variable}`} suppressHydrationWarning>
+    <html lang="en" className={roboto.variable} suppressHydrationWarning>
       <body className="min-h-screen flex flex-col" suppressHydrationWarning>
         <Script
           id="structured-data-organization"

@@ -58,7 +58,7 @@ function ForgotPasswordContent() {
                     <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-burgundy/10 flex items-center justify-center">
                         <Mail className="w-8 h-8 text-burgundy" />
                     </div>
-                    <h1 className="font-serif text-3xl font-bold text-charcoal">
+                    <h1 className="text-3xl font-bold text-charcoal">
                         Forgot Password
                     </h1>
                     <p className="mt-2 text-sm text-warm-gray">

@@ -562,7 +562,7 @@ export default function ExportOrdersModal({
                             <FileText className="h-6 w-6 text-[#3B5D3B]" />
                         </div>
                         <div>
-                            <h2 className="font-serif text-xl font-bold text-charcoal">Export Orders</h2>
+                            <h2 className="text-xl font-bold text-charcoal">Export Orders</h2>
                             <p className="text-sm text-warm-gray mt-0.5">Download detailed orders as PDF (2 per page)</p>
                         </div>
                     </div>

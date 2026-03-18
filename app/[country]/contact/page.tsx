@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MapPin, Phone, Mail, Clock, Send, Compass } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, Send } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { submitFeedback } from '@/lib/api';
 import Image from 'next/image';
@@ -85,11 +85,11 @@ export default function ContactPage() {
                 >
                     Get In Touch
                 </motion.div>
-                <h1 className="font-serif text-[42px] leading-tight sm:text-6xl font-bold text-[#1A1A1A] mb-5 tracking-tight">
+                <h1 className="text-[42px] leading-tight sm:text-6xl font-bold text-[#1A1A1A] mb-5 tracking-tight">
                     Contact Us
                 </h1>
-                <p className="text-[#5c5c5c] text-lg sm:text-lg max-w-[600px] mx-auto leading-relaxed font-inter">
-                    We&apos;d love to hear from you. Whether you have a question about our collections, tasting sessions, or simply want to share your experience, send us a message or visit us at our tasting room.
+                <p className="text-[#5c5c5c] text-lg sm:text-lg max-w-[600px] mx-auto leading-relaxed">
+                    We&apos;d love to hear from you. Whether you have a question about our collections or simply want to share your experience, send us a message or visit us at our tasting room.
                 </p>
             </motion.section>
 
@@ -105,7 +105,7 @@ export default function ContactPage() {
                         style={{ willChange: "transform, opacity" }}
                         className="rounded-[24px] bg-white p-8 sm:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] h-fit border border-gray-100"
                     >
-                        <h2 className="font-serif text-3xl font-bold text-[#1A1A1A] mb-3">Send a Message</h2>
+                        <h2 className="text-3xl font-bold text-[#1A1A1A] mb-3">Send a Message</h2>
                         <p className="text-[#5c5c5c] mb-8 text-[15px]">Fill out the form below and our team will be in touch shortly.</p>
                         
                         <form onSubmit={handleSubmit} className="space-y-6">
@@ -222,38 +222,7 @@ export default function ContactPage() {
                             </motion.div>
                         ))}
 
-                        {/* Highlight Card */}
-                        <motion.div 
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.6, ease: "easeOut", delay: 0.8 }}
-                            whileHover={{ scale: 1.02, y: -4 }}
-                            style={{ willChange: "transform, opacity" }}
-                            className="mt-6 rounded-[24px] bg-[#3B4533] p-8 shadow-xl text-white relative overflow-hidden group cursor-pointer"
-                        >
-                           {/* Decorative subtle texture/gradient */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-[#4A5541] to-transparent opacity-50 pointer-events-none transition-opacity duration-300 group-hover:opacity-100"></div>
-                            
-                            <div className="relative z-10">
-                                <motion.div 
-                                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 mb-5 border border-white/20"
-                                    whileHover={{ rotate: 15 }}
-                                >
-                                   <Compass className="h-5 w-5 text-white/90" />
-                                </motion.div>
-                                <h3 className="font-serif text-2xl font-bold text-white mb-2">Private Tasting Sessions</h3>
-                                <p className="text-white/80 text-[15px] leading-relaxed mb-6">
-                                    Experience our premium reserve selection in an exclusive, guided tasting session led by our Head Sommelier.
-                                </p>
-                                <motion.button 
-                                    whileHover={{ scale: 1.03 }}
-                                    whileTap={{ scale: 0.97 }}
-                                    className="w-full rounded-xl bg-white px-6 py-3.5 text-[14px] font-bold text-[#3B4533] hover:bg-gray-50 transition-colors shadow-sm"
-                                >
-                                    Book an Appointment
-                                </motion.button>
-                            </div>
-                        </motion.div>
+
 
                     </div>
                 </div>

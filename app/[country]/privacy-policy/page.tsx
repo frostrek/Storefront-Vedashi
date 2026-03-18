@@ -19,7 +19,7 @@ export default async function PrivacyPolicyPage() {
         <div className="min-h-screen bg-cream flex flex-col">
             <div className="flex-1 max-w-4xl mx-auto px-4 py-16 w-full">
                 <div className="bg-white rounded-2xl shadow-sm border border-light-border p-8 md:p-12">
-                    <h1 className="font-serif text-3xl font-bold text-charcoal mb-4">Privacy & Cookie Policy</h1>
+                    <h1 className="text-3xl font-bold text-charcoal mb-4">Privacy & Cookie Policy</h1>
 
                     {policy ? (
                         <>
