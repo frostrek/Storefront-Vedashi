@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Star, Sparkles, Leaf, ShieldCheck, Beaker, Heart, Stethoscope, Salad, FlaskConical, CalendarCheck } from 'lucide-react';
-import { getBestSellers, getFeaturedProducts as fetchFeatured } from '@/lib/api';
+import toast from 'react-hot-toast';
+import { ArrowRight, Star, Sparkles, Leaf, ShieldCheck, Beaker, Heart, Stethoscope, Salad, FlaskConical, CalendarCheck, Loader2 } from 'lucide-react';
+import { getBestSellers, getFeaturedProducts as fetchFeatured, subscribeNewsletter } from '@/lib/api';
 import { Product } from '@/types';
 import ProductCard from '@/components/ProductCard';
 import ProductReel from '@/components/ProductReel';
@@ -16,6 +17,32 @@ export default function HomePage() {
   const [featuredLoading, setFeaturedLoading] = useState(true);
   const [bestSellers, setBestSellers] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Newsletter State
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [isSubscribing, setIsSubscribing] = useState(false);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newsletterEmail || !newsletterEmail.includes('@')) {
+      toast.error('Please enter a valid email.');
+      return;
+    }
+    setIsSubscribing(true);
+    try {
+      const res = await subscribeNewsletter(newsletterEmail);
+      if (res.success) {
+        toast.success('Welcome to the Healed.');
+        setNewsletterEmail('');
+      } else {
+        toast.error(res.message || 'Failed to subscribe.');
+      }
+    } catch (error) {
+      toast.error('An error occurred. Please try again.');
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
 
   useEffect(() => {
     async function loadData() {
@@ -299,10 +326,24 @@ export default function HomePage() {
             <p className="relative z-10 mt-4 text-[#C9B87A]/80 text-sm sm:text-base max-w-lg mx-auto">
               Receive weekly Ayurvedic insights, seasonal recipes, and early access to physician-curated kits.
             </p>
-            <div className="relative z-10 mt-8 flex flex-wrap justify-center gap-4">
-              <Link href="/login" className="rounded-lg border-2 border-white/30 bg-white/10 px-8 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/20 hover:-translate-y-0.5">Login</Link>
-              <Link href="/login" className="rounded-lg bg-[#C9B87A] px-8 py-3 text-sm font-semibold text-[#2C2C2C] transition-all hover:bg-[#D4C38A] hover:-translate-y-0.5 shadow-lg">Sign Up</Link>
-            </div>
+            <form onSubmit={handleSubscribe} className="relative z-10 mt-8 flex flex-col sm:flex-row max-w-md mx-auto justify-center gap-3">
+              <input 
+                type="email" 
+                value={newsletterEmail}
+                onChange={(e) => setNewsletterEmail(e.target.value)}
+                placeholder="Enter your email" 
+                className="w-full sm:w-auto flex-grow rounded-lg border-2 border-white/30 bg-white/10 px-4 py-3 text-sm text-white placeholder-white/80 focus:outline-none focus:border-white/60 backdrop-blur-sm transition-all" 
+                disabled={isSubscribing}
+                required
+              />
+              <button 
+                type="submit" 
+                disabled={isSubscribing}
+                className="w-full sm:w-auto rounded-lg bg-[#C9B87A] px-8 py-3 text-sm font-semibold text-[#2C2C2C] transition-all hover:bg-[#D4C38A] hover:-translate-y-0.5 shadow-lg whitespace-nowrap flex items-center justify-center disabled:opacity-70 disabled:hover:translate-y-0"
+              >
+                {isSubscribing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Subscribe'}
+              </button>
+            </form>
             <p className="relative z-10 mt-6 text-[10px] text-white/40 tracking-wide">We respect your peace. Unsubscribe at any time.</p>
           </div>
         </AnimateOnScroll>

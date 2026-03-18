@@ -660,6 +660,17 @@ export async function verifyOtp(otp_code: string) {
     return res.json();
 }
 
+/* ─── Newsletter ─── */
+
+export async function subscribeNewsletter(email: string) {
+    const res = await authFetch(`${API_URL}/api/storefront/newsletter/subscribe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+    });
+    return res.json();
+}
+
 /* ─── Cart ─── */
 
 export async function createCart(customerId?: string) {

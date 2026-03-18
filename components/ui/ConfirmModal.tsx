@@ -30,7 +30,7 @@ export default function ConfirmModal({
         setIsMounted(true);
     }, []);
 
-    // Prevent scrolling when modal is open
+    // Prevent scrolling when modal is open 
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = 'hidden';
