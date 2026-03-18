@@ -10,7 +10,7 @@ export default function DynamicScriptLoader() {
 
     return (
         <>
-            {/* Example Google Analytics Loader */}
+            {/* Example Google Analytic s Loader */}
             {consent?.analytics && (
                 <>
                     <Script
