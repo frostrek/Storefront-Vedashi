@@ -263,7 +263,7 @@ export default function AccountPage() {
 
     // Body scroll lock for modals
     useEffect(() => {
-        if (selectedOrderDetails || isTrackOrderModalOpen || showDeactivateModal || deletingAddressId || cancellingOrderId || reviewModal || showNotificationOverlay || showExportModal || showPasswordModal || showEmailOtpModal) {
+        if (isTrackOrderModalOpen || showDeactivateModal || deletingAddressId || cancellingOrderId || reviewModal || showNotificationOverlay || showExportModal || showPasswordModal || showEmailOtpModal) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = 'unset';
@@ -271,7 +271,7 @@ export default function AccountPage() {
         return () => {
             document.body.style.overflow = 'unset';
         };
-    }, [selectedOrderDetails, isTrackOrderModalOpen, showDeactivateModal, deletingAddressId, cancellingOrderId, reviewModal, showNotificationOverlay, showExportModal, showPasswordModal, showEmailOtpModal]);
+    }, [isTrackOrderModalOpen, showDeactivateModal, deletingAddressId, cancellingOrderId, reviewModal, showNotificationOverlay, showExportModal, showPasswordModal, showEmailOtpModal]);
 
     useEffect(() => {
         if (!isLoading && !isAuthenticated) {
