@@ -109,7 +109,7 @@ export default function ShopPage() {
 
           <div className="relative z-10">
             <div className="text-center mb-16 px-4">
-              <h2 className="text-4xl font-bold text-gray-900 font-serif tracking-tight mb-4">Shop by Category</h2>
+              <h2 className="text-4xl font-bold text-gray-900 tracking-tight mb-4">Shop by Category</h2>
               <p className="text-gray-500 font-medium italic mb-8 max-w-xl mx-auto">Explore our curated collections of traditional wisdom for modern living</p>
               <div className="w-24 h-1 bg-[#8B7A3D] mx-auto rounded-full" />
             </div>
@@ -184,7 +184,7 @@ export default function ShopPage() {
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-10 sm:p-16">
               <div className="max-w-xl">
                 <span className="inline-block px-4 py-1 bg-[#C9B87A] text-black text-[9px] font-black uppercase tracking-[0.3em] rounded-full mb-6">Limited Apothecary</span>
-                <h3 className="text-white text-5xl sm:text-6xl font-bold font-serif mb-6 leading-[1.1]">Seasonal<br />Immunity Kits.</h3>
+                <h3 className="text-white text-5xl sm:text-6xl font-bold mb-6 leading-[1.1]">Seasonal<br />Immunity Kits.</h3>
                 <p className="text-white/80 text-lg mb-10 font-medium leading-relaxed italic">Hand-blended by master Vaidyas for constitutional harmony during seasonal shifts.</p>
                 <Link href="/products" className="group inline-flex items-center gap-3 px-10 py-4 bg-white text-black font-black uppercase tracking-widest rounded-2xl text-xs hover:bg-[#F5F2E8] transition-all shadow-2xl">
                   Acquire the Kit
@@ -207,7 +207,7 @@ export default function ShopPage() {
             />
             <div className="relative z-10">
               <Award className="h-10 w-10 text-[#C9B87A] mb-6" />
-              <h3 className="text-2xl font-serif font-bold mb-4">Purest Botanicals.</h3>
+              <h3 className="text-2xl font-bold mb-4">Purest Botanicals.</h3>
               <p className="text-white/70 text-sm leading-relaxed mb-8">
                 Every ingredient is sourced from its native soil to ensure maximum therapeutic potency.
               </p>
@@ -283,7 +283,7 @@ export default function ShopPage() {
               </div>
 
               <div>
-                <h4 className="text-3xl sm:text-4xl font-bold text-white font-serif mb-4 leading-tight">Empower Your Wellness Odyssey.</h4>
+                <h4 className="text-3xl sm:text-4xl font-bold text-white mb-4 leading-tight">Empower Your Wellness Odyssey.</h4>
                 <p className="text-white/60 text-lg max-w-2xl font-medium">
                   Join a global community dedicated to conscious living and Ayurvedic wisdom.
                   Synchronize your health with nature's rhythm.

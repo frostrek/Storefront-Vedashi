@@ -49,7 +49,7 @@ export default function LegalModal({
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-[#E8E4DC] bg-white">
                     <div>
-                        <h2 className="font-serif text-2xl font-bold text-[#1A1A1A] tracking-tight">{title}</h2>
+                        <h2 className="text-2xl font-bold text-[#1A1A1A] tracking-tight">{title}</h2>
                     </div>
                     <button
                         onClick={onClose}

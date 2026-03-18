@@ -59,7 +59,7 @@ export default function BlogHeroSection({ featuredPost }: BlogHeroSectionProps) 
                             </span>
                         </div>
                         
-                        <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl text-charcoal font-bold leading-[1.15] mb-6">
+                        <h1 className="text-4xl md:text-5xl lg:text-6xl text-charcoal font-bold leading-[1.15] mb-6">
                             {featuredPost.title}
                         </h1>
                         

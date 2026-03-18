@@ -93,7 +93,7 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
         <section className="pt-10">
             {/* Section header */}
             <div className="mb-12 max-w-2xl">
-                <h2 className="font-serif text-3xl font-bold text-gray-900 mb-3">Community Experiences</h2>
+                <h2 className="text-3xl font-bold text-gray-900 mb-3">Community Experiences</h2>
                 <p className="text-[15px] text-gray-500">Stories of restoration and balance from our collective.</p>
             </div>
 
@@ -108,7 +108,7 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
                     {/* ── Left: Summary ── */}
                     <div className="lg:sticky lg:top-24 self-start space-y-6">
                         <div className="rounded-2xl border border-gray-100 bg-white p-8 text-center shadow-sm">
-                            <p className="text-5xl font-bold text-gray-900 font-serif">
+                            <p className="text-5xl font-bold text-gray-900">
                                 {(summary?.average_rating ?? 0).toFixed(1)}
                             </p>
                             <StarRating

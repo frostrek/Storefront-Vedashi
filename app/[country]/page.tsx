@@ -90,7 +90,7 @@ export default function HomePage() {
                     Discover Your Nature
                   </span>
                 </div>
-                <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C2C2C] leading-tight">
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C2C2C] leading-tight">
                   What is your unique <em className="italic">Dosha</em>?
                 </h2>
                 <p className="mt-5 text-[#6B6B60] text-base leading-relaxed max-w-lg">
@@ -114,7 +114,7 @@ export default function HomePage() {
                 <img src="/dosha-woman.png" alt="Woman enjoying herbal tea" className="absolute inset-0 w-full h-full object-cover" />
                 <div className="absolute bottom-8 right-8 left-8 max-w-xs ml-auto">
                   <div className="rounded-xl bg-white/95 backdrop-blur-md p-5 shadow-xl">
-                    <p className="text-sm text-[#2C2C2C] italic leading-relaxed font-serif">
+                    <p className="text-sm text-[#2C2C2C] italic leading-relaxed">
                       &ldquo;This assessment changed how I view my
                       energy cycles entirely. It&apos;s more than a
                       quiz; it&apos;s a mirror.&rdquo;
@@ -188,7 +188,7 @@ export default function HomePage() {
             {/* Right — Text */}
             <div>
               <AnimateOnScroll animation="fadeRight" delay={0.1}>
-                <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#3B5D3B] leading-tight italic">
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#3B5D3B] leading-tight italic">
                   Rooted in Nature, Verified by Science
                 </h2>
                 <p className="mt-5 text-[#6B6B60] text-base leading-relaxed">
@@ -226,10 +226,10 @@ export default function HomePage() {
       <section className="py-12 sm:py-20 lg:py-24 px-4 bg-white">
         <div className="mx-auto max-w-7xl text-center">
           <AnimateOnScroll animation="fadeUp">
-            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C2C2C]">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C2C2C]">
               The Path to <em className="italic text-[#3B5D3B]">Prakriti</em>
             </h2>
-            <p className="mt-3 text-[#6B6B60] text-base max-w-2xl mx-auto italic font-serif">
+            <p className="mt-3 text-[#6B6B60] text-base max-w-2xl mx-auto italic">
               Beyond products, we offer a comprehensive healing ecosystem to restore your natural harmony.
             </p>
           </AnimateOnScroll>
@@ -246,7 +246,7 @@ export default function HomePage() {
                   <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm group-hover:shadow-md transition-shadow">
                     <service.icon className="h-6 w-6 text-[#3B5D3B]" />
                   </div>
-                  <h3 className="font-serif text-lg font-bold text-[#2C2C2C]">{service.title}</h3>
+                  <h3 className="text-lg font-bold text-[#2C2C2C]">{service.title}</h3>
                   <p className="mt-2 text-sm text-[#6B6B60] leading-relaxed">{service.desc}</p>
                 </div>
               </AnimateOnScroll>
@@ -263,13 +263,13 @@ export default function HomePage() {
               <Star key={i} className="h-5 w-5 fill-[#8B7A3D] text-[#8B7A3D]" />
             ))}
           </div>
-          <blockquote className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-[#3B5D3B] leading-snug italic">
+          <blockquote className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#3B5D3B] leading-snug italic">
             &ldquo;Vedashi hasn&apos;t just improved my health; it has fundamentally changed
             how I relate to my body and the seasons.&rdquo;
           </blockquote>
           <div className="mt-8 flex flex-col items-center gap-3">
             <div className="h-16 w-16 rounded-full bg-[#3B5D3B]/10 flex items-center justify-center border-2 border-[#3B5D3B]/20">
-              <span className="text-xl font-bold text-[#3B5D3B] font-serif">S</span>
+              <span className="text-xl font-bold text-[#3B5D3B]">S</span>
             </div>
             <p className="text-[11px] font-bold tracking-[0.2em] text-[#6B6B60] uppercase">
               Wellness Consultant, Madrid
@@ -292,7 +292,7 @@ export default function HomePage() {
                 </div>
                 <p className="text-sm text-[#6B6B60] leading-relaxed">&ldquo;{testimonial.text}&rdquo;</p>
                 <div className="mt-4 flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-full bg-[#3B5D3B]/10 flex items-center justify-center font-serif text-[#3B5D3B] font-bold text-sm">
+                  <div className="h-9 w-9 rounded-full bg-[#3B5D3B]/10 flex items-center justify-center text-[#3B5D3B] font-bold text-sm">
                     {testimonial.name.charAt(0)}
                   </div>
                   <div>
@@ -320,7 +320,7 @@ export default function HomePage() {
                 <path d="M100 0C120 60 200 80 200 140C200 180 160 200 100 200C40 200 0 180 0 140C0 80 80 60 100 0Z" />
               </svg>
             </div>
-            <h2 className="relative z-10 font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
+            <h2 className="relative z-10 text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
               Join the <em className="italic text-[#C9B87A]">Healed</em>.
             </h2>
             <p className="relative z-10 mt-4 text-[#C9B87A]/80 text-sm sm:text-base max-w-lg mx-auto">

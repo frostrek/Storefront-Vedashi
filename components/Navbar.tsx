@@ -288,7 +288,7 @@ export default function Navbar() {
                         </div>
                         <div className="pr-2">
                           <div className="flex items-center gap-2 mb-1">
-                            <h4 className="text-base font-serif font-bold text-[#1a2408]">Items left in cart</h4>
+                            <h4 className="text-base font-bold text-[#1a2408]">Items left in cart</h4>
                             <Sparkles className="h-3 w-3 text-[#c8a84e]" />
                           </div>
                           <p className="text-xs text-[#5B4A31] leading-relaxed mb-4 font-medium italic">

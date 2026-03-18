@@ -163,7 +163,7 @@ export default function CartPage() {
                                                         )}
                                                     </div>
                                                     <div className="text-right">
-                                                        <div className="font-serif text-lg font-bold text-[#1A1A1A]">
+                                                        <div className="text-lg font-bold text-[#1A1A1A]">
                                                             {formatPrice(price * item.quantity)}
                                                         </div>
                                                         <div className="text-xs text-[#8B7A3D] mt-1">{formatPrice(price)} each</div>
@@ -217,7 +217,7 @@ export default function CartPage() {
                                                     <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
                                                         <h3 className="text-sm font-bold text-[#1A1A1A] hover:text-[#3d5c3a] transition-colors">{item.product_name || 'Product'}</h3>
                                                     </Link>
-                                                    <p className="font-serif text-[#4A4A4A] mt-1">{formatPrice(price)}</p>
+                                                    <p className="text-[#4A4A4A] mt-1">{formatPrice(price)}</p>
                                                 </div>
                                                 <div className="flex flex-col items-end gap-2">
                                                     <button onClick={() => { moveToCart(item.cart_item_id); toast.success('Moved to cart'); }} disabled={loading} className="bg-[#6B8F5E] text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-[#5A7A4E]">
@@ -241,7 +241,7 @@ export default function CartPage() {
                                 <div className="cart-item-card p-6 border-l-4 border-l-[#2D3B2D]">
                                     <div className="flex items-center gap-2 mb-3">
                                         <FileText className="h-5 w-5 text-[#2D3B2D]" />
-                                        <h4 className="font-serif text-lg font-bold text-[#1A1A1A]">Order Notes <span className="text-[#8B7A3D] font-normal text-xs">(optional)</span></h4>
+                                        <h4 className="text-lg font-bold text-[#1A1A1A]">Order Notes <span className="text-[#8B7A3D] font-normal text-xs">(optional)</span></h4>
                                     </div>
                                     <p className="text-[13px] text-[#6B6B60] mb-4">Add any specific allergies, preferences, or delivery instructions for our practitioners.</p>
                                     <textarea
@@ -259,7 +259,7 @@ export default function CartPage() {
                                 <div className="cart-item-card p-6 border-t-4 border-t-[#8B7A3D]">
                                     <div className="flex items-center gap-2 mb-3">
                                         <Ticket className="h-5 w-5 text-[#8B7A3D]" />
-                                        <h4 className="font-serif text-lg font-bold text-[#1A1A1A]">Promo Offering</h4>
+                                        <h4 className="text-lg font-bold text-[#1A1A1A]">Promo Offering</h4>
                                     </div>
                                     <p className="text-[13px] text-[#6B6B60] mb-4">Have a sacred promo code? Enter it below.</p>
                                     {couponCode ? (
@@ -299,7 +299,7 @@ export default function CartPage() {
                                 <div className="cart-item-card p-6 border-t-4 border-t-[#6B8F5E]">
                                     <div className="flex items-center gap-2 mb-3">
                                         <MapPin className="h-5 w-5 text-[#6B8F5E]" />
-                                        <h4 className="font-serif text-lg font-bold text-[#1A1A1A]">Shipping Sanctuary</h4>
+                                        <h4 className="text-lg font-bold text-[#1A1A1A]">Shipping Sanctuary</h4>
                                     </div>
                                     <p className="text-[13px] text-[#6B6B60] mb-4">Estimate delivery to your location.</p>
                                     <div className="space-y-3">

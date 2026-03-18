@@ -60,7 +60,7 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
         <div className="relative group/reel py-8">
             <div className="flex flex-col items-center mb-10 px-4 relative">
                 <div className="text-center">
-                    {title && <h2 className="text-4xl font-bold text-gray-900 font-serif mb-2">{title}</h2>}
+                    {title && <h2 className="text-4xl font-bold text-gray-900 mb-2">{title}</h2>}
                     {subtitle && <p className="text-gray-500 font-medium italic mb-6">{subtitle}</p>}
                     <div className="w-24 h-1 bg-[#8B7A3D] rounded-full mx-auto" />
                 </div>

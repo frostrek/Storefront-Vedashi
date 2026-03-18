@@ -164,7 +164,7 @@ export default function VerifyOtpPage() {
                                 <Smartphone className="h-8 w-8 text-white" />
                             )}
                         </div>
-                        <h1 className="font-serif text-2xl font-bold text-white">
+                        <h1 className="text-2xl font-bold text-white">
                             {status === 'success' ? 'Mobile Verified!' : 'Verify Mobile Number'}
                         </h1>
                         <p className="mt-2 text-sm text-white/80">

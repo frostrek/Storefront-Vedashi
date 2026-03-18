@@ -85,10 +85,10 @@ export default function ContactPage() {
                 >
                     Get In Touch
                 </motion.div>
-                <h1 className="font-serif text-[42px] leading-tight sm:text-6xl font-bold text-[#1A1A1A] mb-5 tracking-tight">
+                <h1 className="text-[42px] leading-tight sm:text-6xl font-bold text-[#1A1A1A] mb-5 tracking-tight">
                     Contact Us
                 </h1>
-                <p className="text-[#5c5c5c] text-lg sm:text-lg max-w-[600px] mx-auto leading-relaxed font-inter">
+                <p className="text-[#5c5c5c] text-lg sm:text-lg max-w-[600px] mx-auto leading-relaxed">
                     We&apos;d love to hear from you. Whether you have a question about our collections or simply want to share your experience, send us a message or visit us at our tasting room.
                 </p>
             </motion.section>
@@ -105,7 +105,7 @@ export default function ContactPage() {
                         style={{ willChange: "transform, opacity" }}
                         className="rounded-[24px] bg-white p-8 sm:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] h-fit border border-gray-100"
                     >
-                        <h2 className="font-serif text-3xl font-bold text-[#1A1A1A] mb-3">Send a Message</h2>
+                        <h2 className="text-3xl font-bold text-[#1A1A1A] mb-3">Send a Message</h2>
                         <p className="text-[#5c5c5c] mb-8 text-[15px]">Fill out the form below and our team will be in touch shortly.</p>
                         
                         <form onSubmit={handleSubmit} className="space-y-6">
@@ -221,6 +221,7 @@ export default function ContactPage() {
                                 </div>
                             </motion.div>
                         ))}
+
 
 
                     </div>
