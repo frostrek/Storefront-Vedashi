@@ -83,8 +83,8 @@ export function useFilters() {
             priceRange: parseRange(searchParams.get('price'), DEFAULTS.priceRange),
             alcoholRange: parseRange(searchParams.get('alcohol'), DEFAULTS.alcoholRange),
             inStock: searchParams.get('inStock') === 'true',
-            bestSellers: searchParams.get('bestSellers') === 'true',
-            newArrivals: searchParams.get('newArrivals') === 'true',
+            bestSellers: searchParams.get('bestSeller') === 'true',
+            newArrivals: searchParams.get('newArrival') === 'true',
             sort: searchParams.get('sort') || DEFAULTS.sort,
             discountMin: searchParams.get('discount_min') ? Number(searchParams.get('discount_min')) : null,
             attributes,
@@ -127,8 +127,8 @@ export function useFilters() {
         setParam({ alcohol: isDefault ? null : `${val[0]}-${val[1]}` });
     }, [setParam]);
     const setInStock = useCallback((val: boolean) => setParam({ inStock: val ? 'true' : null }), [setParam]);
-    const setBestSellers = useCallback((val: boolean) => setParam({ bestSellers: val ? 'true' : null }), [setParam]);
-    const setNewArrivals = useCallback((val: boolean) => setParam({ newArrivals: val ? 'true' : null }), [setParam]);
+    const setBestSellers = useCallback((val: boolean) => setParam({ bestSeller: val ? 'true' : null }), [setParam]);
+    const setNewArrivals = useCallback((val: boolean) => setParam({ newArrival: val ? 'true' : null }), [setParam]);
     const setSort = useCallback((val: string) => setParam({ sort: val || null }), [setParam]);
     const setDiscountMin = useCallback((val: number | null) => setParam({ discount_min: val ? String(val) : null }), [setParam]);
     const setAttribute = useCallback((key: string, val: string[]) => setParam({ [`attr_${key}`]: val.length ? val.join(',') : null }), [setParam]);

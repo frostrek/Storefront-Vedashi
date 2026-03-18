@@ -9,7 +9,7 @@ export default function QuoteBlock() {
                 </svg>
             </div>
             
-            <blockquote className="font-serif text-lg md:text-xl text-charcoal italic leading-relaxed mb-6">
+            <blockquote className="text-lg md:text-xl text-charcoal italic leading-relaxed mb-6">
                 "Health is a state of complete harmony of the body, mind and spirit. When one is free from physical disabilities and mental distractions, the gates of the soul open."
             </blockquote>
             

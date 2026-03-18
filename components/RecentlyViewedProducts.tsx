@@ -67,7 +67,7 @@ export default function RecentlyViewedProducts({ currentProductId }: RecentlyVie
     return (
         <div className="mt-16 border-t border-light-border pt-16">
             <div className="flex items-center justify-between mb-8">
-                <h2 className="font-serif text-3xl font-bold text-charcoal flex items-center gap-3">
+                <h2 className="text-3xl font-bold text-charcoal flex items-center gap-3">
                     <Clock className="h-6 w-6 text-burgundy" />
                     Recently Viewed
                 </h2>

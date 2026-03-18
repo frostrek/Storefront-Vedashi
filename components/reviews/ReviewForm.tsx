@@ -33,7 +33,7 @@ export default function ReviewForm({ productId, orderId, existingReview, onSubmi
         return (
             <div className="rounded-xl border border-neutral-200 bg-gradient-to-br from-[#faf8f5] to-[#f5f0ea] p-8 text-center">
                 <Leaf className="mx-auto h-8 w-8 text-[#C5A46D]/60 mb-3" />
-                <p className="font-serif text-lg text-neutral-700 mb-1">Share Your Experience</p>
+                <p className="text-lg text-neutral-700 mb-1">Share Your Experience</p>
                 <p className="text-sm text-neutral-500 mb-4">Login to leave a review for this product</p>
                 <Link
                     href="/login"
@@ -83,7 +83,7 @@ export default function ReviewForm({ productId, orderId, existingReview, onSubmi
 
     return (
         <div className="rounded-xl border border-neutral-200 bg-white p-6">
-            <h4 className="font-serif text-lg font-semibold text-neutral-800 mb-1">
+            <h4 className="text-lg font-semibold text-neutral-800 mb-1">
                 {isEditing ? 'Edit Your Review' : 'Write a Review'}
             </h4>
             <p className="text-xs text-neutral-400 mb-4">

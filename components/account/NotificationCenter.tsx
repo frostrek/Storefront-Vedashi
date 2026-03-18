@@ -36,9 +36,18 @@ export default function NotificationCenter({ colors }: { colors: any }) {
   useEffect(() => {
     fetchNotifications();
     
+    // Listen for updates from other components
+    const handleUpdate = () => {
+      fetchNotifications();
+    };
+    window.addEventListener('notifications-updated', handleUpdate);
+    
     // Polling for new notifications every 2 minutes
     const interval = setInterval(fetchNotifications, 120000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('notifications-updated', handleUpdate);
+    };
   }, []);
 
   useEffect(() => {
@@ -58,6 +67,7 @@ export default function NotificationCenter({ colors }: { colors: any }) {
     if (res.success) {
       setNotifications(prev => prev.map(n => n.notification_id === id ? { ...n, is_read: true } : n));
       setUnreadCount(prev => Math.max(0, prev - 1));
+      window.dispatchEvent(new CustomEvent('notifications-updated'));
     }
   };
 
@@ -66,6 +76,7 @@ export default function NotificationCenter({ colors }: { colors: any }) {
     if (res.success) {
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
       setUnreadCount(0);
+      window.dispatchEvent(new CustomEvent('notifications-updated'));
     }
   };
 
@@ -76,6 +87,7 @@ export default function NotificationCenter({ colors }: { colors: any }) {
       // Re-fetch count to be sure
       const count = await getUnreadNotificationCount();
       setUnreadCount(count);
+      window.dispatchEvent(new CustomEvent('notifications-updated'));
     }
   };
 
@@ -125,7 +137,7 @@ export default function NotificationCenter({ colors }: { colors: any }) {
           >
             {/* Header */}
             <div className="px-6 py-4 border-b border-gray-50 bg-gray-50/50 flex items-center justify-between">
-              <h3 className="font-serif font-bold text-[#1a2408]">Notifications</h3>
+              <h3 className="font-bold text-[#1a2408]">Notifications</h3>
               <div className="flex items-center gap-3">
                 {unreadCount > 0 && (
                   <button 

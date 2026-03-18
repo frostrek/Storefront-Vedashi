@@ -47,7 +47,7 @@ export default function BlogCategoryPage({ params }: { params: Promise<{ slug: s
                         <span>/</span>
                         <span className="text-white">{categoryName}</span>
                     </nav>
-                    <h1 className="font-serif text-3xl md:text-4xl font-bold text-white mb-3">
+                    <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">
                         {categoryName}
                     </h1>
                     <p className="text-white/60 text-sm">

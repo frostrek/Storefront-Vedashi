@@ -32,7 +32,7 @@ export default function AboutPage() {
                         </p>
                     </AnimateOnScroll>
                     <AnimateOnScroll animation="fadeUp" delay={0.1} duration={0.9}>
-                        <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight">
+                        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight">
                             Crafting a Legacy of{' '}
                             <em className="italic text-[#C9B87A]">Balance</em>
                         </h1>
@@ -83,7 +83,7 @@ export default function AboutPage() {
                                 <p className="text-xs font-bold tracking-widest uppercase text-[#8B7A3D]">
                                     Preserving traditions from the heart of
                                 </p>
-                                <p className="font-serif text-lg font-bold text-[#3B5D3B] mt-1">
+                                <p className="text-lg font-bold text-[#3B5D3B] mt-1">
                                     the Himalayas, 5000+ yrs
                                 </p>
                             </div>
@@ -93,7 +93,7 @@ export default function AboutPage() {
                     {/* Text */}
                     <div>
                         <AnimateOnScroll animation="fadeRight" delay={0.1}>
-                            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C2C2C] leading-tight">
+                            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C2C2C] leading-tight">
                                 A Return to <em className="italic text-[#3B5D3B]">Purity</em>
                             </h2>
                         </AnimateOnScroll>
@@ -121,7 +121,7 @@ export default function AboutPage() {
                                     { number: '98%', label: 'Client Satisfaction' },
                                 ].map((stat, i) => (
                                     <div key={i}>
-                                        <p className="font-serif text-2xl font-bold text-[#3B5D3B]">{stat.number}</p>
+                                        <p className="text-2xl font-bold text-[#3B5D3B]">{stat.number}</p>
                                         <p className="text-xs text-[#6B6B60] mt-0.5">{stat.label}</p>
                                     </div>
                                 ))}
@@ -138,10 +138,10 @@ export default function AboutPage() {
                 <div className="mx-auto max-w-4xl">
                     <AnimateOnScroll animation="fadeUp">
                         <div className="text-center mb-16">
-                            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C2C2C]">
+                            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C2C2C]">
                                 The Path of <em className="italic text-[#3B5D3B]">Prakriti</em>
                             </h2>
-                            <p className="mt-3 text-[#6B6B60] font-serif italic">
+                            <p className="mt-3 text-[#6B6B60] italic">
                                 Milestones in our journey to bring Ayurveda to the modern world
                             </p>
                         </div>
@@ -184,7 +184,7 @@ export default function AboutPage() {
                                     </div>
                                     <div className="pb-8 pt-1">
                                         <span className="text-[11px] font-bold tracking-widest text-[#8B7A3D] uppercase">{event.year}</span>
-                                        <h3 className="font-serif text-xl font-bold text-[#2C2C2C] mt-1">{event.title}</h3>
+                                        <h3 className="text-xl font-bold text-[#2C2C2C] mt-1">{event.title}</h3>
                                         <p className="mt-2 text-sm text-[#6B6B60] leading-relaxed max-w-md">{event.desc}</p>
                                     </div>
                                 </div>
@@ -201,7 +201,7 @@ export default function AboutPage() {
                 <div className="mx-auto max-w-7xl">
                     <AnimateOnScroll animation="fadeUp">
                         <div className="text-center mb-14">
-                            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C2C2C]">
+                            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C2C2C]">
                                 Meet the Visionaries
                             </h2>
                             <p className="mt-3 text-[#6B6B60] max-w-lg mx-auto">
@@ -238,9 +238,9 @@ export default function AboutPage() {
                             <AnimateOnScroll key={i} animation="fadeUp" delay={i * 0.12}>
                                 <div className="rounded-2xl border border-[#E0DCCF] bg-white p-8 text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group">
                                     <div className={`mx-auto mb-5 h-20 w-20 rounded-full ${member.color} flex items-center justify-center transition-transform group-hover:scale-105`}>
-                                        <span className="text-2xl font-bold font-serif text-[#3B5D3B]">{member.initial}</span>
+                                        <span className="text-2xl font-bold text-[#3B5D3B]">{member.initial}</span>
                                     </div>
-                                    <h3 className="font-serif text-lg font-bold text-[#2C2C2C]">{member.name}</h3>
+                                    <h3 className="text-lg font-bold text-[#2C2C2C]">{member.name}</h3>
                                     <p className="text-xs font-bold tracking-widest text-[#8B7A3D] uppercase mt-1">{member.role}</p>
                                     <p className="mt-3 text-sm text-[#6B6B60] leading-relaxed">{member.desc}</p>
                                 </div>
@@ -273,7 +273,7 @@ export default function AboutPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
                         <AnimateOnScroll animation="fadeLeft" duration={0.9}>
                             <div>
-                                <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C2C2C] leading-tight italic">
+                                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C2C2C] leading-tight italic">
                                     Sourced by Nature,<br />Verified by Science.
                                 </h2>
                                 <p className="mt-5 text-[#6B6B60] text-base leading-relaxed">
@@ -316,13 +316,13 @@ export default function AboutPage() {
                             <Star key={i} className="h-5 w-5 fill-[#8B7A3D] text-[#8B7A3D]" />
                         ))}
                     </div>
-                    <blockquote className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-[#3B5D3B] leading-snug italic">
+                    <blockquote className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#3B5D3B] leading-snug italic">
                         &ldquo;Vedashi hasn&apos;t just improved my health; it has fundamentally changed
                         how I relate to my body and the seasons. It&apos;s the sanctuary I didn&apos;t know I needed.&rdquo;
                     </blockquote>
                     <div className="mt-8 flex flex-col items-center gap-3">
                         <div className="h-16 w-16 rounded-full bg-[#3B5D3B]/10 flex items-center justify-center border-2 border-[#3B5D3B]/20">
-                            <span className="text-xl font-bold text-[#3B5D3B] font-serif">R</span>
+                            <span className="text-xl font-bold text-[#3B5D3B]">R</span>
                         </div>
                         <p className="text-[11px] font-bold tracking-[0.2em] text-[#6B6B60] uppercase">
                             Dr. Rebecca Lane — Integrative Physician, London
@@ -349,7 +349,7 @@ export default function AboutPage() {
                             </svg>
                         </div>
 
-                        <h2 className="relative z-10 font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
+                        <h2 className="relative z-10 text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
                             Ready to return to your{' '}
                             <em className="italic text-[#C9B87A]">true nature</em>?
                         </h2>

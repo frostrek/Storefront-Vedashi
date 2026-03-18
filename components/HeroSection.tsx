@@ -35,7 +35,7 @@ export default function HeroSection() {
                         </span>
 
                         {/* Headline */}
-                        <h1 className="font-serif leading-[1.1] animate-fade-in-up">
+                        <h1 className="leading-[1.1] animate-fade-in-up">
                             <span className="block text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-[#2C2C2C]">
                                 Ancient
                             </span>

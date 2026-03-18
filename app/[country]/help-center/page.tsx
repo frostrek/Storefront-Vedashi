@@ -95,7 +95,7 @@ export default function HelpCenterPage() {
                     <span className="inline-block px-4 py-1.5 rounded-full bg-[#4A5D23]/10 text-[#2D3A15] text-xs font-bold tracking-widest uppercase mb-6">
                         Vedic Support
                     </span>
-                    <h1 className="text-4xl md:text-6xl font-serif font-bold text-[#1a2408] mb-6 leading-tight">
+                    <h1 className="text-4xl md:text-6xl font-bold text-[#1a2408] mb-6 leading-tight">
                         How can we <span className="text-[#4A5D23]">help you?</span>
                     </h1>
                     <p className="text-[#5B4A31] text-lg mb-10 max-w-2xl mx-auto leading-relaxed">
@@ -216,7 +216,7 @@ export default function HelpCenterPage() {
             {popularFaqs.length > 0 && (
                 <section className="max-w-5xl mx-auto px-6 py-20 bg-[#FDFBF7] rounded-[50px] mb-20 border border-[#4A5D23]/5">
                     <div className="text-center mb-12">
-                        <h2 className="text-3xl md:text-4xl font-serif font-bold text-[#1a2408] mb-4">Common Questions</h2>
+                        <h2 className="text-3xl md:text-4xl font-bold text-[#1a2408] mb-4">Common Questions</h2>
                         <div className="w-24 h-1 bg-[#4A5D23] mx-auto rounded-full opacity-30"></div>
                     </div>
                     <div className="grid md:grid-cols-1 gap-4 max-w-3xl mx-auto">
@@ -258,7 +258,7 @@ export default function HelpCenterPage() {
                     </div>
                     
                     <div className="relative z-10">
-                        <h2 className="text-3xl md:text-5xl font-serif font-bold text-[#F2E8CF] mb-4">
+                        <h2 className="text-3xl md:text-5xl font-bold text-[#F2E8CF] mb-4">
                             Didn&apos;t find what you need?
                         </h2>
                         <p className="text-[#A6BF8F] mb-10 text-lg max-w-xl mx-auto font-medium">

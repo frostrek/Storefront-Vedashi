@@ -83,7 +83,7 @@ export default function FAQPage() {
                         <span className="text-xs font-bold tracking-[0.2em] uppercase text-[#2D3A15]">Knowledge Base</span>
                     </div>
 
-                    <h1 className="text-4xl md:text-6xl font-serif font-bold text-[#1a2408] mb-6 leading-tight">
+                    <h1 className="text-4xl md:text-6xl font-bold text-[#1a2408] mb-6 leading-tight">
                         How can we help you <em className="not-italic text-[#4A5D23]">grow</em>?
                     </h1>
 
@@ -171,7 +171,7 @@ export default function FAQPage() {
                     {/* ─── LEFT COLUMN: FAQ Accordions ─── */}
                     <div className="flex-1 min-w-0">
                         <div className="mb-12">
-                            <h2 className="text-3xl md:text-5xl font-serif font-bold text-[#1a2408] mb-4">
+                            <h2 className="text-3xl md:text-5xl font-bold text-[#1a2408] mb-4">
                                 Frequently Asked Questions
                             </h2>
                             <p className="text-lg text-[#5B4A31] max-w-2xl leading-relaxed">
@@ -286,7 +286,7 @@ export default function FAQPage() {
                                         </div>
                                         <Leaf className="h-10 w-10 text-[#4A5D23]/40 -mr-2" />
                                     </div>
-                                    <h3 className="text-2xl font-serif font-bold text-[#F2E8CF] mb-4">Our Organic Promise</h3>
+                                    <h3 className="text-2xl font-bold text-[#F2E8CF] mb-4">Our Organic Promise</h3>
                                     <p className="text-base text-[#A6BF8F] leading-relaxed mb-8 font-medium">
                                         Transparecy is our root. Every Vedashi product is verified for purity and environmental impact.
                                     </p>
