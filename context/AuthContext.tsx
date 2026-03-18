@@ -9,7 +9,7 @@ interface AuthContextType {
     isLoading: boolean;
     login: (email: string, password: string) => Promise<{ success: boolean; error?: string; code?: string; role?: string; access_token?: string }>;
     register: (name: string, email: string, password: string) => Promise<RegisterResponse>;
-    /** Log-in the user directly from verification data (after OTP verified and account created) */
+    /** Log-in the user directly from verification data (after OTP verified and accounts created) */
     loginFromVerification: (customerData: Record<string, unknown>, accessToken: string) => void;
     socialLogin: (clerkToken: string) => Promise<{ success: boolean; error?: string; is_new_user?: boolean; account_linked?: boolean; pending_verification?: boolean; customer_id?: string; email?: string; full_name?: string }>;
     logout: () => void;
