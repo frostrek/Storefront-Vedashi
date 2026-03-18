@@ -10,7 +10,7 @@ import { SkeletonProductGrid } from '@/components/Skeleton';
 import SearchBar from '@/components/SearchBar';
 import {
     SlidersHorizontal, X, Leaf, Loader2,
-    Sparkles, ChevronLeft, ChevronRight
+    Sparkles, ChevronLeft, ChevronRight, LayoutGrid, List
 } from 'lucide-react';
 import { useFilters } from '@/hooks/useFilters';
 import { FILTER_CONFIGS, SORT_OPTIONS } from '@/lib/filterConfig';
@@ -63,6 +63,18 @@ function ProductsContent() {
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('vedashi_view_mode') as 'grid' | 'list';
+            if (saved === 'grid' || saved === 'list') {
+                setViewMode(saved);
+            }
+        }
+    }, []);
 
     // Dynamic filter options (loaded from API)
     const [brandOptions, setBrandOptions] = useState<string[]>([]);
@@ -445,7 +457,7 @@ function ProductsContent() {
                     )}
                 </button>
 
-                <div className="lg:grid lg:grid-cols-[300px_1fr] lg:gap-12 items-start">
+                <div className="lg:grid lg:grid-cols-[300px_1fr] lg:gap-12">
                     {/* ─── Desktop Sidebar ─── */}
                     <aside className="hidden lg:block">
                         <div className="sticky top-28 h-[calc(100vh-120px)] overflow-y-auto rounded-3xl border border-[#3d5c3a]/5 bg-white/90 backdrop-blur-md px-6 py-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] custom-scrollbar">
@@ -497,11 +509,31 @@ function ProductsContent() {
                                 </span>
                                 {loading && <Loader2 className="h-4 w-4 animate-spin text-[#3d5c3a]" />}
                             </p>
-                            <SortDropdown
-                                value={filters.sort || SORT_OPTIONS[0].value}
-                                onChange={setSort}
-                                options={SORT_OPTIONS}
-                            />
+                            <div className="flex items-center gap-3">
+                                <div className="flex items-center rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
+                                    <button
+                                        onClick={() => { setViewMode('grid'); localStorage.setItem('vedashi_view_mode', 'grid'); }}
+                                        className={`p-2 transition-colors cursor-pointer ${viewMode === 'grid' ? 'bg-[#3d5c3a] text-white' : 'text-gray-400 hover:text-gray-600'}`}
+                                        aria-label="Grid view"
+                                        title="Grid view"
+                                    >
+                                        <LayoutGrid className="h-4 w-4" />
+                                    </button>
+                                    <button
+                                        onClick={() => { setViewMode('list'); localStorage.setItem('vedashi_view_mode', 'list'); }}
+                                        className={`p-2 transition-colors cursor-pointer ${viewMode === 'list' ? 'bg-[#3d5c3a] text-white' : 'text-gray-400 hover:text-gray-600'}`}
+                                        aria-label="List view"
+                                        title="List view"
+                                    >
+                                        <List className="h-4 w-4" />
+                                    </button>
+                                </div>
+                                <SortDropdown
+                                    value={filters.sort || SORT_OPTIONS[0].value}
+                                    onChange={setSort}
+                                    options={SORT_OPTIONS}
+                                />
+                            </div>
                         </div>
 
                         <ActiveFilterChips
@@ -514,7 +546,7 @@ function ProductsContent() {
                             <SkeletonProductGrid count={8} />
                         ) : products.length > 0 ? (
                             <>
-                                <div ref={gridRef} className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-3">
+                                <div ref={gridRef} className={viewMode === 'grid' ? 'grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-3' : 'flex flex-col gap-4'}>
                                     {products.map((product, i) => (
                                         <div
                                             key={`${product.product_id}-${i}`}
@@ -524,6 +556,7 @@ function ProductsContent() {
                                             <ProductCard
                                                 product={product}
                                                 priority={i < 4}
+                                                layout={viewMode}
                                             />
                                         </div>
                                     ))}

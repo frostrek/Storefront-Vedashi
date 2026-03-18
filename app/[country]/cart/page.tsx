@@ -104,6 +104,10 @@ export default function CartPage() {
     const deliveryFee = couponType === 'free_shipping' ? 0 : (totalPrice > 50 ? 0 : 15); // Default $15 standard
     const grandTotal = totalPrice - couponDiscount + deliveryFee;
 
+    const outOfStockItems = items.filter(i => (i.stock_quantity ?? 0) === 0);
+    const insufficientStockItems = items.filter(i => (i.stock_quantity ?? 0) > 0 && i.quantity > (i.stock_quantity ?? 0));
+    const hasStockIssues = outOfStockItems.length > 0 || insufficientStockItems.length > 0;
+
     return (
         <div className="cart-leaf-bg min-h-screen">
             <div className="cart-noise-overlay" aria-hidden="true" />
@@ -133,6 +137,16 @@ export default function CartPage() {
                                 </div>
                             )}
 
+                            {hasStockIssues && (
+                                <div className="mb-4 rounded-xl p-4 text-sm flex items-start gap-3 bg-[#FFF3CD] border border-[#FFEEBA] text-[#856404]">
+                                    <span className="mt-0.5">⚠️</span> 
+                                    <div>
+                                        <p className="font-bold">Inventory Update</p>
+                                        <p>One or more items in your cart are currently out of stock or have insufficient quantity. Please adjust them to proceed.</p>
+                                    </div>
+                                </div>
+                            )}
+
                             {items.length === 0 ? (
                                 <div className="cart-item-card text-center py-10">
                                     <p className="text-[#4A4A4A] font-medium">Your active cart is empty.</p>
@@ -141,8 +155,11 @@ export default function CartPage() {
                                 items.map(item => {
                                     const price = item.price ?? 0;
                                     const unitPrice = item.original_price ?? price;
+                                    const isOutOfStock = (item.stock_quantity ?? 0) === 0;
+                                    const hasInsufficientStock = !isOutOfStock && item.quantity > (item.stock_quantity ?? 0);
+                                    
                                     return (
-                                        <div key={item.cart_item_id} className="cart-item-card flex flex-col sm:flex-row gap-6">
+                                        <div key={item.cart_item_id} className={`cart-item-card flex flex-col sm:flex-row gap-6 ${isOutOfStock ? 'opacity-60 grayscale-[0.3]' : ''}`}>
                                             {/* Image */}
                                             <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img flex-shrink-0">
                                                 {item.image_url ? (
@@ -161,6 +178,12 @@ export default function CartPage() {
                                                         {item.size_label && (
                                                             <p className="text-xs mt-1 text-[#6B6B60] uppercase tracking-wider font-semibold">{item.size_label}</p>
                                                         )}
+                                                        {isOutOfStock && (
+                                                            <p className="text-[10px] mt-2 text-[#C0392B] font-bold uppercase tracking-wider py-1 px-2 border border-[#C0392B] bg-red-50 inline-block rounded max-w-fit">Out of Stock</p>
+                                                        )}
+                                                        {hasInsufficientStock && (
+                                                            <p className="text-xs mt-2 text-[#D35400] font-bold">Only {item.stock_quantity} left in stock</p>
+                                                        )}
                                                     </div>
                                                     <div className="text-right">
                                                         <div className="text-lg font-bold text-[#1A1A1A]">
@@ -173,11 +196,11 @@ export default function CartPage() {
                                                 <div className="flex items-center justify-between mt-4">
                                                     {/* Quantity */}
                                                     <div className="cart-qty-control">
-                                                        <button onClick={() => updateQuantity(item.cart_item_id, item.quantity - 1)} disabled={loading} className="cart-qty-btn">
+                                                        <button onClick={() => updateQuantity(item.cart_item_id, item.quantity - 1)} disabled={loading || isOutOfStock} className="cart-qty-btn disabled:opacity-50">
                                                             <Minus className="h-3 w-3" />
                                                         </button>
                                                         <span className="cart-qty-value">{item.quantity}</span>
-                                                        <button onClick={() => updateQuantity(item.cart_item_id, item.quantity + 1)} disabled={loading} className="cart-qty-btn">
+                                                        <button onClick={() => updateQuantity(item.cart_item_id, item.quantity + 1)} disabled={loading || isOutOfStock || hasInsufficientStock} className="cart-qty-btn disabled:opacity-50">
                                                             <Plus className="h-3 w-3" />
                                                         </button>
                                                     </div>
@@ -462,6 +485,7 @@ export default function CartPage() {
 
                                 <button
                                     onClick={() => {
+                                        if (hasStockIssues || loading) return;
                                         if (!isAuthenticated) {
                                             toast('Please sign in to proceed to checkout', { icon: '🔐' });
                                             router.push('/login?redirect=/cart');
@@ -469,7 +493,8 @@ export default function CartPage() {
                                             router.push('/checkout');
                                         }
                                     }}
-                                    className="cart-checkout-btn block w-full text-center hover:bg-[#8B7A3D]"
+                                    disabled={hasStockIssues || loading}
+                                    className="cart-checkout-btn block w-full text-center hover:bg-[#8B7A3D] disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {isAuthenticated ? 'Confirm & Complete Ritual' : 'Sign In to Checkout'}
                                 </button>

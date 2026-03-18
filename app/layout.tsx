@@ -1,29 +1,25 @@
 import type { Metadata } from "next";
-import { Roboto } from "next/font/google";
-import Script from "next/script";
-import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import { Manrope, Outfit, Cormorant_Garamond } from "next/font/google";
 
-import PromoBanner from "@/components/PromoBanner";
-import { CartProvider } from "@/context/CartContext";
-import { WishlistProvider } from "@/context/WishlistContext";
-import { AuthProvider } from "@/context/AuthContext";
-import { ClerkProvider } from "@clerk/nextjs";
-import { Toaster } from "react-hot-toast";
-import { CookieConsentProvider } from "@/context/CookieConsentContext";
-import CookieBanner from "@/components/CookieBanner";
-import LanguageSuggestionBanner from "@/components/LanguageSuggestionBanner";
-import DynamicScriptLoader from "@/components/DynamicScriptLoader";
-import MaintenancePage from "@/components/MaintenancePage";
-import { generateOrganizationJsonLd, generateWebSiteJsonLd } from "@/lib/seo";
-import ButterflyEffect from "@/components/animations/ButterflyEffect";
-
-const roboto = Roboto({
+const manrope = Manrope({
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  variable: "--font-roboto",
+  variable: "--font-base",
   display: "swap",
+  weight: ["400", "500", "600", "700"],
+});
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-ui",
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
+});
+
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  variable: "--font-accent",
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -75,7 +71,7 @@ export default async function RootLayout({
 
   if (isMaintenance) {
     return (
-      <html lang="en" className={roboto.variable} suppressHydrationWarning>
+      <html lang="en" className={`${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
         <body className="min-h-screen bg-[#1A1814]">
           <MaintenancePage message={maintenanceMessage} />
         </body>
@@ -84,7 +80,7 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="en" className={roboto.variable} suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
       <body className="min-h-screen flex flex-col" suppressHydrationWarning>
         <Script
           id="structured-data-organization"

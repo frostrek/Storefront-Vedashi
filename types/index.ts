@@ -208,6 +208,7 @@ export interface BackendCartItem {
         variant_sku?: string;
         size_label?: string;
         volume_ml?: number;
+        stock_quantity?: number;
     };
     pricing?: {
         unit_price: number;
@@ -226,6 +227,7 @@ export interface BackendCartItem {
     sku?: string;
     image_url?: string;
     slug?: string;
+    stock_quantity?: number;
 }
 
 export interface BackendCart {

@@ -196,15 +196,15 @@ export default function Navbar() {
             {/* Center Nav Links */}
             <nav className="hidden md:flex flex-shrink-0 items-center justify-center gap-8 mx-4">
               {visibleLinks.map(link => {
-                const isActive = link.url === '/' 
+                const isActive = link.url === '/'
                   ? pathname === '/' || pathname === `/${pathname?.split('/')[1]}`
                   : pathname?.includes(link.url);
-                  
+
                 return (
                   <Link
                     key={link.label}
                     href={link.url}
-                    className={`text-[13px] font-semibold uppercase tracking-widest transition-colors duration-200 relative before:content-[''] before:absolute before:-bottom-1 before:left-0 before:w-full before:h-0.5 before:bg-current before:transition-transform before:duration-300 ${isActive ? 'before:scale-x-100' : 'before:scale-x-0'}`}
+                    className={`text-[12px] font-bold font-ui uppercase tracking-[0.14em] transition-colors duration-200 relative before:content-[''] before:absolute before:-bottom-1 before:left-0 before:w-full before:h-0.5 before:bg-current before:transition-transform before:duration-300 ${isActive ? 'before:scale-x-100' : 'before:scale-x-0'}`}
                     style={{ color: isActive ? colors.navbar_hover : colors.navbar_text }}
                     onMouseEnter={e => (e.currentTarget.style.color = colors.navbar_hover)}
                     onMouseLeave={e => (e.currentTarget.style.color = isActive ? colors.navbar_hover : colors.navbar_text)}
@@ -237,7 +237,7 @@ export default function Navbar() {
                 <Heart className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
                 {wishlistCount > 0 && (
                   <span
-                    className="absolute -top-0.5 -right-0.5 text-white text-[9px] font-bold h-4 w-4 flex items-center justify-center rounded-full"
+                    className="absolute -top-0.5 -right-0.5 text-white text-[9px] font-black font-ui h-4 w-4 flex items-center justify-center rounded-full tabular-nums"
                     style={{ backgroundColor: colors.cart_badge_bg }}
                   >
                     {wishlistCount}
@@ -252,7 +252,7 @@ export default function Navbar() {
                   <ShoppingCart className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
                   {totalItems > 0 && (
                     <span
-                      className="absolute -top-0.5 -right-0.5 text-white text-[9px] font-bold h-4 w-4 flex items-center justify-center rounded-full"
+                      className="absolute -top-0.5 -right-0.5 text-white text-[9px] font-black font-ui h-4 w-4 flex items-center justify-center rounded-full tabular-nums"
                       style={{ backgroundColor: colors.cart_badge_bg }}
                     >
                       {totalItems}
@@ -288,16 +288,16 @@ export default function Navbar() {
                         </div>
                         <div className="pr-2">
                           <div className="flex items-center gap-2 mb-1">
-                            <h4 className="text-base font-bold text-[#1a2408]">Items left in cart</h4>
+                            <h4 className="text-base font-display font-bold text-[#1a2408]">Items left in cart</h4>
                             <Sparkles className="h-3 w-3 text-[#c8a84e]" />
                           </div>
-                          <p className="text-xs text-[#5B4A31] leading-relaxed mb-4 font-medium italic">
+                          <p className="text-xs text-[#5B4A31] leading-relaxed mb-4 font-medium italic font-sans">
                             You previously left {totalItems} {totalItems === 1 ? 'item' : 'items'} in your cart. Checkout fast before they go out of stock!
                           </p>
                           <Link
                             href="/cart"
                             onClick={() => setShowCartReminder(false)}
-                            className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white px-5 py-2.5 rounded-xl transition-all shadow-xl hover:-translate-y-0.5 active:translate-y-0"
+                            className="inline-flex items-center gap-2 text-[10px] font-black font-ui uppercase tracking-widest text-white px-5 py-2.5 rounded-xl transition-all shadow-xl hover:-translate-y-0.5 active:translate-y-0"
                             style={{ backgroundColor: '#4A5D23' }}
                           >
                             Go to Cart <ArrowRight className="h-3.5 w-3.5" />
@@ -438,17 +438,17 @@ export default function Navbar() {
 
             {/* Main links (from config, filtered to enabled) */}
             {visibleLinks.map(link => {
-              const isActive = link.url === '/' 
+              const isActive = link.url === '/'
                 ? pathname === '/' || pathname === `/${pathname?.split('/')[1]}`
                 : pathname?.includes(link.url);
-                
+
               return (
                 <Link
                   key={link.label}
                   href={link.url}
                   onClick={() => setMobileOpen(false)}
                   className="py-2.5 px-3 rounded-lg font-semibold text-sm uppercase tracking-wide transition-colors"
-                  style={{ 
+                  style={{
                     color: isActive ? colors.navbar_hover : colors.navbar_text,
                     backgroundColor: isActive ? `${colors.navbar_hover}12` : 'transparent'
                   }}

@@ -57,6 +57,7 @@ function flattenCartItem(item: BackendCartItem): BackendCartItem {
         original_price: item.pricing?.unit_price ?? item.price ?? 0,
         size_label: item.variant?.size_label || item.size_label || '',
         image_url: item.product?.thumbnail_url || item.image_url || '',
+        stock_quantity: item.variant?.stock_quantity ?? (item as any).stock_quantity ?? 0,
     };
 }
 
@@ -313,6 +314,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return () => { active = false; };
     }, [totalPrice, couponCode, autoApplyDisabled, applyCoupon]);
 
+
     // Re-validate applied coupon when cart changes
     useEffect(() => {
         if (couponCode && !loading) {
@@ -442,6 +444,29 @@ export function CartProvider({ children }: { children: ReactNode }) {
             setLoading(false);
         }
     }, [cartId, items]);
+
+    // Real-time stock polling & validation
+    useEffect(() => {
+        if (!cartId || items.length === 0) return;
+
+        // Auto-check quantities against stock
+        items.forEach(item => {
+            const stock = item.stock_quantity ?? 0;
+            if (stock > 0 && item.quantity > stock) {
+                updateQuantity(item.cart_item_id, stock).catch(() => {});
+                import('react-hot-toast').then(({ default: toast }) => {
+                    toast(`Quantity of ${item.product_name} reduced to ${stock} due to limited stock.`, { icon: '⚠️' });
+                });
+            }
+        });
+
+        // Poll cart every 30 seconds
+        const pollInterval = setInterval(() => {
+            fetchCart(cartId).catch(() => {});
+        }, 30000);
+
+        return () => clearInterval(pollInterval);
+    }, [cartId, items, fetchCart, updateQuantity]);
 
     return (
         <CartContext.Provider value={{

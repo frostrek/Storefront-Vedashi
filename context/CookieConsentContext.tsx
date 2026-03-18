@@ -61,6 +61,10 @@ export function CookieConsentProvider({ children }: { children: ReactNode }) {
             setShowBanner(false);
             setIsSettingsOpen(false);
 
+            // Fix: Explicitly set cookie on frontend domain to persist across refreshes
+            const secureFlag = window.location.protocol === 'https:' ? '; Secure' : '';
+            document.cookie = `gdpr_consent=${encodeURIComponent(JSON.stringify(newConsent))}; path=/; max-age=${365 * 24 * 60 * 60}; SameSite=Lax${secureFlag}`;
+
             // Send to backend to track logs and set cookies
             await authFetch(`${API_URL}/api/gdpr/consent`, {
                 method: 'POST',
