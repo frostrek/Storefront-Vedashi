@@ -359,7 +359,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
             await fetchCart(activeCartId);
         } catch (err) {
             console.error('[CartContext] addItem error:', err);
-            setError('Failed to add item to cart');
+            const msg = 'Failed to add item to cart';
+            setError(msg);
+            throw err; // Re-throw to inform caller (e.g. for toast handling)
         } finally {
             setLoading(false);
         }

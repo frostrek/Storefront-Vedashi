@@ -1700,7 +1700,7 @@ export default function AccountPage() {
                                                             <Download className="h-3.5 w-3.5" /> Invoice
                                                         </button>
                                                         <button
-                                                            onClick={() => router.push(`/${country}/account/support`)}
+                                                            onClick={() => router.push(`/${country}/help-center/support?orderId=${selectedOrderDetails.order_id}`)}
                                                             className="flex-1 flex justify-center items-center gap-2 border border-[#E8E1D5] bg-white rounded-xl py-2.5 text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors shadow-sm"
                                                         >
                                                             <Mail className="h-3.5 w-3.5" /> Support
@@ -1709,7 +1709,26 @@ export default function AccountPage() {
 
                                                     <button
                                                         className="w-full bg-[#36453A] text-white rounded-xl py-3 text-sm font-bold flex items-center justify-center gap-2 hover:bg-[#2A362D] transition-colors shadow-sm"
-                                                        onClick={() => toast.success("Items added to cart.")}
+                                                        onClick={async () => {
+                                                            const items = selectedOrderDetails.items || [];
+                                                            if (items.length === 0) {
+                                                                toast.error('No items found in this order.');
+                                                                return;
+                                                            }
+                                                            const toastId = toast.loading('Adding items to cart...');
+                                                            try {
+                                                                for (const item of items) {
+                                                                    const productId = item.product_id || item.product?.product_id;
+                                                                    const variantId = item.variant_id || item.variant?.variant_id || null;
+                                                                    if (productId) {
+                                                                        await addCartItem(productId, variantId, item.quantity || 1);
+                                                                    }
+                                                                }
+                                                                toast.success('All items added to cart!', { id: toastId });
+                                                            } catch {
+                                                                toast.error('Failed to add some items to cart.', { id: toastId });
+                                                            }
+                                                        }}
                                                     >
                                                         <ShoppingCart className="h-4 w-4" /> Buy These Items Again
                                                     </button>
