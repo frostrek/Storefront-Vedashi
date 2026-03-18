@@ -769,6 +769,15 @@ div.skiptranslate,
   color: #1A1A1A;
 }
 
+.cart-step-item button:hover .cart-step-circle {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(45, 59, 45, 0.15);
+}
+
+.cart-step-item button:active .cart-step-circle {
+  transform: scale(0.95);
+}
+
 .cart-step-line {
   width: 60px;
   height: 1px;

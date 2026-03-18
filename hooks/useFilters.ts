@@ -109,7 +109,7 @@ export function useFilters() {
 
     // Setter  helpers
     const setSearch = useCallback((val: string) => setParam({ search: val || null }), [setParam]);
-    const setCategory = useCallback((val: string) => setParam({ category: val || null }), [setParam]);
+    const setCategory = useCallback((val: string) => setParam({ category: val || null, sub_category: null }), [setParam]);
     const setSubCategory = useCallback((val: string) => setParam({ sub_category: val || null }), [setParam]);
     const setBrands = useCallback((val: string[]) => setParam({ brand: val.length ? val.join(',') : null }), [setParam]);
     const setCountry = useCallback((val: string) => setParam({ country: val || null }), [setParam]);

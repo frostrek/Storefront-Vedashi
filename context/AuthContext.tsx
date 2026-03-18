@@ -121,6 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 if (json.data.access_token) {
                     localStorage.setItem(TOKEN_KEY, json.data.access_token);
                 }
+                sessionStorage.setItem('justSignedIn', String(Date.now()));
                 notifyListeners('login', u);
                 return { success: true, role: u.role, access_token: json.data.access_token };
             }
@@ -166,6 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(u);
         localStorage.setItem(USER_KEY, JSON.stringify(u));
         localStorage.setItem(TOKEN_KEY, accessToken);
+        sessionStorage.setItem('justSignedIn', String(Date.now()));
         notifyListeners('login', u);
     }, [notifyListeners]);
 
@@ -207,6 +209,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 if (json.data.access_token) {
                     localStorage.setItem(TOKEN_KEY, json.data.access_token);
                 }
+                sessionStorage.setItem('justSignedIn', String(Date.now()));
                 notifyListeners('login', u);
                 return {
                     success: true,

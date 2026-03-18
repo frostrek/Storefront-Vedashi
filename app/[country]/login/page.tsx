@@ -257,7 +257,8 @@ function LoginContent() {
                     toast.success('Welcome back!');
                     setIsRedirecting(true);
                     router.push(redirectTo);
-                    toast.error(result?.error || 'Something went wrong');
+                } else {
+                    toast.error(result?.error || 'Login failed. Please check your credentials.');
                 }
             }
         } catch (error) {

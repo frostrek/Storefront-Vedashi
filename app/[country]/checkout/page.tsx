@@ -38,20 +38,49 @@ type PaymentMethod = 'razorpay' | 'cod';
 
 const STEPS = ['BAG', 'SHIPPING', 'PAYMENT', 'REVIEW'] as const;
 
-function StepIndicator({ currentStep = 1 }: { currentStep?: number }) {
+function StepIndicator({ 
+    currentStep = 1, 
+    maxStepReached = 1, 
+    onStepClick 
+}: { 
+    currentStep?: number; 
+    maxStepReached?: number;
+    onStepClick?: (index: number) => void 
+}) {
     return (
         <div className="cart-step-bar">
-            {STEPS.map((step, i) => (
-                <div key={step} className="cart-step-item">
-                    <div className="flex flex-col items-center">
-                        <div className={`cart-step-circle ${i === currentStep ? 'active' : i < currentStep ? 'completed' : ''}`}>
-                            {i < currentStep ? '✓' : i + 1}
-                        </div>
-                        <span className={`cart-step-label ${i <= currentStep ? 'active' : ''}`}>{step}</span>
+            {STEPS.map((step, i) => {
+                const isReachable = i <= maxStepReached || i === 0;
+                const isActive = i === currentStep;
+                const isCompleted = i < currentStep;
+
+                return (
+                    <div key={step} className="cart-step-item">
+                        <button 
+                            type="button"
+                            onClick={() => isReachable && onStepClick?.(i)}
+                            className={`flex flex-col items-center group/step transition-all ${
+                                isReachable ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'
+                            }`}
+                            disabled={!onStepClick || !isReachable}
+                        >
+                            <div className={`cart-step-circle ${
+                                isActive ? 'active' : isCompleted ? 'completed' : ''
+                            } ${isReachable ? 'group-hover/step:scale-110' : ''} transition-transform`}>
+                                {isCompleted ? '✓' : i + 1}
+                            </div>
+                            <span className={`cart-step-label ${
+                                i <= currentStep ? 'active' : ''
+                            } ${isReachable ? 'group-hover/step:text-[#1A1A1A]' : ''} transition-colors uppercase tracking-widest`}>
+                                {step}
+                            </span>
+                        </button>
+                        {i < STEPS.length - 1 && (
+                            <div className={`cart-step-line ${isCompleted ? 'completed' : ''}`} />
+                        )}
                     </div>
-                    {i < STEPS.length - 1 && <div className={`cart-step-line ${i < currentStep ? 'completed' : ''}`} />}
-                </div>
-            ))}
+                );
+            })}
         </div>
     );
 }
@@ -65,6 +94,7 @@ function CheckoutContent() {
     const { user, isAuthenticated } = useAuth();
 
     const [step, setStep] = useState(1); // 1: Shipping, 2: Payment, 3: Review
+    const [maxStepReached, setMaxStepReached] = useState(1);
     const [orderPlaced, setOrderPlaced] = useState(false);
     const [placing, setPlacing] = useState(false);
     const [orderId, setOrderId] = useState<string | null>(null);
@@ -155,6 +185,12 @@ function CheckoutContent() {
     // Tax Tooltip UI
     const [showTaxTooltip, setShowTaxTooltip] = useState(false);
 
+
+    useEffect(() => {
+        if (step > maxStepReached) {
+            setMaxStepReached(step);
+        }
+    }, [step, maxStepReached]);
 
     useEffect(() => {
         if (isBuyNow) {
@@ -617,6 +653,25 @@ function CheckoutContent() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
+    const handleStepLink = (index: number) => {
+        if (index === 0) {
+            router.push('/cart');
+            return;
+        }
+        
+        // Only allow clicking if reachable
+        if (index <= maxStepReached) {
+            if (index === 1) {
+                setStep(1);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else if (index === 2) {
+                goToPayment();
+            } else if (index === 3) {
+                goToReview();
+            }
+        }
+    };
+
     /* ─── Order Placed Confirmation UI ───────────────────────── */
 
     if (orderPlaced) {
@@ -674,7 +729,11 @@ function CheckoutContent() {
             {/* Step Indicator */}
             <div className="border-b border-[#D4CFC0] bg-[#FFFFFF] sticky top-0 z-20 shadow-sm">
                 <div className="mx-auto max-w-5xl">
-                    <StepIndicator currentStep={step} />
+                    <StepIndicator 
+                        currentStep={step} 
+                        maxStepReached={maxStepReached} 
+                        onStepClick={handleStepLink} 
+                    />
                 </div>
             </div>
 

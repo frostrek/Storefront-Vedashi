@@ -471,7 +471,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                                                 const weightLabel = formatWeight(v.weight_g);
                                                 const countLabel = v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : '';
                                                 const strengthLabel = v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : '';
-                                                
+
                                                 const labelParts = [
                                                     v.size_label,
                                                     weightLabel,
@@ -498,9 +498,9 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                                                             ? 'border-[#3d5c3a] bg-[#3d5c3a]/[0.02] shadow-[0_2px_10px_rgba(61,92,58,0.1)] z-10 scale-[1.02]'
                                                             : isInactive
                                                                 ? 'border-gray-100 bg-gray-50 text-gray-300 opacity-50 cursor-not-allowed'
-                                                            : isOut
-                                                                ? 'border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed'
-                                                                : 'border-gray-100 hover:border-[#3d5c3a]/30 hover:bg-gray-50'
+                                                                : isOut
+                                                                    ? 'border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed'
+                                                                    : 'border-gray-100 hover:border-[#3d5c3a]/30 hover:bg-gray-50'
                                                             }`}
                                                     >
                                                         <div className="flex items-center gap-2.5 w-full pr-2">

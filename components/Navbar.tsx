@@ -19,6 +19,7 @@ interface Category {
   category_id: string;
   parent_id: string | null;
   name: string;
+  slug: string;
 }
 
 interface HeaderConfig {
@@ -85,7 +86,6 @@ export default function Navbar() {
   const { isAuthenticated } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [showCartReminder, setShowCartReminder] = useState(false);
-  const [prevTotalItems, setPrevTotalItems] = useState(0);
   const [scrolled, setScrolled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<HeaderConfig>(DEFAULT_CONFIG);
@@ -125,35 +125,23 @@ export default function Navbar() {
       .finally(() => setLoading(false));
   }, []);
 
-  // 1. Trigger when a new product is added (but not on initial load)
-  const isFirstCount = useRef(true);
+  // 2. Trigger ONLY when customer explicitly just signed in (within last 15 seconds)
   useEffect(() => {
-    if (!cartLoading) {
-      if (isFirstCount.current) {
-        setPrevTotalItems(totalItems);
-        isFirstCount.current = false;
-        return;
+    if (isAuthenticated && !cartLoading) {
+      const justSignedIn = sessionStorage.getItem('justSignedIn');
+      if (justSignedIn) {
+        const ts = parseInt(justSignedIn, 10);
+        // Fallback for 'true' or timestamp within last 15s
+        if (justSignedIn === 'true' || (!isNaN(ts) && Date.now() - ts < 15000)) {
+          if (totalItems > 0 && !showCartReminder) {
+            setShowCartReminder(true);
+          }
+        } else {
+          sessionStorage.removeItem('justSignedIn');
+        }
       }
-
-      if (totalItems > prevTotalItems && totalItems > 0) {
-        setShowCartReminder(true);
-      }
-      setPrevTotalItems(totalItems);
     }
-  }, [totalItems, cartLoading, prevTotalItems]);
-
-  // 2. Trigger when customer logs in
-  useEffect(() => {
-    if (isAuthenticated && !cartLoading && totalItems > 0) {
-      const hasShownOnLogin = sessionStorage.getItem('cartReminderLoginShown');
-      if (!hasShownOnLogin) {
-        setShowCartReminder(true);
-        sessionStorage.setItem('cartReminderLoginShown', 'true');
-      }
-    } else if (!isAuthenticated) {
-      sessionStorage.removeItem('cartReminderLoginShown');
-    }
-  }, [isAuthenticated, totalItems, cartLoading]);
+  }, [isAuthenticated, totalItems, cartLoading, showCartReminder]);
 
   useEffect(() => {
     getCategories().then(cats => {
@@ -196,10 +184,10 @@ export default function Navbar() {
             {/* Center Nav Links */}
             <nav className="hidden md:flex flex-shrink-0 items-center justify-center gap-8 mx-4">
               {visibleLinks.map(link => {
-                const isActive = link.url === '/' 
+                const isActive = link.url === '/'
                   ? pathname === '/' || pathname === `/${pathname?.split('/')[1]}`
                   : pathname?.includes(link.url);
-                  
+
                 return (
                   <Link
                     key={link.label}
@@ -276,6 +264,7 @@ export default function Navbar() {
                       onClick={(e) => {
                         e.stopPropagation();
                         setShowCartReminder(false);
+                        sessionStorage.removeItem('justSignedIn');
                       }}
                       className="absolute top-3 right-3 p-2 text-[#5B4A31]/40 hover:text-[#4A5D23] transition-all hover:bg-[#4A5D23]/5 rounded-full z-50"
                     >
@@ -296,7 +285,10 @@ export default function Navbar() {
                           </p>
                           <Link
                             href="/cart"
-                            onClick={() => setShowCartReminder(false)}
+                            onClick={() => {
+                              setShowCartReminder(false);
+                              sessionStorage.removeItem('justSignedIn');
+                            }}
                             className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white px-5 py-2.5 rounded-xl transition-all shadow-xl hover:-translate-y-0.5 active:translate-y-0"
                             style={{ backgroundColor: '#4A5D23' }}
                           >
@@ -366,7 +358,7 @@ export default function Navbar() {
                           return (
                             <div key={parent.category_id} className="relative group/cat">
                               <Link
-                                href={`/products?category=${encodeURIComponent(parent.name)}`}
+                                href={`/products?category=${parent.slug}`}
                                 className="flex items-center justify-between px-5 py-2.5 text-sm font-medium transition-colors duration-150"
                                 style={{ color: colors.navbar_text }}
                                 onMouseEnter={e => (e.currentTarget.style.color = colors.navbar_hover)}
@@ -381,7 +373,7 @@ export default function Navbar() {
                                     {subs.map(sub => (
                                       <Link
                                         key={sub.category_id}
-                                        href={`/products?category=${encodeURIComponent(parent.name)}&sub_category=${encodeURIComponent(sub.name)}`}
+                                        href={`/products?category=${parent.slug}&sub_category=${sub.slug}`}
                                         className="block px-5 py-2 text-sm text-gray-600 transition-colors duration-150"
                                         style={{ color: colors.navbar_text }}
                                         onMouseEnter={e => {
@@ -438,17 +430,17 @@ export default function Navbar() {
 
             {/* Main links (from config, filtered to enabled) */}
             {visibleLinks.map(link => {
-              const isActive = link.url === '/' 
+              const isActive = link.url === '/'
                 ? pathname === '/' || pathname === `/${pathname?.split('/')[1]}`
                 : pathname?.includes(link.url);
-                
+
               return (
                 <Link
                   key={link.label}
                   href={link.url}
                   onClick={() => setMobileOpen(false)}
                   className="py-2.5 px-3 rounded-lg font-semibold text-sm uppercase tracking-wide transition-colors"
-                  style={{ 
+                  style={{
                     color: isActive ? colors.navbar_hover : colors.navbar_text,
                     backgroundColor: isActive ? `${colors.navbar_hover}12` : 'transparent'
                   }}
@@ -493,7 +485,7 @@ export default function Navbar() {
             {parentCategories.map(parent => (
               <div key={parent.category_id} className="flex flex-col">
                 <Link
-                  href={`/products?category=${encodeURIComponent(parent.name)}`}
+                  href={`/products?category=${parent.slug}`}
                   onClick={() => setMobileOpen(false)}
                   className="py-2 px-3 font-semibold text-sm transition-colors"
                   style={{ color: colors.navbar_text }}
@@ -505,7 +497,7 @@ export default function Navbar() {
                 {categories.filter(c => c.parent_id === parent.category_id).map(sub => (
                   <Link
                     key={sub.category_id}
-                    href={`/products?category=${encodeURIComponent(parent.name)}&sub_category=${encodeURIComponent(sub.name)}`}
+                    href={`/products?category=${parent.slug}&sub_category=${sub.slug}`}
                     onClick={() => setMobileOpen(false)}
                     className="py-1.5 pl-7 pr-3 text-sm border-l-2 border-gray-100 ml-4 transition-colors"
                     style={{ color: colors.navbar_text, opacity: 0.75 }}
