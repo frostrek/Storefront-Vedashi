@@ -88,7 +88,7 @@ function ProductsContent() {
     }, []);
 
     const buildParams = useCallback((page: number) => {
-        const params: Record<string, unknown> = {
+        const params: Record<string, any> = {
             page,
             limit: ITEMS_PER_PAGE,
         };
@@ -107,7 +107,9 @@ function ProductsContent() {
             const ratingValues = filters.ratings.map(r => parseInt(r)).filter(n => !isNaN(n));
             if (ratingValues.length > 0) params.min_rating = Math.min(...ratingValues);
         }
-        if (filters.inStock) params.availability = 'in_stock';
+        if (filters.inStock) params.inStock = true;
+        if (filters.bestSellers) params.bestSeller = true;
+        if (filters.newArrivals) params.newArrival = true;
         if (filters.discountMin) params.discount_min = filters.discountMin;
         if (Object.keys(filters.attributes).length > 0) params.attributes = filters.attributes;
         return params;
@@ -118,47 +120,16 @@ function ProductsContent() {
         setLoading(true);
         setProducts([]);
 
-        if (filters.bestSellers) {
-            const bsParams: Record<string, any> = { limit: ITEMS_PER_PAGE, page };
-            if (filters.category) bsParams.category = filters.category;
-            if (filters.country) bsParams.country = filters.country;
-            if (filters.priceRange[0] !== 0) bsParams.minPrice = filters.priceRange[0];
-            if (filters.priceRange[1] !== Infinity) bsParams.maxPrice = filters.priceRange[1];
-            const result = await getBestSellers(bsParams);
-            if (!cancelled.value) {
-                setProducts(result.data);
-                setMeta(result.meta);
-                setLoading(false);
-            }
-            return;
-        }
-
-        if (filters.newArrivals) {
-            const naParams: Record<string, any> = { limit: ITEMS_PER_PAGE, page };
-            if (filters.category) naParams.category = filters.category;
-            if (filters.country) naParams.region = filters.country;
-            if (filters.brands.length === 1) naParams.brand = filters.brands[0];
-            if (filters.priceRange[0] !== 0) naParams.min_price = filters.priceRange[0];
-            if (filters.priceRange[1] !== Infinity) naParams.max_price = filters.priceRange[1];
-            if (filters.inStock) naParams.in_stock = true;
-            const result = await getNewArrivals(naParams);
-            if (!cancelled.value) {
-                setProducts(result.data);
-                setMeta(result.meta);
-                setLoading(false);
-            }
-            return;
-        }
-
-        // All other cases (including search) go through filter endpoint
+        // Unified filtering logic
         const params = buildParams(page);
-        const result = await getFilteredProducts(params as any);
+        const result = await getFilteredProducts(params);
+
         if (!cancelled.value) {
             setProducts(result.data);
             setMeta(result.meta);
             setLoading(false);
         }
-    }, [filters, buildParams]);
+    }, [buildParams]);
 
     // Reset to page 1 whenever filters change
     useEffect(() => {

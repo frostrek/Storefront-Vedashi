@@ -169,11 +169,11 @@ export default function Navbar() {
   if (pathname?.endsWith('/login') || pathname?.endsWith('/signup')) return null;
 
   return (
-    <header className={`w-full sticky top-0 z-[100] transition-all duration-500 ${scrolled ? 'shadow-lg' : ''}`}>
+    <header className={`w-full sticky top-0 z-[1000] transition-all duration-500 ${scrolled ? 'shadow-lg' : ''}`}>
 
       {/* ═══════════════ MAIN NAVBAR ═══════════════ */}
       <div
-        className={`border-b transition-all duration-500 ${scrolled
+        className={`relative z-[100] border-b transition-all duration-500 ${scrolled
           ? 'bg-white/80 backdrop-blur-xl border-[#3B5D3B]/10 shadow-[0_2px_20px_rgba(59,93,59,0.08)]'
           : 'bg-white border-gray-200 shadow-sm'
           }`}
@@ -256,7 +256,7 @@ export default function Navbar() {
 
                 {/* Cart Reminder Popup */}
                 {showCartReminder && (
-                  <div className="absolute top-full right-0 mt-3 w-80 bg-white rounded-[30px] shadow-2xl border border-[#4A5D23]/10 overflow-hidden z-[110] animate-in slide-in-from-top-4 fade-in duration-300">
+                  <div className="absolute top-full right-0 mt-3 w-80 bg-white rounded-[30px] shadow-2xl border border-[#4A5D23]/10 overflow-hidden z-[120] animate-in slide-in-from-top-4 fade-in duration-300">
                     {/* Background Texture */}
                     <div
                       className="absolute inset-0 z-0 opacity-[0.08] pointer-events-none"

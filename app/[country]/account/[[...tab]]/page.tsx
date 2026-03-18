@@ -16,7 +16,7 @@ import {
     requestEmailChange, verifyEmailChangeProfile,
     getLoyaltyWallet, getMyNotifications, getUnreadNotificationCount,
     markNotificationAsRead, markAllNotificationsAsRead, deleteNotification,
-    lookupPostalCode
+    lookupPostalCode, getMySupportTickets, replySupportTicket, getSupportTicketDetail
 } from '@/lib/api';
 import { Order, Address } from '@/types';
 import { COUNTRIES } from '@/lib/countries';
@@ -278,6 +278,62 @@ export default function AccountPage() {
         }
     }, [isLoading, isAuthenticated, router]);
 
+    // ── Derive Filtered & Sorted Orders ────────────────────────────
+    const filteredAndSortedOrders = useMemo(() => {
+        let result = [...orders];
+
+        // Filter by Status
+        if (orderStatusFilter !== 'All') {
+            result = result.filter(o => o.order_status?.toUpperCase() === orderStatusFilter.toUpperCase());
+        }
+
+        // Filter by Search (Order ID or Product Name)
+        if (orderSearch.trim()) {
+            const query = orderSearch.toLowerCase();
+            result = result.filter(o => {
+                const orderIdMatch = o.order_id.toLowerCase().includes(query);
+                const itemsMatch = o.items?.some((item: any) => {
+                    const name = item.product?.product_name || item.product_name || '';
+                    return name.toLowerCase().includes(query);
+                });
+                const firstItemMatch = o.first_item?.product_name?.toLowerCase().includes(query);
+                return orderIdMatch || itemsMatch || firstItemMatch;
+            });
+        }
+
+        // Sort
+        result.sort((a, b) => {
+            if (orderSort === 'newest') return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            if (orderSort === 'oldest') return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+            if (orderSort === 'highest') {
+                const valA = parseFloat(String(a.final_total || a.total_amount || 0));
+                const valB = parseFloat(String(b.final_total || b.total_amount || 0));
+                return valB - valA;
+            }
+            if (orderSort === 'lowest') {
+                const valA = parseFloat(String(a.final_total || a.total_amount || 0));
+                const valB = parseFloat(String(b.final_total || b.total_amount || 0));
+                return valA - valB;
+            }
+            return 0;
+        });
+
+        return result;
+    }, [orders, orderStatusFilter, orderSearch, orderSort]);
+
+    // ── Derive Sorted Wishlist ─────────────────────────────────────
+    const sortedWishlistItems = useMemo(() => {
+        const result = [...wishlistItems];
+        if (wishlistSort === 'recently_added') {
+            result.sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+        } else if (wishlistSort === 'price_low') {
+            result.sort((a, b) => (a.price || 0) - (b.price || 0));
+        } else if (wishlistSort === 'price_high') {
+            result.sort((a, b) => (b.price || 0) - (a.price || 0));
+        }
+        return result;
+    }, [wishlistItems, wishlistSort]);
+
     // ── Fetch orders ─────────────────────────────────────────────────
     const fetchOrders = useCallback(async () => {
         if (!user?.id) return;
@@ -360,12 +416,34 @@ export default function AccountPage() {
         }
     }, [user?.id]);
 
-    // ── Fetch enquiries ──────────────────────────────────────────────
+    // ── Fetch enquiries + support tickets ─────────────────────────────
     const fetchEnquiries = useCallback(async () => {
         setEnquiriesLoading(true);
         try {
-            const data = await getMyEnquiries();
-            setEnquiries(data || []);
+            const [enquiryData, ticketData] = await Promise.all([
+                getMyEnquiries(),
+                getMySupportTickets()
+            ]);
+            // Normalize support tickets to look like enquiries for unified display
+            const normalizedTickets = (ticketData || []).map((t: any) => ({
+                feedback_id: t.ticket_id,
+                subject: t.subject || 'Support Ticket',
+                message: t.description || t.subject || '',
+                status: t.status || 'open',
+                created_at: t.created_at,
+                updated_at: t.updated_at,
+                replies: [],
+                _source: 'ticket' as const,
+                _ticket_id: t.ticket_id,
+                _ticket_number: t.ticket_number,
+                _category: t.category,
+                _priority: t.priority,
+                _message_count: parseInt(t.message_count || '0'),
+            }));
+            // Merge both lists and sort by most recent
+            const merged = [...(enquiryData || []), ...normalizedTickets];
+            merged.sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+            setEnquiries(merged);
         } catch (err) {
             console.error('Failed to fetch enquiries:', err);
         } finally {
@@ -390,15 +468,19 @@ export default function AccountPage() {
         const loadingToast = toast.loading('Sending your message...');
 
         try {
-            const res = await replyToEnquiry(selectedEnquiry.feedback_id, enquiryReplyText);
+            let res;
+            if (selectedEnquiry._source === 'ticket') {
+                // Support ticket reply
+                res = await replySupportTicket(selectedEnquiry._ticket_id, enquiryReplyText);
+            } else {
+                // Customer enquiry reply
+                res = await replyToEnquiry(selectedEnquiry.feedback_id, enquiryReplyText);
+            }
             if (res.success) {
                 toast.success('Message sent successfully', { id: loadingToast });
                 setEnquiryReplyText('');
-                // Fetch fresh data
-                const freshData = await getMyEnquiries();
-                setEnquiries(freshData || []);
-                const updated = freshData.find((e: any) => e.feedback_id === selectedEnquiry.feedback_id);
-                if (updated) setSelectedEnquiry(updated);
+                // Re-fetch all data
+                await fetchEnquiries();
             } else {
                 toast.error(res.message || 'Failed to send message', { id: loadingToast });
             }
@@ -435,6 +517,8 @@ export default function AccountPage() {
             await markAllNotificationsAsRead();
             toast.success('All marked as read');
             fetchNotificationsData();
+            // Sync with navbar
+            window.dispatchEvent(new CustomEvent('notifications-updated'));
         } catch (err) { toast.error('Failed to update'); }
     };
 
@@ -443,6 +527,8 @@ export default function AccountPage() {
             await deleteNotification(id);
             toast.success('Notification removed');
             fetchNotificationsData();
+            // Sync with navbar
+            window.dispatchEvent(new CustomEvent('notifications-updated'));
         } catch (err) { toast.error('Failed to delete'); }
     };
 
@@ -464,13 +550,24 @@ export default function AccountPage() {
         if (activeTab === 'addresses') fetchAddresses();
         if (activeTab === 'support') fetchEnquiries();
         if (activeTab === 'notifications') fetchNotificationsData();
-        if (activeTab === 'wallet' || activeTab === 'overview') fetchLoyaltyData();
+        if (activeTab === 'wallet' || activeTab === 'overview') {
+            fetchLoyaltyData();
+            if (activeTab === 'overview') fetchOrders();
+        }
         if (activeTab === 'profile') {
             fetchOrders(); // for order count
             fetchProfile();
             fetchProfileImage();
         }
     }, [activeTab, user?.id, fetchOrders, fetchAddresses, fetchProfile, fetchProfileImage, fetchEnquiries, fetchLoyaltyData]);
+
+    useEffect(() => {
+        const handleUpdate = () => {
+            fetchNotificationsData();
+        };
+        window.addEventListener('notifications-updated', handleUpdate);
+        return () => window.removeEventListener('notifications-updated', handleUpdate);
+    }, [fetchNotificationsData]);
 
     const activeTier = loyaltyData?.tier?.tier_name || 'Bronze';
     const activePoints = loyaltyData?.wallet?.balance || 0;
@@ -812,10 +909,10 @@ export default function AccountPage() {
     ];
 
     return (
-        <div className="flex h-screen bg-[#F8F5F0] overflow-hidden">
+        <div className="flex bg-[#F8F5F0] min-h-[calc(100vh-128px)]">
             {/* Left Sidebar */}
             <aside className="w-[280px] bg-[#36453A] text-white flex flex-col flex-shrink-0 relative z-20 shadow-[4px_0_24px_rgba(0,0,0,0.12)]">
-                <div className="flex-1 overflow-y-auto px-5 py-8 custom-scrollbar">
+                <div className="flex-1 px-5 py-8">
                     {/* CORE EXPERIENCE */}
                     <div className="mb-8">
                         <p className="text-[10px] font-bold tracking-[0.15em] text-white/50 mb-3 ml-3">CORE EXPERIENCE</p>
@@ -946,7 +1043,7 @@ export default function AccountPage() {
                 </header>
 
                 {/* Content Roll */}
-                <div className="flex-1 overflow-y-auto px-4 py-8 md:px-8 xl:px-12 custom-scrollbar">
+                <div className="flex-1 px-4 py-8 md:px-8 xl:px-12">
                     <div className="max-w-6xl mx-auto">
 
                         {/* ═══════════════════ OVERVIEW TAB ═══════════════════ */}
@@ -1091,7 +1188,7 @@ export default function AccountPage() {
                                         </div>
 
                                         <div className="overflow-x-auto">
-                                            <table className="w-full text-left border-collapse min-w-[500px]">
+                                            <table className="w-full text-left border-collapse">
                                                 <thead>
                                                     <tr className="border-b border-[#E8E1D5]">
                                                         <th className="pb-3 text-xs font-bold text-warm-gray uppercase tracking-wider">Order ID</th>
@@ -1106,11 +1203,11 @@ export default function AccountPage() {
                                                             <td className="py-4 text-sm font-bold text-[#36453A]">{order.order_id.split('-')[0].toUpperCase()}</td>
                                                             <td className="py-4 text-sm text-warm-gray">{new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
                                                             <td className="py-4">
-                                                                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border border-current ${getStatusColor(order.status)}`}>
-                                                                    {order.status || 'PENDING'}
+                                                                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border border-current ${getStatusColor(order.order_status)}`}>
+                                                                    {order.order_status || 'PENDING'}
                                                                 </span>
                                                             </td>
-                                                            <td className="py-4 text-sm font-bold text-[#36453A] text-right">{formatPrice(order.total_amount)}</td>
+                                                            <td className="py-4 text-sm font-bold text-[#36453A] text-right">{formatPrice(order.final_total || order.total_amount)}</td>
                                                         </tr>
                                                     ))}
                                                     {orders.length === 0 && (
@@ -1204,7 +1301,7 @@ export default function AccountPage() {
                                     <div className="flex items-center gap-4">
                                         <h2 className="font-serif text-3xl font-bold text-[#36453A]">Orders List</h2>
                                         <span className="bg-[#E7F0E9] text-[#2D5A3A] text-xs font-bold px-3 py-1 rounded-full">
-                                            {orders.length} Total
+                                            {filteredAndSortedOrders.length} {filteredAndSortedOrders.length !== orders.length ? `of ${orders.length}` : ''} Total
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-4">
@@ -1275,14 +1372,14 @@ export default function AccountPage() {
                                                     <Loader2 className="h-8 w-8 animate-spin text-[#36453A]" />
                                                 </div>
                                             )}
-                                            {!ordersLoading && orders.length === 0 && (
+                                            {!ordersLoading && filteredAndSortedOrders.length === 0 && (
                                                 <div className="rounded-3xl border border-[#E8E1D5] bg-white py-16 text-center shadow-sm">
                                                     <Package className="mx-auto h-12 w-12 text-warm-gray/30 mb-4" />
                                                     <p className="font-serif text-xl font-bold text-[#36453A]">No orders found</p>
-                                                    <p className="mt-2 text-sm text-warm-gray">You haven&apos;t placed any orders yet.</p>
+                                                    <p className="mt-2 text-sm text-warm-gray">{orderSearch || orderStatusFilter !== 'All' ? 'Try adjusting your filters.' : "You haven't placed any orders yet."}</p>
                                                 </div>
                                             )}
-                                            {!ordersLoading && orders.map(order => {
+                                            {!ordersLoading && filteredAndSortedOrders.map(order => {
                                                 const dtDate = new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
                                                 // Extract items from order payload regardless of formatting variations
                                                 const orderItemsData = order.items || [];
@@ -1382,9 +1479,9 @@ export default function AccountPage() {
                                         </div>
 
                                         {/* Pagination Bottom */}
-                                        {!ordersLoading && orders.length > 0 && (
+                                        {!ordersLoading && filteredAndSortedOrders.length > 0 && (
                                             <div className="flex items-center justify-between pt-6 border-t border-[#E8E1D5]">
-                                                <span className="text-sm font-medium text-warm-gray">Showing <strong className="text-[#36453A]">1-{orders.length}</strong> of <strong className="text-[#36453A]">{orders.length}</strong> orders</span>
+                                                <span className="text-sm font-medium text-warm-gray">Showing <strong className="text-[#36453A]">1-{filteredAndSortedOrders.length}</strong> of <strong className="text-[#36453A]">{filteredAndSortedOrders.length}</strong> orders</span>
                                                 <div className="flex items-center gap-2">
                                                     <button className="px-4 py-2 text-sm font-bold text-warm-gray bg-white border border-[#E8E1D5] rounded-xl opacity-50 cursor-not-allowed">Previous</button>
                                                     <button className="h-9 w-9 rounded-xl bg-[#36453A] text-white font-bold text-sm shadow-sm flex items-center justify-center">1</button>
@@ -1411,7 +1508,7 @@ export default function AccountPage() {
                                                     </button>
                                                 </div>
 
-                                                <div className="p-6 space-y-6 max-h-[calc(100vh-250px)] overflow-y-auto custom-scrollbar">
+                                                <div className="p-6 space-y-6">
 
                                                     {/* Track Shipment Card */}
                                                     <div className="bg-[#36453A] rounded-[24px] p-6 text-white relative overflow-hidden shadow-md">
@@ -1754,18 +1851,18 @@ export default function AccountPage() {
                                 </div>
 
                                 {/* ── Product Grid ── */}
-                                {wishlistItems.length === 0 ? (
+                                {sortedWishlistItems.length === 0 ? (
                                     <div className="rounded-[30px] border border-[#E8E1D5] bg-white py-24 text-center">
                                         <Heart className="mx-auto h-16 w-16 text-warm-gray/30 mb-4" />
                                         <p className="font-serif text-2xl font-bold text-[#36453A]">Your sanctuary is empty</p>
-                                        <p className="mt-2 text-warm-gray text-lg">Save your favorite organic rituals here.</p>
+                                        <p className="mt-2 text-warm-gray text-lg">{wishlistItems.length > 0 ? "No matches found for your current sort." : "Save your favorite organic rituals here."}</p>
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                                        {wishlistItems.map((prod) => {
+                                        {sortedWishlistItems.map((prod) => {
                                             const product = prod as any;
                                             const isSelected = selectedWishlistItems.has(product.product_id);
-                                            const inStock = product.stock_status === 'in_stock' || product.stock_status === 'low_stock';
+                                            const inStock = product.stock_status !== 'out_of_stock' && product.stock_quantity !== 0 && product.quantity !== 0;
                                             const addDate = product.created_at ? new Date(product.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'Recently';
 
                                             return (
@@ -2366,7 +2463,7 @@ export default function AccountPage() {
                                                     <span className="w-1.5 h-6 bg-[#36453A] rounded-full inline-block"></span>
                                                     Notification Harmony
                                                 </h3>
-                                                <div className="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                                <div className="pt-2">
                                                     <NotificationPreferences />
                                                 </div>
                                             </section>
@@ -2678,14 +2775,44 @@ export default function AccountPage() {
                                                 enquiries.map((enquiry) => (
                                                     <div
                                                         key={enquiry.feedback_id}
-                                                        onClick={() => setSelectedEnquiry(enquiry)}
+                                                        onClick={async () => {
+                                                            if (enquiry._source === 'ticket') {
+                                                                // Load ticket messages for display
+                                                                const detail = await getSupportTicketDetail(enquiry._ticket_id);
+                                                                if (detail) {
+                                                                    const allMessages = detail.messages || [];
+                                                                    setSelectedEnquiry({
+                                                                        ...enquiry,
+                                                                        message: allMessages[0]?.body || enquiry.message,
+                                                                        replies: allMessages.slice(1).map((m: any) => ({
+                                                                            author_type: m.sender_type, // 'admin' or 'customer'
+                                                                            message: m.body,
+                                                                            timestamp: m.created_at,
+                                                                            sender_name: m.sender_name,
+                                                                        })),
+                                                                    });
+                                                                } else {
+                                                                    setSelectedEnquiry(enquiry);
+                                                                }
+                                                            } else {
+                                                                setSelectedEnquiry(enquiry);
+                                                            }
+                                                        }}
                                                         className="p-6 transition-all hover:bg-[#F8F5F0] cursor-pointer group"
                                                     >
                                                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                                             <div className="flex-1 min-w-0">
                                                                 <div className="flex items-center gap-3 mb-2">
-                                                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${enquiry.status === 'resolved' ? 'bg-green-100 text-green-700' : 'bg-[#D4A847]/20 text-[#B38720]'
-                                                                        }`}>
+                                                                    {enquiry._source === 'ticket' && (
+                                                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest bg-blue-100 text-blue-700">
+                                                                            Ticket
+                                                                        </span>
+                                                                    )}
+                                                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${
+                                                                        enquiry.status === 'resolved' || enquiry.status === 'closed' ? 'bg-green-100 text-green-700' :
+                                                                        enquiry.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
+                                                                        'bg-[#D4A847]/20 text-[#B38720]'
+                                                                    }`}>
                                                                         {enquiry.status || 'Pending'}
                                                                     </span>
                                                                     <span className="text-[10px] font-bold text-warm-gray uppercase tracking-widest">
@@ -2693,7 +2820,7 @@ export default function AccountPage() {
                                                                     </span>
                                                                 </div>
                                                                 <h3 className="font-serif text-lg font-bold text-[#36453A] group-hover:text-black transition-colors truncate capitalize">
-                                                                    {enquiry.subject || 'Standard Enquiry'}
+                                                                    {enquiry._source === 'ticket' && enquiry._ticket_number ? `${enquiry._ticket_number} — ` : ''}{enquiry.subject || 'Standard Enquiry'}
                                                                 </h3>
                                                                 <p className="text-sm text-warm-gray truncate mt-1">
                                                                     {enquiry.message}
@@ -2702,8 +2829,8 @@ export default function AccountPage() {
 
                                                             <div className="flex items-center gap-6 flex-shrink-0">
                                                                 <div className="text-center hidden md:block">
-                                                                    <p className="font-serif text-xl font-bold text-[#36453A]">{enquiry.replies?.length || 0}</p>
-                                                                    <p className="text-[10px] font-bold text-warm-gray uppercase tracking-widest">Responses</p>
+                                                                    <p className="font-serif text-xl font-bold text-[#36453A]">{enquiry._source === 'ticket' ? (enquiry._message_count || 0) : (enquiry.replies?.length || 0)}</p>
+                                                                    <p className="text-[10px] font-bold text-warm-gray uppercase tracking-widest">Messages</p>
                                                                 </div>
                                                                 <div className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${enquiry.replies?.some((r: any) => r.type === 'admin')
                                                                     ? 'bg-amber-100 text-amber-600'
@@ -2962,16 +3089,16 @@ export default function AccountPage() {
                                         {notifications.map((n) => (
                                             <div 
                                                 key={n.notification_id}
-                                                className={`group flex items-start gap-4 p-5 rounded-2xl border transition-all ${n.read_at 
+                                                className={`group flex items-start gap-4 p-5 rounded-2xl border transition-all ${n.is_read 
                                                     ? 'bg-white/60 border-[#E8E1D5] opacity-75' 
                                                     : 'bg-white border-[#36453A]/20 shadow-sm border-l-4 border-l-[#36453A]'}`}
                                             >
-                                                <div className={`mt-1 h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 ${n.read_at ? 'bg-warm-gray/10' : 'bg-[#36453A]/10'}`}>
-                                                    {n.type === 'security' ? <Shield className="h-5 w-5 text-red-500" /> : <Sparkles className="h-5 w-5 text-[#D4A847]" />}
+                                                <div className={`mt-1 h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 ${n.is_read ? 'bg-warm-gray/10' : 'bg-[#36453A]/10'}`}>
+                                                    {n.type === 'security' || n.category === 'security_alerts' ? <Shield className="h-5 w-5 text-red-500" /> : <Sparkles className="h-5 w-5 text-[#D4A847]" />}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center justify-between gap-2 mb-1">
-                                                        <h4 className={`text-sm font-bold ${n.read_at ? 'text-[#36453A]/60' : 'text-[#36453A]'}`}>{n.title}</h4>
+                                                        <h4 className={`text-sm font-bold ${n.is_read ? 'text-[#36453A]/60' : 'text-[#36453A]'}`}>{n.title}</h4>
                                                         <span className="text-[10px] font-medium text-warm-gray whitespace-nowrap">
                                                             {new Date(n.created_at).toLocaleDateString()}
                                                         </span>
@@ -2988,111 +3115,23 @@ export default function AccountPage() {
                                                                 View Details
                                                             </button>
                                                         )}
-                                                        <button 
-                                                            onClick={async () => {
-                                                                if (!n.read_at) {
+                                                        {!n.is_read && (
+                                                            <button 
+                                                                onClick={async () => {
                                                                     await markNotificationAsRead(n.notification_id);
                                                                     fetchNotificationsData();
-                                                                }
-                                                            }}
-                                                            disabled={!!n.read_at}
-                                                            className={`text-[10px] font-black uppercase tracking-widest transition-colors ${n.read_at ? 'text-[#36453A]/30 cursor-default' : 'text-[#D4A847] hover:text-[#B38720]'}`}
-                                                        >
-                                                            {n.read_at ? 'Seen' : 'Mark as Read'}
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <button 
-                                                    onClick={() => handleDeleteNotification(n.notification_id)}
-                                                    className="opacity-0 group-hover:opacity-100 p-2 text-warm-gray/40 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* ═══════════════════ NOTIFICATIONS TAB ═══════════════════ */}
-                        {activeTab === 'notifications' && (
-                            <div className="max-w-[900px] animate-fadeIn pb-12">
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-                                    <div className="flex items-center gap-4">
-                                        <div className="h-12 w-12 rounded-xl bg-white border border-[#E8E1D5] flex items-center justify-center shadow-sm">
-                                            <BellRing className="h-6 w-6 text-[#36453A]" />
-                                        </div>
-                                        <div>
-                                            <h1 className="font-serif text-3xl font-bold text-[#36453A]">Your Notifications</h1>
-                                            <p className="text-sm text-warm-gray">Security alerts and update rituals</p>
-                                        </div>
-                                    </div>
-                                    {notifications.length > 0 && (
-                                        <button 
-                                            onClick={handleMarkAllRead}
-                                            className="px-4 py-2 bg-white border border-[#E8E1D5] rounded-xl text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors flex items-center gap-2"
-                                        >
-                                            <Check className="h-3.5 w-3.5" /> Mark All as Read
-                                        </button>
-                                    )}
-                                </div>
-
-                                {notificationsLoading ? (
-                                    <div className="py-24 flex justify-center">
-                                        <Loader2 className="h-10 w-10 animate-spin text-[#36453A]" />
-                                    </div>
-                                ) : notifications.length === 0 ? (
-                                    <div className="bg-white rounded-[30px] border border-[#E8E1D5] py-20 px-6 text-center">
-                                        <div className="h-20 w-20 rounded-full bg-[#F8F5F0] border border-[#E8E1D5] flex items-center justify-center mx-auto mb-6">
-                                            <BellRing className="h-10 w-10 text-warm-gray/30" />
-                                        </div>
-                                        <h3 className="font-serif text-2xl font-bold text-[#36453A] mb-2">Inner Peace</h3>
-                                        <p className="text-warm-gray text-sm max-w-xs mx-auto">You have no new notifications at this moment. Stay mindful and enjoy your wellness journey.</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-4">
-                                        {notifications.map((n) => (
-                                            <div 
-                                                key={n.notification_id}
-                                                className={`group flex items-start gap-4 p-5 rounded-2xl border transition-all ${n.read_at 
-                                                    ? 'bg-white/60 border-[#E8E1D5] opacity-75' 
-                                                    : 'bg-white border-[#36453A]/20 shadow-sm border-l-4 border-l-[#36453A]'}`}
-                                            >
-                                                <div className={`mt-1 h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 ${n.read_at ? 'bg-warm-gray/10' : 'bg-[#36453A]/10'}`}>
-                                                    {n.type === 'security' ? <Shield className="h-5 w-5 text-red-500" /> : <Sparkles className="h-5 w-5 text-[#D4A847]" />}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center justify-between gap-2 mb-1">
-                                                        <h4 className={`text-sm font-bold ${n.read_at ? 'text-[#36453A]/60' : 'text-[#36453A]'}`}>{n.title}</h4>
-                                                        <span className="text-[10px] font-medium text-warm-gray whitespace-nowrap">
-                                                            {new Date(n.created_at).toLocaleDateString()}
-                                                        </span>
-                                                    </div>
-                                                    <p className="text-xs text-warm-gray leading-relaxed mb-3">
-                                                        {n.message}
-                                                    </p>
-                                                    <div className="flex items-center gap-4">
-                                                        {n.link_url && (
-                                                            <button 
-                                                                onClick={() => router.push(n.link_url as any)}
-                                                                className="text-[10px] font-black uppercase tracking-widest text-[#36453A] hover:underline"
+                                                                    window.dispatchEvent(new CustomEvent('notifications-updated'));
+                                                                }}
+                                                                className="text-[10px] font-black uppercase tracking-widest transition-colors text-[#D4A847] hover:text-[#B38720]"
                                                             >
-                                                                View Details
+                                                                Mark as Read
                                                             </button>
                                                         )}
-                                                        <button 
-                                                            onClick={async () => {
-                                                                if (!n.read_at) {
-                                                                    await markNotificationAsRead(n.notification_id);
-                                                                    fetchNotificationsData();
-                                                                }
-                                                            }}
-                                                            disabled={!!n.read_at}
-                                                            className={`text-[10px] font-black uppercase tracking-widest transition-colors ${n.read_at ? 'text-[#36453A]/30 cursor-default' : 'text-[#D4A847] hover:text-[#B38720]'}`}
-                                                        >
-                                                            {n.read_at ? 'Seen' : 'Mark as Read'}
-                                                        </button>
+                                                        {n.is_read && (
+                                                            <span className="text-[10px] font-black uppercase tracking-widest text-[#36453A]/30 flex items-center gap-1.5">
+                                                                <Check className="h-3 w-3" /> Seen
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </div>
                                                 <button 
