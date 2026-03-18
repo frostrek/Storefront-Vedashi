@@ -92,7 +92,7 @@ export default function PrivacyDashboard() {
             <div className="flex items-center gap-3 border-b border-light-border pb-4">
                 <Shield className="h-6 w-6 text-burgundy" />
                 <div>
-                    <h2 className="font-serif text-xl font-bold text-charcoal">Privacy & Data Management</h2>
+                    <h2 className="text-xl font-bold text-charcoal">Privacy & Data Management</h2>
                     <p className="text-sm text-warm-gray">Control your personal data in compliance with GDPR guidelines.</p>
                 </div>
             </div>
@@ -118,7 +118,7 @@ export default function PrivacyDashboard() {
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 mb-4">
                         <Download className="h-5 w-5 text-blue-600" />
                     </div>
-                    <h3 className="font-serif font-bold text-charcoal mb-1">Data Portability</h3>
+                    <h3 className="font-bold text-charcoal mb-1">Data Portability</h3>
                     <p className="text-sm text-warm-gray mb-4">Download a machine-readable JSON file containing all your personal data, orders, and addresses.</p>
                     <button
                         onClick={handleExport}
@@ -135,7 +135,7 @@ export default function PrivacyDashboard() {
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-50 mb-4">
                         <Trash2 className="h-5 w-5 text-red-600" />
                     </div>
-                    <h3 className="font-serif font-bold text-charcoal mb-1">Right to be Forgotten</h3>
+                    <h3 className="font-bold text-charcoal mb-1">Right to be Forgotten</h3>
                     <p className="text-sm text-warm-gray mb-4">Permanently anonymize your personal information. This action will delete your account instantly.</p>
                     <button
                         onClick={handleErasure}
@@ -151,7 +151,7 @@ export default function PrivacyDashboard() {
             {/* Request History Log */}
             <div className="rounded-xl border border-light-border bg-white overflow-hidden mt-8">
                 <div className="bg-cream px-5 py-3 border-b border-light-border flex justify-between items-center">
-                    <h3 className="font-serif font-bold text-charcoal">Data Request Log</h3>
+                    <h3 className="font-bold text-charcoal">Data Request Log</h3>
                     <div className="text-xs text-warm-gray">Maintained for Article 30 compliance</div>
                 </div>
                 {requests.length === 0 ? (

@@ -410,7 +410,7 @@ function ProductsContent() {
                         <span className="text-[10px] font-bold tracking-widest uppercase text-white/90">Refine Collection</span>
                     </div>
 
-                    <h1 className="text-3xl md:text-5xl font-serif font-bold text-white mb-3 italic tracking-tight drop-shadow-lg">
+                    <h1 className="text-3xl md:text-5xl font-bold text-white mb-3 italic tracking-tight drop-shadow-lg">
                         Ancient Remedies
                     </h1>
                     <p className="text-sm md:text-base text-white/80 mb-8 max-w-md mx-auto font-medium leading-relaxed">
@@ -449,7 +449,7 @@ function ProductsContent() {
                     {/* ─── Desktop Sidebar ─── */}
                     <aside className="hidden lg:block">
                         <div className="sticky top-28 h-[calc(100vh-120px)] overflow-y-auto rounded-3xl border border-[#3d5c3a]/5 bg-white/90 backdrop-blur-md px-6 py-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] custom-scrollbar">
-                            <h2 className="font-serif text-base font-bold text-gray-900 mb-1">Filters</h2>
+                            <h2 className="text-base font-bold text-gray-900 mb-1">Filters</h2>
                             <p className="text-xs text-gray-400 mb-4 flex items-center gap-2">
                                 <span className={`transition-opacity ${loading ? 'opacity-50' : 'opacity-100'}`}>
                                     {totalCount} product{totalCount !== 1 ? 's' : ''} found
@@ -469,7 +469,7 @@ function ProductsContent() {
                             />
                             <div className="absolute left-0 top-0 bottom-0 w-[320px] max-w-[85vw] bg-white shadow-2xl overflow-y-auto">
                                 <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-                                    <h2 className="font-serif text-lg font-bold text-gray-900">Filters</h2>
+                                    <h2 className="text-lg font-bold text-gray-900">Filters</h2>
                                     <button
                                         onClick={() => setMobileOpen(false)}
                                         className="rounded-full p-1.5 hover:bg-gray-100 transition-colors cursor-pointer"
@@ -589,7 +589,7 @@ function ProductsContent() {
                                 <div className="h-16 w-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
                                     <span className="text-3xl">🌿</span>
                                 </div>
-                                <p className="font-serif text-xl text-gray-700">No products found</p>
+                                <p className="text-xl text-gray-700">No products found</p>
                                 <p className="mt-2 text-sm text-gray-400">Try adjusting your filters or search
                                     {filters.search && <> for &ldquo;<strong>{filters.search}</strong>&rdquo;</>}
                                 </p>
@@ -615,7 +615,7 @@ function ProductsContent() {
                             <Sparkles className="h-3.5 w-3.5 text-[#c8d8a0]" />
                             <span className="text-[10px] font-bold tracking-widest uppercase text-white/90">Vedashi Clinical Standard</span>
                         </div>
-                        <h2 className="text-3xl font-serif font-bold text-white mb-4 leading-tight">
+                        <h2 className="text-3xl font-bold text-white mb-4 leading-tight">
                             Where Tradition Meets<br /><em>Clinical Rigor.</em>
                         </h2>
                         <p className="text-white/70 text-sm leading-relaxed mb-6">
@@ -646,7 +646,7 @@ function ProductsContent() {
             {/* ═══════ NEWSLETTER ═══════ */}
             <section className="py-16 px-6 bg-[#FAF7F2]">
                 <div className="max-w-xl mx-auto text-center">
-                    <h2 className="text-2xl font-serif font-bold text-gray-900 mb-3">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-3">
                         Join the Vedashi Circle
                     </h2>
                     <p className="text-sm text-gray-500 mb-6">

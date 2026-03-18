@@ -94,7 +94,7 @@ export default function KnowledgeBasePage() {
                         <span className="text-xs font-black tracking-[0.2em] uppercase text-[#1a2408]">Vedashi Resource Hub</span>
                     </div>
 
-                    <h1 className="text-5xl md:text-7xl font-serif font-bold text-[#1a2408] mb-8 leading-tight">
+                    <h1 className="text-5xl md:text-7xl font-bold text-[#1a2408] mb-8 leading-tight">
                         Sacred <span className="text-[#4A5D23]">Knowledge</span> Archive
                     </h1>
 
@@ -135,7 +135,7 @@ export default function KnowledgeBasePage() {
                 {/* Search results header */}
                 {searchResults && (
                     <div className="flex items-center justify-between mb-12 animate-in fade-in slide-in-from-top-4">
-                        <h2 className="text-3xl font-serif font-bold text-[#1a2408]">
+                        <h2 className="text-3xl font-bold text-[#1a2408]">
                             {searchResults.length > 0
                                 ? `${searchResults.length} Wisdom Found for "${searchQuery}"`
                                 : 'No results found in the hub'}
@@ -204,7 +204,7 @@ export default function KnowledgeBasePage() {
                         <div className="w-24 h-24 rounded-[30px] bg-[#4A5D23]/10 flex items-center justify-center mx-auto mb-10">
                             <BookOpen className="h-10 w-10 text-[#4A5D23]" />
                         </div>
-                        <h3 className="text-3xl font-serif font-bold text-[#1a2408] mb-4">The library is currently silent</h3>
+                        <h3 className="text-3xl font-bold text-[#1a2408] mb-4">The library is currently silent</h3>
                         <p className="text-lg text-[#5B4A31] max-w-sm mx-auto font-medium">
                             {searchResults ? 'Our archive doesn\'t seem to contain that wisdom. Try adjusting your search.' : 'Our scholars are preparing new guides for you.'}
                         </p>
@@ -242,7 +242,7 @@ export default function KnowledgeBasePage() {
                                         </div>
 
                                         {/* Title */}
-                                        <h3 className="text-xl md:text-2xl font-serif font-bold text-[#1a2408] mb-4 leading-snug group-hover:text-[#4A5D23] transition-colors">
+                                        <h3 className="text-xl md:text-2xl font-bold text-[#1a2408] mb-4 leading-snug group-hover:text-[#4A5D23] transition-colors">
                                             {article.title}
                                         </h3>
 

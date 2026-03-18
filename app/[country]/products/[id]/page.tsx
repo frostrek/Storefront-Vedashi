@@ -63,7 +63,7 @@ function LazyRelatedProducts({ productId, type, title, icon }: {
     return (
         <div className="mt-16 border-t border-gray-100 pt-16">
             <div className="flex items-center justify-between mb-8">
-                <h2 className="font-serif text-3xl font-bold text-gray-900 flex items-center gap-3">
+                <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
                     {icon}
                     {title}
                 </h2>
@@ -353,7 +353,7 @@ function ProductDetailContent({ params }: Props) {
                             </span>
                         </div>
 
-                        <h1 className="font-serif text-4xl lg:text-5xl font-bold text-gray-900 italic tracking-tight leading-[1.1]">
+                        <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 italic tracking-tight leading-[1.1]">
                             {product.product_name}
                         </h1>
 
@@ -826,7 +826,7 @@ function ProductDetailContent({ params }: Props) {
                                 <span className="inline-block px-3 py-1 rounded-full bg-white/10 text-xs font-bold tracking-wider mb-8 w-max">
                                     Clinical Transparency
                                 </span>
-                                <h2 className="font-serif text-4xl lg:text-5xl font-bold mb-6">
+                                <h2 className="text-4xl lg:text-5xl font-bold mb-6">
                                     Ancient Roots.<br />Proven Science.
                                 </h2>
                                 <p className="text-white/80 text-[15px] leading-relaxed mb-8 max-w-md">
@@ -868,7 +868,7 @@ function ProductDetailContent({ params }: Props) {
                                 <div className="space-y-4 flex flex-col pt-12">
                                     <div className="bg-black/20 rounded-2xl h-[45%] bg-cover bg-center" style={{backgroundImage: "url('https://images.unsplash.com/photo-1563241527-310ca0fa8f12?q=80&w=800&auto=format&fit=crop')"}} />
                                     <div className="bg-[#8b997c] rounded-2xl h-[40%] flex flex-col justify-center p-6 text-[#1a2e18]">
-                                        <div className="font-serif text-5xl font-bold mb-2">24+</div>
+                                        <div className="text-5xl font-bold mb-2">24+</div>
                                         <div className="text-xs font-bold uppercase tracking-wider leading-relaxed">CLINICAL TRIALS<br />COMPLETED IN 2022</div>
                                     </div>
                                 </div>
@@ -898,7 +898,7 @@ function ProductDetailContent({ params }: Props) {
                                     <div className="bg-gray-50 p-8 rounded-2xl h-max border border-gray-100">
                                         <div className="flex items-center gap-3 mb-6">
                                             <Info className="h-5 w-5 text-[#3d5c3a] flex-shrink-0" strokeWidth={2} />
-                                            <h2 className="font-serif text-xl font-bold text-gray-900">Intended Use</h2>
+                                            <h2 className="text-xl font-bold text-gray-900">Intended Use</h2>
                                         </div>
                                         <p className="text-[14px] text-gray-600 leading-relaxed whitespace-pre-line">
                                             {product.intended_use}
@@ -907,7 +907,7 @@ function ProductDetailContent({ params }: Props) {
                                 )}
                                 {product.description && (
                                     <div className="pt-4 lg:pt-0">
-                                        <h2 className={`font-serif text-3xl font-bold text-gray-900 mb-6 ${product.intended_use ? 'hidden lg:block' : ''}`}>Description</h2>
+                                        <h2 className={`text-3xl font-bold text-gray-900 mb-6 ${product.intended_use ? 'hidden lg:block' : ''}`}>Description</h2>
                                         <div className="text-[15px] text-gray-600 leading-[1.85] whitespace-pre-line">
                                             {isDescriptionExpanded || product.description.split(/\s+/).length <= 100
                                                 ? product.description

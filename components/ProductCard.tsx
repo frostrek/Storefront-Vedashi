@@ -385,7 +385,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false }:
                                 </p>
                             )}
 
-                            <h3 className="font-serif text-sm font-semibold text-gray-900 leading-snug line-clamp-2 mb-2">
+                            <h3 className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2 mb-2">
                                 {product.product_name}
                             </h3>
 

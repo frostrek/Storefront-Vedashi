@@ -63,7 +63,7 @@ export default function CollectionPage() {
             <div className="bg-cream min-h-screen">
                 <div className="mx-auto max-w-7xl px-4 py-20 text-center">
                     <Layers className="mx-auto h-16 w-16 text-warm-gray/30 mb-4" />
-                    <h1 className="font-serif text-2xl font-bold text-charcoal">Collection Not Found</h1>
+                    <h1 className="text-2xl font-bold text-charcoal">Collection Not Found</h1>
                     <p className="mt-2 text-warm-gray">This collection may have ended or does not exist.</p>
                     <Link href="/" className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-burgundy hover:text-burgundy-dark transition-colors">
                         <ArrowLeft className="h-4 w-4" /> Back to Home
@@ -97,7 +97,7 @@ export default function CollectionPage() {
                         <ArrowLeft className="h-4 w-4" /> Back to Home
                     </Link>
 
-                    <h1 className={`font-serif text-3xl sm:text-4xl lg:text-5xl font-bold ${collection.image_url ? 'text-white' : 'text-vedic-gold'
+                    <h1 className={`text-3xl sm:text-4xl lg:text-5xl font-bold ${collection.image_url ? 'text-white' : 'text-vedic-gold'
                         }`}>
                         {collection.name}
                     </h1>
@@ -150,7 +150,7 @@ export default function CollectionPage() {
                 ) : (
                     <div className="rounded-2xl border border-light-border bg-white py-20 text-center">
                         <Package className="mx-auto h-12 w-12 text-warm-gray/30 mb-3" />
-                        <p className="font-serif text-lg text-charcoal">No products in this collection yet</p>
+                        <p className="text-lg text-charcoal">No products in this collection yet</p>
                         <p className="mt-2 text-sm text-warm-gray">Check back soon for new additions</p>
                     </div>
                 )}

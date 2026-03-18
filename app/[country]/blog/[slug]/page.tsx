@@ -54,7 +54,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
         return (
             <div className="min-h-screen bg-cream flex items-center justify-center">
                 <div className="text-center">
-                    <h1 className="font-serif text-3xl font-bold text-charcoal mb-3">Article Not Found</h1>
+                    <h1 className="text-3xl font-bold text-charcoal mb-3">Article Not Found</h1>
                     <p className="text-warm-gray mb-6">This article might have been moved or deleted.</p>
                     <Link href="/blog" className="px-6 py-3 rounded-full bg-burgundy text-white font-semibold hover:bg-burgundy-dark transition-colors">
                         Back to Blog
@@ -116,7 +116,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
                 </div>
 
                 {/* Title */}
-                <h1 className="font-serif text-3xl md:text-4xl font-bold text-charcoal leading-tight mb-4 animate-fade-in-up">
+                <h1 className="text-3xl md:text-4xl font-bold text-charcoal leading-tight mb-4 animate-fade-in-up">
                     {post.title}
                 </h1>
 
@@ -127,7 +127,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
 
                 {/* Author & Meta */}
                 <div className="flex items-center gap-4 mb-8 pb-6 border-b border-light-border">
-                    <div className="w-11 h-11 rounded-full bg-burgundy/10 flex items-center justify-center text-burgundy font-serif font-bold text-lg flex-shrink-0">
+                    <div className="w-11 h-11 rounded-full bg-burgundy/10 flex items-center justify-center text-burgundy font-bold text-lg flex-shrink-0">
                         {post.author_avatar ? (
                             <img src={post.author_avatar} alt={post.author_name} className="w-full h-full rounded-full object-cover" />
                         ) : (
@@ -187,7 +187,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
                 {/* Article Body */}
                 <div
                     className="prose prose-lg max-w-none text-charcoal/90 leading-relaxed
-                        prose-headings:font-serif prose-headings:text-charcoal
+                        prose-headings:prose-headings:text-charcoal
                         prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4
                         prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
                         prose-p:mb-5
@@ -206,7 +206,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
                 {/* Author Bio */}
                 {post.author_bio && (
                     <div className="mt-8 rounded-2xl border border-light-border bg-white p-6 flex gap-4 items-start">
-                        <div className="w-14 h-14 rounded-full bg-burgundy/10 flex items-center justify-center text-burgundy font-serif font-bold text-xl flex-shrink-0">
+                        <div className="w-14 h-14 rounded-full bg-burgundy/10 flex items-center justify-center text-burgundy font-bold text-xl flex-shrink-0">
                             {post.author_avatar ? (
                                 <img src={post.author_avatar} alt={post.author_name} className="w-full h-full rounded-full object-cover" />
                             ) : (
@@ -214,7 +214,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
                             )}
                         </div>
                         <div>
-                            <p className="font-serif font-bold text-charcoal mb-1">About {post.author_name}</p>
+                            <p className="font-bold text-charcoal mb-1">About {post.author_name}</p>
                             <p className="text-sm text-warm-gray leading-relaxed">{post.author_bio}</p>
                         </div>
                     </div>
@@ -223,7 +223,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
                 {/* Related Posts */}
                 {related.length > 0 && (
                     <section className="mt-12">
-                        <h3 className="font-serif text-xl font-bold text-charcoal mb-6">You Might Also Like</h3>
+                        <h3 className="text-xl font-bold text-charcoal mb-6">You Might Also Like</h3>
                         <div className="grid md:grid-cols-3 gap-4">
                             {related.map(p => (
                                 <BlogPostCard key={p.post_id} post={p} />

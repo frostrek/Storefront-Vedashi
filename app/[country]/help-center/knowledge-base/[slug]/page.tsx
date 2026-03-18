@@ -41,7 +41,7 @@ export default function KBArticlePage() {
                     <div className="w-24 h-24 rounded-[30px] bg-[#4A5D23]/10 flex items-center justify-center mx-auto mb-10">
                         <BookOpen className="h-10 w-10 text-[#4A5D23]" />
                     </div>
-                    <h2 className="text-3xl font-serif font-bold text-[#1a2408] mb-4">Ancient Scroll Not Found</h2>
+                    <h2 className="text-3xl font-bold text-[#1a2408] mb-4">Ancient Scroll Not Found</h2>
                     <p className="text-[#5B4A31] mb-10 font-medium">This search did not lead us to the wisdom you seek.</p>
                     <Link href="/help-center/knowledge-base" className="inline-flex items-center gap-3 bg-[#4A5D23] text-white px-10 py-5 rounded-[20px] font-black uppercase tracking-widest text-sm hover:bg-[#3a491b] transition-all shadow-xl">
                         <ChevronLeft className="h-5 w-5" /> Return to Archives
@@ -75,7 +75,7 @@ export default function KBArticlePage() {
                         Back to Knowledge Hub
                     </Link>
                     
-                    <h1 className="text-4xl md:text-6xl font-serif font-bold text-[#1a2408] mb-8 leading-tight">
+                    <h1 className="text-4xl md:text-6xl font-bold text-[#1a2408] mb-8 leading-tight">
                         {article.title}
                     </h1>
                     
@@ -100,7 +100,7 @@ export default function KBArticlePage() {
             <div className="max-w-4xl mx-auto px-6 py-16">
                 <article className="bg-white rounded-[60px] p-12 md:p-20 border border-[#4A5D23]/5 shadow-[0_32px_64px_-16px_rgba(74,93,35,0.08)]">
                     <div
-                        className="prose prose-lg max-w-none prose-headings:font-serif prose-headings:text-[#1a2408] prose-p:text-[#5B4A31] prose-p:leading-relaxed prose-a:text-[#4A5D23] prose-strong:text-[#1a2408] prose-img:rounded-[30px] prose-img:shadow-2xl"
+                        className="prose prose-lg max-w-none prose-headings:prose-headings:text-[#1a2408] prose-p:text-[#5B4A31] prose-p:leading-relaxed prose-a:text-[#4A5D23] prose-strong:text-[#1a2408] prose-img:rounded-[30px] prose-img:shadow-2xl"
                         dangerouslySetInnerHTML={{ __html: article.content.replace(/\n/g, '<br/>') }}
                     />
                 </article>
@@ -109,7 +109,7 @@ export default function KBArticlePage() {
                 {related && related.length > 0 && (
                     <div className="mt-20">
                         <div className="flex items-center gap-4 mb-8">
-                            <h3 className="text-3xl font-serif font-bold text-[#1a2408]">Related Wisdom</h3>
+                            <h3 className="text-3xl font-bold text-[#1a2408]">Related Wisdom</h3>
                             <div className="flex-1 h-px bg-[#4A5D23]/10"></div>
                         </div>
                         <div className="grid gap-6 md:grid-cols-2">
@@ -120,7 +120,7 @@ export default function KBArticlePage() {
                                     className="group bg-white rounded-[32px] p-8 border border-[#4A5D23]/5 hover:border-[#4A5D23]/20 hover:shadow-xl transition-all flex items-center justify-between"
                                 >
                                     <div className="flex-1">
-                                        <h4 className="text-lg font-serif font-bold text-[#1a2408] group-hover:text-[#4A5D23] transition-colors mb-2">
+                                        <h4 className="text-lg font-bold text-[#1a2408] group-hover:text-[#4A5D23] transition-colors mb-2">
                                             {r.title}
                                         </h4>
                                         {r.excerpt && <p className="text-sm text-[#5B4A31]/60 line-clamp-1 font-medium italic">{r.excerpt}</p>}

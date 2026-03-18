@@ -627,7 +627,7 @@ function CheckoutContent() {
                     <div className="text-center max-w-lg p-10 bg-white rounded-2xl border border-[#E8E4DC] shadow-sm relative overflow-hidden">
                         <div className="absolute top-0 left-0 w-full h-2 bg-[#6B8F5E]" />
                         <CheckCircle className="mx-auto h-24 w-24 text-[#6B8F5E] mb-6" />
-                        <h1 className="font-serif text-3xl font-bold text-[#1A1A1A]">Ritual Initialized</h1>
+                        <h1 className="text-3xl font-bold text-[#1A1A1A]">Ritual Initialized</h1>
                         {orderId && (
                             <p className="mt-2 text-sm font-mono text-[#6B6B60]">Order ID: {orderId}</p>
                         )}
@@ -689,7 +689,7 @@ function CheckoutContent() {
                         {/* ── Step 1: Shipping ── */}
                         {step === 1 && (
                             <div className="space-y-6">
-                                <h2 className="font-serif text-2xl font-bold text-[#1A1A1A] mb-4">Shipping Sanctuary</h2>
+                                <h2 className="text-2xl font-bold text-[#1A1A1A] mb-4">Shipping Sanctuary</h2>
                                  {/* Contact Details Form */}
                                 <div className="cart-item-card p-6 border-l-4 border-l-[#2D3B2D]">
                                     <h3 className="font-bold text-[#1A1A1A] mb-4 flex items-center gap-2">
@@ -810,7 +810,7 @@ function CheckoutContent() {
                         {step === 2 && (
                             <div className="space-y-6">
                                 <div className="flex justify-between items-center mb-4">
-                                    <h2 className="font-serif text-2xl font-bold text-[#1A1A1A]">Payment Methodology</h2>
+                                    <h2 className="text-2xl font-bold text-[#1A1A1A]">Payment Methodology</h2>
                                     <div className="flex items-center gap-1.5 text-xs font-bold text-[#6B8F5E]">
                                         <Lock className="w-3.5 h-3.5" /> SECURE CHECKOUT
                                     </div>
@@ -972,7 +972,7 @@ function CheckoutContent() {
                         {/* ── Step 3: Review ── */}
                         {step === 3 && (
                             <div className="space-y-6">
-                                <h2 className="font-serif text-2xl font-bold text-[#1A1A1A] mb-4">Final Review</h2>
+                                <h2 className="text-2xl font-bold text-[#1A1A1A] mb-4">Final Review</h2>
 
                                 <div className="grid sm:grid-cols-2 gap-4">
                                     {/* Shipping details */}

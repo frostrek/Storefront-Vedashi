@@ -126,7 +126,7 @@ export default function NotificationPreferences({
             {/* Header */}
             {!hideHeader && (
                 <div>
-                    <h2 className="font-serif text-lg font-bold text-charcoal">Notification Preferences</h2>
+                    <h2 className="text-lg font-bold text-charcoal">Notification Preferences</h2>
                     <p className="text-sm text-warm-gray mt-0.5">
                         Manage how you&apos;d like to receive alerts and updates from us
                     </p>
@@ -136,7 +136,7 @@ export default function NotificationPreferences({
             {/* ── Receive Notifications Via ── */}
             <div className="rounded-3xl border border-light-border bg-white overflow-hidden shadow-sm">
                 <div className="px-6 py-4 border-b border-light-border bg-cream/50">
-                    <h3 className="font-serif text-base font-bold text-herbal-green">Receive notifications via:</h3>
+                    <h3 className="text-base font-bold text-herbal-green">Receive notifications via:</h3>
                     <p className="text-[10px] font-bold text-warm-gray uppercase tracking-widest mt-1">Select the channels for your periodic awareness</p>
                 </div>
                 <div className="px-6 py-5 flex flex-wrap sm:flex-nowrap items-center gap-6 md:gap-10">
@@ -211,7 +211,7 @@ export default function NotificationPreferences({
                                     <Icon className="h-5 w-5" style={{ color: isChannelDisabled ? '#9CA3AF' : meta.color }} />
                                 </div>
                                 <div>
-                                    <h3 className="font-serif text-lg font-bold text-herbal-green">{meta.label}</h3>
+                                    <h3 className="text-lg font-bold text-herbal-green">{meta.label}</h3>
                                     <p className="text-[11px] font-medium text-warm-gray">{meta.description}</p>
                                 </div>
                             </div>

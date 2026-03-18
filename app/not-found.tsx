@@ -26,14 +26,14 @@ export default function NotFound() {
 
                 {/* 404 number */}
                 <h1
-                    className="font-serif text-7xl md:text-8xl font-black tracking-tight mb-1 text-[#3B5D3B] select-none"
+                    className="text-7xl md:text-8xl font-black tracking-tight mb-1 text-[#3B5D3B] select-none"
                     aria-label="Error 404"
                 >
                     404
                 </h1>
 
                 {/* Message */}
-                <h2 className="font-serif text-lg md:text-xl text-[#2C2C2C] mb-2">
+                <h2 className="text-lg md:text-xl text-[#2C2C2C] mb-2">
                     Oops! This path is out of balance
                 </h2>
                 <p className="max-w-md text-warm-gray text-xs md:text-sm leading-relaxed mb-6">

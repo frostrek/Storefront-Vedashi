@@ -194,7 +194,7 @@ export default function HeroCarousel() {
             {/* ── Content ── */}
             <div className="relative z-20 mx-auto max-w-7xl px-4 py-16 text-center w-full">
                 {/* Dynamic Headings */}
-                <div className="animate-fade-in-up space-y-2 mb-6 shadow-black/20 drop-shadow-2xl font-serif">
+                <div className="animate-fade-in-up space-y-2 mb-6 shadow-black/20 drop-shadow-2xl">
                     {slide.headings?.map(h => {
                         const isNum = !isNaN(Number(h.fontSize)) && h.fontSize !== '';
                         return (

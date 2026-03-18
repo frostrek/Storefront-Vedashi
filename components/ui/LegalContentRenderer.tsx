@@ -22,7 +22,7 @@ export default function LegalContentRenderer({ content }: LegalContentRendererPr
                     {blocks.map((block: Block, idx: number) => (
                         <div key={idx}>
                             {block.type === 'heading' ? (
-                                <h2 className="font-serif text-2xl lg:text-3xl font-bold text-gray-900 mt-12 mb-6 first:mt-0">
+                                <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mt-12 mb-6 first:mt-0">
                                     {block.text}
                                 </h2>
                             ) : (

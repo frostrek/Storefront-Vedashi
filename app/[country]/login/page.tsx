@@ -135,7 +135,7 @@ function LoginContent() {
                     </div>
                 </div>
                 <div className="mt-8 flex flex-col items-center space-y-2">
-                    <h2 className="font-serif text-2xl font-bold text-white tracking-tight">
+                    <h2 className="text-2xl font-bold text-white tracking-tight">
                         Securing your session
                     </h2>
                     <p className="text-sm font-medium text-[#8dbf8d] animate-pulse">
@@ -285,7 +285,7 @@ function LoginContent() {
                 <div className="w-12 h-12 rounded-2xl bg-[#1e3d1e] flex items-center justify-center mb-4 shadow-lg">
                     <Smartphone className="w-6 h-6 text-white" />
                 </div>
-                <h2 className="font-serif text-2xl font-bold text-[#1a1a1a] tracking-tight">
+                <h2 className="text-2xl font-bold text-[#1a1a1a] tracking-tight">
                     {otpSent ? 'Enter Your Code' : 'Sign in with Phone'}
                 </h2>
                 <p className="text-sm text-[#6b7b6b] mt-1">
@@ -430,7 +430,7 @@ function LoginContent() {
 
                 {/* ── Left Hero ── */}
                 <div className="hidden lg:flex flex-col justify-center flex-1 max-w-xxl px-12 xl:px-24 mx-auto w-full">
-                    <h1 className="font-serif text-5xl xl:text-6xl font-bold text-white leading-tight mb-3">
+                    <h1 className="text-5xl xl:text-6xl font-bold text-white leading-tight mb-3">
                         Your Path to<br />
                         <em className="italic text-[#8dbf8d] not-italic font-bold" style={{ fontStyle: 'italic' }}>Prakriti</em> Awaits.
                     </h1>
@@ -486,7 +486,7 @@ function LoginContent() {
 
                             {/* Card header */}
                             <div className="flex flex-col items-center mb-4">
-                                <h2 className="font-serif text-2xl font-bold text-[#1a1a1a] tracking-tight">{cardTitle}</h2>
+                                <h2 className="text-2xl font-bold text-[#1a1a1a] tracking-tight">{cardTitle}</h2>
                                 <div className="w-12 h-0.5 bg-gradient-to-r from-transparent via-[#2d5a2d]/40 to-transparent mt-2" />
                                 <p className="text-sm text-[#6b7b6b] mt-2">{cardSubtitle}</p>
                             </div>

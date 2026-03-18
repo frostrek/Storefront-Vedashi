@@ -221,7 +221,7 @@ export default function VerifySocialOTPPage() {
                         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/20 backdrop-blur mb-4">
                             <ShieldCheck className="h-8 w-8 text-white" />
                         </div>
-                        <h1 className="text-2xl font-serif font-bold text-white">
+                        <h1 className="text-2xl font-bold text-white">
                             Verify Your Email
                         </h1>
                         <p className="mt-2 text-sm text-white/80">
