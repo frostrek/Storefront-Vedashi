@@ -1,5 +1,23 @@
 import type { Metadata } from "next";
 import { Manrope, Outfit, Cormorant_Garamond } from "next/font/google";
+import Script from "next/script";
+import "./globals.css";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+
+import PromoBanner from "@/components/PromoBanner";
+import { CartProvider } from "@/context/CartContext";
+import { WishlistProvider } from "@/context/WishlistContext";
+import { AuthProvider } from "@/context/AuthContext";
+import { ClerkProvider } from "@clerk/nextjs";
+import { Toaster } from "react-hot-toast";
+import { CookieConsentProvider } from "@/context/CookieConsentContext";
+import CookieBanner from "@/components/CookieBanner";
+import LanguageSuggestionBanner from "@/components/LanguageSuggestionBanner";
+import DynamicScriptLoader from "@/components/DynamicScriptLoader";
+import MaintenancePage from "@/components/MaintenancePage";
+import { generateOrganizationJsonLd, generateWebSiteJsonLd } from "@/lib/seo";
+import ButterflyEffect from "@/components/animations/ButterflyEffect";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -71,7 +89,7 @@ export default async function RootLayout({
 
   if (isMaintenance) {
     return (
-      <html lang="en" className={`${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
+      <html lang="en" className={`${manrope.variable} ${outfit.variable} ${cormorant.variable}`} suppressHydrationWarning>
         <body className="min-h-screen bg-[#1A1814]">
           <MaintenancePage message={maintenanceMessage} />
         </body>
@@ -80,7 +98,7 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${manrope.variable} ${outfit.variable} ${cormorant.variable}`} suppressHydrationWarning>
       <body className="min-h-screen flex flex-col" suppressHydrationWarning>
         <Script
           id="structured-data-organization"

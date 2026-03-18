@@ -14,6 +14,8 @@ interface AuthContextType {
     socialLogin: (clerkToken: string) => Promise<{ success: boolean; error?: string; is_new_user?: boolean; account_linked?: boolean; pending_verification?: boolean; customer_id?: string; email?: string; full_name?: string }>;
     logout: () => void;
     verifyUserAge: (dateOfBirth: string) => Promise<{ success: boolean; error?: string }>;
+    /** Update partial user info (like avatar_url) dynamically in cache and context */
+    updateUser: (updates: Partial<UserInfo>) => void;
     /** Register callbacks that run after login/logout so Carts + Wishlist can react */
     onAuthChange: (cb: AuthChangeCallback) => () => void;
 }
@@ -121,6 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 if (json.data.access_token) {
                     localStorage.setItem(TOKEN_KEY, json.data.access_token);
                 }
+                sessionStorage.setItem('justSignedIn', String(Date.now()));
                 notifyListeners('login', u);
                 return { success: true, role: u.role, access_token: json.data.access_token };
             }
@@ -166,7 +169,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(u);
         localStorage.setItem(USER_KEY, JSON.stringify(u));
         localStorage.setItem(TOKEN_KEY, accessToken);
+        sessionStorage.setItem('justSignedIn', String(Date.now()));
         notifyListeners('login', u);
+    }, [notifyListeners]);
+
+    /** Update user fields dynamically */
+    const updateUser = useCallback((updates: Partial<UserInfo>) => {
+        setUser(prev => {
+            if (!prev) return null;
+            const updated = { ...prev, ...updates };
+            localStorage.setItem(USER_KEY, JSON.stringify(updated));
+            // Trigger login event to simulate an update broadcast
+            notifyListeners('login', updated);
+            return updated;
+        });
     }, [notifyListeners]);
 
     const logout = useCallback(() => {
@@ -207,6 +223,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 if (json.data.access_token) {
                     localStorage.setItem(TOKEN_KEY, json.data.access_token);
                 }
+                sessionStorage.setItem('justSignedIn', String(Date.now()));
                 notifyListeners('login', u);
                 return {
                     success: true,
@@ -245,7 +262,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return (
         <AuthContext.Provider value={{
             user, isAuthenticated: !!user, isLoading,
-            login, register, loginFromVerification, socialLogin, logout, verifyUserAge, onAuthChange,
+            login, register, loginFromVerification, socialLogin, logout, verifyUserAge, updateUser, onAuthChange,
         }}>
             {children}
         </AuthContext.Provider>

@@ -106,7 +106,7 @@ export default function Footer() {
                         <h4 className="font-display font-bold text-[#333] text-lg mb-3">Explore</h4>
                         <ul className="space-y-2">
                             <li>
-                                <Link href="/about" className="text-sm font-ui font-medium text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
+                                <Link href="/about" className="text-sm font-base font-medium text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
                                     Our Story
                                 </Link>
                             </li>
@@ -158,7 +158,7 @@ export default function Footer() {
                                 </Link>
                             </li>
                             <li>
-                                <button onClick={openSettings} className="text-sm font-ui font-medium text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors bg-transparent border-none p-0 cursor-pointer text-left">
+                                <button onClick={openSettings} className="text-sm font-base font-medium text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors bg-transparent border-none p-0 cursor-pointer text-left">
                                     Cookie Settings
                                 </button>
                             </li>
@@ -191,13 +191,13 @@ export default function Footer() {
 
                 {/* ── Bottom bar ── */}
                 <div className="mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[#e8e8e0]">
-                    <p className="text-[10px] font-bold font-ui uppercase tracking-widest text-[#999]">
+                    <p className="text-[10px] font-bold font-base uppercase tracking-widest text-[#999]">
                         © 2026 Vedashi. All rights reserved.
                     </p>
                     <div className="flex items-center gap-6">
                         <RegionSwitcher upward={true} />
                         <GoogleTranslateWidget upward={true} />
-                        <p className="text-xs text-[#999] italic font-serif">
+                        <p className="text-xs text-[#999] italic font-accent">
                             Gently crafted for modern balance.
                         </p>
                     </div>

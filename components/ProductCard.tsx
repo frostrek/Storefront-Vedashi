@@ -632,7 +632,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                         ) : variants.length > 0 ? (
                             <div className="mb-4">
                                 <div className="flex items-center justify-between mb-2">
-                                    <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                                    <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500 font-ui">
                                         Select Option
                                     </p>
                                 </div>
@@ -730,7 +730,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                 <div className="bg-white border-t border-gray-100 p-4 flex flex-col gap-2.5 rounded-b-2xl sm:rounded-b-3xl">
                     {hasVariants && variants.length > 0 && (
                         <div className="flex justify-end -mt-1 mb-1 pr-1">
-                            <span className="text-[9px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                            <span className="text-[9px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full font-ui">
                                 {variants.length} {variants.length === 1 ? 'Option' : 'Options'} Available
                             </span>
                         </div>
@@ -739,7 +739,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                         <button
                             onClick={(e) => handleModalAddToCart(e)}
                             disabled={(hasVariants && !selectedVariant) || addingToCart || cartLoading || justAdded || (hasVariants && selectedVariant?.stock_quantity <= 0) || (!hasVariants && (product as any).stock_quantity <= 0)}
-                            className={`w-full py-3.5 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2 transition-all duration-300 disabled:opacity-50 cursor-pointer shadow-lg ${justAdded ? 'bg-[#2a4d2e] shadow-[#2a4d2e]/20' : 'bg-[#3d5c3a] hover:bg-[#2d4a2a] shadow-[#3d5c3a]/20 hover:shadow-[#3d5c3a]/40'}`}
+                            className={`w-full py-3.5 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2 transition-all duration-300 disabled:opacity-50 cursor-pointer shadow-lg font-ui ${justAdded ? 'bg-[#2a4d2e] shadow-[#2a4d2e]/20' : 'bg-[#3d5c3a] hover:bg-[#2d4a2a] shadow-[#3d5c3a]/20 hover:shadow-[#3d5c3a]/40'}`}
                         >
                             {addingToCart ? (
                                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -939,7 +939,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                 </p>
                             )}
 
-                            <h3 className={`font-display text-gray-900 leading-tight mb-1.5 sm:mb-2 ${isList ? 'text-lg sm:text-xl line-clamp-1 sm:line-clamp-2' : 'text-base line-clamp-2'}`}>
+                            <h3 className={`font-accent text-gray-900 leading-tight mb-1.5 sm:mb-2 ${isList ? 'text-lg sm:text-xl line-clamp-1 sm:line-clamp-2' : 'text-base line-clamp-2'}`}>
                                 {product.product_name}
                             </h3>
 

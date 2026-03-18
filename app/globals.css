@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@plugin "@tailwindcss/typography";
+/* @plugin "@tailwindcss/typography"; */
 
 /* === Vedashi â€” Premium Ayurvedic Wellness Theme === */
 
@@ -16,14 +16,22 @@
   --color-charcoal: #2C2C2C;
   --color-warm-gray: #6B6B60;
   --color-light-border: #D4CFC0;
-  --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-accent: 'Cormorant Garamond', serif;
+  --font-ui: 'Outfit', sans-serif;
+  --font-base: 'Manrope', system-ui, -apple-system, sans-serif;
 }
 
 :root {
   --background: #FAF8F0;
   --foreground: #2C2C2C;
+  --font-base: var(--font-base);
+  --font-ui: var(--font-ui);
+  --font-accent: var(--font-accent);
 }
+
+.font-base { font-family: var(--font-base); }
+.font-ui { font-family: var(--font-ui); }
+.font-accent { font-family: var(--font-accent); }
 
 html {
   scroll-behavior: smooth;
@@ -32,11 +40,27 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans);
+  font-family: var(--font-base);
+  font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
   top: 0px !important;
+}
+
+h1, .font-display {
+  font-family: var(--font-accent);
+  font-weight: 600;
+}
+
+h2 {
+  font-family: var(--font-accent);
+  font-weight: 600;
+}
+
+h3, h4, h5, h6 {
+  font-family: var(--font-base);
+  font-weight: 600;
 }
 
 /* ============================================

@@ -339,7 +339,7 @@ export default function HomePage() {
               <button 
                 type="submit" 
                 disabled={isSubscribing}
-                className="w-full sm:w-auto rounded-lg bg-[#C9B87A] px-8 py-3 text-sm font-semibold text-[#2C2C2C] transition-all hover:bg-[#D4C38A] hover:-translate-y-0.5 shadow-lg whitespace-nowrap flex items-center justify-center disabled:opacity-70 disabled:hover:translate-y-0"
+                className="w-full sm:w-auto rounded-lg bg-[#C9B87A] px-8 py-3 text-sm font-semibold text-[#2C2C2C] transition-all hover:bg-[#D4C38A] hover:-translate-y-0.5 shadow-lg whitespace-nowrap flex items-center justify-center disabled:opacity-70 disabled:hover:translate-y-0 font-ui"
               >
                 {isSubscribing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Subscribe'}
               </button>

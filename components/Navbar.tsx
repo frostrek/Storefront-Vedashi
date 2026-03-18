@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
-import { ShoppingCart, User, Menu, X, Heart, ChevronDown, Search, ArrowRight, Leaf, Sparkles } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, Heart, ChevronDown, Search, ArrowRight, Leaf, Sparkles, LogOut, Settings, Package, UserPlus, LogIn } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useAuth } from '@/context/AuthContext';
@@ -19,6 +19,7 @@ interface Category {
   category_id: string;
   parent_id: string | null;
   name: string;
+  slug: string;
 }
 
 interface HeaderConfig {
@@ -82,10 +83,9 @@ export default function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const { totalItems, loading: cartLoading } = useCart();
   const { totalItems: wishlistCount } = useWishlist();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [showCartReminder, setShowCartReminder] = useState(false);
-  const [prevTotalItems, setPrevTotalItems] = useState(0);
   const [scrolled, setScrolled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<HeaderConfig>(DEFAULT_CONFIG);
@@ -125,35 +125,23 @@ export default function Navbar() {
       .finally(() => setLoading(false));
   }, []);
 
-  // 1. Trigger when a new product is added (but not on initial load)
-  const isFirstCount = useRef(true);
+  // 2. Trigger ONLY when customer explicitly just signed in (within last 15 seconds)
   useEffect(() => {
-    if (!cartLoading) {
-      if (isFirstCount.current) {
-        setPrevTotalItems(totalItems);
-        isFirstCount.current = false;
-        return;
+    if (isAuthenticated && !cartLoading) {
+      const justSignedIn = sessionStorage.getItem('justSignedIn');
+      if (justSignedIn) {
+        const ts = parseInt(justSignedIn, 10);
+        // Fallback for 'true' or timestamp within last 15s
+        if (justSignedIn === 'true' || (!isNaN(ts) && Date.now() - ts < 15000)) {
+          if (totalItems > 0 && !showCartReminder) {
+            setShowCartReminder(true);
+          }
+        } else {
+          sessionStorage.removeItem('justSignedIn');
+        }
       }
-
-      if (totalItems > prevTotalItems && totalItems > 0) {
-        setShowCartReminder(true);
-      }
-      setPrevTotalItems(totalItems);
     }
-  }, [totalItems, cartLoading, prevTotalItems]);
-
-  // 2. Trigger when customer logs in
-  useEffect(() => {
-    if (isAuthenticated && !cartLoading && totalItems > 0) {
-      const hasShownOnLogin = sessionStorage.getItem('cartReminderLoginShown');
-      if (!hasShownOnLogin) {
-        setShowCartReminder(true);
-        sessionStorage.setItem('cartReminderLoginShown', 'true');
-      }
-    } else if (!isAuthenticated) {
-      sessionStorage.removeItem('cartReminderLoginShown');
-    }
-  }, [isAuthenticated, totalItems, cartLoading]);
+  }, [isAuthenticated, totalItems, cartLoading, showCartReminder]);
 
   useEffect(() => {
     getCategories().then(cats => {
@@ -169,11 +157,11 @@ export default function Navbar() {
   if (pathname?.endsWith('/login') || pathname?.endsWith('/signup')) return null;
 
   return (
-    <header className={`w-full sticky top-0 z-[100] transition-all duration-500 ${scrolled ? 'shadow-lg' : ''}`}>
+    <header className={`w-full sticky top-0 z-[1000] transition-all duration-500 ${scrolled ? 'shadow-lg' : ''}`}>
 
       {/* ═══════════════ MAIN NAVBAR ═══════════════ */}
       <div
-        className={`border-b transition-all duration-500 ${scrolled
+        className={`relative z-[100] border-b transition-all duration-500 ${scrolled
           ? 'bg-white/80 backdrop-blur-xl border-[#3B5D3B]/10 shadow-[0_2px_20px_rgba(59,93,59,0.08)]'
           : 'bg-white border-gray-200 shadow-sm'
           }`}
@@ -204,7 +192,7 @@ export default function Navbar() {
                   <Link
                     key={link.label}
                     href={link.url}
-                    className={`text-[12px] font-bold font-ui uppercase tracking-[0.14em] transition-colors duration-200 relative before:content-[''] before:absolute before:-bottom-1 before:left-0 before:w-full before:h-0.5 before:bg-current before:transition-transform before:duration-300 ${isActive ? 'before:scale-x-100' : 'before:scale-x-0'}`}
+                    className={`text-[12px] font-bold font-base uppercase tracking-[0.14em] transition-colors duration-200 relative before:content-[''] before:absolute before:-bottom-1 before:left-0 before:w-full before:h-0.5 before:bg-current before:transition-transform before:duration-300 ${isActive ? 'before:scale-x-100' : 'before:scale-x-0'}`}
                     style={{ color: isActive ? colors.navbar_hover : colors.navbar_text }}
                     onMouseEnter={e => (e.currentTarget.style.color = colors.navbar_hover)}
                     onMouseLeave={e => (e.currentTarget.style.color = isActive ? colors.navbar_hover : colors.navbar_text)}
@@ -262,7 +250,7 @@ export default function Navbar() {
 
                 {/* Cart Reminder Popup */}
                 {showCartReminder && (
-                  <div className="absolute top-full right-0 mt-3 w-80 bg-white rounded-[30px] shadow-2xl border border-[#4A5D23]/10 overflow-hidden z-[110] animate-in slide-in-from-top-4 fade-in duration-300">
+                  <div className="absolute top-full right-0 mt-3 w-80 bg-white rounded-[30px] shadow-2xl border border-[#4A5D23]/10 overflow-hidden z-[120] animate-in slide-in-from-top-4 fade-in duration-300">
                     {/* Background Texture */}
                     <div
                       className="absolute inset-0 z-0 opacity-[0.08] pointer-events-none"
@@ -276,6 +264,7 @@ export default function Navbar() {
                       onClick={(e) => {
                         e.stopPropagation();
                         setShowCartReminder(false);
+                        sessionStorage.removeItem('justSignedIn');
                       }}
                       className="absolute top-3 right-3 p-2 text-[#5B4A31]/40 hover:text-[#4A5D23] transition-all hover:bg-[#4A5D23]/5 rounded-full z-50"
                     >
@@ -296,7 +285,10 @@ export default function Navbar() {
                           </p>
                           <Link
                             href="/cart"
-                            onClick={() => setShowCartReminder(false)}
+                            onClick={() => {
+                              setShowCartReminder(false);
+                              sessionStorage.removeItem('justSignedIn');
+                            }}
                             className="inline-flex items-center gap-2 text-[10px] font-black font-ui uppercase tracking-widest text-white px-5 py-2.5 rounded-xl transition-all shadow-xl hover:-translate-y-0.5 active:translate-y-0"
                             style={{ backgroundColor: '#4A5D23' }}
                           >
@@ -309,9 +301,72 @@ export default function Navbar() {
                 )}
               </div>
 
-              <Link href="/account" className="relative p-2 group" suppressHydrationWarning>
-                <User className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
-              </Link>
+              {/* Profile / Account Dropdown */}
+              <div className="relative group flex items-center" suppressHydrationWarning>
+                <Link href={isAuthenticated ? "/account" : "/login"} className="relative p-2 block group-hover:text-[#3B5D3B] transition-colors">
+                  {isAuthenticated && user?.avatar_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <div className="h-[22px] w-[22px] rounded-full overflow-hidden ring-1 ring-[#D4A847]/30 group-hover:ring-[#D4A847] transition-all">
+                        <img src={user.avatar_url} alt="Profile" className="h-full w-full object-cover" />
+                    </div>
+                  ) : (
+                    <User className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
+                  )}
+                </Link>
+                
+                {/* Account Dropdown Desktop */}
+                <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[120] transform origin-top-right scale-95 group-hover:scale-100 overflow-hidden">
+                  <div className="py-2">
+                    {isAuthenticated ? (
+                       <>
+                          <div className="px-5 py-4 border-b border-gray-50 bg-[#3B5D3B]/5">
+                            <p className="text-sm font-bold text-gray-800 truncate">{user?.name || 'My Account'}</p>
+                            <p className="text-xs text-gray-500 truncate mt-0.5">{user?.email}</p>
+                          </div>
+                          <div className="p-2 space-y-1">
+                            <Link href="/account" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:text-[#3B5D3B] hover:bg-[#3B5D3B]/5 transition-all">
+                               <Settings className="h-4 w-4" /> Account Settings
+                            </Link>
+                            <Link href="/account/orders" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:text-[#3B5D3B] hover:bg-[#3B5D3B]/5 transition-all">
+                               <Package className="h-4 w-4" /> My Orders
+                            </Link>
+                            <Link href="/account/wishlist" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:text-[#3B5D3B] hover:bg-[#3B5D3B]/5 transition-all">
+                               <Heart className="h-4 w-4" /> My Wishlist
+                            </Link>
+                          </div>
+                          <div className="border-t border-gray-100 my-1"></div>
+                          <div className="p-2">
+                            <button 
+                              onClick={() => {
+                                logout();
+                                toast.success('Logged out successfully');
+                                router.push('/');
+                              }} 
+                              className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-all font-semibold"
+                            >
+                               <LogOut className="h-4 w-4" /> Sign Out
+                            </button>
+                          </div>
+                       </>
+                    ) : (
+                       <>
+                          <div className="px-5 py-4 border-b border-gray-50 bg-[#3B5D3B]/5">
+                             <p className="text-sm font-bold text-gray-800">Welcome to Vedashi</p>
+                             <p className="text-xs text-gray-500 mt-0.5">Sign in to easily track orders, save items, and more.</p>
+                          </div>
+                          <div className="p-2 space-y-1">
+                            <Link href="/login" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-white bg-[#3B5D3B] hover:bg-[#4A724A] transition-all shadow-md shadow-[#3B5D3B]/20">
+                               <LogIn className="h-4 w-4" /> Sign In
+                            </Link>
+                            <Link href="/signup" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-all">
+                               <UserPlus className="h-4 w-4" /> Create Account
+                            </Link>
+                          </div>
+                       </>
+                    )}
+                  </div>
+                </div>
+              </div>
 
               {/* Mobile toggle */}
               <button suppressHydrationWarning onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2" style={{ color: colors.navbar_text }}>
@@ -366,7 +421,7 @@ export default function Navbar() {
                           return (
                             <div key={parent.category_id} className="relative group/cat">
                               <Link
-                                href={`/products?category=${encodeURIComponent(parent.name)}`}
+                                href={`/products?category=${parent.slug}`}
                                 className="flex items-center justify-between px-5 py-2.5 text-sm font-medium transition-colors duration-150"
                                 style={{ color: colors.navbar_text }}
                                 onMouseEnter={e => (e.currentTarget.style.color = colors.navbar_hover)}
@@ -381,7 +436,7 @@ export default function Navbar() {
                                     {subs.map(sub => (
                                       <Link
                                         key={sub.category_id}
-                                        href={`/products?category=${encodeURIComponent(parent.name)}&sub_category=${encodeURIComponent(sub.name)}`}
+                                        href={`/products?category=${parent.slug}&sub_category=${sub.slug}`}
                                         className="block px-5 py-2 text-sm text-gray-600 transition-colors duration-150"
                                         style={{ color: colors.navbar_text }}
                                         onMouseEnter={e => {
@@ -493,7 +548,7 @@ export default function Navbar() {
             {parentCategories.map(parent => (
               <div key={parent.category_id} className="flex flex-col">
                 <Link
-                  href={`/products?category=${encodeURIComponent(parent.name)}`}
+                  href={`/products?category=${parent.slug}`}
                   onClick={() => setMobileOpen(false)}
                   className="py-2 px-3 font-semibold text-sm transition-colors"
                   style={{ color: colors.navbar_text }}
@@ -505,7 +560,7 @@ export default function Navbar() {
                 {categories.filter(c => c.parent_id === parent.category_id).map(sub => (
                   <Link
                     key={sub.category_id}
-                    href={`/products?category=${encodeURIComponent(parent.name)}&sub_category=${encodeURIComponent(sub.name)}`}
+                    href={`/products?category=${parent.slug}&sub_category=${sub.slug}`}
                     onClick={() => setMobileOpen(false)}
                     className="py-1.5 pl-7 pr-3 text-sm border-l-2 border-gray-100 ml-4 transition-colors"
                     style={{ color: colors.navbar_text, opacity: 0.75 }}
@@ -523,6 +578,77 @@ export default function Navbar() {
                 ))}
               </div>
             ))}
+
+            {/* Profile Section */}
+            <div className="border-t border-gray-100 my-2" />
+            <p className="px-3 text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-2">My Account</p>
+            {isAuthenticated ? (
+              <div className="flex flex-col gap-1 px-2">
+                <div className="px-3 py-2 bg-[#3B5D3B]/5 rounded-lg mb-1 flex items-center gap-3">
+                  {user?.avatar_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={user.avatar_url} alt="Profile" className="h-[36px] w-[36px] rounded-full object-cover ring-1 ring-[#D4A847]/30" />
+                  ) : (
+                      <div className="h-[36px] w-[36px] rounded-full bg-[#3B5D3B]/10 flex items-center justify-center flex-shrink-0">
+                          <User className="h-[18px] w-[18px] text-[#3B5D3B]" />
+                      </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-gray-800 truncate">{user?.name}</p>
+                    <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                  </div>
+                </div>
+                <Link
+                  href="/account"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 py-2.5 px-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-[#3B5D3B]/5 transition-colors"
+                >
+                  <Settings className="h-4 w-4" /> Account Settings
+                </Link>
+                <Link
+                  href="/account/orders"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 py-2.5 px-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-[#3B5D3B]/5 transition-colors"
+                >
+                  <Package className="h-4 w-4" /> My Orders
+                </Link>
+                <Link
+                  href="/account/wishlist"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 py-2.5 px-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-[#3B5D3B]/5 transition-colors"
+                >
+                  <Heart className="h-4 w-4" /> My Wishlist
+                </Link>
+                <button
+                  onClick={() => {
+                    setMobileOpen(false);
+                    logout();
+                    toast.success('Logged out successfully');
+                    router.push('/');
+                  }}
+                  className="flex items-center gap-3 py-2.5 px-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors mt-2"
+                >
+                  <LogOut className="h-4 w-4" /> Sign Out
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2 px-3 pb-2 pt-1">
+                <Link
+                  href="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium text-white bg-[#3B5D3B] hover:bg-[#4A724A] transition-colors shadow-md shadow-[#3B5D3B]/20"
+                >
+                  <LogIn className="h-4 w-4" /> Sign In
+                </Link>
+                <Link
+                  href="/signup"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-colors"
+                >
+                  <UserPlus className="h-4 w-4" /> Create Account
+                </Link>
+              </div>
+            )}
 
             {/* Hotline */}
             <div className="border-t border-gray-100 my-2" />
