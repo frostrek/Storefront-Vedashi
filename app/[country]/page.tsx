@@ -299,9 +299,9 @@ export default function HomePage() {
             <p className="relative z-10 mt-4 text-[#C9B87A]/80 text-sm sm:text-base max-w-lg mx-auto">
               Receive weekly Ayurvedic insights, seasonal recipes, and early access to physician-curated kits.
             </p>
-            <div className="relative z-10 mt-8 flex flex-wrap justify-center gap-4">
-              <Link href="/login" className="rounded-lg border-2 border-white/30 bg-white/10 px-8 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/20 hover:-translate-y-0.5">Login</Link>
-              <Link href="/login" className="rounded-lg bg-[#C9B87A] px-8 py-3 text-sm font-semibold text-[#2C2C2C] transition-all hover:bg-[#D4C38A] hover:-translate-y-0.5 shadow-lg">Sign Up</Link>
+            <div className="relative z-10 mt-8 flex flex-col sm:flex-row max-w-md mx-auto justify-center gap-3">
+              <input type="email" placeholder="Enter your email" className="w-full sm:w-auto flex-grow rounded-lg border-2 border-white/30 bg-white/10 px-4 py-3 text-sm text-white placeholder-white/80 focus:outline-none focus:border-white/60 backdrop-blur-sm transition-all" />
+              <button className="w-full sm:w-auto rounded-lg bg-[#C9B87A] px-8 py-3 text-sm font-semibold text-[#2C2C2C] transition-all hover:bg-[#D4C38A] hover:-translate-y-0.5 shadow-lg whitespace-nowrap">Subscribe</button>
             </div>
             <p className="relative z-10 mt-6 text-[10px] text-white/40 tracking-wide">We respect your peace. Unsubscribe at any time.</p>
           </div>
