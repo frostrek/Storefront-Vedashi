@@ -92,13 +92,13 @@ export default function HelpCenterPage() {
                 <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-[#4A5D23]/10 to-transparent z-0"></div>
                 
                 <div className="max-w-4xl mx-auto text-center relative z-10">
-                    <span className="inline-block px-4 py-1.5 rounded-full bg-[#4A5D23]/10 text-[#2D3A15] text-xs font-bold tracking-widest uppercase mb-6">
+                    <span className="inline-block px-4 py-1.5 rounded-full bg-[#4A5D23]/50 text-[#2D3A15] text-xs font-bold tracking-widest uppercase mb-6">
                         Vedic Support
                     </span>
                     <h1 className="text-4xl md:text-6xl font-bold text-[#1a2408] mb-6 leading-tight">
                         How can we <span className="text-[#4A5D23]">help you?</span>
                     </h1>
-                    <p className="text-[#5B4A31] text-lg mb-10 max-w-2xl mx-auto leading-relaxed">
+                    <p className="text-[#5B4A31] text-lg mb-8 max-w-2xl mx-auto font-bold leading-relaxed">
                         Find guidance, answers, and support for your Ayurvedic journey.
                     </p>
                     <div className="relative max-w-2xl mx-auto group">
