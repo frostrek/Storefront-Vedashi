@@ -177,8 +177,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (!prev) return null;
             const updated = { ...prev, ...updates };
             localStorage.setItem(USER_KEY, JSON.stringify(updated));
-            // Trigger login event to simulate an update broadcast
-            notifyListeners('login', updated);
+            // Notify listeners outside the state updater to avoid
+            // "Cannot update a component while rendering a different component"
+            setTimeout(() => notifyListeners('login', updated), 0);
             return updated;
         });
     }, [notifyListeners]);
