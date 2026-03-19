@@ -150,23 +150,43 @@ export default function MyWallet({ customerId }: MyWalletProps) {
                     </div>
                 </div>
 
-                {/* Next Tier Hint */}
-                <div className="bg-[#1A2E1A]/[0.02] border-2 border-dashed border-[#D4A847]/30 p-6 rounded-[2rem] shadow-sm flex flex-col justify-center relative overflow-hidden group hover:bg-white hover:border-solid hover:border-[#D4A847]/50 transition-all duration-500">
-                    <div className="absolute -bottom-4 -right-4 p-3 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-1000 rotate-12 transform scale-150">
+                {/* Tier Benefits & Badge */}
+                <div className="bg-white border-2 border-[#F0EAD6] p-6 rounded-[2rem] shadow-sm flex flex-col relative overflow-hidden group hover:border-[#D4A847]/30 hover:shadow-xl transition-all duration-500">
+                    <div className="absolute -bottom-4 -right-4 p-3 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-1000 rotate-12 transform scale-150 pointer-events-none">
                         <Award className="h-24 w-24 text-[#D4A847]" />
                     </div>
-                    <div className="relative z-10">
-                        <div className="text-[10px] font-bold text-[#D4A847] uppercase tracking-widest mb-3 flex items-center gap-2">
-                           <div className="h-1 w-1 rounded-full bg-[#D4A847]" /> Tier Benefits
+                    
+                    {/* Badge Icon Top Right or Top Center */}
+                    <div className="flex-1">
+                        <div className="mb-6 flex justify-between items-start">
+                            <div className="h-16 w-16 rounded-2xl flex items-center justify-center shadow-md transform group-hover:scale-110 transition-transform duration-500 border"
+                                 style={{ 
+                                     backgroundColor: badge_color ? `${badge_color}15` : '#D4A84715',
+                                     borderColor: badge_color ? `${badge_color}30` : '#D4A84730'
+                                 }}>
+                                <Award className="h-8 w-8" style={{ color: badge_color || '#D4A847' }} />
+                            </div>
                         </div>
-                        <ul className="space-y-2">
-                             <li className="text-[10px] font-medium text-[#4A5D4A] flex items-center gap-1.5">
-                                <Check className="h-3 w-3 text-emerald-600" /> Multiplier: {wallet.tier?.points_multiplier || 1}x
-                             </li>
-                             <li className="text-[10px] font-medium text-[#4A5D4A] flex items-center gap-1.5">
-                                <Check className="h-3 w-3 text-emerald-600" /> Discount: {wallet.tier?.discount_percent || 0}%
-                             </li>
-                        </ul>
+
+                        <div className="relative z-10 mt-auto">
+                            <div className="text-[10px] font-bold text-[#D4A847] uppercase tracking-widest mb-4 flex items-center gap-2">
+                               <div className="h-1 w-1 rounded-full bg-[#D4A847]" /> Tier Benefits
+                            </div>
+                            <ul className="space-y-3">
+                                 <li className="text-[11px] font-medium text-[#1A2E1A] flex items-center gap-2">
+                                    <div className="h-5 w-5 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100">
+                                        <Check className="h-3 w-3 text-emerald-600" />
+                                    </div>
+                                    Multiplier: <span className="font-bold">{wallet.tier?.points_multiplier || 1}x</span>
+                                 </li>
+                                 <li className="text-[11px] font-medium text-[#1A2E1A] flex items-center gap-2">
+                                    <div className="h-5 w-5 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100">
+                                        <Check className="h-3 w-3 text-emerald-600" />
+                                    </div>
+                                    Discount: <span className="font-bold">{wallet.tier?.discount_percent || 0}%</span>
+                                 </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -260,7 +280,7 @@ export default function MyWallet({ customerId }: MyWalletProps) {
                  <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div className="max-w-md">
                         <h4 className="text-2xl font-bold mb-2 text-[#D4A847]">The Essence of Reciprocity</h4>
-                        <p className="text-sm text-white/80 leading-relaxed italic">
+                        <p className="text-sm text-white/80 leading-relaxed">
                             "In Nature, everything given returns in abundance. Your loyalty reflects the harmony of our shared values."
                         </p>
                     </div>
