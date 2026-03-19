@@ -2424,13 +2424,27 @@ export default function AccountPage() {
                                                     </div>
                                                 )}
                                             </div>
-                                            <button
-                                                onClick={() => fileInputRef.current?.click()}
-                                                disabled={imageUploading}
-                                                className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-[#36453A] text-white flex items-center justify-center shadow-md hover:bg-[#2A362D] transition-transform hover:scale-110 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#36453A]/30"
-                                            >
-                                                <Camera className="h-3.5 w-3.5" />
-                                            </button>
+
+                                            {/* Image Action Buttons */}
+                                            <div className="absolute -bottom-1 -right-1 flex gap-2">
+                                                {profileImageUrl && !imageUploading && (
+                                                    <button
+                                                        onClick={handleRemoveImage}
+                                                        className="h-8 w-8 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md hover:bg-red-600 transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-red-200"
+                                                        title="Remove Photo"
+                                                    >
+                                                        <Trash2 className="h-3.5 w-3.5" />
+                                                    </button>
+                                                )}
+                                                <button
+                                                    onClick={() => fileInputRef.current?.click()}
+                                                    disabled={imageUploading}
+                                                    className="h-8 w-8 rounded-full bg-[#36453A] text-white flex items-center justify-center shadow-md hover:bg-[#2A362D] transition-transform hover:scale-110 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#36453A]/30"
+                                                    title="Upload Photo"
+                                                >
+                                                    <Camera className="h-3.5 w-3.5" />
+                                                </button>
+                                            </div>
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-3 mb-1">
