@@ -1281,8 +1281,11 @@ export async function submitReview(data: { product_id: string; rating: number; t
 
 
 export async function getMyReviews() {
-    const res = await authFetch(`${API_URL}/api/reviews/my`);
-    return res.json();
+    try {
+        const res = await authFetch(`${API_URL}/api/reviews/my`);
+        const json = await res.json();
+        return json.success && json.data ? json.data : [];
+    } catch { return []; }
 }
 
 export async function getMyReviewForProduct(productId: string) {
@@ -1291,10 +1294,12 @@ export async function getMyReviewForProduct(productId: string) {
 }
 
 export async function deleteReview(reviewId: string) {
-    const res = await authFetch(`${API_URL}/api/reviews/${reviewId}`, {
-        method: 'DELETE',
-    });
-    return res.json();
+    try {
+        const res = await authFetch(`${API_URL}/api/reviews/${reviewId}`, {
+            method: 'DELETE',
+        });
+        return await res.json();
+    } catch { return { success: false }; }
 }
 
 export async function voteHelpful(reviewId: string, voteType: 'up' | 'down') {
@@ -1965,3 +1970,6 @@ export async function getLegalDocument(slug: string) {
         return null;
     }
 }
+
+
+

@@ -52,12 +52,6 @@ export default function AboutPage() {
                                 Explore Remedies
                                 <ArrowRight className="h-4 w-4" />
                             </Link>
-                            <Link
-                                href="/contact"
-                                className="inline-flex items-center gap-2 rounded-lg border-2 border-white/30 px-7 py-3.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-white/10 hover:-translate-y-0.5"
-                            >
-                                Book Consultation
-                            </Link>
                         </div>
                     </AnimateOnScroll>
                 </div>
@@ -66,7 +60,7 @@ export default function AboutPage() {
             {/* ═══════════════════════════════════════════════════════════
           MISSION — "A Return to Purity"
       ═══════════════════════════════════════════════════════════ */}
-            <section className="py-16 sm:py-24 lg:py-28 px-4">
+            <section className="py-16 sm:py-24 lg:py-28 px-4 relative z-10">
                 <div className="mx-auto max-w-7xl grid grid-cols-1 gap-12 lg:grid-cols-2 items-center">
                     {/* Image + floating card */}
                     <AnimateOnScroll animation="fadeLeft" duration={0.9}>
@@ -134,7 +128,7 @@ export default function AboutPage() {
             {/* ═══════════════════════════════════════════════════════════
           JOURNEY/TIMELINE — "The Path of Prakriti"
       ═══════════════════════════════════════════════════════════ */}
-            <section className="py-16 sm:py-24 lg:py-28 px-4 bg-white">
+            <section className="py-16 sm:py-24 lg:py-28 px-4 bg-white relative z-10">
                 <div className="mx-auto max-w-4xl">
                     <AnimateOnScroll animation="fadeUp">
                         <div className="text-center mb-16">
@@ -197,7 +191,7 @@ export default function AboutPage() {
             {/* ═══════════════════════════════════════════════════════════
           TEAM — "Meet the Visionaries"
       ═══════════════════════════════════════════════════════════ */}
-            <section className="py-16 sm:py-24 lg:py-28 px-4">
+            <section className="py-16 sm:py-24 lg:py-28 px-4 relative z-10">
                 <div className="mx-auto max-w-7xl">
                     <AnimateOnScroll animation="fadeUp">
                         <div className="text-center mb-14">
@@ -236,7 +230,7 @@ export default function AboutPage() {
                             },
                         ].map((member, i) => (
                             <AnimateOnScroll key={i} animation="fadeUp" delay={i * 0.12}>
-                                <div className="rounded-2xl border border-[#E0DCCF] bg-white p-8 text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group">
+                                <div className="rounded-2xl border border-[#E0DCCF] bg-white p-8 text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group shadow-sm">
                                     <div className={`mx-auto mb-5 h-20 w-20 rounded-full ${member.color} flex items-center justify-center transition-transform group-hover:scale-105`}>
                                         <span className="text-2xl font-bold text-[#3B5D3B]">{member.initial}</span>
                                     </div>
@@ -253,7 +247,7 @@ export default function AboutPage() {
             {/* ═══════════════════════════════════════════════════════════
           VALUES — "Sourced by Nature, Verified by Science"
       ═══════════════════════════════════════════════════════════ */}
-            <section className="py-16 sm:py-24 lg:py-28 px-4 bg-[#F5F2E8] relative overflow-hidden">
+            <section className="py-16 sm:py-24 lg:py-28 px-4 bg-[#F5F2E8] relative overflow-hidden z-10">
                 {/* Realistic Leaf Watermarks */}
                 <img
                     src="/leaf-watermark.png"
@@ -292,7 +286,7 @@ export default function AboutPage() {
                                 { title: 'Online Satsangs', desc: 'Monthly virtual gatherings with our founding physicians.', icon: BookOpen },
                             ].map((val, i) => (
                                 <AnimateOnScroll key={i} animation="scaleUp" delay={i * 0.1}>
-                                    <div className="rounded-2xl bg-white border border-[#E0DCCF] p-6 transition-all hover:shadow-md group">
+                                    <div className="rounded-2xl bg-white border border-[#E0DCCF] p-6 transition-all hover:shadow-md group shadow-sm">
                                         <div className="h-10 w-10 rounded-lg bg-[#3B5D3B]/10 flex items-center justify-center mb-3 group-hover:bg-[#3B5D3B]/20 transition-colors">
                                             <val.icon className="h-5 w-5 text-[#3B5D3B]" />
                                         </div>
@@ -309,7 +303,7 @@ export default function AboutPage() {
             {/* ═══════════════════════════════════════════════════════════
           TESTIMONIAL
       ═══════════════════════════════════════════════════════════ */}
-            <section className="py-16 sm:py-24 lg:py-28 px-4">
+            <section className="py-16 sm:py-24 lg:py-28 px-4 relative z-10">
                 <AnimateOnScroll animation="fadeUp" className="mx-auto max-w-3xl text-center">
                     <div className="flex justify-center gap-1 mb-6">
                         {Array.from({ length: 5 }).map((_, i) => (

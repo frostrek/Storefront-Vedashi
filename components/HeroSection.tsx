@@ -70,12 +70,6 @@ export default function HeroSection() {
                                 Shop Remedies
                                 <ArrowRight className="h-4 w-4" />
                             </Link>
-                            <Link
-                                href="/contact"
-                                className="inline-flex items-center gap-2 rounded-lg border-2 border-[#3B5D3B] px-7 py-3.5 text-sm font-semibold text-[#3B5D3B] transition-all duration-300 hover:bg-[#3B5D3B] hover:text-white hover:-translate-y-0.5 font-ui"
-                            >
-                                Book Consultation
-                            </Link>
                         </div>
                     </div>
 
