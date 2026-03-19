@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { 
     Send, MessageSquare, Sparkles, AlertCircle, 
@@ -20,10 +20,12 @@ const CATEGORIES = [
     { id: 'contact', label: 'Collaborations', icon: Mail, color: '#4A5D23' },
 ];
 
-export default function CustomerEnquiryPage() {
+function CustomerEnquiryContent() {
     const params = useParams();
+    const searchParams = useSearchParams();
     const country = params?.country || 'in';
     const { user, isAuthenticated } = useAuth();
+    const orderIdParam = searchParams?.get('orderId') || '';
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [form, setForm] = useState({
@@ -34,7 +36,7 @@ export default function CustomerEnquiryPage() {
         message: ''
     });
 
-    // Sync auth state to form
+    // Sync auth state and order ID to form
     useEffect(() => {
         if (isAuthenticated && user) {
             setForm(prev => ({
@@ -44,6 +46,18 @@ export default function CustomerEnquiryPage() {
             }));
         }
     }, [isAuthenticated, user]);
+
+    // Pre-fill form when orderId is provided
+    useEffect(() => {
+        if (orderIdParam) {
+            setForm(prev => ({
+                ...prev,
+                type: 'complaint',
+                subject: `Issue with Order #${orderIdParam.split('-')[0].toUpperCase()}`,
+                message: `Hi, I need help with my order (ID: ${orderIdParam}).\n\nPlease describe your issue here...`
+            }));
+        }
+    }, [orderIdParam]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -327,5 +341,17 @@ export default function CustomerEnquiryPage() {
                 </div>
             </main>
         </div>
+    );
+}
+
+export default function CustomerEnquiryPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center">
+                <Leaf className="h-8 w-8 animate-spin text-[#4A5D23]" />
+            </div>
+        }>
+            <CustomerEnquiryContent />
+        </Suspense>
     );
 }

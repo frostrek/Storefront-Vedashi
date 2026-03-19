@@ -370,7 +370,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                 <div
                     ref={borderLineRef}
                     className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#3d5c3a] via-[#5a8a56] to-transparent rounded-b"
-                    style={{ scaleX: 0, transformOrigin: 'left center' }}
+                    style={{ transform: 'scaleX(0)', transformOrigin: 'left center' }}
                 />
 
                 {/* ── Inner content: slides in from right (parallax) ─────────── */}

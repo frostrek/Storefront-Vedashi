@@ -1457,7 +1457,7 @@ export default function AccountPage() {
                                                 // Safely acquire the first item
                                                 const fItem: any = orderItemsData[0];
                                                 const prodName = fItem?.product?.product_name || fItem?.product_name || order.first_item?.product_name || 'Product';
-                                                const prodImg = fItem?.product?.images?.[0] || fItem?.product?.thumbnail_url || order.first_item?.thumbnail_url || null;
+                                                const prodImg = fItem?.thumbnail_url || fItem?.product?.thumbnail_url || fItem?.product?.primary_image_url || fItem?.product?.images?.[0] || order.first_item?.thumbnail_url || null;
 
                                                 const isSelected = selectedOrderDetails?.order_id === order.order_id;
 
@@ -1605,7 +1605,7 @@ export default function AccountPage() {
                                                             onClick={() => handleTrackOrder(selectedOrderDetails.order_id)}
                                                             className="w-full bg-white text-[#36453A] rounded-xl py-3 text-sm font-bold shadow-sm hover:bg-[#F8F5F0] transition-colors flex items-center justify-center gap-2 relative z-10"
                                                         >
-                                                            Track on Maps <ChevronRight className="h-4 w-4" />
+                                                            Track Order <ChevronRight className="h-4 w-4" />
                                                         </button>
                                                     </div>
 
@@ -1614,7 +1614,7 @@ export default function AccountPage() {
                                                         <h4 className="text-[11px] font-bold tracking-widest text-[#36453A] uppercase mb-4">Items Summary</h4>
                                                         <div className="rounded-2xl border border-[#E8E1D5] bg-[#F8F5F0]/50 divide-y divide-[#E8E1D5]">
                                                             {(selectedOrderDetails.items || []).map((item: any) => {
-                                                                const prodImg = item.product?.images?.[0] || item.product?.thumbnail_url || null;
+                                                                const prodImg = item.thumbnail_url || item.product?.thumbnail_url || item.product?.primary_image_url || item.product?.images?.[0] || null;
                                                                 const prodName = item.product?.product_name || item.product_name || 'Product';
                                                                 return (
                                                                     <div key={item.order_item_id} className="p-4 flex items-center justify-between gap-4">
@@ -1699,14 +1699,36 @@ export default function AccountPage() {
                                                         >
                                                             <Download className="h-3.5 w-3.5" /> Invoice
                                                         </button>
-                                                        <button className="flex-1 flex justify-center items-center gap-2 border border-[#E8E1D5] bg-white rounded-xl py-2.5 text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors shadow-sm">
+                                                        <button
+                                                            onClick={() => router.push(`/${country}/help-center/support?orderId=${selectedOrderDetails.order_id.split('-')[0].toUpperCase()}`)}
+                                                            className="flex-1 flex justify-center items-center gap-2 border border-[#E8E1D5] bg-white rounded-xl py-2.5 text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors shadow-sm"
+                                                        >
                                                             <Mail className="h-3.5 w-3.5" /> Support
                                                         </button>
                                                     </div>
 
                                                     <button
                                                         className="w-full bg-[#36453A] text-white rounded-xl py-3 text-sm font-bold flex items-center justify-center gap-2 hover:bg-[#2A362D] transition-colors shadow-sm"
-                                                        onClick={() => toast.success("Items added to cart.")}
+                                                        onClick={async () => {
+                                                            const items = selectedOrderDetails.items || [];
+                                                            if (items.length === 0) {
+                                                                toast.error('No items found in this order.');
+                                                                return;
+                                                            }
+                                                            const toastId = toast.loading('Adding items to cart...');
+                                                            try {
+                                                                for (const item of items) {
+                                                                    const productId = item.product_id || item.product?.product_id;
+                                                                    const variantId = item.variant_id || item.variant?.variant_id || null;
+                                                                    if (productId) {
+                                                                        await addCartItem(productId, variantId, item.quantity || 1);
+                                                                    }
+                                                                }
+                                                                toast.success('All items added to cart!', { id: toastId });
+                                                            } catch {
+                                                                toast.error('Failed to add some items to cart.', { id: toastId });
+                                                            }
+                                                        }}
                                                     >
                                                         <ShoppingCart className="h-4 w-4" /> Buy These Items Again
                                                     </button>
