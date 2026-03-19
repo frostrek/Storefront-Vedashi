@@ -180,7 +180,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const updated = { ...prev, ...updates };
             localStorage.setItem(USER_KEY, JSON.stringify(updated));
             // Trigger login event to simulate an update broadcast
-            // Defer notification until after the current render/update cycle to avoid React errors
+            // Notify listeners outside the state updater to avoid React update errors
             setTimeout(() => notifyListeners('login', updated), 0);
             return updated;
         });

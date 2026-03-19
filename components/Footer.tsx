@@ -158,7 +158,7 @@ export default function Footer() {
                                 </Link>
                             </li>
                             <li>
-                                <button onClick={openSettings} className="text-sm font-base font-medium text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors bg-transparent border-none p-0 cursor-pointer text-left">
+                                <button suppressHydrationWarning onClick={openSettings} className="text-sm font-base font-medium text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors bg-transparent border-none p-0 cursor-pointer text-left">
                                     Cookie Settings
                                 </button>
                             </li>
