@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@plugin "@tailwindcss/typography";
+/* @plugin "@tailwindcss/typography"; */
 
 /* === Vedashi â€” Premium Ayurvedic Wellness Theme === */
 
@@ -16,58 +16,51 @@
   --color-charcoal: #2C2C2C;
   --color-warm-gray: #6B6B60;
   --color-light-border: #D4CFC0;
-  --font-sans: 'Roboto', system-ui, -apple-system, sans-serif;
+  --font-accent: 'Cormorant Garamond', serif;
+  --font-ui: 'Outfit', sans-serif;
+  --font-base: 'Manrope', system-ui, -apple-system, sans-serif;
 }
 
 :root {
   --background: #FAF8F0;
   --foreground: #2C2C2C;
+  --font-base: var(--font-base);
+  --font-ui: var(--font-ui);
+  --font-accent: var(--font-accent);
 }
 
+.font-base { font-family: var(--font-base); }
+.font-ui { font-family: var(--font-ui); }
+.font-accent { font-family: var(--font-accent); }
+
 html {
-  font-size: 16px;
   scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans);
-  font-size: 1rem;
+  font-family: var(--font-base);
   font-weight: 400;
-  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
   top: 0px !important;
 }
 
-/* === Typography Scale === */
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-sans);
-  line-height: 1.2;
+h1, .font-display {
+  font-family: var(--font-accent);
+  font-weight: 600;
 }
 
-h1 { font-size: 2.5rem; font-weight: 700; }
-h2 { font-size: 2rem; font-weight: 600; }
-h3 { font-size: 1.75rem; font-weight: 600; }
-h4 { font-size: 1.5rem; font-weight: 500; }
-h5 { font-size: 1.25rem; font-weight: 500; }
-h6 { font-size: 1rem; font-weight: 500; }
-
-small { font-size: 0.875rem; }
-
-button, input, textarea, select {
-  font-family: var(--font-sans);
+h2 {
+  font-family: var(--font-accent);
+  font-weight: 600;
 }
 
-/* === Responsive Typography === */
-@media (max-width: 768px) {
-  h1 { font-size: 2rem; }
-  h2 { font-size: 1.75rem; }
-  h3 { font-size: 1.5rem; }
-  h4 { font-size: 1.25rem; }
-  h5 { font-size: 1.125rem; }
+h3, h4, h5, h6 {
+  font-family: var(--font-base);
+  font-weight: 600;
 }
 
 /* ============================================
@@ -462,6 +455,7 @@ div.skiptranslate,
 .legal-rich-text h3, 
 .legal-rich-text h4 {
   color: #1A1A1A;
+  font-family: var(--font-serif);
   font-weight: 700;
   margin-top: 2.5rem;
   margin-bottom: 1.25rem;
@@ -799,6 +793,15 @@ div.skiptranslate,
   color: #1A1A1A;
 }
 
+.cart-step-item button:hover .cart-step-circle {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(45, 59, 45, 0.15);
+}
+
+.cart-step-item button:active .cart-step-circle {
+  transform: scale(0.95);
+}
+
 .cart-step-line {
   width: 60px;
   height: 1px;
@@ -865,7 +868,7 @@ div.skiptranslate,
 
 .cart-item-title {
   color: #1A1A1A;
-
+  font-family: 'Playfair Display', Georgia, serif;
 }
 
 /* --- Quantity Controls (Light Theme) --- */
@@ -952,7 +955,7 @@ div.skiptranslate,
 }
 
 .ritual-summary-title {
-
+  font-family: 'Playfair Display', Georgia, serif;
   font-size: 20px;
   font-weight: 700;
   color: white;
@@ -1054,7 +1057,7 @@ div.skiptranslate,
 }
 
 .ritual-summary-total-value {
-
+  font-family: 'Playfair Display', Georgia, serif;
   font-size: 32px;
   font-weight: 700;
   color: white;
@@ -1173,7 +1176,7 @@ div.skiptranslate,
 
 /* --- Section Titles --- */
 .cart-saved-section-title {
-
+  font-family: 'Playfair Display', Georgia, serif;
   font-size: 20px;
   font-weight: 600;
   color: #1A1A1A;

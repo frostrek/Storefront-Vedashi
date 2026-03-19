@@ -74,13 +74,13 @@ export default function PromoBanner() {
                     {/* First copy */}
                     <div className="flex shrink-0 items-center gap-16 px-8">
                         {messageArray.map((msg, i) => (
-                            <span key={`a-${i}`} className="whitespace-nowrap font-bold tracking-[0.2em]">{msg}</span>
+                            <span key={`a-${i}`} className="whitespace-nowrap font-bold tracking-[0.2em] font-accent text-sm">{msg}</span>
                         ))}
                     </div>
                     {/* Second copy for seamless loop */}
                     <div className="flex shrink-0 items-center gap-16 px-8">
                         {messageArray.map((msg, i) => (
-                            <span key={`b-${i}`} className="whitespace-nowrap font-bold tracking-[0.2em]">{msg}</span>
+                            <span key={`b-${i}`} className="whitespace-nowrap font-bold tracking-[0.2em] font-accent text-sm">{msg}</span>
                         ))}
                     </div>
                 </div>
@@ -95,7 +95,7 @@ export default function PromoBanner() {
             className="text-[12px] overflow-hidden py-2 border-b border-[#D5CAA4]"
         >
             <div className="relative w-full px-4 mx-auto max-w-[1600px]">
-                <div className={`flex whitespace-nowrap font-bold tracking-[0.2em] ${count > 1 ? 'justify-between' : 'justify-center'} w-full ${getEffectClass()}`}>
+                <div className={`flex whitespace-nowrap font-bold tracking-[0.2em] font-accent text-sm ${count > 1 ? 'justify-between' : 'justify-center'} w-full ${getEffectClass()}`}>
                     {messageArray.map((msg, index) => (
                         <span key={index}>{msg}</span>
                     ))}

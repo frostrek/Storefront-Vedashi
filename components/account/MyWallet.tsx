@@ -94,26 +94,26 @@ export default function MyWallet({ customerId }: MyWalletProps) {
 
                     <div className="relative z-10">
                         <div className="flex items-center justify-between mb-4">
-                             <p className="text-white/40 text-[10px] font-bold tracking-[0.3em] uppercase">Active Plan</p>
+                             <p className="text-white/60 text-[10px] font-bold tracking-[0.3em] uppercase">Active Plan</p>
                              <div className="h-2 w-2 rounded-full bg-[#D4A847] shadow-[0_0_10px_#D4A847] animate-pulse" />
                         </div>
                         <h3 className="text-4xl md:text-5xl font-bold text-[#D4A847] mb-4 tracking-tight">
                             {tier_name || 'Bronze Ritualist'}
                         </h3>
                         {benefits && Array.isArray(benefits) && benefits.length > 0 ? (
-                            <p className="text-sm text-white/70 leading-relaxed max-w-md font-medium">
+                            <p className="text-sm text-white/90 leading-relaxed max-w-md font-medium">
                                 {benefits.join(', ')}.
                             </p>
                         ) : (
-                            <p className="text-sm text-white/50 italic leading-relaxed">
+                            <p className="text-sm text-white/70 italic leading-relaxed">
                                 Unlock your potential. Your wellness journey is just beginning.
                             </p>
                         )}
                     </div>
-
-                    <div className="relative z-10 flex items-end justify-between border-t border-white/5 pt-6 mt-4">
+ 
+                    <div className="relative z-10 flex items-end justify-between border-t border-white/10 pt-6 mt-4">
                         <div>
-                             <p className="text-[10px] uppercase font-bold text-white/30 tracking-[0.2em] mb-1">Aura Balance</p>
+                             <p className="text-[10px] uppercase font-bold text-white/50 tracking-[0.2em] mb-1">Aura Balance</p>
                              <div className="flex items-baseline gap-2">
                                 <span className="text-5xl font-black text-white">{balance || 0}</span>
                                 <span className="text-xs font-bold text-[#D4A847] uppercase tracking-tighter">Points</span>
@@ -213,7 +213,7 @@ export default function MyWallet({ customerId }: MyWalletProps) {
                                                     {txn.transaction_type.replace(/_/g, ' ')}
                                                 </p>
                                                 <div className="flex items-center gap-3 mt-1">
-                                                    <p className="text-[10px] font-bold text-[#4A5D4A]/60 uppercase tracking-widest">
+                                                    <p className="text-[10px] font-bold text-[#4A5D4A]/90 uppercase tracking-widest">
                                                         {new Date(txn.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                                                     </p>
                                                     {txn.reference_type === 'order' && (

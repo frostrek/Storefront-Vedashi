@@ -123,6 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 if (json.data.access_token) {
                     localStorage.setItem(TOKEN_KEY, json.data.access_token);
                 }
+                sessionStorage.setItem('justSignedIn', String(Date.now()));
                 notifyListeners('login', u);
                 return { success: true, role: u.role, access_token: json.data.access_token };
             }
@@ -168,6 +169,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(u);
         localStorage.setItem(USER_KEY, JSON.stringify(u));
         localStorage.setItem(TOKEN_KEY, accessToken);
+        sessionStorage.setItem('justSignedIn', String(Date.now()));
         notifyListeners('login', u);
     }, [notifyListeners]);
 
@@ -177,8 +179,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (!prev) return null;
             const updated = { ...prev, ...updates };
             localStorage.setItem(USER_KEY, JSON.stringify(updated));
-            // Notify listeners outside the state updater to avoid
-            // "Cannot update a component while rendering a different component"
+            // Trigger login event to simulate an update broadcast
+            // Notify listeners outside the state updater to avoid React update errors
             setTimeout(() => notifyListeners('login', updated), 0);
             return updated;
         });
@@ -222,6 +224,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 if (json.data.access_token) {
                     localStorage.setItem(TOKEN_KEY, json.data.access_token);
                 }
+                sessionStorage.setItem('justSignedIn', String(Date.now()));
                 notifyListeners('login', u);
                 return {
                     success: true,

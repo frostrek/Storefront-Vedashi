@@ -19,6 +19,7 @@ interface Category {
   category_id: string;
   parent_id: string | null;
   name: string;
+  slug: string;
 }
 
 interface HeaderConfig {
@@ -85,7 +86,6 @@ export default function Navbar() {
   const { isAuthenticated, user, logout } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [showCartReminder, setShowCartReminder] = useState(false);
-  const [prevTotalItems, setPrevTotalItems] = useState(0);
   const [scrolled, setScrolled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<HeaderConfig>(DEFAULT_CONFIG);
@@ -125,35 +125,23 @@ export default function Navbar() {
       .finally(() => setLoading(false));
   }, []);
 
-  // 1. Trigger when a new product is added (but not on initial load)
-  const isFirstCount = useRef(true);
+  // 2. Trigger ONLY when customer explicitly just signed in (within last 15 seconds)
   useEffect(() => {
-    if (!cartLoading) {
-      if (isFirstCount.current) {
-        setPrevTotalItems(totalItems);
-        isFirstCount.current = false;
-        return;
+    if (isAuthenticated && !cartLoading) {
+      const justSignedIn = sessionStorage.getItem('justSignedIn');
+      if (justSignedIn) {
+        const ts = parseInt(justSignedIn, 10);
+        // Fallback for 'true' or timestamp within last 15s
+        if (justSignedIn === 'true' || (!isNaN(ts) && Date.now() - ts < 15000)) {
+          if (totalItems > 0 && !showCartReminder) {
+            setShowCartReminder(true);
+          }
+        } else {
+          sessionStorage.removeItem('justSignedIn');
+        }
       }
-
-      if (totalItems > prevTotalItems && totalItems > 0) {
-        setShowCartReminder(true);
-      }
-      setPrevTotalItems(totalItems);
     }
-  }, [totalItems, cartLoading, prevTotalItems]);
-
-  // 2. Trigger when customer logs in
-  useEffect(() => {
-    if (isAuthenticated && !cartLoading && totalItems > 0) {
-      const hasShownOnLogin = sessionStorage.getItem('cartReminderLoginShown');
-      if (!hasShownOnLogin) {
-        setShowCartReminder(true);
-        sessionStorage.setItem('cartReminderLoginShown', 'true');
-      }
-    } else if (!isAuthenticated) {
-      sessionStorage.removeItem('cartReminderLoginShown');
-    }
-  }, [isAuthenticated, totalItems, cartLoading]);
+  }, [isAuthenticated, totalItems, cartLoading, showCartReminder]);
 
   useEffect(() => {
     getCategories().then(cats => {
@@ -169,11 +157,11 @@ export default function Navbar() {
   if (pathname?.endsWith('/login') || pathname?.endsWith('/signup')) return null;
 
   return (
-    <header className={`w-full sticky top-0 z-[100] transition-all duration-500 ${scrolled ? 'shadow-lg' : ''}`}>
+    <header className={`w-full sticky top-0 z-[1000] transition-all duration-500 ${scrolled ? 'shadow-lg' : ''}`}>
 
       {/* ═══════════════ MAIN NAVBAR ═══════════════ */}
       <div
-        className={`border-b transition-all duration-500 ${scrolled
+        className={`relative z-[100] border-b transition-all duration-500 ${scrolled
           ? 'bg-white/80 backdrop-blur-xl border-[#3B5D3B]/10 shadow-[0_2px_20px_rgba(59,93,59,0.08)]'
           : 'bg-white border-gray-200 shadow-sm'
           }`}
@@ -196,15 +184,15 @@ export default function Navbar() {
             {/* Center Nav Links */}
             <nav className="hidden md:flex flex-shrink-0 items-center justify-center gap-8 mx-4">
               {visibleLinks.map(link => {
-                const isActive = link.url === '/' 
+                const isActive = link.url === '/'
                   ? pathname === '/' || pathname === `/${pathname?.split('/')[1]}`
                   : pathname?.includes(link.url);
-                  
+
                 return (
                   <Link
                     key={link.label}
                     href={link.url}
-                    className={`text-[13px] font-semibold uppercase tracking-widest transition-colors duration-200 relative before:content-[''] before:absolute before:-bottom-1 before:left-0 before:w-full before:h-0.5 before:bg-current before:transition-transform before:duration-300 ${isActive ? 'before:scale-x-100' : 'before:scale-x-0'}`}
+                    className={`text-[12px] font-bold font-base uppercase tracking-[0.14em] transition-colors duration-200 relative before:content-[''] before:absolute before:-bottom-1 before:left-0 before:w-full before:h-0.5 before:bg-current before:transition-transform before:duration-300 ${isActive ? 'before:scale-x-100' : 'before:scale-x-0'}`}
                     style={{ color: isActive ? colors.navbar_hover : colors.navbar_text }}
                     onMouseEnter={e => (e.currentTarget.style.color = colors.navbar_hover)}
                     onMouseLeave={e => (e.currentTarget.style.color = isActive ? colors.navbar_hover : colors.navbar_text)}
@@ -237,7 +225,7 @@ export default function Navbar() {
                 <Heart className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
                 {wishlistCount > 0 && (
                   <span
-                    className="absolute -top-0.5 -right-0.5 text-white text-[9px] font-bold h-4 w-4 flex items-center justify-center rounded-full"
+                    className="absolute -top-0.5 -right-0.5 text-white text-[9px] font-black font-ui h-4 w-4 flex items-center justify-center rounded-full tabular-nums"
                     style={{ backgroundColor: colors.cart_badge_bg }}
                   >
                     {wishlistCount}
@@ -252,7 +240,7 @@ export default function Navbar() {
                   <ShoppingCart className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
                   {totalItems > 0 && (
                     <span
-                      className="absolute -top-0.5 -right-0.5 text-white text-[9px] font-bold h-4 w-4 flex items-center justify-center rounded-full"
+                      className="absolute -top-0.5 -right-0.5 text-white text-[9px] font-black font-ui h-4 w-4 flex items-center justify-center rounded-full tabular-nums"
                       style={{ backgroundColor: colors.cart_badge_bg }}
                     >
                       {totalItems}
@@ -262,7 +250,7 @@ export default function Navbar() {
 
                 {/* Cart Reminder Popup */}
                 {showCartReminder && (
-                  <div className="absolute top-full right-0 mt-3 w-80 bg-white rounded-[30px] shadow-2xl border border-[#4A5D23]/10 overflow-hidden z-[110] animate-in slide-in-from-top-4 fade-in duration-300">
+                  <div className="absolute top-full right-0 mt-3 w-80 bg-white rounded-[30px] shadow-2xl border border-[#4A5D23]/10 overflow-hidden z-[120] animate-in slide-in-from-top-4 fade-in duration-300">
                     {/* Background Texture */}
                     <div
                       className="absolute inset-0 z-0 opacity-[0.08] pointer-events-none"
@@ -276,6 +264,7 @@ export default function Navbar() {
                       onClick={(e) => {
                         e.stopPropagation();
                         setShowCartReminder(false);
+                        sessionStorage.removeItem('justSignedIn');
                       }}
                       className="absolute top-3 right-3 p-2 text-[#5B4A31]/40 hover:text-[#4A5D23] transition-all hover:bg-[#4A5D23]/5 rounded-full z-50"
                     >
@@ -288,16 +277,19 @@ export default function Navbar() {
                         </div>
                         <div className="pr-2">
                           <div className="flex items-center gap-2 mb-1">
-                            <h4 className="text-base font-bold text-[#1a2408]">Items left in cart</h4>
+                            <h4 className="text-base font-display font-bold text-[#1a2408]">Items left in cart</h4>
                             <Sparkles className="h-3 w-3 text-[#c8a84e]" />
                           </div>
-                          <p className="text-xs text-[#5B4A31] leading-relaxed mb-4 font-medium italic">
+                          <p className="text-xs text-[#5B4A31] leading-relaxed mb-4 font-medium italic font-sans">
                             You previously left {totalItems} {totalItems === 1 ? 'item' : 'items'} in your cart. Checkout fast before they go out of stock!
                           </p>
                           <Link
                             href="/cart"
-                            onClick={() => setShowCartReminder(false)}
-                            className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white px-5 py-2.5 rounded-xl transition-all shadow-xl hover:-translate-y-0.5 active:translate-y-0"
+                            onClick={() => {
+                              setShowCartReminder(false);
+                              sessionStorage.removeItem('justSignedIn');
+                            }}
+                            className="inline-flex items-center gap-2 text-[10px] font-black font-ui uppercase tracking-widest text-white px-5 py-2.5 rounded-xl transition-all shadow-xl hover:-translate-y-0.5 active:translate-y-0"
                             style={{ backgroundColor: '#4A5D23' }}
                           >
                             Go to Cart <ArrowRight className="h-3.5 w-3.5" />
@@ -429,7 +421,7 @@ export default function Navbar() {
                           return (
                             <div key={parent.category_id} className="relative group/cat">
                               <Link
-                                href={`/products?category=${encodeURIComponent(parent.name)}`}
+                                href={`/products?category=${parent.slug}`}
                                 className="flex items-center justify-between px-5 py-2.5 text-sm font-medium transition-colors duration-150"
                                 style={{ color: colors.navbar_text }}
                                 onMouseEnter={e => (e.currentTarget.style.color = colors.navbar_hover)}
@@ -444,7 +436,7 @@ export default function Navbar() {
                                     {subs.map(sub => (
                                       <Link
                                         key={sub.category_id}
-                                        href={`/products?category=${encodeURIComponent(parent.name)}&sub_category=${encodeURIComponent(sub.name)}`}
+                                        href={`/products?category=${parent.slug}&sub_category=${sub.slug}`}
                                         className="block px-5 py-2 text-sm text-gray-600 transition-colors duration-150"
                                         style={{ color: colors.navbar_text }}
                                         onMouseEnter={e => {
@@ -501,17 +493,17 @@ export default function Navbar() {
 
             {/* Main links (from config, filtered to enabled) */}
             {visibleLinks.map(link => {
-              const isActive = link.url === '/' 
+              const isActive = link.url === '/'
                 ? pathname === '/' || pathname === `/${pathname?.split('/')[1]}`
                 : pathname?.includes(link.url);
-                
+
               return (
                 <Link
                   key={link.label}
                   href={link.url}
                   onClick={() => setMobileOpen(false)}
                   className="py-2.5 px-3 rounded-lg font-semibold text-sm uppercase tracking-wide transition-colors"
-                  style={{ 
+                  style={{
                     color: isActive ? colors.navbar_hover : colors.navbar_text,
                     backgroundColor: isActive ? `${colors.navbar_hover}12` : 'transparent'
                   }}
@@ -556,7 +548,7 @@ export default function Navbar() {
             {parentCategories.map(parent => (
               <div key={parent.category_id} className="flex flex-col">
                 <Link
-                  href={`/products?category=${encodeURIComponent(parent.name)}`}
+                  href={`/products?category=${parent.slug}`}
                   onClick={() => setMobileOpen(false)}
                   className="py-2 px-3 font-semibold text-sm transition-colors"
                   style={{ color: colors.navbar_text }}
@@ -568,7 +560,7 @@ export default function Navbar() {
                 {categories.filter(c => c.parent_id === parent.category_id).map(sub => (
                   <Link
                     key={sub.category_id}
-                    href={`/products?category=${encodeURIComponent(parent.name)}&sub_category=${encodeURIComponent(sub.name)}`}
+                    href={`/products?category=${parent.slug}&sub_category=${sub.slug}`}
                     onClick={() => setMobileOpen(false)}
                     className="py-1.5 pl-7 pr-3 text-sm border-l-2 border-gray-100 ml-4 transition-colors"
                     style={{ color: colors.navbar_text, opacity: 0.75 }}

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Roboto } from "next/font/google";
+import { Manrope, Outfit, Cormorant_Garamond } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
@@ -19,11 +19,25 @@ import MaintenancePage from "@/components/MaintenancePage";
 import { generateOrganizationJsonLd, generateWebSiteJsonLd } from "@/lib/seo";
 import ButterflyEffect from "@/components/animations/ButterflyEffect";
 
-const roboto = Roboto({
+const manrope = Manrope({
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  variable: "--font-roboto",
+  variable: "--font-base",
   display: "swap",
+  weight: ["400", "500", "600", "700"],
+});
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-ui",
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
+});
+
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  variable: "--font-accent",
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -70,12 +84,12 @@ export default async function RootLayout({
       maintenanceMessage = data.maintenance.message || "The Vedashi experience is currently undergoing routine maintenance.";
     }
   } catch (error) {
-    // Ignore network errors here
+    // Ignore network errors her
   }
 
   if (isMaintenance) {
     return (
-      <html lang="en" className={roboto.variable} suppressHydrationWarning>
+      <html lang="en" className={`${manrope.variable} ${outfit.variable} ${cormorant.variable}`} suppressHydrationWarning>
         <body className="min-h-screen bg-[#1A1814]">
           <MaintenancePage message={maintenanceMessage} />
         </body>
@@ -84,7 +98,7 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="en" className={roboto.variable} suppressHydrationWarning>
+    <html lang="en" className={`${manrope.variable} ${outfit.variable} ${cormorant.variable}`} suppressHydrationWarning>
       <body className="min-h-screen flex flex-col" suppressHydrationWarning>
         <Script
           id="structured-data-organization"

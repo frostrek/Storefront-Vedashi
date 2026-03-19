@@ -30,7 +30,7 @@ export default function HeroSection() {
                     {/* Left Column — Text */}
                     <div className="max-w-xl">
                         {/* Badge */}
-                        <span className="inline-block px-4 py-1.5 rounded-full bg-[#3B5D3B] text-white text-[11px] font-bold tracking-widest uppercase mb-6 animate-fade-in">
+                        <span className="inline-block px-4 py-1.5 rounded-full bg-[#3B5D3B] text-white text-[11px] font-bold tracking-widest uppercase mb-6 animate-fade-in font-ui">
                             ESTD 1984
                         </span>
 
@@ -65,14 +65,14 @@ export default function HeroSection() {
                         >
                             <Link
                                 href="/shop"
-                                className="inline-flex items-center gap-2.5 rounded-lg bg-[#3B5D3B] px-7 py-3.5 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:bg-[#2D4A2D] hover:-translate-y-0.5 hover:shadow-xl"
+                                className="inline-flex items-center gap-2.5 rounded-lg bg-[#3B5D3B] px-7 py-3.5 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:bg-[#2D4A2D] hover:-translate-y-0.5 hover:shadow-xl font-ui"
                             >
                                 Shop Remedies
                                 <ArrowRight className="h-4 w-4" />
                             </Link>
                             <Link
                                 href="/contact"
-                                className="inline-flex items-center gap-2 rounded-lg border-2 border-[#3B5D3B] px-7 py-3.5 text-sm font-semibold text-[#3B5D3B] transition-all duration-300 hover:bg-[#3B5D3B] hover:text-white hover:-translate-y-0.5"
+                                className="inline-flex items-center gap-2 rounded-lg border-2 border-[#3B5D3B] px-7 py-3.5 text-sm font-semibold text-[#3B5D3B] transition-all duration-300 hover:bg-[#3B5D3B] hover:text-white hover:-translate-y-0.5 font-ui"
                             >
                                 Book Consultation
                             </Link>
@@ -121,7 +121,7 @@ export default function HeroSection() {
                         {trustBadges.map((badge, i) => (
                             <div key={i} className="flex items-center gap-2.5 flex-1 min-w-[200px] justify-center">
                                 <badge.icon className="h-4 w-4 text-[#C9B87A] flex-shrink-0" />
-                                <span className="text-[10px] sm:text-[11px] font-bold tracking-[0.15em] text-[#E8DCAF] uppercase whitespace-nowrap">
+                                <span className="text-[10px] sm:text-[11px] font-bold tracking-[0.15em] text-[#E8DCAF] uppercase whitespace-nowrap font-ui">
                                     {badge.label}
                                 </span>
                             </div>

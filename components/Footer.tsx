@@ -6,6 +6,7 @@ import { Facebook, Instagram, Twitter, Youtube, Linkedin, Globe, Mail, Phone, Ma
 import { useEffect, useState } from 'react';
 import RegionSwitcher from './RegionSwitcher';
 import GoogleTranslateWidget from './GoogleTranslateWidget';
+import { useCookieConsent } from '@/context/CookieConsentContext';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
 
@@ -44,6 +45,7 @@ interface FooterData {
 export default function Footer() {
     const pathname = usePathname();
     const [data, setData] = useState<FooterData | null>(null);
+    const { openSettings } = useCookieConsent();
 
 
     useEffect(() => {
@@ -101,10 +103,10 @@ export default function Footer() {
 
                     {/* Explore column */}
                     <div>
-                        <h4 className="font-semibold text-[#333] text-base mb-3">Explore</h4>
+                        <h4 className="font-display font-bold text-[#333] text-lg mb-3">Explore</h4>
                         <ul className="space-y-2">
                             <li>
-                                <Link href="/about" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
+                                <Link href="/about" className="text-sm font-base font-medium text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
                                     Our Story
                                 </Link>
                             </li>
@@ -128,7 +130,7 @@ export default function Footer() {
 
                     {/* Support column */}
                     <div>
-                        <h4 className="font-semibold text-[#333] text-base mb-3">Support</h4>
+                        <h4 className="font-display font-bold text-[#333] text-lg mb-3">Support</h4>
                         <ul className="space-y-2">
                             <li>
                                 <Link href="/help" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
@@ -155,12 +157,17 @@ export default function Footer() {
                                     Privacy Policy
                                 </Link>
                             </li>
+                            <li>
+                                <button onClick={openSettings} className="text-sm font-base font-medium text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors bg-transparent border-none p-0 cursor-pointer text-left">
+                                    Cookie Settings
+                                </button>
+                            </li>
                         </ul>
                     </div>
 
                     {/* Newsletter column */}
                     <div>
-                        <h4 className="font-semibold text-[#333] text-base mb-3">Newsletter</h4>
+                        <h4 className="font-display font-bold text-[#333] text-lg mb-3">Newsletter</h4>
                         <p className="text-sm text-[#6b6b6b] leading-relaxed mb-4">
                             Join our community for weekly wellness rituals.
                         </p>
@@ -174,7 +181,7 @@ export default function Footer() {
                             <button
                                 suppressHydrationWarning
                                 type="submit"
-                                className="px-5 py-2 bg-[#3B5D3B] text-white text-sm font-medium rounded-md hover:bg-[#2d472d] transition-colors whitespace-nowrap"
+                                className="px-5 py-2 bg-[#3B5D3B] text-white text-xs font-black font-ui uppercase tracking-widest rounded-md hover:bg-[#2d472d] transition-colors whitespace-nowrap"
                             >
                                 Join
                             </button>
@@ -184,13 +191,13 @@ export default function Footer() {
 
                 {/* ── Bottom bar ── */}
                 <div className="mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[#e8e8e0]">
-                    <p className="text-xs text-[#999]">
+                    <p className="text-[10px] font-bold font-base uppercase tracking-widest text-[#999]">
                         © 2026 Vedashi. All rights reserved.
                     </p>
                     <div className="flex items-center gap-6">
                         <RegionSwitcher upward={true} />
                         <GoogleTranslateWidget upward={true} />
-                        <p className="text-xs text-[#999] italic">
+                        <p className="text-xs text-[#999] italic font-accent">
                             Gently crafted for modern balance.
                         </p>
                     </div>

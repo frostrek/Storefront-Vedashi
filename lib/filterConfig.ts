@@ -70,14 +70,14 @@ export const FILTER_CONFIGS: FilterConfig[] = [
         key: 'bestSellers',
         label: 'Best Sellers',
         type: 'toggle',
-        urlParam: 'bestSellers',
+        urlParam: 'bestSeller',
         defaultValue: false,
     },
     {
         key: 'newArrivals',
         label: 'New Arrivals',
         type: 'toggle',
-        urlParam: 'newArrivals',
+        urlParam: 'newArrival',
         defaultValue: false,
     },
 ];

@@ -226,19 +226,17 @@ function ProductImageGalleryInner({
     return (
         <>
             <div
-                className={`${styles.galleryContainer} ${images.length <= 1 ? styles.singleImageLayout : ''}`}
+                className={styles.galleryContainer}
                 role="region"
                 aria-label="Product image gallery"
             >
                 {/* Thumbnail strip */}
-                {images.length > 1 && (
-                    <ImageThumbnailStrip
-                        images={images}
-                        activeIndex={activeIndex}
-                        onSelect={handleThumbnailSelect}
-                        onHover={handleThumbnailHover}
-                    />
-                )}
+                <ImageThumbnailStrip
+                    images={images}
+                    activeIndex={activeIndex}
+                    onSelect={handleThumbnailSelect}
+                    onHover={handleThumbnailHover}
+                />
 
                 {/* Main preview area — contains preview + zoom panel side by side */}
                 <div className={styles.previewZoomRow}>

@@ -10,7 +10,7 @@ import { SkeletonProductGrid } from '@/components/Skeleton';
 import SearchBar from '@/components/SearchBar';
 import {
     SlidersHorizontal, X, Leaf, Loader2,
-    Sparkles, ChevronLeft, ChevronRight
+    Sparkles, ChevronLeft, ChevronRight, LayoutGrid, List
 } from 'lucide-react';
 import { useFilters } from '@/hooks/useFilters';
 import { FILTER_CONFIGS, SORT_OPTIONS } from '@/lib/filterConfig';
@@ -63,6 +63,18 @@ function ProductsContent() {
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('vedashi_view_mode') as 'grid' | 'list';
+            if (saved === 'grid' || saved === 'list') {
+                setViewMode(saved);
+            }
+        }
+    }, []);
 
     // Dynamic filter options (loaded from API)
     const [brandOptions, setBrandOptions] = useState<string[]>([]);
@@ -88,7 +100,7 @@ function ProductsContent() {
     }, []);
 
     const buildParams = useCallback((page: number) => {
-        const params: Record<string, unknown> = {
+        const params: Record<string, any> = {
             page,
             limit: ITEMS_PER_PAGE,
         };
@@ -107,9 +119,13 @@ function ProductsContent() {
             const ratingValues = filters.ratings.map(r => parseInt(r)).filter(n => !isNaN(n));
             if (ratingValues.length > 0) params.min_rating = Math.min(...ratingValues);
         }
-        if (filters.inStock) params.availability = 'in_stock';
+        if (filters.inStock) params.inStock = true;
+        if (filters.bestSellers) params.bestSeller = true;
+        if (filters.newArrivals) params.newArrival = true;
         if (filters.discountMin) params.discount_min = filters.discountMin;
         if (Object.keys(filters.attributes).length > 0) params.attributes = filters.attributes;
+        if (filters.bestSellers) params.bestSeller = true;
+        if (filters.newArrivals) params.newArrival = true;
         return params;
     }, [filters]);
 
@@ -118,47 +134,16 @@ function ProductsContent() {
         setLoading(true);
         setProducts([]);
 
-        if (filters.bestSellers) {
-            const bsParams: Record<string, any> = { limit: ITEMS_PER_PAGE, page };
-            if (filters.category) bsParams.category = filters.category;
-            if (filters.country) bsParams.country = filters.country;
-            if (filters.priceRange[0] !== 0) bsParams.minPrice = filters.priceRange[0];
-            if (filters.priceRange[1] !== Infinity) bsParams.maxPrice = filters.priceRange[1];
-            const result = await getBestSellers(bsParams);
-            if (!cancelled.value) {
-                setProducts(result.data);
-                setMeta(result.meta);
-                setLoading(false);
-            }
-            return;
-        }
-
-        if (filters.newArrivals) {
-            const naParams: Record<string, any> = { limit: ITEMS_PER_PAGE, page };
-            if (filters.category) naParams.category = filters.category;
-            if (filters.country) naParams.region = filters.country;
-            if (filters.brands.length === 1) naParams.brand = filters.brands[0];
-            if (filters.priceRange[0] !== 0) naParams.min_price = filters.priceRange[0];
-            if (filters.priceRange[1] !== Infinity) naParams.max_price = filters.priceRange[1];
-            if (filters.inStock) naParams.in_stock = true;
-            const result = await getNewArrivals(naParams);
-            if (!cancelled.value) {
-                setProducts(result.data);
-                setMeta(result.meta);
-                setLoading(false);
-            }
-            return;
-        }
-
-        // All other cases (including search) go through filter endpoint
+        // All cases go through filter endpoint to support combining any filter with Best Sellers/New Arrivals
         const params = buildParams(page);
-        const result = await getFilteredProducts(params as any);
+        const result = await getFilteredProducts(params);
+
         if (!cancelled.value) {
             setProducts(result.data);
             setMeta(result.meta);
             setLoading(false);
         }
-    }, [filters, buildParams]);
+    }, [buildParams]);
 
     // Reset to page 1 whenever filters change
     useEffect(() => {
@@ -228,7 +213,6 @@ function ProductsContent() {
                             value={filters.category}
                             onChange={(e) => {
                                 setCategory(e.target.value);
-                                setSubCategory(''); // Reset subcategory when category changes
                             }}
                         >
                             <option value="">All Categories</option>
@@ -445,7 +429,7 @@ function ProductsContent() {
                     )}
                 </button>
 
-                <div className="lg:grid lg:grid-cols-[300px_1fr] lg:gap-12 items-start">
+                <div className="lg:grid lg:grid-cols-[300px_1fr] lg:gap-12">
                     {/* ─── Desktop Sidebar ─── */}
                     <aside className="hidden lg:block">
                         <div className="sticky top-28 h-[calc(100vh-120px)] overflow-y-auto rounded-3xl border border-[#3d5c3a]/5 bg-white/90 backdrop-blur-md px-6 py-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] custom-scrollbar">
@@ -497,11 +481,31 @@ function ProductsContent() {
                                 </span>
                                 {loading && <Loader2 className="h-4 w-4 animate-spin text-[#3d5c3a]" />}
                             </p>
-                            <SortDropdown
-                                value={filters.sort || SORT_OPTIONS[0].value}
-                                onChange={setSort}
-                                options={SORT_OPTIONS}
-                            />
+                            <div className="flex items-center gap-3">
+                                <div className="flex items-center rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
+                                    <button
+                                        onClick={() => { setViewMode('grid'); localStorage.setItem('vedashi_view_mode', 'grid'); }}
+                                        className={`p-2 transition-colors cursor-pointer ${viewMode === 'grid' ? 'bg-[#3d5c3a] text-white' : 'text-gray-400 hover:text-gray-600'}`}
+                                        aria-label="Grid view"
+                                        title="Grid view"
+                                    >
+                                        <LayoutGrid className="h-4 w-4" />
+                                    </button>
+                                    <button
+                                        onClick={() => { setViewMode('list'); localStorage.setItem('vedashi_view_mode', 'list'); }}
+                                        className={`p-2 transition-colors cursor-pointer ${viewMode === 'list' ? 'bg-[#3d5c3a] text-white' : 'text-gray-400 hover:text-gray-600'}`}
+                                        aria-label="List view"
+                                        title="List view"
+                                    >
+                                        <List className="h-4 w-4" />
+                                    </button>
+                                </div>
+                                <SortDropdown
+                                    value={filters.sort || SORT_OPTIONS[0].value}
+                                    onChange={setSort}
+                                    options={SORT_OPTIONS}
+                                />
+                            </div>
                         </div>
 
                         <ActiveFilterChips
@@ -514,7 +518,7 @@ function ProductsContent() {
                             <SkeletonProductGrid count={8} />
                         ) : products.length > 0 ? (
                             <>
-                                <div ref={gridRef} className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-3">
+                                <div ref={gridRef} className={viewMode === 'grid' ? 'grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-3' : 'flex flex-col gap-4'}>
                                     {products.map((product, i) => (
                                         <div
                                             key={`${product.product_id}-${i}`}
@@ -524,6 +528,7 @@ function ProductsContent() {
                                             <ProductCard
                                                 product={product}
                                                 priority={i < 4}
+                                                layout={viewMode}
                                             />
                                         </div>
                                     ))}

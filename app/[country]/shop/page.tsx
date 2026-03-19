@@ -118,7 +118,7 @@ export default function ShopPage() {
               {dbCategories.slice(0, 7).map((cat, i) => (
                 <Link
                   key={cat.category_id}
-                  href={`/products?category=${encodeURIComponent(cat.name)}`}
+                  href={`/products?category=${cat.slug}`}
                   className="group flex flex-col items-center gap-6 transition-all duration-500 hover:-translate-y-2"
                 >
                   <div className={`relative w-full aspect-square rounded-full ${categoryColors[cat.slug] || 'bg-[#F2F4F2]'} flex items-center justify-center shadow-sm group-hover:shadow-[0_20px_50px_rgba(59,93,59,0.12)] group-hover:bg-[#E2F0E2] transition-all duration-700 overflow-hidden isolate`}>

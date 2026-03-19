@@ -54,7 +54,6 @@ function ImageThumbnailStripInner({
         [images, onHover]
     );
 
-    if (images.length <= 1) return null;
 
     return (
         <div className={styles.thumbStrip} ref={stripRef} role="tablist" aria-label="Product images">

@@ -9,6 +9,7 @@ interface Category {
   category_id: string;
   parent_id: string | null;
   name: string;
+  slug: string;
 }
 
 export default function SecondaryNavbar() {
@@ -58,7 +59,7 @@ export default function SecondaryNavbar() {
               return (
                 <div key={parent.category_id} className="group/nav-item h-full flex items-center shrink-0">
                   <Link
-                    href={`/products?category=${encodeURIComponent(parent.name)}`}
+                    href={`/products?category=${parent.slug}`}
                     className="flex items-center gap-1 h-full px-1.5 hover:text-[#3B5D3B] transition-colors cursor-pointer border-b-2 border-transparent group-hover/nav-item:border-[#3B5D3B]"
                   >
                     {parent.name}
@@ -71,14 +72,14 @@ export default function SecondaryNavbar() {
                         <div className="w-1/4 border-r border-[#3B5D3B]/10 pr-6">
                           <h3 className="text-xl font-extrabold text-gray-900 mb-2">{parent.name}</h3>
                           <p className="text-sm text-gray-500 font-normal">Explore our collection of {parent.name.toLowerCase()}.</p>
-                          <Link href={`/products?category=${encodeURIComponent(parent.name)}`} className="text-[#3B5D3B] hover:underline mt-4 inline-block font-semibold">View All {parent.name}</Link>
+                          <Link href={`/products?category=${parent.slug}`} className="text-[#3B5D3B] hover:underline mt-4 inline-block font-semibold">View All {parent.name}</Link>
                         </div>
                         <div className="w-3/4">
                           <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-6 space-y-4">
                             {subcats.map(sub => (
                               <div key={sub.category_id} className="break-inside-avoid">
                                 <Link
-                                  href={`/products?category=${encodeURIComponent(parent.name)}&sub_category=${encodeURIComponent(sub.name)}`}
+                                  href={`/products?category=${parent.slug}&sub_category=${sub.slug}`}
                                   className="text-[14px] text-gray-600 hover:text-[#3B5D3B] hover:translate-x-1 transition-all inline-block font-semibold py-1"
                                 >
                                   {sub.name}
