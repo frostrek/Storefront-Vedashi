@@ -98,15 +98,92 @@ export default function CartPage() {
         );
     }
 
-    const totalMRP = items.reduce((sum, item) => sum + (item.original_price ?? item.price ?? 0) * item.quantity, 0);
-    const saleDiscount = totalMRP - items.reduce((sum, item) => sum + (item.price ?? 0) * item.quantity, 0);
-    const totalTaxes = items.reduce((sum, item) => sum + ((item as any).pricing?.tax_amount ?? 0), 0);
-    const deliveryFee = couponType === 'free_shipping' ? 0 : (totalPrice > 50 ? 0 : 15); // Default $15 standard
-    const grandTotal = totalPrice - couponDiscount + deliveryFee;
+    // Show saved items section even when cart is empty but saved items exist
+    if (items.length === 0 && savedItems.length > 0) {
+        return (
+            <div className="cart-leaf-bg min-h-screen">
+                <div className="cart-noise-overlay" aria-hidden="true" />
+                <div className="border-b border-[#D4CFC0] bg-[#FFFFFF] sticky top-0 z-20 shadow-sm">
+                    <div className="mx-auto max-w-5xl">
+                        <StepIndicator currentStep={0} />
+                    </div>
+                </div>
+                <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12 relative z-10">
+                    <Link href="/products" className="inline-flex items-center gap-2 text-sm font-semibold text-[#6B8F5E] hover:text-[#5A7A4E] mb-6 transition-colors uppercase tracking-wider">
+                        <ArrowLeft className="h-4 w-4" /> Continue Shopping
+                    </Link>
+                    <div className="cart-item-card text-center py-10 mb-6">
+                        <ShoppingCart className="h-8 w-8 text-[#8B7A3D] mx-auto mb-3" />
+                        <p className="text-[#4A4A4A] font-medium">Your active cart is empty.</p>
+                        <Link href="/products" className="text-sm text-[#6B8F5E] font-semibold hover:underline mt-2 inline-block">Browse Products</Link>
+                    </div>
+                    <div>
+                        <h3 className="cart-saved-section-title">
+                            <Bookmark className="h-5 w-5 text-[#8B7A3D]" />
+                            Saved for Later ({savedItems.length})
+                        </h3>
+                        <div className="space-y-4">
+                            {savedItems.map(item => {
+                                const price = item.price ?? 0;
+                                return (
+                                    <div key={item.cart_item_id} className="cart-item-card flex items-center gap-4 bg-[#FAFAFA]">
+                                        <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img w-16 h-16 rounded-lg flex-shrink-0">
+                                            {item.image_url ? <img src={item.image_url} alt="" /> : <span className="text-xl">🌿</span>}
+                                        </Link>
+                                        <div className="flex-1">
+                                            <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
+                                                <h3 className="text-sm font-bold text-[#1A1A1A] hover:text-[#3d5c3a] transition-colors">{item.product_name || 'Product'}</h3>
+                                            </Link>
+                                            <p className="text-[#4A4A4A] mt-1">{formatPrice(price)}</p>
+                                        </div>
+                                        <div className="flex flex-col items-end gap-2">
+                                            <button onClick={() => { moveToCart(item.cart_item_id); toast.success('Moved to cart'); }} disabled={loading} className="bg-[#6B8F5E] text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-[#5A7A4E]">
+                                                Move to Bag
+                                            </button>
+                                            <button onClick={() => setItemToRemove(item.cart_item_id)} disabled={loading} className="text-[#C0392B] text-[11px] uppercase tracking-wider font-semibold hover:underline">
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+                <ConfirmModal
+                    isOpen={!!itemToRemove}
+                    title="Remove Item"
+                    message="Are you sure you want to remove this item?"
+                    confirmText="Remove"
+                    cancelText="Cancel"
+                    isDestructive={true}
+                    onConfirm={() => {
+                        if (itemToRemove) {
+                            removeItem(itemToRemove);
+                            toast.success('Removed item');
+                            setItemToRemove(null);
+                        }
+                    }}
+                    onCancel={() => setItemToRemove(null)}
+                />
+            </div>
+        );
+    }
 
+    // Separate in-stock vs out-of-stock items
+    const inStockItems = items.filter(i => (i.stock_quantity ?? 0) > 0);
     const outOfStockItems = items.filter(i => (i.stock_quantity ?? 0) === 0);
-    const insufficientStockItems = items.filter(i => (i.stock_quantity ?? 0) > 0 && i.quantity > (i.stock_quantity ?? 0));
-    const hasStockIssues = outOfStockItems.length > 0 || insufficientStockItems.length > 0;
+    const insufficientStockItems = inStockItems.filter(i => i.quantity > (i.stock_quantity ?? 0));
+    const hasInsufficientStock = insufficientStockItems.length > 0;
+
+    // Calculate totals using ONLY in-stock items
+    const totalMRP = inStockItems.reduce((sum, item) => sum + (item.original_price ?? item.price ?? 0) * item.quantity, 0);
+    const saleDiscount = totalMRP - inStockItems.reduce((sum, item) => sum + (item.price ?? 0) * item.quantity, 0);
+    const totalTaxes = inStockItems.reduce((sum, item) => sum + ((item as any).pricing?.tax_amount ?? 0), 0);
+    const inStockTotal = inStockItems.reduce((sum, item) => sum + (item.price ?? 0) * item.quantity, 0);
+    const deliveryFee = couponType === 'free_shipping' ? 0 : (inStockTotal > 50 ? 0 : 15);
+    const grandTotal = inStockTotal - couponDiscount + deliveryFee;
+    const inStockItemCount = inStockItems.reduce((sum, item) => sum + item.quantity, 0);
 
     return (
         <div className="cart-leaf-bg min-h-screen">
@@ -137,12 +214,21 @@ export default function CartPage() {
                                 </div>
                             )}
 
-                            {hasStockIssues && (
+                            {outOfStockItems.length > 0 && (
                                 <div className="mb-4 rounded-xl p-4 text-sm flex items-start gap-3 bg-[#FFF3CD] border border-[#FFEEBA] text-[#856404]">
                                     <span className="mt-0.5">⚠️</span> 
                                     <div>
                                         <p className="font-bold">Inventory Update</p>
-                                        <p>One or more items in your cart are currently out of stock or have insufficient quantity. Please adjust them to proceed.</p>
+                                        <p>Some items in your cart are out of stock. They won&apos;t be included in your order and will be saved for later when you checkout.</p>
+                                    </div>
+                                </div>
+                            )}
+                            {hasInsufficientStock && (
+                                <div className="mb-4 rounded-xl p-4 text-sm flex items-start gap-3 bg-[#FFF3CD] border border-[#FFEEBA] text-[#856404]">
+                                    <span className="mt-0.5">⚠️</span> 
+                                    <div>
+                                        <p className="font-bold">Stock Limited</p>
+                                        <p>One or more items exceed available stock. Please adjust the quantity to proceed.</p>
                                     </div>
                                 </div>
                             )}
@@ -159,7 +245,7 @@ export default function CartPage() {
                                     const hasInsufficientStock = !isOutOfStock && item.quantity > (item.stock_quantity ?? 0);
                                     
                                     return (
-                                        <div key={item.cart_item_id} className={`cart-item-card flex flex-col sm:flex-row gap-6 ${isOutOfStock ? 'opacity-60 grayscale-[0.3]' : ''}`}>
+                                        <div key={item.cart_item_id} className="cart-item-card flex flex-col sm:flex-row gap-6">
                                             {/* Image */}
                                             <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img flex-shrink-0">
                                                 {item.image_url ? (
@@ -195,7 +281,7 @@ export default function CartPage() {
 
                                                 <div className="flex items-center justify-between mt-4">
                                                     {/* Quantity */}
-                                                    <div className="cart-qty-control">
+                                                    <div className={`cart-qty-control ${isOutOfStock ? 'opacity-40' : ''}`}>
                                                         <button onClick={() => updateQuantity(item.cart_item_id, item.quantity - 1)} disabled={loading || isOutOfStock} className="cart-qty-btn disabled:opacity-50">
                                                             <Minus className="h-3 w-3" />
                                                         </button>
@@ -232,7 +318,7 @@ export default function CartPage() {
                                     {savedItems.map(item => {
                                         const price = item.price ?? 0;
                                         return (
-                                            <div key={item.cart_item_id} className="cart-item-card flex items-center gap-4 bg-[#FAFAFA] opacity-80 hover:opacity-100">
+                                            <div key={item.cart_item_id} className="cart-item-card flex items-center gap-4 bg-[#FAFAFA]">
                                                 <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img w-16 h-16 rounded-lg flex-shrink-0">
                                                     {item.image_url ? <img src={item.image_url} alt="" /> : <span className="text-xl">🌿</span>}
                                                 </Link>
@@ -364,12 +450,14 @@ export default function CartPage() {
                                         <Leaf className="w-4 h-4 text-white" />
                                     </div>
                                     Investment Summary
-                                    <span className="ritual-summary-badge">{totalItems} Item{totalItems !== 1 ? 's' : ''}</span>
+                                    <span className="ritual-summary-badge">{inStockItemCount} Item{inStockItemCount !== 1 ? 's' : ''}</span>
                                 </div>
                                 <p className="text-[10px] uppercase tracking-[2px] text-[rgba(255,255,255,0.5)] mb-4 -mt-2">Preparing your path to healing</p>
 
                                 <div className="space-y-1 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                                    {items.map(item => {
+                                    {inStockItems.length === 0 ? (
+                                        <p className="text-[rgba(255,255,255,0.5)] text-xs text-center py-4">No in-stock items in your cart</p>
+                                    ) : inStockItems.map(item => {
                                         const price = item.price ?? 0;
                                         const lineTotal = price * item.quantity;
                                         return (
@@ -484,16 +572,27 @@ export default function CartPage() {
                                 </div>
 
                                 <button
-                                    onClick={() => {
-                                        if (hasStockIssues || loading) return;
+                                    onClick={async () => {
+                                        if (hasInsufficientStock || loading || inStockItems.length === 0) return;
                                         if (!isAuthenticated) {
                                             toast('Please sign in to proceed to checkout', { icon: '🔐' });
                                             router.push('/login?redirect=/cart');
-                                        } else {
-                                            router.push('/checkout');
+                                            return;
                                         }
+                                        // Auto-save out-of-stock items for later before checkout
+                                        if (outOfStockItems.length > 0) {
+                                            for (const oosItem of outOfStockItems) {
+                                                try {
+                                                    await saveForLater(oosItem.cart_item_id);
+                                                } catch (e) {
+                                                    console.warn('Failed to save OOS item for later:', e);
+                                                }
+                                            }
+                                            toast.success(`${outOfStockItems.length} out-of-stock item${outOfStockItems.length > 1 ? 's' : ''} saved for later`);
+                                        }
+                                        router.push('/checkout');
                                     }}
-                                    disabled={hasStockIssues || loading}
+                                    disabled={hasInsufficientStock || loading || inStockItems.length === 0}
                                     className="cart-checkout-btn block w-full text-center hover:bg-[#8B7A3D] disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {isAuthenticated ? 'Confirm & Complete Ritual' : 'Sign In to Checkout'}

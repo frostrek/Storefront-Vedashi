@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useClerk } from '@clerk/nextjs';
 import { useWishlist } from '@/context/WishlistContext';
@@ -16,7 +16,8 @@ import {
     requestEmailChange, verifyEmailChangeProfile,
     getLoyaltyWallet, getMyNotifications, getUnreadNotificationCount,
     markNotificationAsRead, markAllNotificationsAsRead, deleteNotification,
-    lookupPostalCode, getMySupportTickets, replySupportTicket, getSupportTicketDetail
+    lookupPostalCode, getMySupportTickets, replySupportTicket, getSupportTicketDetail,
+    getMyReviews
 } from '@/lib/api';
 import { Order, Address } from '@/types';
 import { COUNTRIES } from '@/lib/countries';
@@ -46,6 +47,8 @@ export default function AccountPage() {
     const { formatPrice } = useCurrency();
     const router = useRouter();
     const params = useParams<{ country: string, tab?: string[] }>();
+    const searchParams = useSearchParams();
+    const urlOrderId = searchParams.get('orderId');
     const country = params?.country || 'in';
     const { user, isAuthenticated, isLoading, logout, updateUser } = useAuth();
     const { signOut: clerkSignOut } = useClerk();
@@ -445,6 +448,7 @@ export default function AccountPage() {
                 _category: t.category,
                 _priority: t.priority,
                 _message_count: parseInt(t.message_count || '0'),
+                _order_id: t.order_id,
             }));
             // Merge both lists and sort by most recent
             const merged = [...(enquiryData || []), ...normalizedTickets];
@@ -540,6 +544,7 @@ export default function AccountPage() {
 
     // Loyalty state
     const [loyaltyData, setLoyaltyData] = useState<any>(null);
+    const [reviewsCount, setReviewsCount] = useState(0);
 
     const fetchLoyaltyData = useCallback(async () => {
         try {
@@ -547,6 +552,17 @@ export default function AccountPage() {
             if (data) setLoyaltyData(data);
         } catch (err) {
             console.error('Failed to fetch loyalty data:', err);
+        }
+    }, []);
+
+    const fetchReviewsCount = useCallback(async () => {
+        try {
+            const data = await getMyReviews();
+            if (data && Array.isArray(data)) {
+                setReviewsCount(data.length);
+            }
+        } catch (err) {
+            console.error('Failed to fetch reviews count:', err);
         }
     }, []);
 
@@ -575,8 +591,12 @@ export default function AccountPage() {
         if (activeTab === 'wallet' || activeTab === 'overview') fetchLoyaltyData();
         if (activeTab === 'profile' || activeTab === 'overview') {
             fetchOrders();
+            fetchReviewsCount();
+            fetchLoyaltyData();
         }
-    }, [activeTab, user?.id, fetchOrders, fetchAddresses, fetchProfile, fetchProfileImage, fetchEnquiries, fetchLoyaltyData]);
+    }, [activeTab, user?.id, fetchOrders, fetchAddresses, fetchProfile, fetchProfileImage, fetchEnquiries, fetchLoyaltyData, fetchReviewsCount]);
+
+
 
     useEffect(() => {
         const handleUpdate = () => {
@@ -611,8 +631,14 @@ export default function AccountPage() {
             }
 
             // Strip out non-DB fields
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { has_password, is_email_verified, is_mobile_verified, email, ...updateData } = profileData;
+            const { has_password, is_email_verified, is_mobile_verified, email, created_at, phone, ...rest } = profileData;
+            
+            const updateData: any = { ...rest };
+            if (phone && phone.trim() !== '') {
+                updateData.phone = phone.trim();
+            } else {
+                updateData.phone = null; // Convert empty string to null to prevent UNIQUE constraint violations
+            }
             
             const res = await updateCustomerProfile(user.id, updateData);
             if (res.success) {
@@ -869,7 +895,7 @@ export default function AccountPage() {
         setManualEdits({ city: false, state: false });
     };
 
-    const handleViewOrderDetails = async (orderId: string) => {
+    const handleViewOrderDetails = useCallback(async (orderId: string) => {
         setIsOrderLoading(true);
         try {
             const res = await getOrderById(orderId);
@@ -884,7 +910,14 @@ export default function AccountPage() {
         } finally {
             setIsOrderLoading(false);
         }
-    };
+    }, []);
+
+    // Handle auto-opening order details from URL param
+    useEffect(() => {
+        if (activeTab === 'orders' && urlOrderId && orders.length > 0) {
+            handleViewOrderDetails(urlOrderId);
+        }
+    }, [activeTab, urlOrderId, orders, handleViewOrderDetails]);
 
     const handleTrackOrder = (orderId: string) => {
         setTrackOrderId(orderId);
@@ -1699,13 +1732,60 @@ export default function AccountPage() {
                                                         >
                                                             <Download className="h-3.5 w-3.5" /> Invoice
                                                         </button>
-                                                        <button
-                                                            onClick={() => router.push(`/${country}/help-center/support?orderId=${selectedOrderDetails.order_id.split('-')[0].toUpperCase()}`)}
-                                                            className="flex-1 flex justify-center items-center gap-2 border border-[#E8E1D5] bg-white rounded-xl py-2.5 text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors shadow-sm"
-                                                        >
-                                                            <Mail className="h-3.5 w-3.5" /> Support
-                                                        </button>
+                                                        {(() => {
+                                                            const linkedTicket = enquiries.find(e => e._order_id === selectedOrderDetails.order_id && e._source === 'ticket');
+                                                            return linkedTicket ? (
+                                                                <button
+                                                                    onClick={() => router.push(`/${country}/help-center/support/${linkedTicket._ticket_id}`)}
+                                                                    className="flex-1 flex justify-center items-center gap-2 border border-[#36453A]/20 bg-[#F8F5F0] rounded-xl py-2.5 text-xs font-bold text-[#36453A] hover:bg-white transition-colors shadow-sm"
+                                                                >
+                                                                    <MessageSquare className="h-3.5 w-3.5" /> View Ticket
+                                                                </button>
+                                                            ) : (
+                                                                <button
+                                                                    onClick={() => router.push(`/${country}/help-center/support?orderId=${selectedOrderDetails.order_id.split('-')[0].toUpperCase()}`)}
+                                                                    className="flex-1 flex justify-center items-center gap-2 border border-[#E8E1D5] bg-white rounded-xl py-2.5 text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors shadow-sm"
+                                                                >
+                                                                    <Mail className="h-3.5 w-3.5" /> Support
+                                                                </button>
+                                                            );
+                                                        })()}
                                                     </div>
+
+                                                    {/* Associated Ticket Messages Preview */}
+                                                    {(() => {
+                                                        const ticket = enquiries.find(e => e._order_id === selectedOrderDetails.order_id && e._source === 'ticket');
+                                                        return ticket ? (
+                                                            <div className="pt-6 border-t border-[#E8E1D5]">
+                                                                <h4 className="text-[11px] font-bold tracking-widest text-[#36453A] uppercase mb-4 flex items-center gap-2">
+                                                                    <MessageCircle className="h-3.5 w-3.5 text-[#D4A847]" /> Inquiry Correspondence
+                                                                </h4>
+                                                                <div className="rounded-2xl border border-[#E8E1D5] bg-[#F8F5F0]/30 p-4 space-y-3">
+                                                                    <div className="flex justify-between items-center">
+                                                                        <span className="text-[10px] font-bold text-[#36453A] uppercase">#{ticket._ticket_number || ticket.feedback_id.slice(0, 8)}</span>
+                                                                        <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
+                                                                            ticket.status === 'resolved' || ticket.status === 'closed' ? 'bg-green-100 text-green-700' : 
+                                                                            ticket.status === 'in_progress' ? 'bg-blue-100 text-blue-700' : 
+                                                                            'bg-amber-100 text-amber-700'
+                                                                        }`}>
+                                                                            {ticket.status}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="relative">
+                                                                        <p className="text-xs text-[#36453A] line-clamp-2 italic leading-relaxed pl-3 border-l-2 border-[#D4A847]/40">
+                                                                            "{ticket.message}"
+                                                                        </p>
+                                                                    </div>
+                                                                    <button
+                                                                        onClick={() => router.push(`/${country}/help-center/support/${ticket._ticket_id}`)}
+                                                                        className="w-full text-[10px] font-black uppercase tracking-[0.1em] text-[#36453A] hover:text-black flex items-center justify-center gap-1.5 mt-2 py-2 rounded-lg bg-white/50 border border-white hover:border-[#E8E1D5] transition-all group"
+                                                                    >
+                                                                        Access All Messages <ChevronRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        ) : null;
+                                                    })()}
 
                                                     <button
                                                         className="w-full bg-[#36453A] text-white rounded-xl py-3 text-sm font-bold flex items-center justify-center gap-2 hover:bg-[#2A362D] transition-colors shadow-sm"
@@ -2485,12 +2565,12 @@ export default function AccountPage() {
                                         </div>
                                         <div className="w-px h-12 bg-[#E8E1D5]"></div>
                                         <div className="text-center">
-                                            <p className="text-3xl font-bold text-[#36453A] mb-1">{(user as any)?.reviews_count || 0}</p>
+                                            <p className="text-3xl font-bold text-[#36453A] mb-1">{reviewsCount}</p>
                                             <p className="text-[10px] font-bold text-warm-gray tracking-widest uppercase">Soulful Reviews</p>
                                         </div>
                                         <div className="w-px h-12 bg-[#E8E1D5]"></div>
                                         <div className="text-center">
-                                            <p className="text-3xl font-bold text-[#D4A847] mb-1">{(user as any)?.seed_points || 0}</p>
+                                            <p className="text-3xl font-bold text-[#D4A847] mb-1">{activePoints}</p>
                                             <p className="text-[10px] font-bold text-[#D4A847]/70 tracking-widest uppercase flex items-center gap-1 justify-center">
                                                 <Star className="h-2.5 w-2.5" /> Seed Points
                                             </p>
@@ -2886,22 +2966,12 @@ export default function AccountPage() {
                                                         key={enquiry.feedback_id}
                                                         onClick={async () => {
                                                             if (enquiry._source === 'ticket') {
-                                                                // Load ticket messages for display
-                                                                const detail = await getSupportTicketDetail(enquiry._ticket_id);
-                                                                if (detail) {
-                                                                    const allMessages = detail.messages || [];
-                                                                    setSelectedEnquiry({
-                                                                        ...enquiry,
-                                                                        message: allMessages[0]?.body || enquiry.message,
-                                                                        replies: allMessages.slice(1).map((m: any) => ({
-                                                                            author_type: m.sender_type, // 'admin' or 'customer'
-                                                                            message: m.body,
-                                                                            timestamp: m.created_at,
-                                                                            sender_name: m.sender_name,
-                                                                        })),
-                                                                    });
+                                                                if (enquiry._order_id) {
+                                                                    // Redirect to the Orders tab with the specific order selected
+                                                                    router.push(`/${country}/account/orders?orderId=${enquiry._order_id}`);
                                                                 } else {
-                                                                    setSelectedEnquiry(enquiry);
+                                                                    // Redirect to the dedicated ticket detail page
+                                                                    router.push(`/${country}/help-center/support/${enquiry._ticket_id}`);
                                                                 }
                                                             } else {
                                                                 setSelectedEnquiry(enquiry);

@@ -183,17 +183,17 @@ export default function ContactPage() {
                             { 
                                 icon: MapPin, 
                                 title: 'VISIT US', 
-                                lines: ['123 Wine Boulevard', 'District 1, Ho Chi Minh City', 'Vietnam'] 
+                                lines: ['JMD Empire, Sector 62', 'Gurgaon, Haryana', 'India'] 
                             },
                             { 
                                 icon: Phone, 
                                 title: 'CALL US', 
-                                lines: ['+84 (0) 28 1234 5678', '+84 (0) 90 123 4567'] 
+                                lines: ['+91 96677 88869'] 
                             },
                             { 
                                 icon: Mail, 
                                 title: 'EMAIL US', 
-                                lines: ['info@kspwines.com', 'orders@kspwines.com'] 
+                                lines: ['info@vedashi.com', 'orders@vedashi.com'] 
                             },
                             { 
                                 icon: Clock, 
