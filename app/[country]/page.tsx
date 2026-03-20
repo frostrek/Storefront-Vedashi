@@ -21,6 +21,11 @@ export default function HomePage() {
   // Newsletter State
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [isSubscribing, setIsSubscribing] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -305,7 +310,6 @@ export default function HomePage() {
           </div>
         </AnimateOnScroll>
       </section>
-
       {/* ═══ 7. NEWSLETTER ═══ */}
       <section className="py-12 sm:py-20 lg:py-24 px-4">
         <AnimateOnScroll animation="scaleUp" className="mx-auto max-w-4xl">
@@ -326,27 +330,36 @@ export default function HomePage() {
             <p className="relative z-10 mt-4 text-[#C9B87A]/80 text-sm sm:text-base max-w-lg mx-auto">
               Receive weekly Ayurvedic insights, seasonal recipes, and early access to physician-curated kits.
             </p>
-            <form onSubmit={handleSubscribe} className="relative z-10 mt-8 flex flex-col sm:flex-row max-w-md mx-auto justify-center gap-3">
-              <input 
-                type="email" 
-                value={newsletterEmail}
-                onChange={(e) => setNewsletterEmail(e.target.value)}
-                placeholder="Enter your email" 
-                className="w-full sm:w-auto flex-grow rounded-lg border-2 border-white/30 bg-white/10 px-4 py-3 text-sm text-white placeholder-white/80 focus:outline-none focus:border-white/60 backdrop-blur-sm transition-all" 
-                disabled={isSubscribing}
-                required
-              />
-              <button 
-                type="submit" 
-                disabled={isSubscribing}
-                className="w-full sm:w-auto rounded-lg bg-[#C9B87A] px-8 py-3 text-sm font-semibold text-[#2C2C2C] transition-all hover:bg-[#D4C38A] hover:-translate-y-0.5 shadow-lg whitespace-nowrap flex items-center justify-center disabled:opacity-70 disabled:hover:translate-y-0 font-ui"
-              >
-                {isSubscribing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Subscribe'}
-              </button>
-            </form>
+            {isMounted && (
+               <form onSubmit={handleSubscribe} className="relative z-10 mt-8 flex flex-col sm:flex-row max-w-md mx-auto justify-center gap-3">
+                 <input 
+                   type="email" 
+                   value={newsletterEmail}
+                   onChange={(e) => setNewsletterEmail(e.target.value)}
+                   placeholder="Enter your email" 
+                   className="w-full sm:w-auto flex-grow rounded-lg border-2 border-white/30 bg-white/10 px-4 py-3 text-sm text-white placeholder-white/80 focus:outline-none focus:border-white/60 backdrop-blur-sm transition-all" 
+                   disabled={isSubscribing}
+                   required
+                 />
+                 <button 
+                   type="submit" 
+                   disabled={isSubscribing}
+                   className="w-full sm:w-auto rounded-lg bg-[#C9B87A] px-8 py-3 text-sm font-semibold text-[#2C2C2C] transition-all hover:bg-[#D4C38A] hover:-translate-y-0.5 shadow-lg whitespace-nowrap flex items-center justify-center disabled:opacity-70 disabled:hover:translate-y-0 font-ui"
+                 >
+                   {isSubscribing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Subscribe'}
+                 </button>
+               </form>
+            )}
+            {!isMounted && (
+               <div className="relative z-10 mt-8 flex flex-col sm:flex-row max-w-md mx-auto justify-center gap-3">
+                 <div className="w-full sm:w-auto flex-grow rounded-lg border-2 border-white/30 bg-white/10 px-4 py-3 h-[48px] animate-pulse"></div>
+                 <div className="w-full sm:w-[120px] rounded-lg bg-[#C9B87A]/50 px-8 py-3 h-[48px] animate-pulse"></div>
+               </div>
+            )}
             <p className="relative z-10 mt-6 text-[10px] text-white/40 tracking-wide">We respect your peace. Unsubscribe at any time.</p>
           </div>
         </AnimateOnScroll>
+
       </section>
     </div>
   );
