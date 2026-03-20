@@ -395,6 +395,7 @@ function ProductDetailContent({ params }: Props) {
                             assets={product.assets}
                             productName={product.product_name}
                             variantId={selectedVariant?.variant_id}
+                            defaultVariantId={product.variants?.find((v: any) => v.is_default)?.variant_id}
                             fallbackImages={product.images}
                             brand={product.brand || undefined}
                             category={product.category || undefined}

@@ -11,6 +11,7 @@ interface ProductImageGalleryProps {
     assets?: ProductAsset[];
     productName: string;
     variantId?: string;
+    defaultVariantId?: string;
     /** Fallback image URLs from product.images (thumbnail_url mapped) */
     fallbackImages?: string[];
     brand?: string;
@@ -28,45 +29,53 @@ function resolveGalleryImages(
     assets: ProductAsset[] | undefined,
     productName: string,
     variantId?: string,
+    defaultVariantId?: string,
     fallbackImages?: string[],
     brand?: string,
     category?: string
 ): GalleryImage[] {
     if (assets && Array.isArray(assets) && assets.length > 0) {
-        let filtered = assets;
-        if (variantId) {
-            // Include images mapped strictly to this variant OR images that have NO variant mapped (shared/global)
-            // But absolutely exclude images mapped to OTHER variants
-            filtered = assets.filter((a) => a.variant_id === variantId || !a.variant_id);
-        }
-        // Always sort so that is_primary is first
-        filtered = [...filtered].sort((a, b) => {
-            if (a.is_primary && !b.is_primary) return -1;
-            if (!a.is_primary && b.is_primary) return 1;
-            return 0;
+        // Logic: Specific Variant -> Default Variant -> Product Level
+        const getFilteredAssets = (vid: string | undefined | null) => assets.filter((a) => {
+            // Important: treat undefined/null/empty string consistently for product-level
+            const targetVid = vid || null;
+            const assetVid = a.variant_id || null;
+            return assetVid === targetVid;
         });
 
-        // Remove duplicates just in case
+        let filtered = getFilteredAssets(variantId); // 1. Specific
+        
+        // 2. Fallback to Product Level (null variant_id) if specific is empty
+        if (filtered.length === 0) {
+            filtered = getFilteredAssets(null);
+        }
+
+        // 3. Fallback to Default Variant if still empty or different
+        if (filtered.length === 0 && defaultVariantId && variantId !== defaultVariantId) {
+            filtered = getFilteredAssets(defaultVariantId);
+        }
+
+        // Always sort within the chosen group so that is_primary is first, then by sort_order
+        const sorted = [...filtered].sort((a, b) => {
+            if (a.is_primary && !b.is_primary) return -1;
+            if (!a.is_primary && b.is_primary) return 1;
+            return (a.sort_order || 0) - (b.sort_order || 0);
+        });
+
+        // Remove duplicates
         const seen = new Set();
-        filtered = filtered.filter(a => {
-            const id = a.asset_id || a.asset_url || a.base64_data;
+        const unique = sorted.filter(a => {
+            const id = a.asset_id || a.cdn_url || a.asset_url || a.base64_data;
             if (!id || seen.has(id)) return false;
             seen.add(id);
             return true;
         });
 
-        // Image assets
-        const imageAssets = filtered.filter((a) => a.media_type !== 'video' || !a.media_type);
-        const videoAssets = filtered.filter((a) => a.media_type === 'video');
-
         const gallery: GalleryImage[] = [];
 
-        // Add images
-        imageAssets.forEach((a, index) => {
+        // Image assets
+        unique.filter((a) => a.media_type !== 'video' || !a.media_type).forEach((a, index) => {
             let src = a.cdn_url || a.asset_url || a.base64_data;
-            const isPrimary = a.is_primary;
-
-            // If there's only 1 fallback image passed and it matches, use it to ensure it's not broken
             if (!src && fallbackImages && fallbackImages.length > 0) {
                 src = fallbackImages[0];
             }
@@ -88,26 +97,17 @@ function resolveGalleryImages(
                 height: a.height,
                 blurhash: a.blurhash,
                 imageType: a.image_type,
-                isPrimary: isPrimary,
+                isPrimary: a.is_primary,
             });
         });
 
-        // Add videos as gallery items
-        videoAssets.forEach((a, index) => {
+        // Video assets
+        unique.filter((a) => a.media_type === 'video').forEach((a, index) => {
             const videoUrl = a.cdn_url || a.asset_url || a.base64_data || '';
-
-            let enrichedAlt = a.alt_text;
-            if (!enrichedAlt) {
-                const parts = [];
-                if (brand) parts.push(brand);
-                parts.push(productName);
-                if (category) parts.push(category);
-                enrichedAlt = `${parts.join(' ')} - Video ${index + 1}`;
-            }
+            let enrichedAlt = a.alt_text || `${productName} Video ${index + 1}`;
 
             gallery.push({
                 id: a.asset_id || `video-${index}`,
-                // Use a poster/fallback for the thumbnail src
                 src: FALLBACK_IMAGE,
                 alt: enrichedAlt,
                 isVideo: true,
@@ -122,35 +122,20 @@ function resolveGalleryImages(
     if (fallbackImages && fallbackImages.length > 0) {
         const validFallbacks = fallbackImages.filter((src) => !!src);
         if (validFallbacks.length > 0) {
-            return validFallbacks.map((src, index) => {
-                const parts = [];
-                if (brand) parts.push(brand);
-                parts.push(productName);
-                if (category) parts.push(category);
-
-                return {
-                    id: `fallback-${index}`,
-                    src,
-                    alt: `${parts.join(' ')} - Image ${index + 1}`,
-                    isPrimary: index === 0,
-                };
-            });
+            return validFallbacks.map((src, index) => ({
+                id: `fallback-${index}`,
+                src,
+                alt: `${productName} - Image ${index + 1}`,
+                isPrimary: index === 0,
+            }));
         }
     }
-
-    // Default Fallback: static image
-    const parts = [];
-    if (brand) parts.push(brand);
-    parts.push(productName);
-    if (category) parts.push(category);
-
-    console.log('[ProductImageGallery] resolveGalleryImages fallback. assets:', assets?.length, 'fallbackImages:', fallbackImages?.length);
 
     return [
         {
             id: 'default-fallback',
             src: FALLBACK_IMAGE,
-            alt: `${parts.join(' ')} - Product Image`,
+            alt: `${productName} - Product Image`,
             isPrimary: true,
         },
     ];
@@ -163,6 +148,7 @@ function ProductImageGalleryInner({
     assets,
     productName,
     variantId,
+    defaultVariantId,
     fallbackImages,
     brand,
     category
@@ -178,8 +164,8 @@ function ProductImageGalleryInner({
     const imageRef = useRef<HTMLImageElement>(null);
 
     const images = useMemo(
-        () => resolveGalleryImages(assets, productName, variantId, fallbackImages, brand, category),
-        [assets, productName, variantId, fallbackImages, brand, category]
+        () => resolveGalleryImages(assets, productName, variantId, defaultVariantId, fallbackImages, brand, category),
+        [assets, productName, variantId, defaultVariantId, fallbackImages, brand, category]
     );
 
     useEffect(() => {
