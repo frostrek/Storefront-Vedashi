@@ -1161,6 +1161,24 @@ export async function verifyEmailChangeProfile(token: string) {
     return res.json();
 }
 
+export async function requestPhoneChange(newPhone: string) {
+    const res = await authFetch(`${API_URL}/api/customers/profile/phone/request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ new_phone: newPhone }),
+    });
+    return res.json();
+}
+
+export async function verifyPhoneChangeProfile(token: string) {
+    const res = await authFetch(`${API_URL}/api/customers/profile/phone/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+    });
+    return res.json();
+}
+
 export async function verifyAge(customerId: string) {
     const res = await authFetch(`${API_URL}/api/customers/${customerId}/verify-age`, {
         method: 'POST',
@@ -1281,8 +1299,11 @@ export async function submitReview(data: { product_id: string; rating: number; t
 
 
 export async function getMyReviews() {
-    const res = await authFetch(`${API_URL}/api/reviews/my`);
-    return res.json();
+    try {
+        const res = await authFetch(`${API_URL}/api/reviews/my`);
+        const json = await res.json();
+        return json.success && json.data ? json.data : [];
+    } catch { return []; }
 }
 
 export async function getMyReviewForProduct(productId: string) {
@@ -1291,10 +1312,12 @@ export async function getMyReviewForProduct(productId: string) {
 }
 
 export async function deleteReview(reviewId: string) {
-    const res = await authFetch(`${API_URL}/api/reviews/${reviewId}`, {
-        method: 'DELETE',
-    });
-    return res.json();
+    try {
+        const res = await authFetch(`${API_URL}/api/reviews/${reviewId}`, {
+            method: 'DELETE',
+        });
+        return await res.json();
+    } catch { return { success: false }; }
 }
 
 export async function voteHelpful(reviewId: string, voteType: 'up' | 'down') {
@@ -1965,3 +1988,6 @@ export async function getLegalDocument(slug: string) {
         return null;
     }
 }
+
+
+

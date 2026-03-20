@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useCookieConsent } from '@/context/CookieConsentContext';
 import { Shield, X, Check } from 'lucide-react';
 
@@ -15,6 +16,13 @@ export default function CookieBanner() {
         preferences: consent?.preferences || false,
     });
 
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    if (!isMounted) return null;
     if (!showBanner && !isSettingsOpen) return null;
 
     const handleSaveSettings = () => {
@@ -24,8 +32,8 @@ export default function CookieBanner() {
     return (
         <>
             {/* ── BANNER ── */}
-            {showBanner && !isSettingsOpen && (
-                <div className="fixed bottom-0 left-0 right-0 z-[100] bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] p-4 md:p-6 animate-in slide-in-from-bottom flex flex-col md:flex-row items-center justify-between gap-4">
+            {showBanner && !isSettingsOpen && createPortal(
+                <div className="fixed bottom-0 left-0 right-0 z-[9999] bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] p-4 md:p-6 animate-in slide-in-from-bottom flex flex-col md:flex-row items-center justify-between gap-4">
                     <div className="flex items-start gap-4">
                         <div className="bg-emerald-100 p-2 rounded-full shrink-0">
                             <Shield className="w-6 h-6 text-emerald-700" />
@@ -58,12 +66,13 @@ export default function CookieBanner() {
                             Accept All
                         </button>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* ── SETTINGS MODAL ── */}
-            {isSettingsOpen && (
-                <div className="fixed inset-0 z-[110] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
+            {isSettingsOpen && createPortal(
+                <div className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col">
                         <div className="p-6 border-b border-gray-100 flex items-center justify-between">
                             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
@@ -158,7 +167,8 @@ export default function CookieBanner() {
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </>
     );

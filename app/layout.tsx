@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Manrope, Outfit, Cormorant_Garamond } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
@@ -19,25 +19,18 @@ import MaintenancePage from "@/components/MaintenancePage";
 import { generateOrganizationJsonLd, generateWebSiteJsonLd } from "@/lib/seo";
 import ButterflyEffect from "@/components/animations/ButterflyEffect";
 
-const manrope = Manrope({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-base",
+  variable: "--font-sans",
   display: "swap",
   weight: ["400", "500", "600", "700"],
 });
 
-const outfit = Outfit({
+const playfair = Playfair_Display({
   subsets: ["latin"],
-  variable: "--font-ui",
+  variable: "--font-serif",
   display: "swap",
-  weight: ["400", "500", "600", "700"],
-});
-
-const cormorant = Cormorant_Garamond({
-  subsets: ["latin"],
-  variable: "--font-accent",
-  display: "swap",
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -89,8 +82,8 @@ export default async function RootLayout({
 
   if (isMaintenance) {
     return (
-      <html lang="en" className={`${manrope.variable} ${outfit.variable} ${cormorant.variable}`} suppressHydrationWarning>
-        <body className="min-h-screen bg-[#1A1814]">
+      <html lang="en" className={`${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
+        <body className={`min-h-screen bg-[#1A1814] ${inter.className}`}>
           <MaintenancePage message={maintenanceMessage} />
         </body>
       </html>
@@ -98,8 +91,8 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="en" className={`${manrope.variable} ${outfit.variable} ${cormorant.variable}`} suppressHydrationWarning>
-      <body className="min-h-screen flex flex-col" suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
+      <body className={`min-h-screen flex flex-col ${inter.className}`} suppressHydrationWarning>
         <Script
           id="structured-data-organization"
           type="application/ld+json"

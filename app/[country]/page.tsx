@@ -21,6 +21,11 @@ export default function HomePage() {
   // Newsletter State
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [isSubscribing, setIsSubscribing] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,7 +119,7 @@ export default function HomePage() {
                 <img src="/dosha-woman.png" alt="Woman enjoying herbal tea" className="absolute inset-0 w-full h-full object-cover" />
                 <div className="absolute bottom-8 right-8 left-8 max-w-xs ml-auto">
                   <div className="rounded-xl bg-white/95 backdrop-blur-md p-5 shadow-xl">
-                    <p className="text-sm text-[#2C2C2C] italic leading-relaxed">
+                    <p className="text-sm text-[#2C2C2C] leading-relaxed">
                       &ldquo;This assessment changed how I view my
                       energy cycles entirely. It&apos;s more than a
                       quiz; it&apos;s a mirror.&rdquo;
@@ -223,13 +228,13 @@ export default function HomePage() {
       </section>
 
       {/* ═══ 5. HEALING SERVICES ═══ */}
-      <section className="py-12 sm:py-20 lg:py-24 px-4 bg-white">
+      <section className="py-12 sm:py-20 lg:py-24 px-4 bg-white relative z-10">
         <div className="mx-auto max-w-7xl text-center">
           <AnimateOnScroll animation="fadeUp">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C2C2C]">
               The Path to <em className="italic text-[#3B5D3B]">Prakriti</em>
             </h2>
-            <p className="mt-3 text-[#6B6B60] text-base max-w-2xl mx-auto italic">
+            <p className="mt-3 text-[#6B6B60] text-base max-w-2xl mx-auto">
               Beyond products, we offer a comprehensive healing ecosystem to restore your natural harmony.
             </p>
           </AnimateOnScroll>
@@ -242,8 +247,8 @@ export default function HomePage() {
               { icon: CalendarCheck, title: 'Lifestyle Coaching', desc: 'Daily routines (Dinacharya) to harmonize with cosmic cycles.', color: 'bg-[#F5EFE4]' },
             ].map((service, i) => (
               <AnimateOnScroll key={i} animation="fadeUp" delay={i * 0.1}>
-                <div className={`${service.color} rounded-2xl p-8 text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group`}>
-                  <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm group-hover:shadow-md transition-shadow">
+                <div className={`rounded-2xl p-8 text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group bg-white border border-[#E0DCCF] shadow-sm`}>
+                  <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#3B5D3B]/10 group-hover:bg-[#3B5D3B]/15 transition-colors">
                     <service.icon className="h-6 w-6 text-[#3B5D3B]" />
                   </div>
                   <h3 className="text-lg font-bold text-[#2C2C2C]">{service.title}</h3>
@@ -256,7 +261,7 @@ export default function HomePage() {
       </section>
 
       {/* ═══ 6. TESTIMONIALS ═══ */}
-      <section className="py-12 sm:py-20 lg:py-24 px-4">
+      <section className="py-12 sm:py-20 lg:py-24 px-4 relative z-10">
         <AnimateOnScroll animation="fadeUp" className="mx-auto max-w-4xl text-center">
           <div className="flex justify-center gap-1 mb-6">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -284,7 +289,7 @@ export default function HomePage() {
               { name: 'David L.', role: 'Naturopath', text: 'Finally, an Ayurvedic brand that combines authentic formulations with modern clinical rigor. My patients love it.', rating: 5 },
               { name: 'Aisha R.', role: 'Wellness Coach', text: 'The Triphala Detox has become a staple in my daily routine. Gentle yet effective — exactly what Ayurveda should be.', rating: 5 },
             ].map((testimonial, i) => (
-              <div key={i} className="rounded-2xl border border-[#E0DCCF] bg-white p-6 text-left transition-all hover:shadow-md">
+              <div key={i} className="rounded-2xl border border-[#E0DCCF] bg-white p-6 text-left transition-all hover:shadow-md shadow-sm">
                 <div className="flex gap-0.5 mb-3">
                   {Array.from({ length: testimonial.rating }).map((_, j) => (
                     <Star key={j} className="h-3.5 w-3.5 fill-[#8B7A3D] text-[#8B7A3D]" />
@@ -305,7 +310,6 @@ export default function HomePage() {
           </div>
         </AnimateOnScroll>
       </section>
-
       {/* ═══ 7. NEWSLETTER ═══ */}
       <section className="py-12 sm:py-20 lg:py-24 px-4">
         <AnimateOnScroll animation="scaleUp" className="mx-auto max-w-4xl">
@@ -326,27 +330,36 @@ export default function HomePage() {
             <p className="relative z-10 mt-4 text-[#C9B87A]/80 text-sm sm:text-base max-w-lg mx-auto">
               Receive weekly Ayurvedic insights, seasonal recipes, and early access to physician-curated kits.
             </p>
-            <form onSubmit={handleSubscribe} className="relative z-10 mt-8 flex flex-col sm:flex-row max-w-md mx-auto justify-center gap-3">
-              <input
-                type="email"
-                value={newsletterEmail}
-                onChange={(e) => setNewsletterEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="w-full sm:w-auto flex-grow rounded-lg border-2 border-white/30 bg-white/10 px-4 py-3 text-sm text-white placeholder-white/80 focus:outline-none focus:border-white/60 backdrop-blur-sm transition-all"
-                disabled={isSubscribing}
-                required
-              />
-              <button
-                type="submit"
-                disabled={isSubscribing}
-                className="w-full sm:w-auto rounded-lg bg-[#C9B87A] px-8 py-3 text-sm font-semibold text-[#2C2C2C] transition-all hover:bg-[#D4C38A] hover:-translate-y-0.5 shadow-lg whitespace-nowrap flex items-center justify-center disabled:opacity-70 disabled:hover:translate-y-0 font-ui"
-              >
-                {isSubscribing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Subscribe'}
-              </button>
-            </form>
+            {isMounted && (
+               <form onSubmit={handleSubscribe} className="relative z-10 mt-8 flex flex-col sm:flex-row max-w-md mx-auto justify-center gap-3">
+                 <input 
+                   type="email" 
+                   value={newsletterEmail}
+                   onChange={(e) => setNewsletterEmail(e.target.value)}
+                   placeholder="Enter your email" 
+                   className="w-full sm:w-auto flex-grow rounded-lg border-2 border-white/30 bg-white/10 px-4 py-3 text-sm text-white placeholder-white/80 focus:outline-none focus:border-white/60 backdrop-blur-sm transition-all" 
+                   disabled={isSubscribing}
+                   required
+                 />
+                 <button 
+                   type="submit" 
+                   disabled={isSubscribing}
+                   className="w-full sm:w-auto rounded-lg bg-[#C9B87A] px-8 py-3 text-sm font-semibold text-[#2C2C2C] transition-all hover:bg-[#D4C38A] hover:-translate-y-0.5 shadow-lg whitespace-nowrap flex items-center justify-center disabled:opacity-70 disabled:hover:translate-y-0 font-ui"
+                 >
+                   {isSubscribing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Subscribe'}
+                 </button>
+               </form>
+            )}
+            {!isMounted && (
+               <div className="relative z-10 mt-8 flex flex-col sm:flex-row max-w-md mx-auto justify-center gap-3">
+                 <div className="w-full sm:w-auto flex-grow rounded-lg border-2 border-white/30 bg-white/10 px-4 py-3 h-[48px] animate-pulse"></div>
+                 <div className="w-full sm:w-[120px] rounded-lg bg-[#C9B87A]/50 px-8 py-3 h-[48px] animate-pulse"></div>
+               </div>
+            )}
             <p className="relative z-10 mt-6 text-[10px] text-white/40 tracking-wide">We respect your peace. Unsubscribe at any time.</p>
           </div>
         </AnimateOnScroll>
+
       </section>
     </div>
   );
