@@ -232,7 +232,8 @@ function LoginContent() {
             } else {
                 const result = await login(form.email, form.password);
                 if (result?.success) {
-                    if (result.role === 'admin') {
+                    const isAdmin = result.role === 'admin' || result.role === 'Super Admin';
+                    if (isAdmin) {
                         isAdminRedirecting.current = true;
                         toast.success('Welcome, Admin! Redirecting to dashboard...');
                         let userName = form.email.split('@')[0];
