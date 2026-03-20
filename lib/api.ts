@@ -1161,6 +1161,24 @@ export async function verifyEmailChangeProfile(token: string) {
     return res.json();
 }
 
+export async function requestPhoneChange(newPhone: string) {
+    const res = await authFetch(`${API_URL}/api/customers/profile/phone/request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ new_phone: newPhone }),
+    });
+    return res.json();
+}
+
+export async function verifyPhoneChangeProfile(token: string) {
+    const res = await authFetch(`${API_URL}/api/customers/profile/phone/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+    });
+    return res.json();
+}
+
 export async function verifyAge(customerId: string) {
     const res = await authFetch(`${API_URL}/api/customers/${customerId}/verify-age`, {
         method: 'POST',

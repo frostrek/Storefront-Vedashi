@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, FileText, Download, Calendar, DollarSign, Loader2 } from 'lucide-react';
 import { Order } from '@/types';
 import jsPDF from 'jspdf';
@@ -37,6 +38,11 @@ export default function ExportOrdersModal({
     orders, isOpen, onClose, userName, userEmail,
 }: ExportOrdersModalProps) {
     const [isExporting, setIsExporting] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     // Filters
     const [statusFilter, setStatusFilter] = useState('All');
@@ -547,8 +553,10 @@ export default function ExportOrdersModal({
         }
     };
 
-    return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6" style={{ animation: 'fadeIn 0.3s ease-out' }}>
+    if (!isMounted) return null;
+
+    return createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6" style={{ animation: 'fadeIn 0.3s ease-out' }}>
             <div className="absolute inset-0 bg-charcoal/50 backdrop-blur-md" onClick={onClose} />
 
             <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-3xl bg-white/95 backdrop-blur-sm shadow-2xl border border-white/20 overflow-hidden" style={{ animation: 'slideUp 0.35s ease-out' }}>
@@ -704,6 +712,7 @@ export default function ExportOrdersModal({
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

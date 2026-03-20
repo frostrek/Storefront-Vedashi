@@ -1,5 +1,7 @@
 'use client';
 
+import { createPortal } from 'react-dom';
+
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useClerk } from '@clerk/nextjs';
@@ -14,6 +16,7 @@ import {
     cancelOrder as apiCancelOrder, formatVND, downloadInvoice, getBestSellers,
     getMyEnquiries, replyToEnquiry, changePassword,
     requestEmailChange, verifyEmailChangeProfile,
+    requestPhoneChange, verifyPhoneChangeProfile,
     getLoyaltyWallet, getMyNotifications, getUnreadNotificationCount,
     markNotificationAsRead, markAllNotificationsAsRead, deleteNotification,
     lookupPostalCode, getMySupportTickets, replySupportTicket, getSupportTicketDetail,
@@ -37,6 +40,7 @@ import NotificationPreferences from '@/components/account/NotificationPreference
 import ExportOrdersModal from '@/components/account/ExportOrdersModal';
 import MyWallet from '@/components/account/MyWallet';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import { COUNTRY_CODES } from '@/lib/country-codes';
 import { useCurrency } from '@/context/CurrencyContext';
 
 type Tab = 'overview' | 'orders' | 'wishlist' | 'addresses' | 'profile' | 'privacy' | 'support' | 'wallet' | 'notifications';
@@ -198,18 +202,27 @@ export default function AccountPage() {
     const [orderCount, setOrderCount] = useState(0);
     const [profileEditing, setProfileEditing] = useState(false);
     const [profileSaving, setProfileSaving] = useState(false);
+    const [showNotificationModal, setShowNotificationModal] = useState(false);
     const [profileData, setProfileData] = useState({
         full_name: '', email: '', phone: '', date_of_birth: '',
         is_email_verified: false, is_mobile_verified: false, has_password: false,
         created_at: '',
     });
     const [originalEmail, setOriginalEmail] = useState('');
+    const [originalPhone, setOriginalPhone] = useState('');
+    const [selectedCountryCode, setSelectedCountryCode] = useState('+91');
 
     // Email OTP modal state
     const [showEmailOtpModal, setShowEmailOtpModal] = useState(false);
     const [emailOtpCode, setEmailOtpCode] = useState('');
     const [emailOtpSubmitting, setEmailOtpSubmitting] = useState(false);
     const [emailOtpResendTimer, setEmailOtpResendTimer] = useState(0);
+
+    // Phone OTP modal state
+    const [showPhoneOtpModal, setShowPhoneOtpModal] = useState(false);
+    const [phoneOtpCode, setPhoneOtpCode] = useState('');
+    const [phoneOtpSubmitting, setPhoneOtpSubmitting] = useState(false);
+    const [phoneOtpResendTimer, setPhoneOtpResendTimer] = useState(0);
 
     useEffect(() => {
         let interval: NodeJS.Timeout;
@@ -220,6 +233,16 @@ export default function AccountPage() {
         }
         return () => clearInterval(interval);
     }, [showEmailOtpModal, emailOtpResendTimer]);
+
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (showPhoneOtpModal && phoneOtpResendTimer > 0) {
+            interval = setInterval(() => {
+                setPhoneOtpResendTimer(prev => prev - 1);
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [showPhoneOtpModal, phoneOtpResendTimer]);
 
     // Profile image state
     const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
@@ -264,9 +287,19 @@ export default function AccountPage() {
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-    // Body scroll lock for modals
+    const [isMounted, setIsMounted] = useState(false);
     useEffect(() => {
-        if (isTrackOrderModalOpen || showDeactivateModal || deletingAddressId || cancellingOrderId || reviewModal || showNotificationOverlay || showExportModal || showPasswordModal || showEmailOtpModal) {
+        setIsMounted(true);
+    }, []);
+
+    // Body scroll lock for all modals
+    useEffect(() => {
+        const isAnyModalOpen = isTrackOrderModalOpen || showDeactivateModal || deletingAddressId || 
+                             cancellingOrderId || reviewModal || showNotificationOverlay || 
+                             showExportModal || showPasswordModal || showEmailOtpModal || 
+                              showNotificationModal || isZoomModalOpen || showPhoneOtpModal;
+        
+        if (isAnyModalOpen) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = 'unset';
@@ -274,7 +307,9 @@ export default function AccountPage() {
         return () => {
             document.body.style.overflow = 'unset';
         };
-    }, [isTrackOrderModalOpen, showDeactivateModal, deletingAddressId, cancellingOrderId, reviewModal, showNotificationOverlay, showExportModal, showPasswordModal, showEmailOtpModal]);
+    }, [isTrackOrderModalOpen, showDeactivateModal, deletingAddressId, cancellingOrderId, 
+        reviewModal, showNotificationOverlay, showExportModal, showPasswordModal, 
+        showEmailOtpModal, showNotificationModal, isZoomModalOpen, showPhoneOtpModal]);
 
     useEffect(() => {
         if (!isLoading && !isAuthenticated) {
@@ -384,17 +419,39 @@ export default function AccountPage() {
                 // Assuming res.data.has_password is a boolean or 1/0
                 const hasPassword = Boolean(res.data.has_password);
                 
+                const phone = res.data.phone || '';
+                let countryCode = '+91';
+                let localNumber = phone;
+
+                if (phone.startsWith('+')) {
+                    // Try to match against our list
+                    const match = COUNTRY_CODES.find(c => phone.startsWith(c.dial_code));
+                    if (match) {
+                        countryCode = match.dial_code;
+                        localNumber = phone.slice(match.dial_code.length).trim();
+                    } else {
+                        // Fallback: split at first space if possible, or just take first few digits
+                        const parts = phone.split(' ');
+                        if (parts.length > 1) {
+                            countryCode = parts[0];
+                            localNumber = parts.slice(1).join(' ');
+                        }
+                    }
+                }
+
                 setProfileData({
                     full_name: res.data.full_name || '',
                     email: fetchedEmail,
-                    phone: res.data.phone || '',
+                    phone: localNumber,
                     date_of_birth: res.data.date_of_birth ? res.data.date_of_birth.split('T')[0] : '',
                     is_email_verified: !!res.data.is_email_verified,
                     is_mobile_verified: !!res.data.is_mobile_verified,
                     has_password: hasPassword,
                     created_at: res.data.created_at || '',
                 });
+                setSelectedCountryCode(countryCode);
                 setOriginalEmail(fetchedEmail);
+                setOriginalPhone(res.data.phone || '');
             }
         } catch (err) {
             console.error('Failed to fetch profile:', err);
@@ -566,15 +623,6 @@ export default function AccountPage() {
         }
     }, []);
 
-    // Prevent scroll when zoom modal is open
-    useEffect(() => {
-        if (isZoomModalOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
-        return () => { document.body.style.overflow = ''; };
-    }, [isZoomModalOpen]);
 
     useEffect(() => {
         if (!user?.id) return;
@@ -612,6 +660,23 @@ export default function AccountPage() {
     // ── Profile save handler ─────────────────────────────────────────
     const handleProfileSave = async () => {
         if (!user?.id) return;
+
+        // Frontend phone validation (international E.164)
+        if (profileData.phone && profileData.phone.trim() !== '') {
+            const cleaned = profileData.phone.replace(/[\s\-()]/g, '');
+            if (!/^\+?\d+$/.test(cleaned)) {
+                toast.error('Phone number can only contain digits and an optional + prefix.');
+                return;
+            }
+            const digitsOnly = cleaned.replace(/\D/g, '');
+            const hasCountryCode = cleaned.startsWith('+');
+            const maxDigits = hasCountryCode ? 15 : 12;
+            if (digitsOnly.length < 7 || digitsOnly.length > maxDigits) {
+                toast.error(`Phone number must be between 7 and ${maxDigits} digits.`);
+                return;
+            }
+        }
+
         setProfileSaving(true);
         try {
             // Check if email was changed
@@ -630,15 +695,38 @@ export default function AccountPage() {
                 }
             }
 
-            // Strip out non-DB fields
+            const phoneDigitsOnly = profileData.phone ? profileData.phone.replace(/\D/g, '') : '';
+            const fullPhone = phoneDigitsOnly ? `${selectedCountryCode}${phoneDigitsOnly}` : null;
+
+            // Check if phone was changed
+            if (fullPhone !== originalPhone && fullPhone) {
+                try {
+                    const reqRes = await requestPhoneChange(fullPhone);
+                    if (reqRes.success) {
+                        toast.success('Verification code sent to your new mobile number');
+                        setShowPhoneOtpModal(true);
+                        setPhoneOtpResendTimer(60);
+                        setProfileSaving(false);
+                        return; // Wait for OTP
+                    } else {
+                        toast.error(reqRes.message || 'Failed to send verification code to new number');
+                        setProfileSaving(false);
+                        return;
+                    }
+                } catch {
+                    toast.error('Failed to request phone verification');
+                    setProfileSaving(false);
+                    return;
+                }
+            }
+
+            // Strip out non-DB fields and fields that need verification (email, phone)
+            // Note: email and phone are handled above. If we are here, it means they haven't changed 
+            // from original OR they were just verified and fetchProfile was called (which updated originalEmail/originalPhone).
             const { has_password, is_email_verified, is_mobile_verified, email, created_at, phone, ...rest } = profileData;
             
             const updateData: any = { ...rest };
-            if (phone && phone.trim() !== '') {
-                updateData.phone = phone.trim();
-            } else {
-                updateData.phone = null; // Convert empty string to null to prevent UNIQUE constraint violations
-            }
+            // DO NOT update phone or email here; they are managed by separate verification endpoints
             
             const res = await updateCustomerProfile(user.id, updateData);
             if (res.success) {
@@ -652,6 +740,52 @@ export default function AccountPage() {
             toast.error('Server error. Please try again.');
         } finally {
             setProfileSaving(false);
+        }
+    };
+
+    const handleResendPhoneOtp = async () => {
+        if (phoneOtpResendTimer > 0) return;
+        const fullPhone = profileData.phone && profileData.phone.trim() !== '' ? `${selectedCountryCode}${profileData.phone.trim().replace(/\s/g, '')}` : null;
+        if (!fullPhone) return;
+
+        try {
+            const reqRes = await requestPhoneChange(fullPhone);
+            if (reqRes.success) {
+                toast.success('A new verification code has been sent');
+                setPhoneOtpResendTimer(60);
+            } else {
+                toast.error(reqRes.message || 'Failed to resend code');
+            }
+        } catch {
+            toast.error('Server error');
+        }
+    };
+
+    const handlePhoneOtpSubmit = async () => {
+        if (!phoneOtpCode) {
+            toast.error('Please enter the OTP');
+            return;
+        }
+        
+        setPhoneOtpSubmitting(true);
+        try {
+            const res = await verifyPhoneChangeProfile(phoneOtpCode);
+            if (res.success) {
+                toast.success('Mobile number updated and verified!');
+                setShowPhoneOtpModal(false);
+                setPhoneOtpCode('');
+                setPhoneOtpResendTimer(0);
+                
+                // Continue to update the rest of the profile if needed, but phone is already updated by backend
+                setProfileEditing(false);
+                fetchProfile();
+            } else {
+                toast.error(res.message || 'Invalid or expired OTP');
+            }
+        } catch {
+            toast.error('Server error. Please try again.');
+        } finally {
+            setPhoneOtpSubmitting(false);
         }
     };
 
@@ -1073,28 +1207,28 @@ export default function AccountPage() {
             <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
 
             {/* Fullscreen Image Zoom Modal */}
-            {isZoomModalOpen && profileImageUrl && (
-                <div 
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md"
+            {isMounted && isZoomModalOpen && createPortal(
+                <div
+                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-md"
                     onClick={() => setIsZoomModalOpen(false)}
+                    style={{ animation: 'fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}
                 >
-                    <button 
-                        className="fixed top-6 right-6 text-white/70 hover:text-white transition-all hover:rotate-90 duration-300 z-[110] bg-white/10 hover:bg-white/20 p-2 rounded-full backdrop-blur-md border border-white/10"
-                        onClick={(e) => { e.stopPropagation(); setIsZoomModalOpen(false); }}
-                        title="Close (Esc)"
+                    <button
+                        className="absolute top-6 right-6 p-3 text-white/50 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all z-10"
+                        onClick={() => setIsZoomModalOpen(false)}
                     >
-                        <X className="h-6 w-6" />
+                        <X size={28} />
                     </button>
-
-                    <div className="relative max-w-[95vw] max-h-[95vh] animate-in zoom-in-95 duration-300 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img 
-                            src={profileImageUrl} 
-                            alt="Profile Zoomed" 
-                            className="max-w-full max-h-[90vh] object-contain rounded-2xl ring-1 ring-white/20 shadow-[0_0_50px_rgba(0,0,0,0.5)]" 
+                    <div className="relative w-full max-w-4xl p-4 flex items-center justify-center">
+                        <img
+                            src={profileImageUrl || ''}
+                            alt="Profile Zoom"
+                            className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-[0_0_80px_rgba(0,0,0,0.5)] border border-white/10"
+                            style={{ animation: 'zoomIn 0.5s cubic-bezier(0.16, 1, 0.3, 1)' }}
                         />
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* Main Content Area */}
@@ -1161,10 +1295,10 @@ export default function AccountPage() {
                                         <div className="relative w-full h-full rounded-full border-4 border-white overflow-hidden shadow-xl bg-[#E8E1D5] flex items-center justify-center">
                                             {profileImageUrl ? (
                                                 // eslint-disable-next-line @next/next/no-img-element
-                                                <img 
-                                                    src={profileImageUrl} 
-                                                    alt="Profile" 
-                                                    className="h-full w-full object-cover cursor-pointer hover:scale-110 transition-transform duration-500" 
+                                                <img
+                                                    src={profileImageUrl}
+                                                    alt="Profile"
+                                                    className="h-full w-full object-cover cursor-pointer hover:scale-110 transition-transform duration-500"
                                                     onClick={() => setIsZoomModalOpen(true)}
                                                 />
                                             ) : (
@@ -1226,7 +1360,7 @@ export default function AccountPage() {
                                         <div className="relative z-10">
                                             <p className="text-xs font-bold text-warm-gray uppercase tracking-wider mb-1">Loyalty Points</p>
                                             <h3 className="text-2xl font-bold text-[#36453A] mb-1">{activePoints} Pts</h3>
-                                            <p className="text-[11px] text-[#A8B28B] font-medium">{activeTier} Tier Multiplier: {loyaltyData?.tier?.points_multiplier || 1}x</p>
+                                            <p className="text-[11px] text-[#A8B28B] font-medium">{loyaltyData?.tier?.points_multiplier || 1}x</p>
                                         </div>
                                     </div>
                                 </div>
@@ -1764,8 +1898,8 @@ export default function AccountPage() {
                                                                     <div className="flex justify-between items-center">
                                                                         <span className="text-[10px] font-bold text-[#36453A] uppercase">#{ticket._ticket_number || ticket.feedback_id.slice(0, 8)}</span>
                                                                         <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
-                                                                            ticket.status === 'resolved' || ticket.status === 'closed' ? 'bg-green-100 text-green-700' : 
-                                                                            ticket.status === 'in_progress' ? 'bg-blue-100 text-blue-700' : 
+                                                                            ticket.status === 'resolved' || ticket.status === 'closed' ? 'bg-green-100 text-green-700' :
+                                                                            ticket.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
                                                                             'bg-amber-100 text-amber-700'
                                                                         }`}>
                                                                             {ticket.status}
@@ -1830,65 +1964,40 @@ export default function AccountPage() {
                         )}
 
                         {/* ─── Cancel Order Confirmation Modal ─── */}
-                        {cancellingOrderId && (
-                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-                                <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 rounded-full bg-red-100">
-                                            <X className="h-5 w-5 text-red-600" />
+                        {isMounted && cancellingOrderId && createPortal(
+                            <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+                                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                                    <div className="p-6">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h3 className="text-xl font-bold text-charcoal">Cancel Order</h3>
+                                            <button onClick={() => setCancellingOrderId(null)} className="text-warm-gray hover:text-charcoal"><X size={20} /></button>
                                         </div>
-                                        <div>
-                                            <h3 className="font-bold text-charcoal text-lg">Cancel Order?</h3>
-                                            <p className="text-sm text-warm-gray">This action cannot be undone. Stock will be restored.</p>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-charcoal mb-1">Reason (optional)</label>
+                                        <p className="text-sm text-warm-gray mb-4">Please let us know why you would like to cancel your order.</p>
                                         <textarea
-                                            rows={3}
                                             value={cancelReason}
                                             onChange={e => setCancelReason(e.target.value)}
-                                            placeholder="e.g. Changed my mind, ordered by mistake..."
-                                            className="w-full rounded-lg border border-light-border px-3 py-2 text-sm text-charcoal placeholder:text-warm-gray/60 focus:border-burgundy/40 focus:outline-none focus:ring-1 focus:ring-burgundy/30 resize-none"
+                                            placeholder="Reason for cancellation..."
+                                            className="w-full bg-cream rounded-xl p-4 text-sm focus:outline-none border border-transparent focus:border-burgundy/20 min-h-[120px]"
                                         />
-                                    </div>
-                                    <div className="flex gap-3">
-                                        <button
-                                            disabled={cancelSubmitting}
-                                            onClick={() => { setCancellingOrderId(null); setCancelReason(''); }}
-                                            className="flex-1 rounded-lg border border-light-border py-2.5 text-sm font-semibold text-charcoal hover:bg-cream transition-colors"
-                                        >
-                                            Keep Order
-                                        </button>
-                                        <button
-                                            disabled={cancelSubmitting}
-                                            onClick={async () => {
-                                                if (!cancellingOrderId) return;
-                                                setCancelSubmitting(true);
-                                                try {
-                                                    const res = await apiCancelOrder(cancellingOrderId, cancelReason);
-                                                    if (res.success) {
-                                                        toast.success('Order cancelled successfully');
-                                                        setCancellingOrderId(null);
-                                                        setCancelReason('');
-                                                        fetchOrders();
-                                                    } else {
-                                                        toast.error(res.message || 'Failed to cancel order');
-                                                    }
-                                                } catch {
-                                                    toast.error('Something went wrong. Please try again.');
-                                                } finally {
-                                                    setCancelSubmitting(false);
-                                                }
-                                            }}
-                                            className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-red-500 hover:bg-red-600 py-2.5 text-sm font-semibold text-white transition-colors disabled:opacity-60"
-                                        >
-                                            {cancelSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                                            Yes, Cancel Order
-                                        </button>
+                                        <div className="flex gap-3 mt-6">
+                                            <button
+                                                onClick={() => setCancellingOrderId(null)}
+                                                className="flex-1 py-3 text-sm font-semibold text-charcoal hover:bg-cream transition-colors rounded-xl border border-light-border"
+                                            >
+                                                Keep Order
+                                            </button>
+                                            <button
+                                                onClick={() => handleCancelOrder(cancellingOrderId)}
+                                                disabled={cancelSubmitting || !cancelReason}
+                                                className="flex-1 py-3 text-sm font-semibold text-white bg-burgundy hover:opacity-90 transition-all rounded-xl disabled:opacity-50"
+                                            >
+                                                {cancelSubmitting ? 'Cancelling...' : 'Cancel Order'}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            </div>,
+                            document.body
                         )}
 
                         {/* ─── Verified Purchase Review Modal ─── */}
@@ -2219,7 +2328,7 @@ export default function AccountPage() {
 
                                         {/* Add New Address Card */}
                                         {!showAddressForm && (
-                                            <button 
+                                            <button
                                                 onClick={() => { resetAddressForm(); setShowAddressForm(true); }}
                                                 className="bg-white rounded-3xl shadow-md border border-[#E8E1D5]/50 p-8 flex flex-col items-center justify-center min-w-[200px] relative z-20 group hover:border-[#36453A]/30 transition-all hover:shadow-lg"
                                             >
@@ -2234,176 +2343,145 @@ export default function AccountPage() {
                                 </div>
 
                                 {/* Address Form (animated) */}
-                                {showAddressForm && (
-                                    <div className="mb-12 rounded-[30px] border border-[#E8E1D5] bg-white overflow-hidden shadow-sm animate-fadeIn">
-                                        {/* Form header accent */}
-                                        <div className="h-1.5" style={{ background: 'linear-gradient(90deg, #36453A, #D4A847, #36453A)' }} />
-                                        <div className="p-8 lg:p-10">
-                                            <div className="flex items-center justify-between mb-8">
-                                                <div>
-                                                    <h3 className="text-2xl font-bold text-[#36453A]">
-                                                        {editingAddress ? 'Revise Ritual Space' : 'New Delivery Ritual'}
-                                                    </h3>
-                                                    <p className="text-xs text-warm-gray mt-1">Provide the details for your sacred delivery destination.</p>
-                                                </div>
-                                                <button onClick={resetAddressForm} className="p-2 rounded-full hover:bg-[#F8F5F0] transition-colors text-warm-gray hover:text-[#36453A]">
-                                                    <X className="h-5 w-5" />
-                                                </button>
+                                {isMounted && showAddressForm && createPortal(
+                                    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+                                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+                                            <div className="px-6 py-4 border-b border-light-border flex items-center justify-between">
+                                                <h3 className="text-xl font-bold text-charcoal">
+                                                    {editingAddress ? 'Revise Sanctuary Path' : 'Enshrine New Sanctuary'}
+                                                </h3>
+                                                <button onClick={() => setShowAddressForm(false)} className="text-warm-gray hover:text-charcoal"><X size={20} /></button>
                                             </div>
-                                            
-                                            <div className="grid gap-6 sm:grid-cols-2">
-                                                <div className="sm:col-span-2">
-                                                    <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5 ml-1">Country *</label>
-                                                    <div className="relative">
+                                            <form onSubmit={handleAddressSubmit} className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div className="md:col-span-2">
+                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Label (e.g., Home, Sanctuary)</label>
+                                                        <input
+                                                            type="text"
+                                                            required
+                                                            value={addressForm.label}
+                                                            onChange={e => setAddressForm({ ...addressForm, label: e.target.value })}
+                                                            placeholder="Home / Work / Temple"
+                                                            className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
+                                                        />
+                                                    </div>
+                                                    <div className="md:col-span-2">
+                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Path Line 1 (Street, Area)</label>
+                                                        <input
+                                                            type="text"
+                                                            required
+                                                            value={addressForm.address_line1}
+                                                            onChange={e => setAddressForm({ ...addressForm, address_line1: e.target.value })}
+                                                            className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
+                                                        />
+                                                    </div>
+                                                    <div className="md:col-span-2">
+                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Path Line 2 (Optional)</label>
+                                                        <input
+                                                            type="text"
+                                                            value={addressForm.address_line2}
+                                                            onChange={e => setAddressForm({ ...addressForm, address_line2: e.target.value })}
+                                                            className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Postal Code (Pincode)</label>
+                                                        <div className="relative">
+                                                            <input
+                                                                type="text"
+                                                                required
+                                                                value={addressForm.pincode}
+                                                                onChange={e => setAddressForm({ ...addressForm, pincode: e.target.value })}
+                                                                className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
+                                                            />
+                                                            {isLookupLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-burgundy" />}
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Sanctuary Domain (Country)</label>
                                                         <Select
                                                             options={countryOptions}
-                                                            value={countryOptions.find(opt => opt.value === addressForm.country_code)}
-                                                            onChange={(opt: any) => {
-                                                                if (opt) {
-                                                                    setAddressForm({ 
-                                                                        ...addressForm, 
-                                                                        country: opt.name, 
-                                                                        country_code: opt.value 
-                                                                    });
-                                                                }
-                                                            }}
                                                             styles={customSelectStyles}
-                                                            placeholder="Select Country"
-                                                        />
-                                                        <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8B7A3D] z-10 pointer-events-none" />
-                                                    </div>
-                                                </div>
-
-                                                <div className="sm:col-span-2">
-                                                    <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5 ml-1">Address Line 1 *</label>
-                                                    <input 
-                                                        type="text" 
-                                                        value={addressForm.address_line1}
-                                                        onChange={e => setAddressForm({ ...addressForm, address_line1: e.target.value })}
-                                                        className="w-full rounded-lg border border-[#D4CFC0] bg-white px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none transition-all text-[#1A1A1A] placeholder:text-warm-gray/40 shadow-sm"
-                                                        placeholder="Street address or P.O. Box" 
-                                                    />
-                                                </div>
-
-                                                <div className="sm:col-span-2">
-                                                    <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5 ml-1">Address Line 2 (Optional)</label>
-                                                    <input 
-                                                        type="text" 
-                                                        value={addressForm.address_line2}
-                                                        onChange={e => setAddressForm({ ...addressForm, address_line2: e.target.value })}
-                                                        className="w-full rounded-lg border border-[#D4CFC0] bg-white px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none transition-all text-[#1A1A1A] placeholder:text-warm-gray/40 shadow-sm"
-                                                        placeholder="Apartment, suite, unit, floor, etc." 
-                                                    />
-                                                </div>
-
-                                                <div>
-                                                    <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5 ml-1">Pincode / ZIP *</label>
-                                                    <div className="relative">
-                                                        <input 
-                                                            type="text" 
-                                                            value={addressForm.pincode}
-                                                            onChange={e => setAddressForm({ ...addressForm, pincode: e.target.value })}
-                                                            className="w-full rounded-lg border border-[#D4CFC0] bg-white px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none transition-all text-[#1A1A1A] placeholder:text-warm-gray/40 shadow-sm"
-                                                            placeholder="Pincode" 
-                                                        />
-                                                        {isLookupLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-[#6B8F5E]" />}
-                                                    </div>
-                                                </div>
-
-                                                <div>
-                                                    <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5 ml-1">City *</label>
-                                                    <input 
-                                                        type="text" 
-                                                        value={addressForm.city}
-                                                        onChange={e => {
-                                                            setAddressForm({ ...addressForm, city: e.target.value });
-                                                            setManualEdits(prev => ({ ...prev, city: true }));
-                                                        }}
-                                                        className="w-full rounded-lg border border-[#D4CFC0] bg-white px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none transition-all text-[#1A1A1A] placeholder:text-warm-gray/40 shadow-sm"
-                                                        placeholder="City" 
-                                                    />
-                                                </div>
-
-                                                <div>
-                                                    <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5 ml-1">State / Province *</label>
-                                                    <input 
-                                                        type="text" 
-                                                        value={addressForm.state}
-                                                        onChange={e => {
-                                                            setAddressForm({ ...addressForm, state: e.target.value });
-                                                            setManualEdits(prev => ({ ...prev, state: true }));
-                                                        }}
-                                                        className="w-full rounded-lg border border-[#D4CFC0] bg-white px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none transition-all text-[#1A1A1A] placeholder:text-warm-gray/40 shadow-sm"
-                                                        placeholder="State" 
-                                                    />
-                                                </div>
-
-                                                <div>
-                                                    <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5 ml-1">Contact Phone</label>
-                                                    <div className="relative">
-                                                        <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8B7A3D]" />
-                                                        <input 
-                                                            type="tel" 
-                                                            value={addressForm.phone}
-                                                            onChange={e => setAddressForm({ ...addressForm, phone: e.target.value })}
-                                                            className="w-full rounded-lg border border-[#D4CFC0] bg-white pl-11 pr-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none transition-all text-[#1A1A1A] placeholder:text-warm-gray/40 shadow-sm"
-                                                            placeholder="Phone number" 
+                                                            value={countryOptions.find(opt => opt.value === addressForm.country_code)}
+                                                            onChange={(opt: any) => setAddressForm({ ...addressForm, country: opt.name, country_code: opt.value })}
                                                         />
                                                     </div>
-                                                </div>
-
-                                                <div className="sm:col-span-2">
-                                                    <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5 ml-1">Space Label</label>
-                                                    <div className="flex gap-3">
-                                                        {['Home', 'Office', 'Other'].map(l => (
-                                                            <button 
-                                                                key={l} 
-                                                                type="button"
-                                                                onClick={() => setAddressForm({ ...addressForm, label: l })}
-                                                                className={`flex-1 rounded-lg px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider transition-all border
-                                                                ${addressForm.label === l
-                                                                    ? 'bg-[#36453A] text-white border-[#36453A] shadow-md transform scale-[1.02]'
-                                                                    : 'bg-white text-[#6B6B60] border-[#D4CFC0] hover:border-[#6B8F5E] hover:bg-[#F8F5F0]'}`
-                                                                }
-                                                            >
-                                                                {l}
-                                                            </button>
-                                                        ))}
+                                                    <div>
+                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">City</label>
+                                                        <input
+                                                            type="text"
+                                                            required
+                                                            value={addressForm.city}
+                                                            onChange={e => {
+                                                                setManualEdits(prev => ({ ...prev, city: true }));
+                                                                setAddressForm({ ...addressForm, city: e.target.value });
+                                                            }}
+                                                            className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
+                                                        />
                                                     </div>
-                                                </div>
-
-                                                <div className="sm:col-span-2 pt-2">
-                                                    <label className="flex items-center gap-3 cursor-pointer group w-fit">
-                                                        <div className="relative flex items-center justify-center">
-                                                            <input 
-                                                                type="checkbox" 
-                                                                checked={addressForm.is_default}
-                                                                onChange={e => setAddressForm({ ...addressForm, is_default: e.target.checked })}
-                                                                className="peer appearance-none w-5 h-5 rounded border-2 border-[#D4CFC0] checked:bg-[#6B8F5E] checked:border-[#6B8F5E] transition-colors cursor-pointer" 
+                                                    <div>
+                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Province (State)</label>
+                                                        <input
+                                                            type="text"
+                                                            required
+                                                            value={addressForm.state}
+                                                            onChange={e => {
+                                                                setManualEdits(prev => ({ ...prev, state: true }));
+                                                                setAddressForm({ ...addressForm, state: e.target.value });
+                                                            }}
+                                                            className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
+                                                        />
+                                                    </div>
+                                                    <div className="md:col-span-2">
+                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Commune Number (Phone)</label>
+                                                        <div className="flex gap-2">
+                                                            <div className="w-24 shrink-0">
+                                                                <input
+                                                                    type="text"
+                                                                    disabled
+                                                                    value={selectedCountryCode}
+                                                                    className="w-full bg-cream rounded-xl px-3 py-3 text-sm border-transparent text-charcoal/50"
+                                                                />
+                                                            </div>
+                                                            <input
+                                                                type="text"
+                                                                required
+                                                                value={addressForm.phone}
+                                                                onChange={e => setAddressForm({ ...addressForm, phone: e.target.value.replace(/\D/g, '') })}
+                                                                className="flex-1 bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
                                                             />
-                                                            <Check className="absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100 pointer-events-none" strokeWidth={3} />
                                                         </div>
-                                                        <span className="text-sm font-bold text-[#6B6B60] group-hover:text-black transition-colors">Designate as Primary Ritual Space</span>
-                                                    </label>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            
-                                            <div className="mt-10 flex flex-col sm:flex-row gap-4">
-                                                <button 
-                                                    onClick={handleAddressSubmit}
-                                                    className="flex-1 rounded-xl bg-[#36453A] px-8 py-4 text-sm font-bold text-white shadow-lg hover:bg-[#2A362D] hover:shadow-xl transition-all flex items-center justify-center gap-2 transform active:scale-95"
-                                                >
-                                                    <CheckCircle2 className="h-4 w-4" /> {editingAddress ? 'Update Ritual Space' : 'Save Ritual Space'}
-                                                </button>
-                                                <button 
-                                                    onClick={resetAddressForm}
-                                                    className="rounded-xl border border-[#D4CFC0] px-8 py-4 text-sm font-bold text-[#6B6B60] hover:bg-[#F8F5F0] transition-colors"
-                                                >
-                                                    Cancel
-                                                </button>
-                                            </div>
+                                                <div className="flex items-center gap-2 pt-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        id="is_default"
+                                                        checked={addressForm.is_default}
+                                                        onChange={e => setAddressForm({ ...addressForm, is_default: e.target.checked })}
+                                                        className="w-4 h-4 rounded text-burgundy focus:ring-burgundy"
+                                                    />
+                                                    <label htmlFor="is_default" className="text-sm text-charcoal font-medium cursor-pointer select-none">Set as Principal Sanctuary (Default Address)</label>
+                                                </div>
+                                                <div className="flex gap-3 pt-4 sticky bottom-0 bg-white">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowAddressForm(false)}
+                                                        className="flex-1 py-3 text-sm font-semibold text-charcoal hover:bg-cream transition-colors rounded-xl border border-light-border"
+                                                    >
+                                                        Back
+                                                    </button>
+                                                    <button
+                                                        type="submit"
+                                                        className="flex-1 py-3 text-sm font-semibold text-[#E8D5A3] bg-[#1C2B1A] hover:bg-[#2A3B28] transition-all rounded-xl shadow-lg border border-[#3A4B38]"
+                                                    >
+                                                        {editingAddress ? 'Update Path' : 'Enshrine Path'}
+                                                    </button>
+                                                </div>
+                                            </form>
                                         </div>
-                                    </div>
+                                    </div>,
+                                    document.body
                                 )}
 
                                 {addressesLoading ? (
@@ -2458,7 +2536,7 @@ export default function AccountPage() {
                                                                 <p className="text-sm text-warm-gray font-medium">{addr.country}</p>
                                                             )}
                                                         </div>
-                                                        
+
                                                         {addr.phone && (
                                                             <div className="mt-5 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#F8F5F0] border border-[#E8E1D5] w-fit">
                                                                 <Phone className="h-3 w-3 text-warm-gray" />
@@ -2466,7 +2544,7 @@ export default function AccountPage() {
                                                             </div>
                                                         )}
                                                     </div>
-                                                    
+
                                                     <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
                                                         {!addr.is_default && (
                                                             <button onClick={() => handleSetDefault(addr)}
@@ -2509,10 +2587,10 @@ export default function AccountPage() {
                                             <div className="h-28 w-28 rounded-full border-4 border-white shadow-md overflow-hidden bg-cream-dark flex items-center justify-center">
                                                 {profileImageUrl ? (
                                                     // eslint-disable-next-line @next/next/no-img-element
-                                                    <img 
-                                                        src={profileImageUrl} 
-                                                        alt="Profile" 
-                                                        className="h-full w-full object-cover cursor-pointer hover:scale-110 transition-transform duration-500" 
+                                                    <img
+                                                        src={profileImageUrl}
+                                                        alt="Profile"
+                                                        className="h-full w-full object-cover cursor-pointer hover:scale-110 transition-transform duration-500"
                                                         onClick={() => setIsZoomModalOpen(true)}
                                                     />
                                                 ) : (
@@ -2602,13 +2680,49 @@ export default function AccountPage() {
                                                         className="w-full bg-[#F8F5F0] border border-[#E8E1D5] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#36453A] focus:ring-1 focus:ring-[#36453A]/20 transition-all font-medium text-[#36453A]" />
                                                 </div>
                                                 <div>
-                                                    <label className="block flex items-center gap-1.5 text-[11px] font-bold text-warm-gray uppercase tracking-widest mb-2"><Phone className="h-3 w-3" /> Contact Frequency</label>
-                                                    <input type="tel" value={profileData.phone} onChange={e => setProfileData({ ...profileData, phone: e.target.value })} placeholder="Add phone number"
-                                                        className="w-full bg-[#F8F5F0] border border-[#E8E1D5] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#36453A] focus:ring-1 focus:ring-[#36453A]/20 transition-all font-medium text-[#36453A]" />
+                                                    <label className="block flex items-center gap-1.5 text-[11px] font-bold text-warm-gray uppercase tracking-widest mb-2"><Phone className="h-3 w-3" /> Mobile Number</label>
+                                                    <div className="flex gap-2">
+                                                        <div className="w-1/3 min-w-[120px]">
+                                                            <Select
+                                                                options={COUNTRY_CODES.map(c => ({
+                                                                    value: c.dial_code,
+                                                                    label: `${c.flag} ${c.dial_code}`,
+                                                                    name: c.name
+                                                                }))}
+                                                                value={{
+                                                                    value: selectedCountryCode,
+                                                                    label: `${COUNTRY_CODES.find(c => c.dial_code === selectedCountryCode)?.flag || ''} ${selectedCountryCode}`
+                                                                }}
+                                                                onChange={(val: any) => setSelectedCountryCode(val.value)}
+                                                                styles={{
+                                                                    ...customSelectStyles,
+                                                                    control: (base: any, state: any) => ({
+                                                                        ...customSelectStyles.control(base, state),
+                                                                        paddingLeft: '10px',
+                                                                        backgroundColor: '#F8F5F0',
+                                                                    })
+                                                                }}
+                                                                placeholder="Code"
+                                                            />
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <input type="tel" value={profileData.phone}
+                                                                maxLength={15}
+                                                                onChange={e => {
+                                                                    // Allow only digits, spaces, hyphens
+                                                                    const val = e.target.value.replace(/[^\d\s\-]/g, '');
+                                                                    setProfileData({ ...profileData, phone: val });
+                                                                }}
+                                                                placeholder="98765 43210"
+                                                                className="w-full bg-[#F8F5F0] border border-[#E8E1D5] rounded-xl px-4 py-[9px] text-sm focus:outline-none focus:border-[#36453A] focus:ring-1 focus:ring-[#36453A]/20 transition-all font-medium text-[#36453A]" />
+                                                        </div>
+                                                    </div>
                                                 </div>
                                                 <div>
                                                     <label className="block flex items-center gap-1.5 text-[11px] font-bold text-warm-gray uppercase tracking-widest mb-2"><Calendar className="h-3 w-3" /> Date of Birth</label>
-                                                    <input type="date" value={profileData.date_of_birth} onChange={e => setProfileData({ ...profileData, date_of_birth: e.target.value })}
+                                                    <input type="date" value={profileData.date_of_birth}
+                                                        max={new Date().toISOString().split('T')[0]}
+                                                        onChange={e => setProfileData({ ...profileData, date_of_birth: e.target.value })}
                                                         className="w-full bg-[#F8F5F0] border border-[#E8E1D5] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#36453A] focus:ring-1 focus:ring-[#36453A]/20 transition-all font-medium text-[#36453A]" />
                                                 </div>
                                                 <div>
@@ -2617,7 +2731,10 @@ export default function AccountPage() {
                                                         <input
                                                             type="text"
                                                             readOnly
-                                                            value={addresses.find(a => a.is_default) ? `${addresses.find(a => a.is_default)?.city}, ${addresses.find(a => a.is_default)?.country}` : addresses[0] ? `${addresses[0].city}, ${addresses[0].country}` : 'No Address Added'}
+                                                            value={(() => {
+                                                                const addr = addresses.find(a => a.is_default) || addresses[0];
+                                                                return addr ? `${addr.city}, ${addr.state}, ${addr.country} - ${addr.pincode}` : 'No Address Added';
+                                                            })()}
                                                             className="w-full bg-[#F8F5F0] border border-[#E8E1D5] rounded-xl px-4 py-3 text-sm focus:outline-none transition-all font-medium text-warm-gray cursor-not-allowed"
                                                             title="Location is derived from your Default Delivery Address"
                                                         />
@@ -2636,7 +2753,7 @@ export default function AccountPage() {
                                                     Security Sanctuary
                                                 </h3>
                                                 <p className="text-sm text-warm-gray mb-6 leading-relaxed">Protect your inner sanctum with a strong, mindful password.</p>
-                                                <button 
+                                                <button
                                                     onClick={() => setShowPasswordModal(true)}
                                                     className="w-full rounded-xl border border-[#E8E1D5] py-3.5 text-sm font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors flex items-center justify-center gap-2 mb-2"
                                                 >
@@ -2646,15 +2763,19 @@ export default function AccountPage() {
                                             </section>
 
                                             {/* Notification Harmony */}
-                                            <section className="bg-white rounded-3xl p-8 border border-[#E8E1D5] shadow-sm relative overflow-hidden">
-                                                <div className="absolute top-0 right-0 w-24 h-24 bg-[#F8F5F0] rounded-bl-full opacity-50 pointer-events-none"></div>
-                                                <h3 className="text-xl font-bold text-[#36453A] mb-5 flex items-center gap-2">
+                                            <section className="bg-white rounded-3xl p-8 border border-[#E8E1D5] shadow-sm relative overflow-hidden group hover:border-[#36453A] transition-all duration-300">
+                                                <div className="absolute top-0 right-0 w-24 h-24 bg-[#F8F5F0] rounded-bl-full opacity-50 pointer-events-none group-hover:bg-[#E7F0E9] transition-colors"></div>
+                                                <h3 className="text-xl font-bold text-[#36453A] mb-4 flex items-center gap-2">
                                                     <span className="w-1.5 h-6 bg-[#36453A] rounded-full inline-block"></span>
                                                     Notification Harmony
                                                 </h3>
-                                                <div className="pt-2">
-                                                    <NotificationPreferences />
-                                                </div>
+                                                <p className="text-sm text-warm-gray mb-6 leading-relaxed">Tune your alerts and stay synchronous with your wellness journey.</p>
+                                                <button
+                                                    onClick={() => setShowNotificationModal(true)}
+                                                    className="w-full rounded-xl border border-[#E8E1D5] py-3.5 text-sm font-bold text-[#36453A] hover:bg-[#F8F5F0] hover:border-[#36453A]/30 transition-all flex items-center justify-center gap-2 group-hover:shadow-sm"
+                                                >
+                                                    <BellRing className="h-4 w-4" /> Manage Notifications <ChevronRight className="h-4 w-4" />
+                                                </button>
                                             </section>
                                         </div>
                                     </div>
@@ -2688,12 +2809,12 @@ export default function AccountPage() {
                                             <p className="text-[10px] font-bold tracking-[0.2em] text-[#D4A847]/60 mb-2 uppercase">ACTIVE PLAN</p>
                                             <h3 className="text-2xl font-bold text-[#D4A847] mb-2">{activeTier} Ritualist</h3>
                                             <p className="text-sm text-white/70 leading-relaxed mb-6">
-                                                {loyaltyData?.tier?.benefits && Array.isArray(loyaltyData.tier.benefits) && loyaltyData.tier.benefits.length > 0 
+                                                {loyaltyData?.tier?.benefits && Array.isArray(loyaltyData.tier.benefits) && loyaltyData.tier.benefits.length > 0
                                                     ? loyaltyData.tier.benefits.join(', ')
                                                     : "Enhance your aura with every ritual to unlock exotic benefits and golden boons."
                                                 }
                                             </p>
-                                            <button 
+                                            <button
                                                 onClick={() => router.push(`/${country}/account/wallet`)}
                                                 className="w-full rounded-xl bg-[#D4A847] text-[#1A2E1A] py-3 text-sm font-bold hover:bg-white transition-all transform active:scale-95 shadow-lg"
                                             >
@@ -2872,7 +2993,7 @@ export default function AccountPage() {
                                                         <h3 className="text-2xl font-bold text-[#D4A847] mb-2">Need to add more info?</h3>
                                                         <p className="text-sm text-white/80 max-w-md">Our support team is here to help. You'll receive an email notification as soon as we reply.</p>
                                                     </div>
-                                                    <button 
+                                                    <button
                                                         onClick={() => router.push(`/${country}/help-center/support`)}
                                                         className="bg-[#D4A847] text-[#36453A] px-8 py-3 rounded-xl text-sm font-bold shadow-md hover:bg-[#B38720] transition-colors whitespace-nowrap"
                                                     >
@@ -2911,7 +3032,7 @@ export default function AccountPage() {
                                                 <p className="text-[11px] leading-relaxed text-warm-gray mb-4">
                                                     At Vedashi, we treat every enquiry with the same mindfulness as our product crafting. Thank you for your patience as we provide a soulful solution.
                                                 </p>
-                                                <button 
+                                                <button
                                                     onClick={() => router.push(`/${country}/help-center`)}
                                                     className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-[#E8E1D5] text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors"
                                                 >
@@ -2953,7 +3074,7 @@ export default function AccountPage() {
                                                     </div>
                                                     <h3 className="text-2xl font-bold text-[#36453A] mb-2">No Past Enquiries</h3>
                                                     <p className="text-sm text-warm-gray max-w-xs mx-auto mb-8">Your path has been smooth! If you ever need help, our support team is just a message away.</p>
-                                                    <button 
+                                                    <button
                                                         onClick={() => router.push('/help-center/support')}
                                                         className="bg-[#36453A] text-white px-8 py-3 rounded-xl text-sm font-bold shadow-md hover:bg-[#2A362D] transition-colors"
                                                     >
@@ -3034,8 +3155,8 @@ export default function AccountPage() {
                         )}
 
                         {/* ═══ Deactivation Confirmation Modal ═══ */}
-                        {showDeactivateModal && (
-                            <div className="fixed inset-0 z-50 flex items-center justify-center px-4" style={{ animation: 'fadeIn 0.3s ease-out' }}>
+                        {isMounted && showDeactivateModal && createPortal(
+                            <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4" style={{ animation: 'fadeIn 0.3s ease-out' }}>
                                 <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowDeactivateModal(false)} />
                                 <div className="relative w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl border border-light-border" style={{ animation: 'slideUp 0.35s ease-out' }}>
                                     <div className="absolute top-0 left-0 right-0 h-1.5 rounded-t-2xl" style={{ background: 'linear-gradient(90deg, #6B2737, #D4A847)' }} />
@@ -3091,7 +3212,8 @@ export default function AccountPage() {
                                         </button>
                                     </div>
                                 </div>
-                            </div>
+                            </div>,
+                            document.body
                         )}
 
                         {/* ═══ Delete Address Confirmation Modal ═══ */}
@@ -3141,7 +3263,7 @@ export default function AccountPage() {
                                         </div>
                                     </div>
                                     {notifications.length > 0 && (
-                                        <button 
+                                        <button
                                             onClick={handleMarkAllRead}
                                             className="px-4 py-2 bg-white border border-[#E8E1D5] rounded-xl text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors flex items-center gap-2"
                                         >
@@ -3165,10 +3287,10 @@ export default function AccountPage() {
                                 ) : (
                                     <div className="space-y-4">
                                         {notifications.map((n) => (
-                                            <div 
+                                            <div
                                                 key={n.notification_id}
-                                                className={`group flex items-start gap-4 p-5 rounded-2xl border transition-all ${n.is_read 
-                                                    ? 'bg-white/60 border-[#E8E1D5] opacity-75' 
+                                                className={`group flex items-start gap-4 p-5 rounded-2xl border transition-all ${n.is_read
+                                                    ? 'bg-white/60 border-[#E8E1D5] opacity-75'
                                                     : 'bg-white border-[#36453A]/20 shadow-sm border-l-4 border-l-[#36453A]'}`}
                                             >
                                                 <div className={`mt-1 h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 ${n.is_read ? 'bg-warm-gray/10' : 'bg-[#36453A]/10'}`}>
@@ -3186,7 +3308,7 @@ export default function AccountPage() {
                                                     </p>
                                                     <div className="flex items-center gap-4">
                                                         {n.link_url && (
-                                                            <button 
+                                                            <button
                                                                 onClick={() => router.push(n.link_url as any)}
                                                                 className="text-[10px] font-black uppercase tracking-widest text-[#36453A] hover:underline"
                                                             >
@@ -3194,7 +3316,7 @@ export default function AccountPage() {
                                                             </button>
                                                         )}
                                                         {!n.is_read && (
-                                                            <button 
+                                                            <button
                                                                 onClick={async () => {
                                                                     await markNotificationAsRead(n.notification_id);
                                                                     fetchNotificationsData();
@@ -3212,7 +3334,7 @@ export default function AccountPage() {
                                                         )}
                                                     </div>
                                                 </div>
-                                                <button 
+                                                <button
                                                     onClick={() => handleDeleteNotification(n.notification_id)}
                                                     className="opacity-0 group-hover:opacity-100 p-2 text-warm-gray/40 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
                                                 >
@@ -3226,8 +3348,8 @@ export default function AccountPage() {
                         )}
 
                         {/* ═══ Track Order Modal ═══ */}
-                        {isTrackOrderModalOpen && (
-                            <div className="fixed inset-0 z-50 flex items-center justify-center px-4" style={{ animation: 'fadeIn 0.2s ease-out' }}>
+                        {isMounted && isTrackOrderModalOpen && createPortal(
+                            <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4" style={{ animation: 'fadeIn 0.2s ease-out' }}>
                                 <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsTrackOrderModalOpen(false)} />
                                 <div className="relative w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl border border-light-border text-center" style={{ animation: 'slideUp 0.25s ease-out' }}>
                                     <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-cream">
@@ -3249,12 +3371,13 @@ export default function AccountPage() {
                                         Close
                                     </button>
                                 </div>
-                            </div>
+                            </div>,
+                            document.body
                         )}
 
                         {/* ═══ Notification Preferences Overlay ═══ */}
-                        {showNotificationOverlay && (
-                            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6" style={{ animation: 'fadeIn 0.3s ease-out' }}>
+                        {isMounted && showNotificationOverlay && createPortal(
+                            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6" style={{ animation: 'fadeIn 0.3s ease-out' }}>
                                 <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowNotificationOverlay(false)} />
 
                                 <div className="relative w-full max-w-3xl max-h-[90vh] flex flex-col rounded-2xl bg-white shadow-2xl overflow-hidden" style={{ animation: 'slideUp 0.35s ease-out' }}>
@@ -3292,7 +3415,8 @@ export default function AccountPage() {
                                         </button>
                                     </div>
                                 </div>
-                            </div>
+                            </div>,
+                            document.body
                         )}
 
                         {/* ═══ Export Orders Modal ═══ */}
@@ -3368,8 +3492,8 @@ export default function AccountPage() {
             />
 
             {/* Email OTP Verification Modal */}
-            {showEmailOtpModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            {isMounted && showEmailOtpModal && createPortal(
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-charcoal/40 backdrop-blur-sm" onClick={() => setShowEmailOtpModal(false)}></div>
                     <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-light-border overflow-hidden animate-fadeIn">
                         <div className="h-1.5" style={{ background: 'linear-gradient(90deg, #36453A, #D4A847, #36453A)' }}></div>
@@ -3382,7 +3506,7 @@ export default function AccountPage() {
                                     <X className="h-5 w-5" />
                                 </button>
                             </div>
-                            
+
                             <p className="text-sm text-warm-gray mb-6">
                                 We've sent a secure verification code to <strong className="text-charcoal font-semibold">{profileData.email}</strong>. Please enter the code below to confirm this change.
                             </p>
@@ -3390,16 +3514,16 @@ export default function AccountPage() {
                             <div className="space-y-5">
                                 <div>
                                     <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Secure Code (OTP)</label>
-                                    <input 
-                                        type="text" 
+                                    <input
+                                        type="text"
                                         value={emailOtpCode}
                                         onChange={(e) => setEmailOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                        placeholder="Enter the 6-digit code" 
+                                        placeholder="Enter the 6-digit code"
                                         className="w-full bg-white border border-[#D4A847] rounded-xl px-4 py-3.5 text-center text-xl font-bold tracking-[0.5em] focus:outline-none shadow-[0_0_15px_rgba(212,168,71,0.15)] focus:border-[#C49A3C] focus:ring-1 focus:ring-[#C49A3C] transition-all placeholder:tracking-normal placeholder:font-normal placeholder:text-base placeholder:text-gray-300 text-[#1C2B1A]"
                                     />
                                 </div>
                                 <div className="pt-2">
-                                    <button 
+                                    <button
                                         onClick={handleEmailOtpSubmit}
                                         disabled={emailOtpSubmitting || emailOtpCode.length < 4}
                                         className="w-full bg-[#1C2B1A] text-[#E8D5A3] rounded-xl py-3.5 text-sm font-bold shadow-xl hover:bg-[#2A3B28] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed border border-[#3A4B38]"
@@ -3409,7 +3533,7 @@ export default function AccountPage() {
                                     </button>
                                 </div>
                                 <div className="text-center pt-2">
-                                    <button 
+                                    <button
                                         type="button"
                                         onClick={handleResendEmailOtp}
                                         disabled={emailOtpResendTimer > 0}
@@ -3421,12 +3545,71 @@ export default function AccountPage() {
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
+            )}
+
+            {/* Phone OTP Verification Modal */}
+            {isMounted && showPhoneOtpModal && createPortal(
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-charcoal/40 backdrop-blur-sm" onClick={() => setShowPhoneOtpModal(false)}></div>
+                    <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-light-border overflow-hidden animate-fadeIn">
+                        <div className="h-1.5" style={{ background: 'linear-gradient(90deg, #1C2B1A, #6B8F5E, #1C2B1A)' }}></div>
+                        <div className="p-8">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-2xl font-bold text-[#1C2B1A]">
+                                    Verify Mobile Number
+                                </h3>
+                                <button onClick={() => setShowPhoneOtpModal(false)} className="p-2 rounded-full hover:bg-cream/50 transition-colors text-warm-gray hover:text-[#1C2B1A]">
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </div>
+
+                            <p className="text-sm text-warm-gray mb-6">
+                                We've sent a 6-digit verification code to your new mobile number ending in <strong className="text-charcoal font-semibold">{profileData.phone.slice(-4)}</strong>.
+                            </p>
+
+                            <div className="space-y-5">
+                                <div>
+                                    <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Verification Code</label>
+                                    <input
+                                        type="text"
+                                        value={phoneOtpCode}
+                                        onChange={(e) => setPhoneOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                        placeholder="000000"
+                                        className="w-full bg-white border border-[#6B8F5E] rounded-xl px-4 py-3.5 text-center text-xl font-bold tracking-[0.5em] focus:outline-none shadow-[0_0_15px_rgba(107,143,94,0.15)] focus:border-[#4A6341] focus:ring-1 focus:ring-[#4A6341] transition-all placeholder:tracking-normal placeholder:font-normal placeholder:text-base placeholder:text-gray-300 text-[#1C2B1A]"
+                                    />
+                                </div>
+                                <div className="pt-2">
+                                    <button
+                                        onClick={handlePhoneOtpSubmit}
+                                        disabled={phoneOtpSubmitting || phoneOtpCode.length < 4}
+                                        className="w-full bg-[#1C2B1A] text-[#E8D5A3] rounded-xl py-3.5 text-sm font-bold shadow-xl hover:bg-[#2A3B28] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed border border-[#3A4B38]"
+                                    >
+                                        {phoneOtpSubmitting ? <Loader2 className="h-4 w-4 animate-spin text-[#E8D5A3]" /> : <CheckCircle2 className="h-4 w-4 text-[#E8D5A3]" />}
+                                        Verify & Update
+                                    </button>
+                                </div>
+                                <div className="text-center pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={handleResendPhoneOtp}
+                                        disabled={phoneOtpResendTimer > 0}
+                                        className={`text-sm font-semibold transition-all ${phoneOtpResendTimer > 0 ? 'text-warm-gray/70 cursor-not-allowed' : 'text-[#6B8F5E] hover:text-[#4A6341] hover:underline'}`}
+                                    >
+                                        {phoneOtpResendTimer > 0 ? `Resend SMS in ${phoneOtpResendTimer}s` : 'Resend Verification SMS'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>,
+                document.body
             )}
 
             {/* Password Change Modal */}
-            {showPasswordModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            {isMounted && showPasswordModal && createPortal(
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-charcoal/40 backdrop-blur-sm" onClick={() => setShowPasswordModal(false)}></div>
                     <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-light-border overflow-hidden animate-fadeIn">
                         <div className="h-1.5" style={{ background: 'linear-gradient(90deg, #36453A, #D4A847, #36453A)' }}></div>
@@ -3439,13 +3622,13 @@ export default function AccountPage() {
                                     <X className="h-5 w-5" />
                                 </button>
                             </div>
-                            
+
                             <form onSubmit={handlePasswordChange} className="space-y-4">
                                 {profileData.has_password && (
                                     <div>
                                         <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Current Password</label>
                                         <div className="relative">
-                                            <input 
+                                            <input
                                                 type={showCurrentPassword ? "text" : "password"}
                                                 required
                                                 value={passwords.current}
@@ -3453,8 +3636,8 @@ export default function AccountPage() {
                                                 className="w-full rounded-xl border border-light-border bg-cream/20 pl-4 pr-12 py-3 text-sm focus:border-burgundy/40 focus:outline-none transition-all"
                                                 placeholder="••••••••"
                                             />
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                                                 className="absolute right-4 top-1/2 -translate-y-1/2 text-warm-gray hover:text-[#36453A] transition-colors"
                                             >
@@ -3467,7 +3650,7 @@ export default function AccountPage() {
                                     <div>
                                         <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">New Password</label>
                                         <div className="relative">
-                                            <input 
+                                            <input
                                                 type={showNewPassword ? "text" : "password"}
                                                 required
                                                 value={passwords.new}
@@ -3475,8 +3658,8 @@ export default function AccountPage() {
                                                 className="w-full rounded-xl border border-light-border bg-cream/20 pl-4 pr-12 py-3 text-sm focus:border-burgundy/40 focus:outline-none transition-all"
                                                 placeholder="••••••••"
                                             />
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 onClick={() => setShowNewPassword(!showNewPassword)}
                                                 className="absolute right-4 top-1/2 -translate-y-1/2 text-warm-gray hover:text-[#36453A] transition-colors"
                                             >
@@ -3487,7 +3670,7 @@ export default function AccountPage() {
                                     <div>
                                         <label className="block text-[10px] font-bold text-warm-gray tracking-widest uppercase mb-2 ml-1">Confirm New Password</label>
                                         <div className="relative">
-                                            <input 
+                                            <input
                                                 type={showConfirmPassword ? "text" : "password"}
                                                 required
                                                 value={passwords.confirm}
@@ -3531,6 +3714,51 @@ export default function AccountPage() {
                 </div>
             )}
 
+            {/* ── Notification Preferences Modal ── */}
+            {isMounted && showNotificationModal && createPortal(
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-[#1A2E1A]/40 backdrop-blur-sm" onClick={() => setShowNotificationModal(false)}></div>
+                    <div className="relative w-full max-w-2xl bg-[#FBF9F6] rounded-[40px] shadow-2xl overflow-hidden border border-[#E8E1D5] animate-in fade-in zoom-in duration-300">
+                        <div className="bg-[#1A2E1A] p-8 text-white relative">
+                            {/* Decorative elements */}
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-full pointer-events-none"></div>
+                            
+                            <div className="flex items-center justify-between relative z-10">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-inner">
+                                        <BellRing className="h-7 w-7 text-[#D4A847]" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-2xl font-bold font-serif tracking-tight">Notification Harmony</h2>
+                                        <p className="text-white/60 text-xs font-medium uppercase tracking-widest mt-0.5">Customise your mindful alerts</p>
+                                    </div>
+                                </div>
+                                <button onClick={() => setShowNotificationModal(false)} className="p-3 rounded-2xl hover:bg-white/10 transition-all text-white/50 hover:text-white border border-transparent hover:border-white/10 group">
+                                    <X className="h-6 w-6 group-hover:rotate-90 transition-transform duration-300" />
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div className="p-8 max-h-[70vh] overflow-y-auto custom-scrollbar bg-white/80 backdrop-blur-md">
+                            <div className="mb-6 bg-[#F8F5F0] p-4 rounded-2xl border border-[#E8E1D5]/50">
+                                <p className="text-sm text-[#36453A] flex items-center gap-2">
+                                    <Sparkles className="h-4 w-4 text-[#D4A847]" /> Master your periodic presence through mindful alerts.
+                                </p>
+                            </div>
+                            <NotificationPreferences hideHeader={true} isMobileVerified={profileData.is_mobile_verified} />
+                        </div>
+                        <div className="p-6 bg-[#F8F5F0] border-t border-[#E8E1D5] text-center">
+                            <button 
+                                onClick={() => setShowNotificationModal(false)}
+                                className="px-12 py-3.5 bg-[#36453A] text-white rounded-xl text-sm font-bold shadow-lg hover:bg-[#2A362D] transition-all transform active:scale-95"
+                            >
+                                DONE
+                            </button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
         </div>
     );
 }
