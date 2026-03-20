@@ -215,6 +215,17 @@ function ProductDetailContent({ params }: Props) {
                 setSelectedVariant(targetV);
             }
 
+            // Set initial active tab based on availability
+            if (data) {
+                if (data.description) {
+                    setActiveInfoTab('description');
+                } else if (data.intended_use) {
+                    setActiveInfoTab('howToUse');
+                } else {
+                    setActiveInfoTab('specifications');
+                }
+            }
+
             setLoading(false);
 
             // Track this product as recently viewed
@@ -389,7 +400,7 @@ function ProductDetailContent({ params }: Props) {
 
             <div className="mx-auto max-w-7xl px-4 py-6">
                 {/* ═══ ABOVE THE FOLD — loads immediately ═══ */}
-                <div className="grid gap-10 lg:grid-cols-2">
+                <div className="grid gap-10 lg:grid-cols-2 items-start">
                     {/* IMAGE GALLERY */}
                     <div>
                         <ProductImageGallery
@@ -404,7 +415,7 @@ function ProductDetailContent({ params }: Props) {
                     </div>
 
                     {/* DETAILS */}
-                    <div className="space-y-5 pt-0 pr-4">
+                    <div className="space-y-5 pt-0 pr-4 lg:min-h-[700px]">
                         {/* Vedashi Badges */}
                         <div className="flex flex-wrap gap-2">
                             <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#3d5c3a]/10 text-[#3d5c3a]">
@@ -452,6 +463,7 @@ function ProductDetailContent({ params }: Props) {
                         </p>
 
                         {/* ✅ VARIANT SELECTORS: Weight, Strength, Volume, Count, Flavor, Pack */}
+                        <div className="min-h-[120px]">
                         {variants.length > 0 && (() => {
                             const uniqueWeights = [...new Set(variants.map((v: any) => v.weight_g as number))].filter(Boolean).sort((a, b) => a - b);
                             const uniqueStrengths = [...new Set(variants.map((v: any) => v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : null))].filter(Boolean);
@@ -757,6 +769,7 @@ function ProductDetailContent({ params }: Props) {
                                 </div>
                             );
                         })()}
+                        </div>
 
                         {/* STOCK AVAILABILITY BADGE & QUANTITY COUNTER */}
                         <div className="flex items-center flex-wrap gap-4">
