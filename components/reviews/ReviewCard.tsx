@@ -17,6 +17,8 @@ export interface Review {
     admin_reply?: string;
     admin_reply_at?: string;
     created_at: string;
+    own_vote?: 'up' | 'down' | null;
+    has_reported?: boolean;
 }
 
 interface ReviewCardProps {
@@ -25,13 +27,13 @@ interface ReviewCardProps {
 
 export default function ReviewCard({ review }: ReviewCardProps) {
     const [helpfulCount, setHelpfulCount] = useState(review.helpful_count ?? 0);
-    const [voteStatus, setVoteStatus] = useState<'none' | 'up' | 'down'>('none');
+    const [voteStatus, setVoteStatus] = useState<'none' | 'up' | 'down'>(review.own_vote || 'none');
 
     // Reporting state
     const [isReporting, setIsReporting] = useState(false);
     const [reportReason, setReportReason] = useState('');
     const [isSubmittingReport, setIsSubmittingReport] = useState(false);
-    const [hasReported, setHasReported] = useState(false);
+    const [hasReported, setHasReported] = useState(!!review.has_reported);
 
     const handleVote = async (type: 'up' | 'down') => {
         if (voteStatus === type) return; // Prevent double voting the same way
@@ -48,10 +50,15 @@ export default function ReviewCard({ review }: ReviewCardProps) {
         }
 
         try {
-            await voteHelpful(review.review_id, type);
+            const res = await voteHelpful(review.review_id, type);
+            if (!res || res.success === false) {
+                toast.error(res?.message || 'Failed to register vote. Please log in.');
+                setVoteStatus(previousVote);
+                setHelpfulCount(previousCount);
+            }
         } catch (error) {
-            // Revert on error
-            toast.error('Failed to register vote. Please log in.');
+            // Revert on network error
+            toast.error('Network error. Please try again.');
             setVoteStatus(previousVote);
             setHelpfulCount(previousCount);
         }
@@ -164,12 +171,12 @@ export default function ReviewCard({ review }: ReviewCardProps) {
                     {/* Report button */}
                     <button
                         onClick={() => setIsReporting(!isReporting)}
-                        className="flex items-center gap-1 text-neutral-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                        className={`flex items-center gap-1 transition-colors ${isReporting || hasReported ? 'text-red-500' : 'text-neutral-400 hover:text-red-500'}`}
                         title="Report this review"
                         disabled={hasReported}
                     >
                         <Flag size={13} className={hasReported ? "text-red-400" : ""} />
-                        <span className="sr-only sm:not-sr-only">{hasReported ? 'Reported' : 'Report'}</span>
+                        <span className="text-xs font-medium">{hasReported ? 'Reported' : 'Report'}</span>
                     </button>
                 </div>
             </div>

@@ -11,7 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useWishlist } from '@/context/WishlistContext';
 import ProductCard from '@/components/ProductCard';
 import { SkeletonLine, SkeletonReviewSection, SkeletonProductRow } from '@/components/Skeleton';
-import { Heart, ShoppingCart, Minus, Plus, Star, Truck, RotateCcw, ChevronRight, AlertTriangle, Sparkles, Info } from 'lucide-react';
+import { Heart, ShoppingCart, Minus, Plus, Star, Truck, RotateCcw, ChevronRight, AlertTriangle, Sparkles, Info, Package, Award, BadgeCheck, Clock, Globe } from 'lucide-react';
 import ProductImageGallery from '@/components/gallery/ProductImageGallery';
 import LazySection from '@/components/lazy/LazySection';
 import toast from 'react-hot-toast';
@@ -170,6 +170,7 @@ function ProductDetailContent({ params }: Props) {
     const [selectedFlavor, setSelectedFlavor] = useState<string | null>(null);
     const [selectedPack, setSelectedPack] = useState<number | null>(null);
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+    const [activeInfoTab, setActiveInfoTab] = useState<'description' | 'howToUse' | 'specifications'>('description');
     const router = useRouter();
     const searchParams = useSearchParams();
     const { isAuthenticated } = useAuth();
@@ -212,6 +213,17 @@ function ProductDetailContent({ params }: Props) {
                 setSelectedFlavor(targetV?.flavor ?? null);
                 setSelectedPack(targetV?.pack_quantity ?? 1);
                 setSelectedVariant(targetV);
+            }
+
+            // Set initial active tab based on availability
+            if (data) {
+                if (data.description) {
+                    setActiveInfoTab('description');
+                } else if (data.intended_use) {
+                    setActiveInfoTab('howToUse');
+                } else {
+                    setActiveInfoTab('specifications');
+                }
             }
 
             setLoading(false);
@@ -366,8 +378,8 @@ function ProductDetailContent({ params }: Props) {
                 }}
             />
             {/* Breadcrumb */}
-            <div className="border-b border-light-border bg-white">
-                <div className="mx-auto max-w-7xl px-4 py-3">
+            <div className="border-b border-light-border bg-white py-1">
+                <div className="mx-auto max-w-7xl px-4 py-1">
                     <nav className="flex items-center gap-2 text-sm text-gray-500">
                         <Link href="/">Home</Link>
                         <ChevronRight className="h-3 w-3" />
@@ -386,9 +398,9 @@ function ProductDetailContent({ params }: Props) {
                 </div>
             </div>
 
-            <div className="mx-auto max-w-7xl px-4 py-10">
+            <div className="mx-auto max-w-7xl px-4 py-6">
                 {/* ═══ ABOVE THE FOLD — loads immediately ═══ */}
-                <div className="grid gap-10 lg:grid-cols-2">
+                <div className="grid gap-10 lg:grid-cols-2 items-start">
                     {/* IMAGE GALLERY */}
                     <div>
                         <ProductImageGallery
@@ -403,7 +415,7 @@ function ProductDetailContent({ params }: Props) {
                     </div>
 
                     {/* DETAILS */}
-                    <div className="space-y-6 pt-4 lg:pt-8 pr-4">
+                    <div className="space-y-5 pt-0 pr-4 lg:min-h-[700px]">
                         {/* Vedashi Badges */}
                         <div className="flex flex-wrap gap-2">
                             <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#3d5c3a]/10 text-[#3d5c3a]">
@@ -451,6 +463,7 @@ function ProductDetailContent({ params }: Props) {
                         </p>
 
                         {/* ✅ VARIANT SELECTORS: Weight, Strength, Volume, Count, Flavor, Pack */}
+                        <div className="min-h-[120px]">
                         {variants.length > 0 && (() => {
                             const uniqueWeights = [...new Set(variants.map((v: any) => v.weight_g as number))].filter(Boolean).sort((a, b) => a - b);
                             const uniqueStrengths = [...new Set(variants.map((v: any) => v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : null))].filter(Boolean);
@@ -756,6 +769,7 @@ function ProductDetailContent({ params }: Props) {
                                 </div>
                             );
                         })()}
+                        </div>
 
                         {/* STOCK AVAILABILITY BADGE & QUANTITY COUNTER */}
                         <div className="flex items-center flex-wrap gap-4">
@@ -808,19 +822,7 @@ function ProductDetailContent({ params }: Props) {
                         </div>
 
                         {/* QUANTITY + CART */}
-                        <div className="space-y-4 pt-4 border-t border-gray-100">
-                            {/* Static Subscription Toggle UI (Visual Only) */}
-                            <div className="flex lg:grid lg:grid-cols-2 gap-3 mb-4">
-                                <button className="flex-[1] lg:flex-none py-3 px-4 rounded-xl border-2 border-[#3d5c3a] bg-[#3d5c3a]/5 text-left transition-colors relative">
-                                    <span className="block text-xs font-bold text-[#3d5c3a] uppercase tracking-wider mb-0.5">Monthly</span>
-                                    <span className="block text-[11px] text-gray-600">Auto-ships every 30 days</span>
-                                    <span className="absolute top-0 right-0 bg-[#3d5c3a] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-bl-lg rounded-tr-[10px]">SAVE 15%</span>
-                                </button>
-                                <button className="flex-[1] lg:flex-none py-3 px-4 rounded-xl border border-gray-200 bg-white text-left hover:border-gray-300 transition-colors">
-                                    <span className="block text-xs font-bold text-gray-900 uppercase tracking-wider mb-0.5">One-time</span>
-                                    <span className="block text-[11px] text-gray-500">Standard purchase</span>
-                                </button>
-                            </div>
+                        <div className="space-y-4 pt-4 mt-2">
 
                             <div className="grid grid-cols-2 gap-3">
                                 <button
@@ -849,7 +851,7 @@ function ProductDetailContent({ params }: Props) {
                         </div>
 
                         {/* TRUST BADGES */}
-                        <div className="grid grid-cols-3 gap-2 pt-6 pb-2">
+                        <div className="grid grid-cols-3 gap-2 pt-4 pb-1">
                             <div className="flex flex-col items-center text-center gap-2">
                                 <div className="h-10 w-10 min-w-10 rounded-full bg-[#3d5c3a]/10 text-[#3d5c3a] flex items-center justify-center">
                                     <FlaskConical size={18} />
@@ -869,6 +871,45 @@ function ProductDetailContent({ params }: Props) {
                                 <span className="text-[9px] font-bold uppercase tracking-wider text-gray-600">Clinical Defended</span>
                             </div>
                         </div>
+
+                        {/* SELLER & DELIVERY INFO GRID — Aligned side-by-side */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="border border-gray-200 rounded-xl divide-y divide-gray-100 bg-white">
+                                <div className="px-3 py-2.5">
+                                    <div className="flex items-center gap-2 text-[11px] font-semibold text-gray-700">
+                                        <BadgeCheck className="h-3.5 w-3.5 text-[#3d5c3a]" />
+                                        <span>100% Genuine</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-[11px] font-semibold text-gray-700 mt-1">
+                                        <RotateCcw className="h-3.5 w-3.5 text-[#3d5c3a]" />
+                                        <span>Easy Returns</span>
+                                    </div>
+                                </div>
+                                <div className="px-3 py-2 text-[10px] text-gray-500">
+                                    <span className="flex items-center gap-1.5">
+                                        <Package className="h-3.5 w-3.5 text-gray-400" />
+                                        <span>Sold by: <strong className="text-gray-700">Vedashi Wellness</strong></span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="bg-[#f8f6f3] rounded-xl p-3 flex flex-col justify-center space-y-2">
+                                <div className="flex items-start gap-2">
+                                    <Truck className="h-4 w-4 text-[#3d5c3a] mt-0.5" />
+                                    <div>
+                                        <p className="text-[11px] font-bold text-gray-900">Free Shipping</p>
+                                        <p className="text-[10px] text-gray-500 leading-tight">Above ₹499. Delivered in 3-7 days</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-2">
+                                    <Clock className="h-4 w-4 text-[#3d5c3a] mt-0.5" />
+                                    <div>
+                                        <p className="text-[11px] font-bold text-gray-900">Cash on Delivery</p>
+                                        <p className="text-[10px] text-gray-500 leading-tight">Pay at your doorstep</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -876,11 +917,11 @@ function ProductDetailContent({ params }: Props) {
 
                 {/* NEW: ANCIENT ROOTS SECTION */}
                 <LazySection
-                    minHeight="600px"
+                    minHeight="500px"
                     rootMargin="200px"
-                    skeleton={<div className="h-[600px] w-full rounded-2xl bg-gray-100 animate-pulse mt-16" />}
+                    skeleton={<div className="h-[500px] w-full rounded-2xl bg-gray-100 animate-pulse mt-6" />}
                 >
-                    <section className="mt-16 bg-[#3d5c3a] rounded-3xl overflow-hidden text-[#FAF7F2]">
+                    <section className="mt-6 bg-[#3d5c3a] rounded-3xl overflow-hidden text-[#FAF7F2]">
                         <div className="grid lg:grid-cols-2">
                             {/* Left Content */}
                             <div className="p-8 lg:p-16 flex flex-col justify-center">
@@ -938,14 +979,14 @@ function ProductDetailContent({ params }: Props) {
                     </section>
                 </LazySection>
 
-                {/* INTENDED USE & DESCRIPTION */}
-                {(product.description || product.intended_use) && (
+                {/* ════ TABBED PRODUCT DESCRIPTION — Nykaa-style ════ */}
+                {(product.description || product.intended_use || product.specifications) && (
                     <LazySection
-                        minHeight="100px"
+                        minHeight="200px"
                         rootMargin="200px"
                         skeleton={
-                            <section className="mt-16 border-t border-gray-100 pt-10">
-                                <div className="space-y-6">
+                            <section className="mt-6 border-t border-gray-100 pt-6">
+                                <div className="space-y-4">
                                     <div className="h-6 w-40 rounded animate-shimmer" />
                                     <div className="h-4 w-full rounded animate-shimmer" />
                                     <div className="h-4 w-3/4 rounded animate-shimmer" />
@@ -953,35 +994,187 @@ function ProductDetailContent({ params }: Props) {
                             </section>
                         }
                     >
-                        <section className="mt-16 pt-10">
-                            <div className={`grid gap-10 ${product.intended_use ? 'lg:grid-cols-[1fr_2fr]' : 'lg:grid-cols-1 max-w-4xl mx-auto'}`}>
-                                {product.intended_use && (
-                                    <div className="bg-gray-50 p-8 rounded-2xl h-max border border-gray-100">
-                                        <div className="flex items-center gap-3 mb-6">
-                                            <Info className="h-5 w-5 text-[#3d5c3a] flex-shrink-0" strokeWidth={2} />
-                                            <h2 className="text-xl font-bold text-gray-900">Intended Use</h2>
-                                        </div>
-                                        <p className="text-[14px] text-gray-600 leading-relaxed whitespace-pre-line">
-                                            {product.intended_use}
-                                        </p>
-                                    </div>
-                                )}
-                                {product.description && (
-                                    <div className="pt-4 lg:pt-0">
-                                        <h2 className={`text-3xl font-bold text-gray-900 mb-6 ${product.intended_use ? 'hidden lg:block' : ''}`}>Description</h2>
-                                        <div className="text-[15px] text-gray-600 leading-[1.85] whitespace-pre-line">
-                                            {isDescriptionExpanded || product.description.split(/\s+/).length <= 100
+                        <section className="mt-6 pt-6">
+                            <h2 className="text-2xl font-bold text-gray-900 mb-6">Product Description</h2>
+
+                            {/* Tab Headers */}
+                            <div className="border-b border-gray-200 mb-0">
+                                <div className="flex gap-0">
+                                    {product.description && (
+                                        <button
+                                            onClick={() => setActiveInfoTab('description')}
+                                            className={`relative px-6 py-3 text-sm font-semibold transition-colors ${
+                                                activeInfoTab === 'description'
+                                                    ? 'text-[#1d351d]'
+                                                    : 'text-gray-500 hover:text-gray-800'
+                                            }`}
+                                        >
+                                            Description
+                                            {activeInfoTab === 'description' && (
+                                                <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#1d351d] rounded-t-full" />
+                                            )}
+                                        </button>
+                                    )}
+                                    {product.intended_use && (
+                                        <button
+                                            onClick={() => setActiveInfoTab('howToUse')}
+                                            className={`relative px-6 py-3 text-sm font-semibold transition-colors ${
+                                                activeInfoTab === 'howToUse'
+                                                    ? 'text-[#1d351d]'
+                                                    : 'text-gray-500 hover:text-gray-800'
+                                            }`}
+                                        >
+                                            How To Use
+                                            {activeInfoTab === 'howToUse' && (
+                                                <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#1d351d] rounded-t-full" />
+                                            )}
+                                        </button>
+                                    )}
+                                    {(product.specifications || product.country_of_origin || product.form || product.brand) && (
+                                        <button
+                                            onClick={() => setActiveInfoTab('specifications')}
+                                            className={`relative px-6 py-3 text-sm font-semibold transition-colors ${
+                                                activeInfoTab === 'specifications'
+                                                    ? 'text-[#1d351d]'
+                                                    : 'text-gray-500 hover:text-gray-800'
+                                            }`}
+                                        >
+                                            Specifications
+                                            {activeInfoTab === 'specifications' && (
+                                                <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#1d351d] rounded-t-full" />
+                                            )}
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Tab Content */}
+                            <div className="bg-white border border-t-0 border-gray-200 rounded-b-2xl p-6 lg:p-8 min-h-[200px]">
+                                {/* Description Tab */}
+                                {activeInfoTab === 'description' && product.description && (
+                                    <div className="animate-fadeIn">
+                                        <div className="text-[15px] text-gray-700 leading-[1.9] whitespace-pre-line">
+                                            {isDescriptionExpanded || product.description.split(/\s+/).length <= 150
                                                 ? product.description
-                                                : product.description.split(/\s+/).slice(0, 100).join(' ') + '...'}
+                                                : product.description.split(/\s+/).slice(0, 150).join(' ') + '...'}
                                         </div>
-                                        {product.description.split(/\s+/).length > 100 && (
+                                        {product.description.split(/\s+/).length > 150 && (
                                             <button 
                                                 onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-                                                className="mt-6 text-[#3d5c3a] font-bold text-sm tracking-wide hover:underline flex items-center gap-2"
+                                                className="mt-6 text-[#1d351d] font-bold text-sm tracking-wide hover:underline flex items-center gap-1"
                                             >
-                                                {isDescriptionExpanded ? 'Read Less' : 'Read More'}
+                                                {isDescriptionExpanded ? 'Read Less ▲' : 'Read More ▼'}
                                             </button>
                                         )}
+
+                                        {/* Key Features Highlights */}
+                                        {product.specialities && product.specialities.length > 0 && (
+                                            <div className="mt-8 pt-6 border-t border-gray-100">
+                                                <p className="text-sm font-bold text-gray-900 mb-3">Features:</p>
+                                                <ul className="space-y-2">
+                                                    {product.specialities.map((s: string, i: number) => (
+                                                        <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                                                            <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-[#3d5c3a] flex-shrink-0" />
+                                                            {s}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* How To Use Tab */}
+                                {activeInfoTab === 'howToUse' && product.intended_use && (
+                                    <div className="animate-fadeIn">
+                                        <div className="text-[15px] text-gray-700 leading-[1.9] whitespace-pre-line">
+                                            {product.intended_use}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Specifications Tab */}
+                                {activeInfoTab === 'specifications' && (
+                                    <div className="animate-fadeIn">
+                                        <div className="divide-y divide-gray-100">
+                                            {product.brand && (
+                                                <div className="flex py-3">
+                                                    <span className="text-sm text-gray-500 w-40 flex-shrink-0 font-medium">Brand</span>
+                                                    <span className="text-sm text-gray-900 font-semibold">{product.brand}</span>
+                                                </div>
+                                            )}
+                                            {product.category && (
+                                                <div className="flex py-3">
+                                                    <span className="text-sm text-gray-500 w-40 flex-shrink-0 font-medium">Category</span>
+                                                    <span className="text-sm text-gray-900">{product.category}</span>
+                                                </div>
+                                            )}
+                                            {product.form && (
+                                                <div className="flex py-3">
+                                                    <span className="text-sm text-gray-500 w-40 flex-shrink-0 font-medium">Form</span>
+                                                    <span className="text-sm text-gray-900 capitalize">{product.form}</span>
+                                                </div>
+                                            )}
+                                            {product.country_of_origin && (
+                                                <div className="flex py-3">
+                                                    <span className="text-sm text-gray-500 w-40 flex-shrink-0 font-medium">Country of Origin</span>
+                                                    <span className="text-sm text-gray-900 flex items-center gap-1.5">
+                                                        <Globe className="h-3.5 w-3.5 text-gray-400" />
+                                                        {product.country_of_origin}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            {product.unit_of_measure && (
+                                                <div className="flex py-3">
+                                                    <span className="text-sm text-gray-500 w-40 flex-shrink-0 font-medium">Unit of Measure</span>
+                                                    <span className="text-sm text-gray-900">{product.unit_of_measure}</span>
+                                                </div>
+                                            )}
+                                            {product.specifications?.material && (
+                                                <div className="flex py-3">
+                                                    <span className="text-sm text-gray-500 w-40 flex-shrink-0 font-medium">Material</span>
+                                                    <span className="text-sm text-gray-900">{product.specifications.material}</span>
+                                                </div>
+                                            )}
+                                            {product.specifications?.weight_kg && (
+                                                <div className="flex py-3">
+                                                    <span className="text-sm text-gray-500 w-40 flex-shrink-0 font-medium">Weight</span>
+                                                    <span className="text-sm text-gray-900">{product.specifications.weight_kg >= 1 ? `${product.specifications.weight_kg} kg` : `${Math.round(product.specifications.weight_kg * 1000)} g`}</span>
+                                                </div>
+                                            )}
+                                            {product.specifications?.color && (
+                                                <div className="flex py-3">
+                                                    <span className="text-sm text-gray-500 w-40 flex-shrink-0 font-medium">Color</span>
+                                                    <span className="text-sm text-gray-900 capitalize">{product.specifications.color}</span>
+                                                </div>
+                                            )}
+                                            {product.specifications?.grade && (
+                                                <div className="flex py-3">
+                                                    <span className="text-sm text-gray-500 w-40 flex-shrink-0 font-medium">Grade</span>
+                                                    <span className="text-sm text-gray-900">{product.specifications.grade}</span>
+                                                </div>
+                                            )}
+                                            {product.specifications?.shelf_life_months && (
+                                                <div className="flex py-3">
+                                                    <span className="text-sm text-gray-500 w-40 flex-shrink-0 font-medium">Shelf Life</span>
+                                                    <span className="text-sm text-gray-900">{product.specifications.shelf_life_months} months</span>
+                                                </div>
+                                            )}
+                                            {(product.specifications?.length_cm || product.specifications?.width_cm || product.specifications?.height_cm) && (
+                                                <div className="flex py-3">
+                                                    <span className="text-sm text-gray-500 w-40 flex-shrink-0 font-medium">Dimensions</span>
+                                                    <span className="text-sm text-gray-900">
+                                                        {[product.specifications.length_cm, product.specifications.width_cm, product.specifications.height_cm].filter(Boolean).join(' × ')} cm
+                                                    </span>
+                                                </div>
+                                            )}
+                                            {product.sku && (
+                                                <div className="flex py-3">
+                                                    <span className="text-sm text-gray-500 w-40 flex-shrink-0 font-medium">SKU</span>
+                                                    <span className="text-sm text-gray-900 font-mono">{product.sku}</span>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -990,7 +1183,7 @@ function ProductDetailContent({ params }: Props) {
                 )}
 
                 {/* REVIEWS SECTION — lazy loaded + dynamic import */}
-               <div className="relative isolate w-full mt-24 pt-16 pb-16 overflow-hidden">
+               <div className="relative isolate w-full mt-6 pt-6 pb-6 overflow-hidden">
                     {/* Shadow Background Illustration (Absolute positioned) */}
                     <div className="absolute inset-0 -z-10 pointer-events-none opacity-[0.03] flex justify-center items-center">
                         {/* A massive placeholder SVG for the "shadow leaves" effect */}
@@ -1000,14 +1193,33 @@ function ProductDetailContent({ params }: Props) {
                         </svg>
                     </div>
 
-                    <div className="mx-auto max-w-7xl px-4 space-y-24">
+                    <div className="mx-auto max-w-7xl px-4 space-y-6">
                         {/* REVIEWS SECTION — lazy loaded + dynamic import */}
                         <LazySection
                             minHeight="300px"
                             rootMargin="300px"
                             skeleton={<SkeletonReviewSection />}
                         >
-                            <ReviewSection productId={product.product_id} />
+                            <ReviewSection 
+                                productId={product.product_id} 
+                                product={product}
+                                selectedVariant={selectedVariant}
+                                onAddToCart={handleAddToCart}
+                            />
+                        </LazySection>
+
+                        {/* CUSTOMERS ALSO VIEWED — lazy loaded with deferred API call */}
+                        <LazySection
+                            minHeight="400px"
+                            rootMargin="400px"
+                            skeleton={<SkeletonProductRow title="Customers Also Viewed" />}
+                        >
+                            <LazyRelatedProducts
+                                productId={product.product_id}
+                                type="similar"
+                                title="Customers Also Viewed"
+                                icon={<LeafIcon className="h-6 w-6 text-[#3d5c3a]" />}
+                            />
                         </LazySection>
 
                         {/* BEST SELLERS — lazy loaded */}
@@ -1019,20 +1231,6 @@ function ProductDetailContent({ params }: Props) {
                             <LazyBestSellers
                                 title="Best Sellers"
                                 icon={<Sparkles className="h-6 w-6 text-[#3d5c3a]" />}
-                            />
-                        </LazySection>
-
-                        {/* YOU MAY ALSO LIKE — lazy loaded with deferred API call */}
-                        <LazySection
-                            minHeight="400px"
-                            rootMargin="400px"
-                            skeleton={<SkeletonProductRow title="Complete Your Healing" />}
-                        >
-                            <LazyRelatedProducts
-                                productId={product.product_id}
-                                type="similar"
-                                title="Complete Your Healing"
-                                icon={<LeafIcon className="h-6 w-6 text-[#3d5c3a]" />}
                             />
                         </LazySection>
                         
