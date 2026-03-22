@@ -16,7 +16,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         if (productsRes.ok) products = await productsRes.json();
         if (categoriesRes.ok) categories = await categoriesRes.json();
     } catch (error) {
-        console.error('Sitemap generation failed to fetch from API:', error);
+        console.warn('⚠️ Sitemap generation warning: API unreachable. Skipping dynamic product/category routes.');
     }
 
     const staticPages: MetadataRoute.Sitemap = [
