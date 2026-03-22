@@ -938,6 +938,31 @@ export default function AccountPage() {
         }
     };
 
+    // ── Cancel Order Handler ─────────────────────────────────────────
+    const handleCancelOrder = async (orderId: string) => {
+        if (!cancelReason.trim()) {
+            toast.error('Please provide a reason for cancellation');
+            return;
+        }
+        setCancelSubmitting(true);
+        try {
+            const res = await apiCancelOrder(orderId, cancelReason);
+            if (res.success) {
+                toast.success('Order cancelled successfully');
+                setCancellingOrderId(null);
+                setCancelReason('');
+                fetchOrders(); // refresh the list
+            } else {
+                toast.error(res.message || 'Failed to cancel order');
+            }
+        } catch (err) {
+            console.error('Cancel order error:', err);
+            toast.error('An error occurred while cancelling the order');
+        } finally {
+            setCancelSubmitting(false);
+        }
+    };
+
     // ── Address handlers ─────────────────────────────────────────────
     const handleAddressSubmit = async () => {
         if (!user?.id) return;
@@ -3711,7 +3736,8 @@ export default function AccountPage() {
                             </form>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* ── Notification Preferences Modal ── */}
