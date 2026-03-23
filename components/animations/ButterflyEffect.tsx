@@ -127,6 +127,7 @@ export default function ButterflyEffect() {
                     src="/botanical-butterfly1.png"
                     alt=""
                     fill
+                    sizes="80px"
                     className="object-contain"
                     priority
                   />
@@ -152,6 +153,7 @@ export default function ButterflyEffect() {
                     src="/botanical-butterfly1.png"
                     alt=""
                     fill
+                    sizes="80px"
                     className="object-contain"
                     priority
                   />

@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { CountryConfig, SUPPORTED_COUNTRIES, SupportedCountryCode, formatPrice } from '@/lib/currency';
+import { API_URL } from '@/lib/api';
 
 interface CurrencyContextType {
   countryConfig: CountryConfig;
@@ -27,8 +28,7 @@ export function CurrencyProvider({
   useEffect(() => {
     async function fetchRates() {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
-        const res = await fetch(`${apiUrl}/api/currency/rates`, { next: { revalidate: 3600 } });
+        const res = await fetch(`${API_URL}/api/currency/rates`, { next: { revalidate: 3600 } });
         if (res.ok) {
           const data = await res.json();
           if (data.success && data.data) {

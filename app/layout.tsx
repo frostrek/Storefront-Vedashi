@@ -18,6 +18,7 @@ import DynamicScriptLoader from "@/components/DynamicScriptLoader";
 import MaintenancePage from "@/components/MaintenancePage";
 import { generateOrganizationJsonLd, generateWebSiteJsonLd } from "@/lib/seo";
 import ButterflyEffect from "@/components/animations/ButterflyEffect";
+import { API_URL } from "@/lib/api";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -69,8 +70,7 @@ export default async function RootLayout({
   let isMaintenance = false;
   let maintenanceMessage = "";
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
-    const res = await fetch(`${apiUrl}/health`, { next: { revalidate: 10 } });
+    const res = await fetch(`${API_URL}/health`, { next: { revalidate: 10 } });
     const data = await res.json();
     if (data?.maintenance?.enabled) {
       isMaintenance = true;

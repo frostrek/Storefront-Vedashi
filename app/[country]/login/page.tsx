@@ -1,5 +1,5 @@
 'use client';
-import { authFetch, getLegalDocument } from '@/lib/api';
+import { authFetch, getLegalDocument, API_URL } from '@/lib/api';
 
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -15,7 +15,7 @@ import SocialLoginButtons from '@/components/SocialLoginButtons';
 import LegalModal from '@/components/ui/LegalModal';
 import LegalContentRenderer from '@/components/ui/LegalContentRenderer';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+// API_URL imported from @/lib/api
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? 'YOUR_SITE_KEY';
 const ADMIN_URL = process.env.NEXT_PUBLIC_ADMIN_URL || 'http://localhost:4000';
 

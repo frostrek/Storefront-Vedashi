@@ -6,8 +6,9 @@
 
 import type { Metadata } from 'next';
 import { buildProductMeta, generateProductJsonLd, generateBreadcrumbJsonLd } from '@/lib/seo';
+import { API_URL } from '@/lib/api';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+// API_URL imported from @/lib/api
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.com';
 
 /** Server-side fetch of product data for metadata (no auth needed) */
