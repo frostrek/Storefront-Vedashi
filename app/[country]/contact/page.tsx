@@ -51,6 +51,7 @@ export default function ContactPage() {
                     src="/Contact%20Us%202.png"
                     alt="Leaf background left"
                     fill
+                    sizes="(max-width: 1000px) 100vw, 1000px"
                     className="object-contain"
                     priority
                 />
@@ -66,6 +67,7 @@ export default function ContactPage() {
                     src="/Contact%20Us%201.png"
                     alt="Leaf background right"
                     fill
+                    sizes="(max-width: 800px) 100vw, 800px"
                     className="object-contain"
                     priority
                 />
