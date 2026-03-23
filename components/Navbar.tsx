@@ -7,7 +7,7 @@ import { ShoppingCart, User, Menu, X, Heart, ChevronDown, Search, ArrowRight, Le
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useAuth } from '@/context/AuthContext';
-import { getCategories } from '@/lib/api';
+import { getCategories, API_URL } from '@/lib/api';
 import toast from 'react-hot-toast';
 import SearchAutocomplete from './SearchAutocomplete';
 import GoogleTranslateWidget from './GoogleTranslateWidget';
@@ -73,7 +73,7 @@ const DEFAULT_CONFIG: HeaderConfig = {
   },
 };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
+// API_URL imported from @/lib/api
 
 export default function Navbar() {
   const router = useRouter();

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useCookieConsent } from '@/context/CookieConsentContext';
 import { Shield, X, Check, Cookie, ChevronRight, Lock, BarChart2, Megaphone, Sliders } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 
 export default function CookieBanner() {
     const { showBanner, acceptAll, rejectAll, openSettings, isSettingsOpen, closeSettings, updateConsent, consent } = useCookieConsent();
@@ -69,7 +70,7 @@ export default function CookieBanner() {
         if (!policyContent) {
             setIsLoadingPolicy(true);
             try {
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/legal/public/privacy-policy`);
+                const res = await fetch(`${API_URL}/api/legal/public/privacy-policy`);
                 const json = await res.json();
                 if (json.success && json.data) {
                     let blocks: any[] = [];

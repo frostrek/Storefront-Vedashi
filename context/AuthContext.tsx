@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
-import { authFetch } from '@/lib/api';
+import { authFetch, API_URL } from '@/lib/api';
 
 interface AuthContextType {
     user: UserInfo | null;
@@ -43,7 +43,7 @@ interface UserInfo {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
+// API_URL imported from @/lib/api
 const USER_KEY = 'vedashi_user';
 const TOKEN_KEY = 'vedashi_token';
 
