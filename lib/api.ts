@@ -6,9 +6,10 @@
 
 import { Product, FilteredProduct, FilterMeta, ProductWithDetails, ProductAsset, ApiResponse } from '@/types';
 
-let API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
+export let API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
 if (typeof window !== 'undefined' && (API_URL.includes('localhost') || API_URL.includes('127.0.0.1'))) {
-    API_URL = `${window.location.protocol}//${window.location.hostname}:5000`;
+    const hostname = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
+    API_URL = `${window.location.protocol}//${hostname}:5000`;
 }
 const TOKEN_KEY = 'vedashi_token';
 
@@ -501,6 +502,37 @@ export async function searchProducts(query: string): Promise<Product[]> {
     }
 }
 
+/** Get or create a session ID for tracking */
+function getTrackingSessionId(): string {
+    if (typeof window === 'undefined') return '';
+    let sid = localStorage.getItem('ksp_tracking_session_id');
+    if (!sid) {
+        sid = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        localStorage.setItem('ksp_tracking_session_id', sid);
+    }
+    return sid;
+}
+
+/** Track a product view for analytics */
+export async function trackProductView(productId: string, source: string = 'direct') {
+    try {
+        // Fire and forget
+        fetch(`${API_URL}/api/analytics/product-view`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                product_id: productId,
+                session_id: getTrackingSessionId(),
+                source,
+                device_type: typeof window !== 'undefined' ? (window.innerWidth < 768 ? 'mobile' : 'desktop') : 'desktop',
+            }),
+        }).catch(() => { /* ignore */ });
+    } catch {
+        /* ignore */
+    }
+}
+
 export interface SearchSuggestion {
     product_id: string;
     product_name: string;
@@ -708,6 +740,20 @@ export async function addCartItem(cartId: string, itemId: string, quantity: numb
         } else {
             body.product_id = itemId;
         }
+        
+        // Add session logic for analytics
+        if (typeof window !== 'undefined') {
+            const getTrackingSessionId = () => {
+                let sid = localStorage.getItem('ksp_tracking_session_id');
+                if (!sid) {
+                    sid = 'sess_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+                    localStorage.setItem('ksp_tracking_session_id', sid);
+                }
+                return sid;
+            };
+            body.session_id = getTrackingSessionId();
+        }
+
         const res = await authFetch(`${API_URL}/api/cart/items`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

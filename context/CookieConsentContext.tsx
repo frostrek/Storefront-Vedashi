@@ -1,5 +1,5 @@
 'use client';
-import { authFetch } from '@/lib/api';
+import { authFetch, API_URL } from '@/lib/api';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
@@ -31,7 +31,7 @@ const defaultConsent: ConsentCategories = {
 const CookieConsentContext = createContext<CookieConsentContextType | undefined>(undefined);
 
 // API URL from env
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
+// API_URL imported from @/lib/api
 
 export function CookieConsentProvider({ children }: { children: ReactNode }) {
     const [consent, setConsent] = useState<ConsentCategories | null>(null);

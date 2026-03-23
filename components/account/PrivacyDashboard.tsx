@@ -1,5 +1,5 @@
 'use client';
-import { authFetch } from '@/lib/api';
+import { authFetch, API_URL } from '@/lib/api';
 
 import { useState, useEffect } from 'react';
 import { Shield, Download, Trash2, Eye, ExternalLink, Loader2, Info } from 'lucide-react';
@@ -15,7 +15,7 @@ export default function PrivacyDashboard() {
 
     const fetchRequests = async () => {
         try {
-            const res = await authFetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000'}/api/gdpr/data-request`);
+            const res = await authFetch(`${API_URL}/api/gdpr/data-request`);
             if (res.ok) {
                 const data = await res.json();
                 if (data.success) {
@@ -30,7 +30,7 @@ export default function PrivacyDashboard() {
     const handleExport = async () => {
         setLoading(true);
         try {
-            const res = await authFetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000'}/api/gdpr/export`);
+            const res = await authFetch(`${API_URL}/api/gdpr/export`);
             if (res.ok) {
                 const data = await res.json();
                 if (data.success) {
@@ -60,7 +60,7 @@ export default function PrivacyDashboard() {
 
         setLoading(true);
         try {
-            const res = await authFetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000'}/api/gdpr/erasure`, {
+            const res = await authFetch(`${API_URL}/api/gdpr/erasure`, {
                 method: 'DELETE'
             });
             if (res.ok) {

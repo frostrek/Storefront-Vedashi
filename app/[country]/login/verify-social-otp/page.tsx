@@ -1,12 +1,12 @@
 'use client';
-import { authFetch } from '@/lib/api';
+import { authFetch, API_URL } from '@/lib/api';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { Mail, RefreshCw, ArrowLeft, ShieldCheck } from 'lucide-react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+// API_URL imported from @/lib/api
 const TOKEN_KEY = 'vedashi_token';
 const USER_KEY = 'vedashi_user';
 

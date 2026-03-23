@@ -90,10 +90,6 @@ export default function ReviewSection({ productId, product, selectedVariant, onA
         fetchData();
     }, [fetchData]);
 
-    const maxDistribution = summary
-        ? Math.max(...Object.values(summary.distribution), 1)
-        : 1;
-
     const formatPrice = (amount: number) => {
         return new Intl.NumberFormat('en-IN', {
             style: 'currency',
@@ -131,7 +127,7 @@ export default function ReviewSection({ productId, product, selectedVariant, onA
                                 <select
                                     value={sort}
                                     onChange={e => setSort(e.target.value)}
-                                    className="rounded-full border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 focus:outline-none focus:border-[#3d5c3a] focus:ring-1 focus:ring-[#3d5c3a] bg-white cursor-pointer hover:bg-gray-50 transition-colors"
+                                    className="rounded-full border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 focus:outline-none focus:border-[#1d351d] focus:ring-1 focus:ring-[#1d351d] bg-white cursor-pointer hover:bg-gray-50 transition-colors"
                                 >
                                     {SORT_OPTIONS.map(o => (
                                         <option key={o.value} value={o.value}>{o.label}</option>
@@ -170,7 +166,7 @@ export default function ReviewSection({ productId, product, selectedVariant, onA
 
                     {/* ── Right: Sidebar (Summary + Product Card) ── */}
                     <div className="flex flex-col">
-                        <div className="lg:sticky lg:top-24 flex-1 flex flex-col justify-between">
+                        <div className="lg:sticky lg:top-24 flex-1 flex flex-col items-stretch">
                             {/* Rating Summary Card (TOP) */}
                             <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
                                 <div className="text-center">
@@ -214,15 +210,15 @@ export default function ReviewSection({ productId, product, selectedVariant, onA
                             {/* Spacing element to push product card to the very bottom */}
                             <div className="flex-1 min-h-[40px]" />
 
-                            {/* ✅ NYKAA-STYLE PRODUCT CARD —— Bottom-aligned */}
+                            {/* ✅ STICKY PRODUCT CARD —— Balanced & Context-Aware */}
                             {product && (
                                 <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm transition-all hover:shadow-md">
-                                    <div className="p-4">
-                                        <div className="aspect-[4/3] w-full mb-3 overflow-hidden rounded-lg bg-gray-50">
+                                    <div className="p-5">
+                                        <div className="aspect-square w-full mb-4 overflow-hidden rounded-lg bg-gray-50 flex items-center justify-center">
                                             <img 
                                                 src={product.thumbnail_url || product.images?.[0] || '/placeholder.png'} 
                                                 alt={product.product_name}
-                                                className="h-full w-full object-contain p-4"
+                                                className="max-h-full max-w-full object-contain p-4 transition-transform hover:scale-110 duration-500"
                                             />
                                         </div>
                                         <h3 className="text-sm font-bold text-gray-900 line-clamp-2 leading-snug mb-2">
@@ -239,14 +235,29 @@ export default function ReviewSection({ productId, product, selectedVariant, onA
                                             )}
                                         </div>
                                     </div>
-                                    {/* Padding added here to ensure the green button baseline matches the ReviewForm button (which has 24px bottom buffer) */}
+
                                     <div className="px-0 pb-6">
-                                        <button
-                                            onClick={onAddToCart}
-                                            className="w-full bg-[#1d351d] py-3.5 text-xs font-bold text-white transition-colors hover:bg-[#152a15] flex items-center justify-center gap-2 uppercase tracking-widest"
-                                        >
-                                            Add to Bag
-                                        </button>
+                                        {product.variants?.length > 1 ? (
+                                            <button
+                                                onClick={() => {
+                                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                                }}
+                                                className="w-full bg-[#1d351d] py-3.5 text-[11px] font-bold text-white transition-colors hover:bg-[#152a15] flex items-center justify-center gap-2 uppercase tracking-[0.2em]"
+                                            >
+                                                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-2">
+                                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                                    <circle cx="12" cy="12" r="3" />
+                                                </svg>
+                                                Preview Options
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={onAddToCart}
+                                                className="w-full bg-[#1d351d] py-4 text-[11px] font-bold text-white transition-colors hover:bg-[#152a15] flex items-center justify-center gap-2 uppercase tracking-[0.2em]"
+                                            >
+                                                Add to Bag
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             )}

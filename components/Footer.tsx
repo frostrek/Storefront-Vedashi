@@ -7,8 +7,9 @@ import { useEffect, useState } from 'react';
 import RegionSwitcher from './RegionSwitcher';
 import GoogleTranslateWidget from './GoogleTranslateWidget';
 import { useCookieConsent } from '@/context/CookieConsentContext';
+import { API_URL } from '@/lib/api';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
+// API_URL imported from @/lib/api
 
 interface FooterData {
     company?: {

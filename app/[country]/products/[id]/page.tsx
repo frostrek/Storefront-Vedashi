@@ -3,7 +3,7 @@
 import { useState, useEffect, use, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { getProduct, getProductDetails, getRelatedProducts, getBestSellers } from '@/lib/api';
+import { getProduct, getProductDetails, getRelatedProducts, getBestSellers, trackProductView } from '@/lib/api';
 import { useCurrency } from '@/context/CurrencyContext';
 import { Product, ProductWithDetails } from '@/types';
 import { useCart } from '@/context/CartContext';
@@ -229,7 +229,10 @@ function ProductDetailContent({ params }: Props) {
             setLoading(false);
 
             // Track this product as recently viewed
-            if (data) trackRecentlyViewed(id);
+            if (data) {
+                trackRecentlyViewed(id);
+                trackProductView(data.product_id);
+            }
         };
 
         load();
