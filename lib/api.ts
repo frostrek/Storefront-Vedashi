@@ -1989,5 +1989,12 @@ export async function getLegalDocument(slug: string) {
     }
 }
 
-
-
+export async function trackOrder(orderId: string) {
+    try {
+        const res = await authFetch(`${API_URL}/api/orders/${orderId}/track`);
+        return await res.json();
+    } catch (error) {
+        console.warn('[API] trackOrder failed:', error);
+        return { success: false, message: 'Network error' };
+    }
+}
