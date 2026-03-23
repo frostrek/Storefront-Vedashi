@@ -20,7 +20,7 @@ import {
     getLoyaltyWallet, getMyNotifications, getUnreadNotificationCount,
     markNotificationAsRead, markAllNotificationsAsRead, deleteNotification,
     lookupPostalCode, getMySupportTickets, replySupportTicket, getSupportTicketDetail,
-    getMyReviews
+    getMyReviews, trackOrder
 } from '@/lib/api';
 import { Order, Address } from '@/types';
 import { COUNTRIES } from '@/lib/countries';
@@ -126,6 +126,9 @@ export default function AccountPage() {
     const [isOrderLoading, setIsOrderLoading] = useState(false);
     const [isTrackOrderModalOpen, setIsTrackOrderModalOpen] = useState(false);
     const [trackOrderId, setTrackOrderId] = useState<string | null>(null);
+    const [trackingData, setTrackingData] = useState<any | null>(null);
+    const [isTrackingLoading, setIsTrackingLoading] = useState(false);
+    const [trackOrderStatus, setTrackOrderStatus] = useState<string | null>(null);
 
     // Orders Filtering State
     const [orderSearch, setOrderSearch] = useState('');
@@ -262,6 +265,28 @@ export default function AccountPage() {
     const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
     const [cancelReason, setCancelReason] = useState('');
     const [cancelSubmitting, setCancelSubmitting] = useState(false);
+
+    const handleCancelOrder = async (orderId: string) => {
+        setCancelSubmitting(true);
+        try {
+            const res = await apiCancelOrder(orderId);
+            if (res.success || res.order) {
+                toast.success('Order cancelled successfully.');
+                setCancellingOrderId(null);
+                setCancelReason('');
+                fetchOrders(); // refresh the list
+                if (selectedOrderDetails?.order_id === orderId) {
+                    handleViewOrderDetails(orderId); // refresh details
+                }
+            } else {
+                toast.error(res.message || 'Failed to cancel order.');
+            }
+        } catch {
+            toast.error('An error occurred while cancelling.');
+        } finally {
+            setCancelSubmitting(false);
+        }
+    };
 
     // Review modal state
     const [reviewModal, setReviewModal] = useState<{ orderId: string; productId: string; productName: string } | null>(null);
@@ -1053,9 +1078,26 @@ export default function AccountPage() {
         }
     }, [activeTab, urlOrderId, orders, handleViewOrderDetails]);
 
-    const handleTrackOrder = (orderId: string) => {
+    const handleTrackOrder = async (orderId: string) => {
         setTrackOrderId(orderId);
         setIsTrackOrderModalOpen(true);
+        setTrackingData(null);
+        setTrackOrderStatus(null);
+        setIsTrackingLoading(true);
+        try {
+            const res = await trackOrder(orderId);
+            if (res?.success && res.data?.tracking_data) {
+                setTrackingData(res.data.tracking_data);
+                setTrackOrderStatus(res.data.order_status || null);
+            } else {
+                toast.error(res?.message || 'Tracking information unavailable for this order.');
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to fetch tracking data');
+        } finally {
+            setIsTrackingLoading(false);
+        }
     };
 
     if (isLoading) {
@@ -1699,6 +1741,17 @@ export default function AccountPage() {
                                                                 >
                                                                     Reorder
                                                                 </button>
+                                                                {order.order_status === 'PENDING' && (
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setCancellingOrderId(order.order_id);
+                                                                        }}
+                                                                        className="rounded-xl px-5 py-2 text-xs font-bold bg-white text-red-600 border border-red-200 hover:border-red-400 hover:bg-red-50 transition-all whitespace-nowrap"
+                                                                    >
+                                                                        Cancel
+                                                                    </button>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1746,17 +1799,20 @@ export default function AccountPage() {
                                                         <div className="flex items-center justify-between mb-8 relative z-10">
                                                             <span className="text-[10px] font-bold tracking-widest uppercase opacity-70">Track Shipment</span>
                                                             <span className="bg-white/20 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest backdrop-blur-sm border border-white/20">
-                                                                {selectedOrderDetails.order_status === 'DELIVERED' ? 'DELIVERED' : 'IN TRANSIT'}
+                                                                {selectedOrderDetails.order_status}
                                                             </span>
                                                         </div>
                                                         <div className="mb-6 relative z-10">
                                                             <p className="text-xs font-medium opacity-70 mb-1">
-                                                                {selectedOrderDetails.order_status === 'DELIVERED' ? 'Delivered On' : 'Estimated Delivery'}
+                                                                {selectedOrderDetails.order_status === 'DELIVERED' ? 'Delivered On' :
+                                                                 selectedOrderDetails.order_status === 'SHIPPED' ? 'Shipped On' :
+                                                                 selectedOrderDetails.order_status === 'CONFIRMED' ? 'Confirmed On' :
+                                                                 'Ordered On'}
                                                             </p>
                                                             <p className="text-2xl font-bold">
                                                                 {selectedOrderDetails.order_status === 'DELIVERED'
                                                                     ? new Date(selectedOrderDetails.updated_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-                                                                    : new Date(new Date(selectedOrderDetails.created_at).getTime() + 5 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+                                                                    : new Date(selectedOrderDetails.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
                                                                 }
                                                             </p>
                                                         </div>
@@ -1876,6 +1932,14 @@ export default function AccountPage() {
                                                                 </button>
                                                             );
                                                         })()}
+                                                        {selectedOrderDetails?.order_status === 'PENDING' && (
+                                                            <button
+                                                                onClick={() => setCancellingOrderId(selectedOrderDetails.order_id)}
+                                                                className="flex-1 flex justify-center items-center gap-2 border border-red-200 bg-red-50 rounded-xl py-2.5 text-xs font-bold text-red-600 hover:bg-red-100 transition-colors shadow-sm"
+                                                            >
+                                                                <X className="h-3.5 w-3.5" /> Cancel Order
+                                                            </button>
+                                                        )}
                                                     </div>
 
                                                     {/* Associated Ticket Messages Preview */}
@@ -3343,22 +3407,121 @@ export default function AccountPage() {
                         {isMounted && isTrackOrderModalOpen && createPortal(
                             <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4" style={{ animation: 'fadeIn 0.2s ease-out' }}>
                                 <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsTrackOrderModalOpen(false)} />
-                                <div className="relative w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl border border-light-border text-center" style={{ animation: 'slideUp 0.25s ease-out' }}>
-                                    <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-cream">
-                                        <Package className="h-8 w-8 text-burgundy" />
-                                    </div>
-                                    <h3 className="text-2xl font-bold text-charcoal mb-2">Track Order</h3>
-                                    <p className="font-mono text-sm font-semibold text-warm-gray mb-4">#{trackOrderId?.split('-')[0].toUpperCase()}</p>
-                                    <div className="bg-light-border/30 rounded-xl p-4 mb-6 relative overflow-hidden">
-                                        <div className="absolute top-0 left-0 w-1 h-full bg-burgundy"></div>
-                                        <p className="text-charcoal text-sm leading-relaxed font-medium">
-                                            We will integrate with a third-party application for real-time tracking in the future. Check back soon!
-                                        </p>
+                                <div className="relative w-full max-w-md rounded-2xl bg-[#FAFAF5] p-8 shadow-2xl border border-[#E8E1D5] text-center" style={{ animation: 'slideUp 0.25s ease-out' }}>
+                                    
+                                    {/* Botanical Icon */}
+                                    {(() => {
+                                        const s = (trackOrderStatus || 'PENDING').toUpperCase();
+                                        const iconMap: Record<string, string> = {
+                                            'PENDING': '/images/tracking/seed-pending.png',
+                                            'CONFIRMED': '/images/tracking/bud-confirmed.png',
+                                            'SHIPPED': '/images/tracking/leaves-shipped.png',
+                                            'DELIVERED': '/images/tracking/flower-delivered.png',
+                                            'CANCELLED': '/images/tracking/wilted-cancelled.png',
+                                        };
+                                        const labelMap: Record<string, string> = {
+                                            'PENDING': 'Seed being sown',
+                                            'CONFIRMED': 'Sprout growing',
+                                            'SHIPPED': 'Leaves flourishing',
+                                            'DELIVERED': 'Flower bloomed',
+                                            'CANCELLED': 'Plant wilted',
+                                        };
+                                        return (
+                                            <div className="mx-auto mb-4">
+                                                <img
+                                                    src={iconMap[s] || iconMap['PENDING']}
+                                                    alt={labelMap[s] || 'Order status'}
+                                                    className="w-24 h-24 object-contain mx-auto rounded-full"
+                                                    style={{ filter: s === 'CANCELLED' ? 'saturate(0.6)' : 'none' }}
+                                                />
+                                            </div>
+                                        );
+                                    })()}
+
+                                    <h3 className="text-2xl font-bold text-[#2E4A32] mb-2">Track Order</h3>
+                                    <p className="font-mono text-sm font-semibold text-[#8B7E6A] mb-1">#{trackOrderId?.split('-')[0].toUpperCase()}</p>
+                                    {trackOrderStatus && (
+                                        <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-4 ${
+                                            trackOrderStatus === 'DELIVERED' ? 'bg-[#E8F5E9] text-[#2E7D32]' :
+                                            trackOrderStatus === 'SHIPPED' ? 'bg-[#E0F2F1] text-[#00695C]' :
+                                            trackOrderStatus === 'CONFIRMED' ? 'bg-[#F1F8E9] text-[#558B2F]' :
+                                            trackOrderStatus === 'CANCELLED' ? 'bg-[#FBE9E7] text-[#BF360C]' :
+                                            'bg-[#FFF8E1] text-[#F9A825]'
+                                        }`}>{trackOrderStatus}</span>
+                                    )}
+
+                                    {/* Growth Progress Bar */}
+                                    {trackOrderStatus && trackOrderStatus !== 'CANCELLED' && (
+                                        <div className="flex items-center justify-between px-2 mb-5">
+                                            {['PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED'].map((step, idx) => {
+                                                const statusOrder = ['PENDING','CONFIRMED','SHIPPED','DELIVERED'];
+                                                const currentIdx = statusOrder.indexOf(trackOrderStatus || 'PENDING');
+                                                const isActive = idx <= currentIdx;
+                                                return (
+                                                    <div key={step} className="flex items-center flex-1 last:flex-none">
+                                                        <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-black transition-all ${isActive ? 'bg-[#4A7C59] text-white shadow-sm' : 'bg-[#E8E1D5] text-[#B5A88A]'}`}>
+                                                            {idx === 0 ? '🌱' : idx === 1 ? '🌿' : idx === 2 ? '🍃' : '🌸'}
+                                                        </div>
+                                                        {idx < 3 && <div className={`h-0.5 flex-1 mx-1 rounded transition-all ${idx < currentIdx ? 'bg-[#4A7C59]' : 'bg-[#E8E1D5]'}`} />}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+
+                                    <div className="bg-[#F0EDE6] rounded-xl p-4 mb-6 relative overflow-hidden text-left min-h-[120px]">
+                                        <div className="absolute top-0 left-0 w-1 h-full" style={{ backgroundColor: trackOrderStatus === 'CANCELLED' ? '#BF360C' : '#4A7C59' }}></div>
+                                        {isTrackingLoading ? (
+                                            <div className="flex flex-col items-center justify-center h-full text-[#8B7E6A] py-6">
+                                                <Loader2 className="h-6 w-6 animate-spin mb-2" />
+                                                <p className="text-xs font-medium">Fetching logistics data...</p>
+                                            </div>
+                                        ) : trackingData ? (
+                                            <div className="space-y-4">
+                                                <div className="flex justify-between items-center bg-white p-3 rounded-lg border border-[#E8E1D5]">
+                                                    <div>
+                                                        <p className="text-[10px] font-black tracking-widest text-[#8B7E6A] uppercase">Current Status</p>
+                                                        <p className="font-bold text-[#2E4A32]">{trackingData.shipment_track?.[0]?.current_status || 'Processing'}</p>
+                                                    </div>
+                                                    {trackingData.track_url && (
+                                                        <a href={trackingData.track_url} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-[#4A7C59] bg-[#E8F5E9] hover:bg-[#4A7C59] hover:text-white px-3 py-1.5 rounded-full transition-colors flex items-center gap-1">
+                                                            Live Map <ChevronRight className="h-3 w-3" />
+                                                        </a>
+                                                    )}
+                                                </div>
+                                                
+                                                {trackingData.shipment_track && trackingData.shipment_track.length > 0 && (
+                                                    <div className="relative pl-4 space-y-4 before:content-[''] before:absolute before:left-1.5 before:top-2 before:bottom-0 before:w-0.5 before:bg-[#E8E1D5]">
+                                                        {trackingData.shipment_track.slice(0, 3).map((track: any, idx: number) => (
+                                                            <div key={idx} className="relative">
+                                                                <div className={`absolute -left-[19px] top-1.5 w-3 h-3 rounded-full border-2 border-[#FAFAF5] ${idx === 0 ? 'bg-[#4A7C59]' : 'bg-[#B5A88A]'}`} />
+                                                                <p className="text-xs font-bold text-[#2E4A32]">{track.activity || track.current_status}</p>
+                                                                <div className="flex items-center gap-2 mt-0.5">
+                                                                    <p className="text-[10px] text-[#8B7E6A] font-medium flex items-center gap-1"><Calendar className="h-3 w-3" /> {track.date}</p>
+                                                                    {track.location && <p className="text-[10px] text-[#8B7E6A] font-medium flex items-center gap-1"><MapPin className="h-3 w-3" /> {track.location}</p>}
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center py-6">
+                                                <svg width="32" height="32" viewBox="0 0 64 64" fill="none" className="mb-2 opacity-40">
+                                                    <rect x="8" y="44" rx="4" width="48" height="12" fill="#8B6914" opacity="0.3"/>
+                                                    <ellipse cx="32" cy="38" rx="6" ry="8" fill="#8B6914" opacity="0.4"/>
+                                                </svg>
+                                                <p className="text-[#2E4A32] text-sm leading-relaxed font-medium">
+                                                    Your order is being prepared.
+                                                </p>
+                                                <p className="text-xs text-[#8B7E6A] mt-1">The seed has been sown. Check back for updates.</p>
+                                            </div>
+                                        )}
                                     </div>
                                     <button
                                         onClick={() => setIsTrackOrderModalOpen(false)}
                                         className="w-full rounded-xl py-3 text-sm font-semibold text-white transition-all shadow-md hover:shadow-lg hover:opacity-90"
-                                        style={{ backgroundColor: '#6B2737' }}
+                                        style={{ backgroundColor: '#36453A' }}
                                     >
                                         Close
                                     </button>
@@ -3703,7 +3866,8 @@ export default function AccountPage() {
                             </form>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* ── Notification Preferences Modal ── */}
