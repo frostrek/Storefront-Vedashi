@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import { getLoyaltyWallet, getLoyaltyTransactions } from '@/lib/api';
 import { useState, useEffect } from 'react';
 import { Wallet, Star, History, ArrowUpRight, ArrowDownRight, Award, Loader2, Info, Check } from 'lucide-react';
@@ -284,9 +285,12 @@ export default function MyWallet({ customerId }: MyWalletProps) {
                             "In Nature, everything given returns in abundance. Your loyalty reflects the harmony of our shared values."
                         </p>
                     </div>
-                    <button className="px-8 py-3 bg-[#D4A847] hover:bg-[#C1973E] text-[#1A2E1A] font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-[#D4A847]/30 transform active:scale-95 text-xs uppercase tracking-widest">
+                    <Link 
+                        href="/products"
+                        className="px-8 py-3 bg-[#D4A847] hover:bg-[#C1973E] text-[#1A2E1A] font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-[#D4A847]/30 transform active:scale-95 text-xs uppercase tracking-widest text-center"
+                    >
                         Nourish Your Aura
-                    </button>
+                    </Link>
                  </div>
             </div>
         </div>

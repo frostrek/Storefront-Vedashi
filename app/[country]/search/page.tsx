@@ -115,7 +115,7 @@ function SearchPageContent() {
                             onChange={e => setSearchInput(e.target.value)}
                             placeholder="Search products, brands, categories…"
                             className="
-                w-full pl-12 pr-12 py-3.5 rounded-full
+                w-full pl-8 pr-8 py-1.5 rounded-full
                 bg-gray-50 border border-gray-200
                 text-base text-gray-800 placeholder-gray-400
                 focus:outline-none focus:ring-2 focus:ring-[#4b0f1a]/30 focus:border-[#4b0f1a]/40
