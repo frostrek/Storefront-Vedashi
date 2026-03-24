@@ -5,8 +5,9 @@
  */
 
 import { Product, FilteredProduct, FilterMeta, ProductWithDetails, ProductAsset, ApiResponse } from '@/types';
+import { env } from '@/lib/env';
 
-export let API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
+export let API_URL = env.NEXT_PUBLIC_API_URL;
 if (typeof window !== 'undefined' && (API_URL.includes('localhost') || API_URL.includes('127.0.0.1'))) {
     const hostname = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
     API_URL = `${window.location.protocol}//${hostname}:5000`;
