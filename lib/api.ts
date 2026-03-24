@@ -5,8 +5,9 @@
  */
 
 import { Product, FilteredProduct, FilterMeta, ProductWithDetails, ProductAsset, ApiResponse } from '@/types';
+import { env } from '@/lib/env';
 
-export let API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
+export let API_URL = env.NEXT_PUBLIC_API_URL;
 if (typeof window !== 'undefined' && (API_URL.includes('localhost') || API_URL.includes('127.0.0.1'))) {
     const hostname = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
     API_URL = `${window.location.protocol}//${hostname}:5000`;
@@ -904,6 +905,10 @@ export async function verifyPayment(data: {
 export async function initiatePaymentCheckout(data: {
     cart_id?: string;
     items?: Array<{ product_id: string; variant_id?: string | null; quantity: number; unit_price?: number }>;
+    customer_id?: string;
+    customer_name?: string;
+    customer_email?: string;
+    customer_phone?: string;
     shipping_address_id?: string;
     shipping_address?: Record<string, any>;
     billing_address_id?: string;
@@ -911,6 +916,9 @@ export async function initiatePaymentCheckout(data: {
     coupon_code?: string;
     payment_method?: string;
     redeem_points?: number;
+    final_total?: number;
+    currency?: string;
+    order_notes?: string;
 }) {
     try {
         const res = await authFetch(`${API_URL}/api/payments/razorpay/initiate-checkout`, {
@@ -946,6 +954,7 @@ export async function directCheckout(data: {
     customer_id?: string;
     customer_name?: string;
     customer_email?: string;
+    customer_phone?: string;
     items: Array<{ product_id: string; variant_id?: string | null; quantity: number; unit_price?: number }>;
     shipping_address_id?: string;
     shipping_address?: Record<string, string>;

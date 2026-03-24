@@ -13,6 +13,8 @@ import Select from 'react-select';
 import { CheckCircle, Loader2, MapPin, CreditCard, Banknote, ShieldCheck, AlertTriangle, ArrowLeft, Leaf, ChevronRight, Lock, Ticket, Globe, Info } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
+import { validatePhoneNumber, validateOptionalPhoneNumber, sanitizePhoneInput, formatPhoneDisplay } from '@/lib/phoneValidation';
+import { CountryCode } from 'libphonenumber-js';
 
 /* ─── Types ─────────────────────────────────────────────────── */
 
@@ -130,6 +132,7 @@ function CheckoutContent() {
 
     // Validation state
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+    const [contactPhoneError, setContactPhoneError] = useState<string>('');
     const [isLookupLoading, setIsLookupLoading] = useState(false);
 
     // Track manual edits to prevent auto-fill overwrite
@@ -480,6 +483,37 @@ function CheckoutContent() {
         setPaymentFailed(false);
 
         try {
+            // Determine the shipping country to use as default for phone validation
+            const currentShippingCountryCode = ((useNewAddress ? newAddress.country_code : (savedAddresses.find(a => a.address_id === selectedAddressId) as any)?.country_code) || 'IN') as CountryCode;
+
+            // Ensure numbers are properly normalized before sending to backend
+            const contactPhoneResult = validatePhoneNumber(contactPhone, currentShippingCountryCode);
+            const finalContactPhone = contactPhoneResult.isValid ? contactPhoneResult.normalized || contactPhone : contactPhone;
+            
+            let finalNewAddress = newAddress;
+            if (useNewAddress || (billingSameAsShipping && useNewAddress) || (!billingSameAsShipping && useNewAddress)) {
+                if (newAddress.phone) {
+                    const addressPhoneResult = validateOptionalPhoneNumber(newAddress.phone, currentShippingCountryCode);
+                    finalNewAddress = { 
+                        ...newAddress, 
+                        phone: addressPhoneResult.isValid ? (addressPhoneResult.normalized || newAddress.phone) : newAddress.phone 
+                    };
+                }
+            }
+
+            let finalNewBillingAddress = newBillingAddress;
+            if (!billingSameAsShipping && useNewBillingAddress) {
+                const currentBillingCountryCode = (((newBillingAddress as any).country_code) || 'IN') as CountryCode;
+                // Assuming newBillingAddress has phone too, if not it won't hurt
+                if ((newBillingAddress as any).phone) {
+                    const billingPhoneResult = validateOptionalPhoneNumber((newBillingAddress as any).phone, currentBillingCountryCode);
+                    finalNewBillingAddress = { 
+                        ...newBillingAddress, 
+                        phone: billingPhoneResult.isValid ? (billingPhoneResult.normalized || (newBillingAddress as any).phone) : (newBillingAddress as any).phone 
+                    } as any;
+                }
+            }
+
             // NEW RAZORPAY FLOW:
             if (paymentMethod === 'razorpay') {
                 setPlacing(false);
@@ -491,11 +525,12 @@ function CheckoutContent() {
                         customer_id: user?.id || undefined,
                         customer_name: user?.name || undefined,
                         customer_email: user?.email || contactEmail || undefined,
+                        customer_phone: finalContactPhone || undefined,
                         items: [{ product_id: buyNowItem.product_id, variant_id: buyNowItem.variant_id, quantity: buyNowItem.quantity, unit_price: buyNowItem.unit_price }],
                         shipping_address_id: useNewAddress ? undefined : selectedAddressId || undefined,
-                        shipping_address: useNewAddress ? newAddress : undefined,
+                        shipping_address: useNewAddress ? finalNewAddress : undefined,
                         billing_address_id: billingSameAsShipping ? (useNewAddress ? undefined : selectedAddressId || undefined) : (useNewBillingAddress ? undefined : selectedBillingAddressId || undefined),
-                        billing_address: !billingSameAsShipping && useNewBillingAddress ? newBillingAddress : (billingSameAsShipping && useNewAddress ? newAddress : undefined),
+                        billing_address: !billingSameAsShipping && useNewBillingAddress ? finalNewBillingAddress : (billingSameAsShipping && useNewAddress ? finalNewAddress : undefined),
                         order_notes: orderNotes.trim() || undefined,
                         redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
                         final_total: grandTotal, // We pass the total for initial order creation
@@ -505,10 +540,11 @@ function CheckoutContent() {
                     checkoutData = {
                         cart_id: cartId,
                         customer_id: user.id,
+                        customer_phone: finalContactPhone || undefined,
                         shipping_address_id: useNewAddress ? undefined : selectedAddressId || undefined,
-                        shipping_address: useNewAddress ? newAddress : undefined,
+                        shipping_address: useNewAddress ? finalNewAddress : undefined,
                         billing_address_id: billingSameAsShipping ? (useNewAddress ? undefined : selectedAddressId || undefined) : (useNewBillingAddress ? undefined : selectedBillingAddressId || undefined),
-                        billing_address: !billingSameAsShipping && useNewBillingAddress ? newBillingAddress : (billingSameAsShipping && useNewAddress ? newAddress : undefined),
+                        billing_address: !billingSameAsShipping && useNewBillingAddress ? finalNewBillingAddress : (billingSameAsShipping && useNewAddress ? finalNewAddress : undefined),
                         coupon_code: couponCode || undefined,
                         order_notes: orderNotes.trim() || undefined,
                         redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
@@ -520,9 +556,10 @@ function CheckoutContent() {
                         customer_id: user?.id || undefined,
                         customer_name: user?.name || undefined,
                         customer_email: user?.email || contactEmail || undefined,
+                        customer_phone: finalContactPhone || undefined,
                         items: checkoutItems.map(item => ({ product_id: (item as any).product_id || '', variant_id: (item as any).variant_id, quantity: item.quantity, unit_price: Number((item as any).price || (item as any).unit_price) || 0 })),
-                        shipping_address: useNewAddress ? newAddress : undefined,
-                        billing_address: !billingSameAsShipping && useNewBillingAddress ? newBillingAddress : (billingSameAsShipping && useNewAddress ? newAddress : undefined),
+                        shipping_address: useNewAddress ? finalNewAddress : undefined,
+                        billing_address: !billingSameAsShipping && useNewBillingAddress ? finalNewBillingAddress : (billingSameAsShipping && useNewAddress ? finalNewAddress : undefined),
                         coupon_code: couponCode || undefined,
                         order_notes: orderNotes.trim() || undefined,
                         redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
@@ -541,11 +578,12 @@ function CheckoutContent() {
                     customer_id: user?.id || undefined,
                     customer_name: user?.name || undefined,
                     customer_email: user?.email || contactEmail || undefined,
+                    customer_phone: finalContactPhone || undefined,
                     items: [{ product_id: buyNowItem.product_id, variant_id: buyNowItem.variant_id, quantity: buyNowItem.quantity, unit_price: buyNowItem.unit_price }],
                     shipping_address_id: useNewAddress ? undefined : selectedAddressId || undefined,
-                    shipping_address: useNewAddress ? newAddress as unknown as Record<string, string> : undefined,
+                    shipping_address: useNewAddress ? finalNewAddress as unknown as Record<string, string> : undefined,
                     billing_address_id: billingSameAsShipping ? (useNewAddress ? undefined : selectedAddressId || undefined) : (useNewBillingAddress ? undefined : selectedBillingAddressId || undefined),
-                    billing_address: !billingSameAsShipping && useNewBillingAddress ? newBillingAddress as unknown as Record<string, string> : (billingSameAsShipping && useNewAddress ? newAddress as unknown as Record<string, string> : undefined),
+                    billing_address: !billingSameAsShipping && useNewBillingAddress ? finalNewBillingAddress as unknown as Record<string, string> : (billingSameAsShipping && useNewAddress ? finalNewAddress as unknown as Record<string, string> : undefined),
                     payment_method: paymentMethod,
                     order_notes: orderNotes.trim() || undefined,
                     redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
@@ -554,10 +592,11 @@ function CheckoutContent() {
                 result = await checkoutOrder({
                     cart_id: cartId,
                     customer_id: user.id,
+                    customer_phone: finalContactPhone || undefined,
                     shipping_address_id: useNewAddress ? undefined : selectedAddressId || undefined,
-                    shipping_address: useNewAddress ? newAddress as unknown as Record<string, string> : undefined,
+                    shipping_address: useNewAddress ? finalNewAddress as unknown as Record<string, string> : undefined,
                     billing_address_id: billingSameAsShipping ? (useNewAddress ? undefined : selectedAddressId || undefined) : (useNewBillingAddress ? undefined : selectedBillingAddressId || undefined),
-                    billing_address: !billingSameAsShipping && useNewBillingAddress ? newBillingAddress as unknown as Record<string, string> : (billingSameAsShipping && useNewAddress ? newAddress as unknown as Record<string, string> : undefined),
+                    billing_address: !billingSameAsShipping && useNewBillingAddress ? finalNewBillingAddress as unknown as Record<string, string> : (billingSameAsShipping && useNewAddress ? finalNewAddress as unknown as Record<string, string> : undefined),
                     coupon_code: couponCode || undefined,
                     order_notes: orderNotes.trim() || undefined,
                     payment_method: paymentMethod,
@@ -568,9 +607,10 @@ function CheckoutContent() {
                     customer_id: user?.id || undefined,
                     customer_name: user?.name || undefined,
                     customer_email: user?.email || contactEmail || undefined,
+                    customer_phone: finalContactPhone || undefined,
                     items: checkoutItems.map(item => ({ product_id: (item as any).product_id || '', variant_id: (item as any).variant_id, quantity: item.quantity, unit_price: Number((item as any).price || (item as any).unit_price) || 0 })),
-                    shipping_address: useNewAddress ? newAddress as unknown as Record<string, string> : undefined,
-                    billing_address: !billingSameAsShipping && useNewBillingAddress ? newBillingAddress as unknown as Record<string, string> : (billingSameAsShipping && useNewAddress ? newAddress as unknown as Record<string, string> : undefined),
+                    shipping_address: useNewAddress ? finalNewAddress as unknown as Record<string, string> : undefined,
+                    billing_address: !billingSameAsShipping && useNewBillingAddress ? finalNewBillingAddress as unknown as Record<string, string> : (billingSameAsShipping && useNewAddress ? finalNewAddress as unknown as Record<string, string> : undefined),
                     payment_method: paymentMethod,
                     coupon_code: couponCode || undefined,
                     order_notes: orderNotes.trim() || undefined,
@@ -605,8 +645,10 @@ function CheckoutContent() {
         if (!addr.state) errors[`${prefix}state`] = 'State/Region is required';
         if (!addr.pincode) errors[`${prefix}pincode`] = 'Postal Code is required';
         
-        if (addr.phone && !/^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/.test(addr.phone)) {
-            errors[`${prefix}phone`] = 'Please enter a valid phone format';
+        const currentCountryCode = (((addr as any).country_code) || 'IN') as CountryCode;
+        const phoneValidation = validateOptionalPhoneNumber(addr.phone, currentCountryCode);
+        if (!phoneValidation.isValid && phoneValidation.error) {
+            errors[`${prefix}phone`] = phoneValidation.error;
         }
 
         return errors;
@@ -616,6 +658,23 @@ function CheckoutContent() {
 
     const goToPayment = () => {
         setFormErrors({});
+        setContactPhoneError('');
+
+        const currentShippingCountryCode = ((useNewAddress ? newAddress.country_code : (savedAddresses.find(a => a.address_id === selectedAddressId) as any)?.country_code) || 'IN') as CountryCode;
+
+        // Validate Contact Phone
+        const contactPhoneResult = validatePhoneNumber(contactPhone, currentShippingCountryCode);
+        if (!contactPhoneResult.isValid) {
+            setContactPhoneError(contactPhoneResult.error || 'Invalid mobile number');
+            toast.error('Please fix contact phone validation error');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+        
+        // Normalize Contact Phone
+        if (contactPhoneResult.normalized) {
+            setContactPhone(contactPhoneResult.normalized);
+        }
         
         if (useNewAddress) {
             const errors = validateAddress(newAddress);
@@ -623,6 +682,11 @@ function CheckoutContent() {
                 setFormErrors(errors);
                 toast.error('Please fix address validation errors');
                 return;
+            }
+            // Normalize Address Phone
+            const addressPhoneResult = validateOptionalPhoneNumber(newAddress.phone, currentShippingCountryCode);
+            if (addressPhoneResult.isValid && addressPhoneResult.normalized) {
+                setNewAddress(prev => ({ ...prev, phone: addressPhoneResult.normalized! }));
             }
         } else if (!selectedAddressId) {
             toast.error('Please select a shipping address');
@@ -762,7 +826,32 @@ function CheckoutContent() {
                                         </div>
                                         <div>
                                             <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Mobile Phone *</label>
-                                            <input type="tel" value={contactPhone} onChange={e => setContactPhone(e.target.value)} className="w-full rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-[#F5F4F0]" placeholder="Enter your mobile number" />
+                                            <input 
+                                                type="tel" 
+                                                value={contactPhone} 
+                                                onChange={e => {
+                                                    const currentShippingCountryCode = ((useNewAddress ? newAddress.country_code : (savedAddresses.find(a => a.address_id === selectedAddressId) as any)?.country_code) || 'IN') as CountryCode;
+                                                    const sanitized = sanitizePhoneInput(e.target.value);
+                                                    setContactPhone(sanitized);
+                                                    if (sanitized) {
+                                                        const res = validatePhoneNumber(sanitized, currentShippingCountryCode);
+                                                        setContactPhoneError(res.isValid ? '' : res.error || '');
+                                                    } else {
+                                                        setContactPhoneError('');
+                                                    }
+                                                }}
+                                                onBlur={e => {
+                                                    const currentShippingCountryCode = ((useNewAddress ? newAddress.country_code : (savedAddresses.find(a => a.address_id === selectedAddressId) as any)?.country_code) || 'IN') as CountryCode;
+                                                    const res = validatePhoneNumber(e.target.value, currentShippingCountryCode);
+                                                    setContactPhoneError(res.isValid ? '' : res.error || '');
+                                                    if (res.isValid && res.normalized) {
+                                                        setContactPhone(formatPhoneDisplay(res.normalized, currentShippingCountryCode));
+                                                    }
+                                                }}
+                                                className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-[#F5F4F0] ${contactPhoneError ? 'border-red-400' : 'border-[#D4CFC0]'}`} 
+                                                placeholder="Enter mobile number" 
+                                            />
+                                            {contactPhoneError && <p className="text-[10px] text-red-500 mt-1 font-bold">{contactPhoneError}</p>}
                                         </div>
                                     </div>
                                     <p className="mt-3 text-xs text-[#8B7A3D]">We will send order updates and Ayurvedic guidelines to these contacts.</p>
@@ -850,7 +939,51 @@ function CheckoutContent() {
                                             </div>
                                             <div>
                                                 <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Mobile Phone (optional)</label>
-                                                <input type="tel" value={newAddress.phone} onChange={e => setNewAddress({ ...newAddress, phone: e.target.value })} className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.phone ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Secondary Phone" />
+                                                <input 
+                                                    type="tel" 
+                                                    value={newAddress.phone} 
+                                                    onChange={e => {
+                                                        const sanitized = sanitizePhoneInput(e.target.value);
+                                                        setNewAddress({ ...newAddress, phone: sanitized });
+                                                        if (sanitized) {
+                                                            const currentCountryCode = ((newAddress as any).country_code || 'IN') as CountryCode;
+                                                            const res = validateOptionalPhoneNumber(sanitized, currentCountryCode);
+                                                            if (!res.isValid && res.error) {
+                                                                setFormErrors(prev => ({ ...prev, phone: res.error! }));
+                                                            } else {
+                                                                setFormErrors(prev => {
+                                                                    const copy = { ...prev };
+                                                                    delete copy.phone;
+                                                                    return copy;
+                                                                });
+                                                            }
+                                                        } else {
+                                                            setFormErrors(prev => {
+                                                                const copy = { ...prev };
+                                                                delete copy.phone;
+                                                                return copy;
+                                                            });
+                                                        }
+                                                    }}
+                                                    onBlur={e => {
+                                                        const currentCountryCode = ((newAddress as any).country_code || 'IN') as CountryCode;
+                                                        const res = validateOptionalPhoneNumber(e.target.value, currentCountryCode);
+                                                        if (!res.isValid && res.error) {
+                                                            setFormErrors(prev => ({ ...prev, phone: res.error! }));
+                                                        } else {
+                                                            setFormErrors(prev => {
+                                                                const copy = { ...prev };
+                                                                delete copy.phone;
+                                                                return copy;
+                                                            });
+                                                            if (res.isValid && res.normalized) {
+                                                                setNewAddress(prev => ({ ...prev, phone: formatPhoneDisplay(res.normalized!, currentCountryCode) }));
+                                                            }
+                                                        }
+                                                    }}
+                                                    className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.phone ? 'border-red-400' : 'border-[#D4CFC0]'}`} 
+                                                    placeholder="e.g., 9876543210" 
+                                                />
                                                 {formErrors.phone && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.phone}</p>}
                                             </div>
                                         </div>
