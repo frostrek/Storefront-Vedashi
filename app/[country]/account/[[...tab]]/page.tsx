@@ -253,6 +253,13 @@ export default function AccountPage() {
     const [isZoomModalOpen, setIsZoomModalOpen] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    // Sync social avatar if no custom image is loaded yet
+    useEffect(() => {
+        if (user?.avatar_url) {
+            setProfileImageUrl((prev) => prev || user.avatar_url!);
+        }
+    }, [user?.avatar_url]);
+
     // Deactivation state
     const [showDeactivateModal, setShowDeactivateModal] = useState(false);
     const [deactivatePassword, setDeactivatePassword] = useState('');
@@ -501,11 +508,16 @@ export default function AccountPage() {
                 if (user?.avatar_url !== parsedResult) {
                     updateUser({ avatar_url: parsedResult });
                 }
+            } else if (user?.avatar_url) {
+                setProfileImageUrl(user.avatar_url);
             }
         } catch {
             // No image or error, stay with fallback
+            if (user?.avatar_url) {
+                setProfileImageUrl(user.avatar_url);
+            }
         }
-    }, [user?.id]);
+    }, [user?.id, user?.avatar_url, updateUser]);
 
     // ── Fetch enquiries + support tickets ─────────────────────────────
     const fetchEnquiries = useCallback(async () => {
