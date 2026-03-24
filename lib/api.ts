@@ -904,6 +904,10 @@ export async function verifyPayment(data: {
 export async function initiatePaymentCheckout(data: {
     cart_id?: string;
     items?: Array<{ product_id: string; variant_id?: string | null; quantity: number; unit_price?: number }>;
+    customer_id?: string;
+    customer_name?: string;
+    customer_email?: string;
+    customer_phone?: string;
     shipping_address_id?: string;
     shipping_address?: Record<string, any>;
     billing_address_id?: string;
@@ -911,6 +915,9 @@ export async function initiatePaymentCheckout(data: {
     coupon_code?: string;
     payment_method?: string;
     redeem_points?: number;
+    final_total?: number;
+    currency?: string;
+    order_notes?: string;
 }) {
     try {
         const res = await authFetch(`${API_URL}/api/payments/razorpay/initiate-checkout`, {
@@ -946,6 +953,7 @@ export async function directCheckout(data: {
     customer_id?: string;
     customer_name?: string;
     customer_email?: string;
+    customer_phone?: string;
     items: Array<{ product_id: string; variant_id?: string | null; quantity: number; unit_price?: number }>;
     shipping_address_id?: string;
     shipping_address?: Record<string, string>;
