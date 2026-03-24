@@ -340,7 +340,7 @@ export default function Navbar() {
                               onClick={() => {
                                 logout();
                                 toast.success('Logged out successfully');
-                                router.push('/');
+                                router.push('/login');
                               }} 
                               className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-all font-semibold"
                             >
@@ -624,7 +624,7 @@ export default function Navbar() {
                     setMobileOpen(false);
                     logout();
                     toast.success('Logged out successfully');
-                    router.push('/');
+                    router.push('/login');
                   }}
                   className="flex items-center gap-3 py-2.5 px-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors mt-2"
                 >

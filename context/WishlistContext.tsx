@@ -39,15 +39,19 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
             if (res.success && res.data) {
                 const wishlistItems = res.data.items || res.data || [];
                 const products: Product[] = wishlistItems.map((wi: any) => {
-                    if (wi.product) return wi.product;
+                    const baseProduct = wi.product || wi;
                     return {
-                        product_id: wi.product_id,
-                        sku: wi.sku || '',
-                        slug: wi.slug || '',
-                        product_name: wi.product_name || 'Unknown Product',
-                        price: wi.price,
-                        brand: wi.brand,
-                        images: wi.image_url ? [wi.image_url] : (wi.images || []),
+                        ...baseProduct,
+                        product_id: baseProduct.product_id || wi.product_id,
+                        sku: baseProduct.sku || wi.sku || '',
+                        slug: baseProduct.slug || wi.slug || '',
+                        product_name: baseProduct.product_name || wi.product_name || 'Unknown Product',
+                        price: baseProduct.price || wi.price,
+                        brand: baseProduct.brand || wi.brand,
+                        images: baseProduct.image_url ? [baseProduct.image_url] : (baseProduct.images || wi.images || []),
+                        // Force normalized 'stock_status' even if nested inside wi or baseProduct
+                        stock_status: (baseProduct.stock_status || wi.stock_status || 'in_stock').toLowerCase(),
+                        created_at: wi.added_at || wi.created_at || baseProduct.created_at,
                     } as Product;
                 });
                 setItems(products);

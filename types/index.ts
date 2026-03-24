@@ -34,6 +34,8 @@ export interface Product {
     is_availability_expired?: boolean;
     available_from?: string;
     available_until?: string;
+    stock_status?: string;
+    status?: string;
 }
 
 /** Shape returned by GET /api/products/filter */

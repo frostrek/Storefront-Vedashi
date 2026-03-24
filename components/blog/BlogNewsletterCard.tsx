@@ -1,6 +1,44 @@
-'use client';
+import { useEffect, useState } from 'react';
+import { subscribeNewsletter } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
+import toast from 'react-hot-toast';
+import { Loader2 } from 'lucide-react';
 
 export default function BlogNewsletterCard() {
+    const [email, setEmail] = useState('');
+    const [loading, setLoading] = useState(false);
+    const { user, isAuthenticated } = useAuth();
+
+    // Pre-fill email if logged in
+    useEffect(() => {
+        if (isAuthenticated && user?.email) {
+            setEmail(user.email);
+        }
+    }, [isAuthenticated, user]);
+
+    const handleSubscribe = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!email || !email.includes('@')) {
+            toast.error('Please enter a valid email.');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const res = await subscribeNewsletter(email);
+            if (res.success) {
+                toast.success('You have joined the Sanctuary!');
+                setEmail('');
+            } else {
+                toast.error(res.message || 'Failed to subscribe.');
+            }
+        } catch (error) {
+            toast.error('Connection error. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="bg-herbal-green text-white rounded-[2rem] p-8 md:p-12 shadow-2xl text-center relative overflow-hidden">
             {/* Decorative pattern/blur for premium feel */}
@@ -21,19 +59,23 @@ export default function BlogNewsletterCard() {
                 Weekly drops of Vedic wisdom, seasonal recipes, and mindful rituals for the modern soul.
             </p>
             
-            <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+            <form className="space-y-4" onSubmit={handleSubscribe}>
                 <input
                     type="email"
                     placeholder="your@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={loading}
                     required
-                    className="w-full bg-white text-charcoal rounded-full px-6 py-3.5 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-vedic-gold/50 shadow-inner"
+                    className="w-full bg-white text-charcoal rounded-full px-6 py-3.5 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-vedic-gold/50 shadow-inner disabled:opacity-50"
                 />
                 
                 <button
                     type="submit"
-                    className="w-full rounded-full py-4 text-sm md:text-base font-bold bg-vedic-gold hover:bg-vedic-gold-light text-white transition-all duration-300 shadow-lg hover:shadow-vedic-gold/30 active:scale-[0.98]"
+                    disabled={loading}
+                    className="w-full rounded-full py-4 text-sm md:text-base font-bold bg-vedic-gold hover:bg-vedic-gold-light text-white transition-all duration-300 shadow-lg hover:shadow-vedic-gold/30 active:scale-[0.98] disabled:opacity-70 flex items-center justify-center min-h-[56px]"
                 >
-                    Join the Sanctuary
+                    {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Join the Sanctuary'}
                 </button>
             </form>
             

@@ -1388,7 +1388,7 @@ export async function reportReview(reviewId: string, reason: string) {
 
 export async function getWishlist() {
     try {
-        const res = await authFetch(`${API_URL}/api/wishlist`);
+        const res = await authFetch(`${API_URL}/api/wishlist`, { cache: 'no-store' });
         return res.json();
     } catch (error) {
         console.warn('[API] getWishlist failed:', error);

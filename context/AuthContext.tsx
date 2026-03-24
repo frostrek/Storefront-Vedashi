@@ -40,6 +40,8 @@ interface UserInfo {
     is_email_verified?: boolean;
     is_mobile_verified?: boolean;
     phone?: string;
+    loyalty_tier?: string;
+    wallet_balance?: number;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -60,6 +62,8 @@ function toUserInfo(customer: Record<string, unknown>): UserInfo {
         is_email_verified: !!(customer.is_email_verified),
         is_mobile_verified: !!(customer.is_mobile_verified),
         phone: (customer.phone ?? customer.mobile_phone ?? '') as string,
+        loyalty_tier: (customer.loyalty_tier as string) || 'Bronze',
+        wallet_balance: Number(customer.wallet_balance || 0),
     };
 }
 
@@ -95,6 +99,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 // Notify listeners (Cart/Wishlist) about restored session
                 // Use setTimeout to ensure listeners are registered first
                 setTimeout(() => notifyListeners('login', cachedUser), 0);
+
+                // Asynchronously fetch fresh data to update fields like loyalty_tier 
+                // that may have been added to the backend schema or changed securely
+                authFetch(`${API_URL}/api/auth/me`)
+                    .then(res => res.json())
+                    .then(json => {
+                        if (json.success && json.data) {
+                            const updatedUser = toUserInfo(json.data);
+                            setUser(updatedUser);
+                            localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+                        }
+                    }).catch(err => console.error('[Auth] Failed to refresh profile data:', err));
             } catch {
                 localStorage.removeItem(USER_KEY);
                 localStorage.removeItem(TOKEN_KEY);

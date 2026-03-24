@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense, useCallback, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { getCategories, getFilterOptions, getBestSellers, getNewArrivals, getFilteredProducts } from '@/lib/api';
+import { getCategories, getFilterOptions, getBestSellers, getNewArrivals, getFilteredProducts, subscribeNewsletter } from '@/lib/api';
 import { useCurrency } from '@/context/CurrencyContext';
 import { FilteredProduct, FilterMeta } from '@/types';
 import ProductCard from '@/components/ProductCard';
@@ -65,6 +65,10 @@ function ProductsContent() {
     const [mobileOpen, setMobileOpen] = useState(false);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [isMounted, setIsMounted] = useState(false);
+    
+    // Newsletter State
+    const [newsletterEmail, setNewsletterEmail] = useState('');
+    const [isSubscribing, setIsSubscribing] = useState(false);
 
     useEffect(() => {
         setIsMounted(true);
@@ -144,6 +148,28 @@ function ProductsContent() {
             setLoading(false);
         }
     }, [buildParams]);
+    
+    const handleSubscribe = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newsletterEmail || !newsletterEmail.includes('@')) {
+            toast.error('Please enter a valid email.');
+            return;
+        }
+        setIsSubscribing(true);
+        try {
+            const res = await subscribeNewsletter(newsletterEmail);
+            if (res.success) {
+                toast.success(res.message || 'Successfully subscribed!');
+                setNewsletterEmail('');
+            } else {
+                toast.error(res.message || 'Failed to subscribe.');
+            }
+        } catch (error) {
+            toast.error('An error occurred. Please try again.');
+        } finally {
+            setIsSubscribing(false);
+        }
+    };
 
     // Reset to page 1 whenever filters change
     useEffect(() => {
@@ -407,6 +433,7 @@ function ProductsContent() {
                         value={filters.search}
                         onSearch={setSearch}
                         variant="hero"
+                        live={true}
                         className="max-w-md mx-auto"
                         placeholder="Search products, brands, or categories..."
                     />
@@ -657,17 +684,22 @@ function ProductsContent() {
                     <p className="text-sm text-gray-500 mb-6">
                         Receive weekly Ayurvedic rituals, seasonal detox guides, and exclusive early access to limited harvest remedies.
                     </p>
-                    <form className="flex gap-2 max-w-sm mx-auto" onSubmit={(e) => { e.preventDefault(); toast.success('Subscribed!'); }}>
+                    <form className="flex gap-2 max-w-sm mx-auto" onSubmit={handleSubscribe}>
                         <input
                             type="email"
                             placeholder="Enter your email address"
-                            className="flex-1 px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#3d5c3a]/20 focus:border-[#3d5c3a]"
+                            value={newsletterEmail}
+                            onChange={(e) => setNewsletterEmail(e.target.value)}
+                            disabled={isSubscribing}
+                            required
+                            className="flex-1 px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#3d5c3a]/20 focus:border-[#3d5c3a] disabled:opacity-50"
                         />
                         <button
                             type="submit"
-                            className="px-6 py-3 rounded-xl bg-[#3d5c3a] text-white text-sm font-bold hover:bg-[#2d4a2a] transition-colors cursor-pointer"
+                            disabled={isSubscribing}
+                            className="px-6 py-3 rounded-xl bg-[#3d5c3a] text-white text-sm font-bold hover:bg-[#2d4a2a] transition-colors cursor-pointer disabled:opacity-70 flex items-center justify-center min-w-[120px]"
                         >
-                            Subscribe
+                            {isSubscribing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Subscribe'}
                         </button>
                     </form>
                     <p className="text-[10px] text-gray-400 mt-3">VEDASHI © 2026. PRIVACY POLICY. TERMS & CONDITIONS.</p>

@@ -99,6 +99,8 @@ export default function AccountPage() {
         setConfirmingBulkRemove(false);
     };
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 10;
     const [confirmingBulkRemove, setConfirmingBulkRemove] = useState(false);
     const [confirmingIndividualRemove, setConfirmingIndividualRemove] = useState<string | null>(null);
 
@@ -468,7 +470,7 @@ export default function AccountPage() {
                     full_name: res.data.full_name || '',
                     email: fetchedEmail,
                     phone: localNumber,
-                    date_of_birth: res.data.date_of_birth ? res.data.date_of_birth.split('T')[0] : '',
+                    date_of_birth: res.data.date_of_birth ? String(res.data.date_of_birth).substring(0, 10) : '',
                     is_email_verified: !!res.data.is_email_verified,
                     is_mobile_verified: !!res.data.is_mobile_verified,
                     has_password: hasPassword,
@@ -650,6 +652,7 @@ export default function AccountPage() {
 
 
     useEffect(() => {
+        setCurrentPage(1);
         if (!user?.id) return;
         
         // Always fetch profile details and image for the sidebar and header
@@ -657,15 +660,14 @@ export default function AccountPage() {
         fetchProfileImage();
 
         // Tab-specific fetching
+        fetchLoyaltyData();
         if (activeTab === 'orders') fetchOrders();
         if (activeTab === 'addresses') fetchAddresses();
         if (activeTab === 'support') fetchEnquiries();
         if (activeTab === 'notifications') fetchNotificationsData();
-        if (activeTab === 'wallet' || activeTab === 'overview') fetchLoyaltyData();
         if (activeTab === 'profile' || activeTab === 'overview') {
             fetchOrders();
             fetchReviewsCount();
-            fetchLoyaltyData();
         }
     }, [activeTab, user?.id, fetchOrders, fetchAddresses, fetchProfile, fetchProfileImage, fetchEnquiries, fetchLoyaltyData, fetchReviewsCount]);
 
@@ -679,8 +681,10 @@ export default function AccountPage() {
         return () => window.removeEventListener('notifications-updated', handleUpdate);
     }, [fetchNotificationsData]);
 
-    const activeTier = loyaltyData?.tier?.tier_name || 'Bronze';
-    const activePoints = loyaltyData?.wallet?.balance || 0;
+    const loyaltyWalletObj = loyaltyData?.wallet || {};
+    const loyaltyTierObj = loyaltyData?.tier || {};
+    const activeTier = loyaltyTierObj.tier_name || user?.loyalty_tier || 'Bronze';
+    const activePoints = loyaltyWalletObj.balance || 0;
 
     // ── Profile save handler ─────────────────────────────────────────
     const handleProfileSave = async () => {
@@ -1139,7 +1143,7 @@ export default function AccountPage() {
     return (
         <div className="flex bg-[#F8F5F0] min-h-[calc(100vh-128px)]">
             {/* Left Sidebar */}
-            <aside className="w-[280px] bg-[#36453A] text-white flex flex-col flex-shrink-0 relative z-20 shadow-[4px_0_24px_rgba(0,0,0,0.12)]">
+            <aside className="w-[280px] bg-[#1D351D] text-white flex flex-col flex-shrink-0 relative z-20 shadow-[4px_0_24px_rgba(0,0,0,0.12)]">
                 <div className="flex-1 px-5 py-8">
                     {/* CORE EXPERIENCE */}
                     <div className="mb-8">
@@ -1380,7 +1384,7 @@ export default function AccountPage() {
                                         <div>
                                             <p className="text-xs font-bold text-warm-gray uppercase tracking-wider mb-1">Saved Items</p>
                                             <h3 className="text-2xl font-bold text-[#36453A] mb-1">{wishlistItems.length} Items</h3>
-                                            <p className="text-[11px] text-warm-gray font-medium">Waitlisting {wishlistItems.filter((i: any) => i.stock_status === 'OUT_OF_STOCK').length} items</p>
+                                            <p className="text-[11px] text-warm-gray font-medium">Waitlisting {wishlistItems.filter((i: any) => (i.stock_status || '').toLowerCase() === 'out_of_stock').length} items</p>
                                         </div>
                                     </div>
 
@@ -1549,7 +1553,7 @@ export default function AccountPage() {
 
                                             <div className="relative z-10">
                                                 <p className="text-[10px] font-bold tracking-widest text-[#D4A847] uppercase mb-1">Vedashi Wallet</p>
-                                                <h3 className="text-3xl font-bold mb-1">${(Number((user as any)?.wallet_balance || 0)).toFixed(2)}</h3>
+                                                <h3 className="text-3xl font-bold mb-1">${(Number(user?.wallet_balance || 0)).toFixed(2)}</h3>
                                                 <p className="text-[10px] text-white/70 tracking-wide">Available balance for quick checkout</p>
                                             </div>
 
@@ -1649,7 +1653,7 @@ export default function AccountPage() {
                                                     <p className="mt-2 text-sm text-warm-gray">{orderSearch || orderStatusFilter !== 'All' ? 'Try adjusting your filters.' : "You haven't placed any orders yet."}</p>
                                                 </div>
                                             )}
-                                            {!ordersLoading && filteredAndSortedOrders.map(order => {
+                                            {!ordersLoading && filteredAndSortedOrders.slice((currentPage - 1) * pageSize, currentPage * pageSize).map(order => {
                                                 const dtDate = new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
                                                 // Extract items from order payload regardless of formatting variations
                                                 const orderItemsData = order.items || [];
@@ -1760,14 +1764,39 @@ export default function AccountPage() {
                                         </div>
 
                                         {/* Pagination Bottom */}
-                                        {!ordersLoading && filteredAndSortedOrders.length > 0 && (
+                                        {!ordersLoading && filteredAndSortedOrders.length > pageSize && (
                                             <div className="flex items-center justify-between pt-6 border-t border-[#E8E1D5]">
-                                                <span className="text-sm font-medium text-warm-gray">Showing <strong className="text-[#36453A]">1-{filteredAndSortedOrders.length}</strong> of <strong className="text-[#36453A]">{filteredAndSortedOrders.length}</strong> orders</span>
+                                                <span className="text-sm font-medium text-warm-gray">
+                                                    Showing <strong className="text-[#36453A]">
+                                                        {Math.min((currentPage - 1) * pageSize + 1, filteredAndSortedOrders.length)}-{Math.min(currentPage * pageSize, filteredAndSortedOrders.length)}
+                                                    </strong> of <strong className="text-[#36453A]">{filteredAndSortedOrders.length}</strong> orders
+                                                </span>
                                                 <div className="flex items-center gap-2">
-                                                    <button className="px-4 py-2 text-sm font-bold text-warm-gray bg-white border border-[#E8E1D5] rounded-xl opacity-50 cursor-not-allowed">Previous</button>
-                                                    <button className="h-9 w-9 rounded-xl bg-[#36453A] text-white font-bold text-sm shadow-sm flex items-center justify-center">1</button>
-                                                    <button className="h-9 w-9 rounded-xl bg-white text-[#36453A] border border-[#E8E1D5] font-bold text-sm flex items-center justify-center hover:bg-[#F8F5F0]">2</button>
-                                                    <button className="px-4 py-2 text-sm font-bold text-[#36453A] bg-white border border-[#E8E1D5] rounded-xl hover:bg-[#F8F5F0] transition-colors shadow-sm">Next</button>
+                                                    <button 
+                                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                                        disabled={currentPage === 1}
+                                                        className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === 1 ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-[#F8F5F0]'}`}
+                                                    >
+                                                        Previous
+                                                    </button>
+                                                    
+                                                    {Array.from({ length: Math.ceil(filteredAndSortedOrders.length / pageSize) }).map((_, i) => (
+                                                        <button 
+                                                            key={i}
+                                                            onClick={() => setCurrentPage(i + 1)}
+                                                            className={`h-9 w-9 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center transition-all ${currentPage === i + 1 ? 'bg-[#36453A] text-white' : 'bg-white text-[#36453A] border border-[#E8E1D5] hover:bg-[#F8F5F0]'}`}
+                                                        >
+                                                            {i + 1}
+                                                        </button>
+                                                    ))}
+
+                                                    <button 
+                                                        onClick={() => setCurrentPage(p => Math.min(Math.ceil(filteredAndSortedOrders.length / pageSize), p + 1))}
+                                                        disabled={currentPage === Math.ceil(filteredAndSortedOrders.length / pageSize)}
+                                                        className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === Math.ceil(filteredAndSortedOrders.length / pageSize) ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-[#F8F5F0]'}`}
+                                                    >
+                                                        Next
+                                                    </button>
                                                 </div>
                                             </div>
                                         )}
@@ -2195,11 +2224,12 @@ export default function AccountPage() {
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                                        {sortedWishlistItems.map((prod) => {
+                                         {sortedWishlistItems.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((prod) => {
                                             const product = prod as any;
                                             const isSelected = selectedWishlistItems.has(product.product_id);
-                                            const inStock = product.stock_status === 'in_stock';
-                                            const addDate = product.created_at ? new Date(product.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'Recently';
+                                            const stockStatus = (product.stock_status || '').toLowerCase();
+                                            const inStock = stockStatus === 'in_stock';
+                                            const addDate = product.created_at ? new Date(product.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recently';
 
                                             return (
                                                 <div key={product.product_id} className="group flex flex-col rounded-3xl border border-[#E8E1D5] bg-white p-4 transition-all hover:shadow-lg relative">
@@ -2303,6 +2333,44 @@ export default function AccountPage() {
                                                 className="rounded-xl border border-[#E8E1D5] px-6 py-2.5 text-xs font-bold text-[#36453A] group-hover:bg-white group-hover:shadow-sm transition-all bg-white"
                                             >
                                                 Browse Shop
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Wishlist Pagination Bottom */}
+                                {sortedWishlistItems.length > pageSize && (
+                                    <div className="flex items-center justify-between pt-6 border-t border-[#E8E1D5]">
+                                        <span className="text-sm font-medium text-warm-gray">
+                                            Showing <strong className="text-[#36453A]">
+                                                {Math.min((currentPage - 1) * pageSize + 1, sortedWishlistItems.length)}-{Math.min(currentPage * pageSize, sortedWishlistItems.length)}
+                                            </strong> of <strong className="text-[#36453A]">{sortedWishlistItems.length}</strong> items
+                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <button 
+                                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                                disabled={currentPage === 1}
+                                                className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === 1 ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-[#F8F5F0]'}`}
+                                            >
+                                                Previous
+                                            </button>
+                                            
+                                            {Array.from({ length: Math.ceil(sortedWishlistItems.length / pageSize) }).map((_, i) => (
+                                                <button 
+                                                    key={i}
+                                                    onClick={() => setCurrentPage(i + 1)}
+                                                    className={`h-9 w-9 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center transition-all ${currentPage === i + 1 ? 'bg-[#36453A] text-white' : 'bg-white text-[#36453A] border border-[#E8E1D5] hover:bg-[#F8F5F0]'}`}
+                                                >
+                                                    {i + 1}
+                                                </button>
+                                            ))}
+
+                                            <button 
+                                                onClick={() => setCurrentPage(p => Math.min(Math.ceil(sortedWishlistItems.length / pageSize), p + 1))}
+                                                disabled={currentPage === Math.ceil(sortedWishlistItems.length / pageSize)}
+                                                className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === Math.ceil(sortedWishlistItems.length / pageSize) ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-[#F8F5F0]'}`}
+                                            >
+                                                Next
                                             </button>
                                         </div>
                                     </div>
@@ -2865,8 +2933,8 @@ export default function AccountPage() {
                                             <p className="text-[10px] font-bold tracking-[0.2em] text-[#D4A847]/60 mb-2 uppercase">ACTIVE PLAN</p>
                                             <h3 className="text-2xl font-bold text-[#D4A847] mb-2">{activeTier} Ritualist</h3>
                                             <p className="text-sm text-white/70 leading-relaxed mb-6">
-                                                {loyaltyData?.tier?.benefits && Array.isArray(loyaltyData.tier.benefits) && loyaltyData.tier.benefits.length > 0
-                                                    ? loyaltyData.tier.benefits.join(', ')
+                                                {loyaltyData?.tier?.benefits && Array.isArray(loyaltyData?.tier?.benefits) && loyaltyData?.tier?.benefits.length > 0
+                                                    ? loyaltyData?.tier?.benefits.join(', ')
                                                     : "Enhance your aura with every ritual to unlock exotic benefits and golden boons."
                                                 }
                                             </p>
@@ -3342,7 +3410,7 @@ export default function AccountPage() {
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
-                                        {notifications.map((n) => (
+                                        {notifications.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((n) => (
                                             <div
                                                 key={n.notification_id}
                                                 className={`group flex items-start gap-4 p-5 rounded-2xl border transition-all ${n.is_read
@@ -3398,6 +3466,44 @@ export default function AccountPage() {
                                                 </button>
                                             </div>
                                         ))}
+
+                                        {/* Notifications Pagination Bottom */}
+                                        {notifications.length > pageSize && (
+                                            <div className="flex items-center justify-between pt-6 border-t border-[#E8E1D5]">
+                                                <span className="text-sm font-medium text-warm-gray">
+                                                    Showing <strong className="text-[#36453A]">
+                                                        {Math.min((currentPage - 1) * pageSize + 1, notifications.length)}-{Math.min(currentPage * pageSize, notifications.length)}
+                                                    </strong> of <strong className="text-[#36453A]">{notifications.length}</strong> notifications
+                                                </span>
+                                                <div className="flex items-center gap-2">
+                                                    <button 
+                                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                                        disabled={currentPage === 1}
+                                                        className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === 1 ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-[#F8F5F0]'}`}
+                                                    >
+                                                        Previous
+                                                    </button>
+                                                    
+                                                    {Array.from({ length: Math.ceil(notifications.length / pageSize) }).map((_, i) => (
+                                                        <button 
+                                                            key={i}
+                                                            onClick={() => setCurrentPage(i + 1)}
+                                                            className={`h-9 w-9 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center transition-all ${currentPage === i + 1 ? 'bg-[#36453A] text-white' : 'bg-white text-[#36453A] border border-[#E8E1D5] hover:bg-[#F8F5F0]'}`}
+                                                        >
+                                                            {i + 1}
+                                                        </button>
+                                                    ))}
+
+                                                    <button 
+                                                        onClick={() => setCurrentPage(p => Math.min(Math.ceil(notifications.length / pageSize), p + 1))}
+                                                        disabled={currentPage === Math.ceil(notifications.length / pageSize)}
+                                                        className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === Math.ceil(notifications.length / pageSize) ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-[#F8F5F0]'}`}
+                                                    >
+                                                        Next
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
