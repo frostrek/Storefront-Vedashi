@@ -3,7 +3,8 @@
 import { useState, useEffect, use, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { getProduct, getProductDetails, getRelatedProducts, getBestSellers, trackProductView } from '@/lib/api';
+import { getProduct, getProductDetails, getRelatedProducts, getBestSellers, trackProductView, requestRestockNotification } from '@/lib/api';
+
 import { useCurrency } from '@/context/CurrencyContext';
 import { Product, ProductWithDetails } from '@/types';
 import { useCart } from '@/context/CartContext';
@@ -178,6 +179,36 @@ function ProductDetailContent({ params }: Props) {
     const { addItem, items, updateQuantity, removeItem, loading: cartLoading } = useCart();
     const { isInWishlist, toggleItem } = useWishlist();
     const { addProduct: trackRecentlyViewed } = useRecentlyViewed();
+
+    // Restock Notification
+    const [restockEmail, setRestockEmail] = useState('');
+    const [isRestockNotifying, setIsRestockNotifying] = useState(false);
+
+    const handleRestockNotify = async () => {
+        if (!restockEmail || !/\S+@\S+\.\S+/.test(restockEmail)) {
+            toast.error('Please enter a valid email address');
+            return;
+        }
+        setIsRestockNotifying(true);
+        try {
+            const res = await requestRestockNotification(
+                product?.product_id as string, 
+                restockEmail, 
+                selectedVariant?.variant_id
+            );
+
+            if (res.success) {
+                toast.success('You will be notified when this is back in stock!');
+                setRestockEmail('');
+            } else {
+                toast.error(res.message || 'Failed to set notification.');
+            }
+        } catch {
+            toast.error('Failed to set notification. Please try again.');
+        } finally {
+            setIsRestockNotifying(false);
+        }
+    };
 
     // Only fetch product details and variants (above-fold data)
     // Related products and reviews are deferred to their lazy sections
@@ -826,31 +857,55 @@ function ProductDetailContent({ params }: Props) {
 
                         {/* QUANTITY + CART */}
                         <div className="space-y-4 pt-4 mt-2">
+                            {isOutOfStock ? (
+                                <div className="bg-red-50 p-4 rounded-xl border border-red-100 flex flex-col gap-3">
+                                    <div className="flex items-center gap-2 text-red-700 font-semibold mb-1">
+                                        <AlertTriangle size={16} />
+                                        <span>Notify me when back in stock</span>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="email"
+                                            placeholder="Enter your email address"
+                                            className="flex-1 px-4 py-2 border border-red-200 rounded-lg text-sm focus:outline-none focus:border-red-400 focus:ring-1 focus:ring-red-400 bg-white placeholder-red-300"
+                                            value={restockEmail}
+                                            onChange={(e) => setRestockEmail(e.target.value)}
+                                        />
+                                        <button
+                                            onClick={handleRestockNotify}
+                                            disabled={isRestockNotifying || !restockEmail}
+                                            className="px-6 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition disabled:opacity-50 text-sm whitespace-nowrap shadow-sm shadow-red-200"
+                                        >
+                                            {isRestockNotifying ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" /> : 'Notify Me'}
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        onClick={(e) => handleAddToCart(e)}
+                                        disabled={isUnavailable || cartLoading}
+                                        className={`w-full rounded-xl py-4 flex justify-center items-center gap-2 transition-all font-semibold ${isUnavailable
+                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
+                                            : 'bg-[#7a8f69] hover:bg-[#6b805a] text-white shadow-sm'
+                                            }`}
+                                    >
+                                        <ShoppingCart size={18} />
+                                        {isComingSoon ? 'Coming Soon' : isExpired ? 'Unavailable' : isVariantInactive ? 'Option Unavailable' : 'Add to Cart'}
+                                    </button>
 
-                            <div className="grid grid-cols-2 gap-3">
-                                <button
-                                    onClick={(e) => handleAddToCart(e)}
-                                    disabled={isUnavailable || cartLoading}
-                                    className={`w-full rounded-xl py-4 flex justify-center items-center gap-2 transition-all font-semibold ${isUnavailable
-                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
-                                        : 'bg-[#7a8f69] hover:bg-[#6b805a] text-white shadow-sm'
-                                        }`}
-                                >
-                                    <ShoppingCart size={18} />
-                                    {isComingSoon ? 'Coming Soon' : isExpired ? 'Unavailable' : isVariantInactive ? 'Option Unavailable' : isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
-                                </button>
-
-                                <button
-                                    onClick={handleBuyNow}
-                                    disabled={isUnavailable || cartLoading}
-                                    className={`w-full rounded-xl py-4 flex justify-center items-center font-semibold transition-all border ${isUnavailable
-                                        ? 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed'
-                                        : 'bg-white border-gray-300 text-gray-900 hover:border-gray-400 hover:bg-gray-50 shadow-sm'
-                                        }`}
-                                >
-                                    Buy It Now
-                                </button>
-                            </div>
+                                    <button
+                                        onClick={handleBuyNow}
+                                        disabled={isUnavailable || cartLoading}
+                                        className={`w-full rounded-xl py-4 flex justify-center items-center font-semibold transition-all border ${isUnavailable
+                                            ? 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed'
+                                            : 'bg-white border-gray-300 text-gray-900 hover:border-gray-400 hover:bg-gray-50 shadow-sm'
+                                            }`}
+                                    >
+                                        Buy It Now
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
                         {/* TRUST BADGES */}

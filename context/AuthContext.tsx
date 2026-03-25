@@ -7,8 +7,8 @@ interface AuthContextType {
     user: UserInfo | null;
     isAuthenticated: boolean;
     isLoading: boolean;
-    login: (email: string, password: string) => Promise<{ success: boolean; error?: string; code?: string; role?: string; access_token?: string }>;
-    register: (name: string, email: string, password: string) => Promise<RegisterResponse>;
+    login: (email: string, password: string, rememberMe?: boolean, turnstileToken?: string) => Promise<{ success: boolean; error?: string; code?: string; role?: string; access_token?: string }>;
+    register: (name: string, email: string, password: string, turnstileToken?: string) => Promise<RegisterResponse>;
     /** Log-in the user directly from verification data (after OTP verified and accounts created) */
     loginFromVerification: (customerData: Record<string, unknown>, accessToken: string) => void;
     socialLogin: (clerkToken: string) => Promise<{ success: boolean; error?: string; is_new_user?: boolean; account_linked?: boolean; pending_verification?: boolean; customer_id?: string; email?: string; full_name?: string }>;
@@ -123,13 +123,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const login = useCallback(async (email: string, password: string) => {
+    const login = useCallback(async (email: string, password: string, rememberMe: boolean = true, turnstileToken?: string) => {
         try {
             const res = await authFetch(`${API_URL}/api/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ email, password }),
+                body: JSON.stringify({ email, password, remember_me: rememberMe, turnstile_token: turnstileToken }),
             });
             const json = await res.json();
             if (res.ok && json.success && json.data?.customer) {
@@ -154,14 +154,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const register = useCallback(async (
         name: string,
         email: string,
-        password: string
+        password: string,
+        turnstileToken?: string
     ): Promise<RegisterResponse> => {
         try {
             const res = await authFetch(`${API_URL}/api/auth/initiate-registration`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ full_name: name, email, password }),
+                body: JSON.stringify({ full_name: name, email, password, turnstile_token: turnstileToken }),
             });
             const json = await res.json();
             if (res.ok && json.success) {
