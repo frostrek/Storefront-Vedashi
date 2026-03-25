@@ -64,7 +64,25 @@ export async function authFetch(url: string, init?: RequestInit): Promise<Respon
     const existingHeaders = init?.headers as Record<string, string> | undefined;
     if (existingHeaders) Object.assign(headers, existingHeaders);
 
-    return fetch(url, { ...init, headers, credentials: 'include' });
+    let res = await fetch(url, { ...init, headers, credentials: 'include' });
+
+    // Auto-retry once on CSRF failure
+    if (res.status === 403 && isStateChanging && typeof window !== 'undefined') {
+        const cloned = res.clone();
+        try {
+            const data = await cloned.json();
+            if (data.message === 'CSRF token invalid or expired' || data.message === 'CSRF token missing') {
+                cachedCsrfToken = null;
+                await initCsrf();
+                headers['X-CSRF-Token'] = cachedCsrfToken || '';
+                res = await fetch(url, { ...init, headers, credentials: 'include' });
+            }
+        } catch {
+            // ignore non-json error
+        }
+    }
+
+    return res;
 }
 
 /* ─── Products ─── */

@@ -1661,8 +1661,14 @@ export default function AccountPage() {
                                             {!ordersLoading && filteredAndSortedOrders.length === 0 && (
                                                 <div className="rounded-3xl border border-[#E8E1D5] bg-white py-16 text-center shadow-sm">
                                                     <Package className="mx-auto h-12 w-12 text-warm-gray/30 mb-4" />
-                                                    <p className="text-xl font-bold text-[#36453A]">No orders found</p>
-                                                    <p className="mt-2 text-sm text-warm-gray">{orderSearch || orderStatusFilter !== 'All' ? 'Try adjusting your filters.' : "You haven't placed any orders yet."}</p>
+                                                    <p className="text-xl font-bold text-[#36453A]">No orders yet</p>
+                                                    <p className="mt-2 text-sm text-warm-gray mb-6">{orderSearch || orderStatusFilter !== 'All' ? 'Try adjusting your filters.' : "You haven't placed any orders yet."}</p>
+                                                    <button
+                                                        onClick={() => router.push(`/${country}/shop`)}
+                                                        className="rounded-xl bg-[#36453A] px-10 py-3 text-sm font-bold text-white shadow-md hover:bg-[#2A362D] transition-all"
+                                                    >
+                                                        Browse Shop
+                                                    </button>
                                                 </div>
                                             )}
                                             {!ordersLoading && filteredAndSortedOrders.slice((currentPage - 1) * pageSize, currentPage * pageSize).map(order => {
@@ -2233,6 +2239,12 @@ export default function AccountPage() {
                                         <Heart className="mx-auto h-16 w-16 text-warm-gray/30 mb-4" />
                                         <p className="text-2xl font-bold text-[#36453A]">Your sanctuary is empty</p>
                                         <p className="mt-2 text-warm-gray text-lg">{wishlistItems.length > 0 ? "No matches found for your current sort." : "Save your favorite organic rituals here."}</p>
+                                        <button
+                                            onClick={() => router.push(`/${country}/shop`)}
+                                            className="mt-8 rounded-xl bg-[#36453A] px-10 py-3 text-sm font-bold text-white shadow-md hover:bg-[#2A362D] transition-all"
+                                        >
+                                            Browse Shop
+                                        </button>
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
