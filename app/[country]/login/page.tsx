@@ -72,6 +72,7 @@ function LoginContent() {
     const isAdminRedirecting = useRef(false);
 
     const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+    const [captchaRequired, setCaptchaRequired] = useState(false);
     const turnstileRef = useRef<HTMLDivElement>(null);
     const widgetIdRef = useRef<string | null>(null);
 
@@ -110,7 +111,7 @@ function LoginContent() {
     useEffect(() => {
         setTurnstileToken(null);
         renderTurnstile();
-    }, [isRegister, renderTurnstile]);
+    }, [isRegister, captchaRequired, renderTurnstile]);
 
     useEffect(() => {
         if (cooldown <= 0) return;
@@ -208,16 +209,19 @@ function LoginContent() {
     // ── Email/Password Submit ────────────────────────────────────────
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!turnstileToken) {
-            toast.error('Please complete the CAPTCHA verification.');
-            return;
-        }
         if (!agreeTerms) {
             toast.error('You must agree to the Terms of Service and Privacy Policy to continue.');
             return;
         }
         setLoading(true);
         try {
+            if (isRegister || captchaRequired) {
+                if (!turnstileToken) {
+                    toast.error('Please complete the CAPTCHA verification.');
+                    setLoading(false);
+                    return;
+                }
+            }
             if (isRegister) {
                 const result = await register(form.name, form.email, form.password);
                 if (result?.success) {
@@ -230,7 +234,8 @@ function LoginContent() {
                     toast.error(result?.error || 'Something went wrong');
                 }
             } else {
-                const result = await login(form.email, form.password);
+                // Login: pass turnstile token (may be null if widget hasn't been solved yet)
+                const result = await login(form.email, form.password, turnstileToken);
                 if (result?.success) {
                     const isAdmin = result.role === 'admin' || result.role === 'Super Admin';
                     if (isAdmin) {
@@ -259,7 +264,21 @@ function LoginContent() {
                     setIsRedirecting(true);
                     router.push(redirectTo);
                 } else {
-                    toast.error(result?.error || 'Login failed. Please check your credentials.');
+                    // Handle security-related responses
+                    if (result?.requireCaptcha) {
+                        setCaptchaRequired(true);
+                    }
+
+                    if (result?.blocked) {
+                        const minutes = result.retryAfter ? Math.ceil(result.retryAfter / 60) : 15;
+                        toast.error(`Too many failed attempts. Please try again in ${minutes} minute${minutes !== 1 ? 's' : ''}.`);
+                    } else if (result?.requireCaptcha && !turnstileToken) {
+                        toast.error('Please complete the CAPTCHA verification to continue.');
+                        // Re-render Turnstile to ensure widget is visible
+                        renderTurnstile();
+                    } else {
+                        toast.error(result?.error || 'Login failed. Please check your credentials.');
+                    }
                 }
             }
         } catch (error) {
@@ -382,7 +401,7 @@ function LoginContent() {
             <div className="mt-6 pt-5 border-t border-[#e8f0e8] flex flex-col items-center gap-3">
                 <button
                     type="button"
-                    onClick={() => { setAuthMethod('email'); setOtpSent(false); setOtpCode(''); }}
+                    onClick={() => { setAuthMethod('email'); setOtpSent(false); setOtpCode(''); setCaptchaRequired(false); setTurnstileToken(null); }}
                     className="flex items-center gap-1.5 text-xs font-semibold text-[#4a6b4a] hover:text-[#1e3d1e] transition-colors cursor-pointer"
                 >
                     <ArrowLeft className="w-3.5 h-3.5" />
@@ -390,7 +409,7 @@ function LoginContent() {
                 </button>
                 <p className="text-sm text-[#6b7b6b]">
                     Don&apos;t have an account?{' '}
-                    <button type="button" onClick={() => { setIsRegister(true); setAuthMethod('email'); }}
+                    <button type="button" onClick={() => { setIsRegister(true); setAuthMethod('email'); setCaptchaRequired(false); setTurnstileToken(null); }}
                         className="font-semibold text-[#2d5a2d] hover:underline cursor-pointer">Create Account</button>
                 </p>
                 <Link href="/" className="text-sm font-semibold text-[#2d5a2d] hover:underline cursor-pointer">Continue as Guest</Link>
@@ -636,7 +655,9 @@ function LoginContent() {
                                 </LegalModal>
 
                                 {/* Cloudflare Turnstile */}
-                                <div ref={turnstileRef} className=" mb-3 flex justify-center" />
+                                {(isRegister || captchaRequired) && (
+                                    <div ref={turnstileRef} className=" mb-3 flex justify-center" />
+                                )}
 
                                 {/* CTA Button */}
                                 <button
@@ -726,7 +747,7 @@ function LoginContent() {
                                     <div className="text-center space-y-1">
                                         <p className="text-sm text-[#6b7b6b]">
                                             {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
-                                            <button type="button" onClick={() => setIsRegister(!isRegister)}
+                                            <button type="button" onClick={() => { setIsRegister(!isRegister); setCaptchaRequired(false); setTurnstileToken(null); }}
                                                 className="font-semibold text-[#2d5a2d] hover:underline cursor-pointer">
                                                 {isRegister ? 'Sign In' : 'Create Account'}
                                             </button>
