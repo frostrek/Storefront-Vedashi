@@ -209,7 +209,7 @@ export default function AccountPage() {
     const [profileSaving, setProfileSaving] = useState(false);
     const [showNotificationModal, setShowNotificationModal] = useState(false);
     const [profileData, setProfileData] = useState({
-        full_name: '', email: '', phone: '', date_of_birth: '',
+        full_name: '', email: '', phone: '',
         is_email_verified: false, is_mobile_verified: false, has_password: false,
         created_at: '',
     });
@@ -477,7 +477,6 @@ export default function AccountPage() {
                     full_name: res.data.full_name || '',
                     email: fetchedEmail,
                     phone: localNumber,
-                    date_of_birth: res.data.date_of_birth ? String(res.data.date_of_birth).substring(0, 10) : '',
                     is_email_verified: !!res.data.is_email_verified,
                     is_mobile_verified: !!res.data.is_mobile_verified,
                     has_password: hasPassword,
@@ -2865,13 +2864,6 @@ export default function AccountPage() {
                                                                 className="w-full bg-[#F8F5F0] border border-[#E8E1D5] rounded-xl px-4 py-[9px] text-sm focus:outline-none focus:border-[#36453A] focus:ring-1 focus:ring-[#36453A]/20 transition-all font-medium text-[#36453A]" />
                                                         </div>
                                                     </div>
-                                                </div>
-                                                <div>
-                                                    <label className="block flex items-center gap-1.5 text-[11px] font-bold text-warm-gray uppercase tracking-widest mb-2"><Calendar className="h-3 w-3" /> Date of Birth</label>
-                                                    <input type="date" value={profileData.date_of_birth}
-                                                        max={new Date().toISOString().split('T')[0]}
-                                                        onChange={e => setProfileData({ ...profileData, date_of_birth: e.target.value })}
-                                                        className="w-full bg-[#F8F5F0] border border-[#E8E1D5] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#36453A] focus:ring-1 focus:ring-[#36453A]/20 transition-all font-medium text-[#36453A]" />
                                                 </div>
                                                 <div>
                                                     <label className="block flex items-center gap-1.5 text-[11px] font-bold text-warm-gray uppercase tracking-widest mb-2"><MapPin className="h-3 w-3" /> Current Location</label>

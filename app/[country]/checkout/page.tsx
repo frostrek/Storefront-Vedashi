@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
-import { getCart, clearCart as clearCartApi, checkoutOrder, getAddresses, updateAddress, deleteAddress, directCheckout, createPaymentOrder, verifyPayment, initiatePaymentCheckout, lookupPostalCode, getLoyaltyWallet } from '@/lib/api';
+import { getCart, clearCart as clearCartApi, checkoutOrder, getAddresses, updateAddress, deleteAddress, directCheckout, createPaymentOrder, verifyPayment, initiatePaymentCheckout, lookupPostalCode, getLoyaltyWallet, updateCheckoutDraft } from '@/lib/api';
 import { useCurrency } from '@/context/CurrencyContext';
 import { Address } from '@/types';
 import { COUNTRIES } from '@/lib/countries';
@@ -101,6 +101,9 @@ function CheckoutContent() {
     const [orderPlaced, setOrderPlaced] = useState(false);
     const [placing, setPlacing] = useState(false);
     const [orderId, setOrderId] = useState<string | null>(null);
+
+    // Persistence Key
+    const PERSIST_KEY = 'vedashi_checkout_draft';
 
     // Payment method selection
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('razorpay');
@@ -261,6 +264,29 @@ function CheckoutContent() {
                         const defaultAddr = res.data.find((a: Address) => a.is_default) || res.data[0];
                         if (defaultAddr) setSelectedAddressId(defaultAddr.address_id);
                         else setUseNewAddress(true);
+                        
+                        // After loading addresses, check if we have a persisted draft to restore
+                        try {
+                            const draft = sessionStorage.getItem(PERSIST_KEY);
+                            if (draft) {
+                                const parsed = JSON.parse(draft);
+                                if (parsed.step) setStep(parsed.step);
+                                if (parsed.maxStepReached) setMaxStepReached(parsed.maxStepReached);
+                                if (parsed.paymentMethod) setPaymentMethod(parsed.paymentMethod);
+                                if (parsed.contactEmail) setContactEmail(parsed.contactEmail);
+                                if (parsed.contactPhone) setContactPhone(parsed.contactPhone);
+                                if (parsed.billingSameAsShipping !== undefined) setBillingSameAsShipping(parsed.billingSameAsShipping);
+                                if (parsed.selectedAddressId) setSelectedAddressId(parsed.selectedAddressId);
+                                if (parsed.useNewAddress !== undefined) setUseNewAddress(parsed.useNewAddress);
+                                if (parsed.newAddress) setNewAddress(prev => ({ ...prev, ...parsed.newAddress }));
+                                if (parsed.selectedBillingAddressId) setSelectedBillingAddressId(parsed.selectedBillingAddressId);
+                                if (parsed.useNewBillingAddress !== undefined) setUseNewBillingAddress(parsed.useNewBillingAddress);
+                                if (parsed.newBillingAddress) setNewBillingAddress(prev => ({ ...prev, ...parsed.newBillingAddress }));
+                                if (parsed.redeemPoints) setRedeemPoints(parsed.redeemPoints);
+                            }
+                        } catch (e) {
+                            console.error('Failed to restore checkout draft:', e);
+                        }
                     } else setUseNewAddress(true);
                 })
                 .catch(() => setUseNewAddress(true))
@@ -276,6 +302,31 @@ function CheckoutContent() {
             setUseNewAddress(true);
         }
     }, [user]);
+
+    // Try to restore draft from backend if missing locally
+    useEffect(() => {
+        if (cartId && isAuthenticated && mounted && !sessionStorage.getItem(PERSIST_KEY)) {
+            getCart({ cart_id: cartId }).then(cartRes => {
+                if (cartRes.success && cartRes.data?.checkout_draft && Object.keys(cartRes.data.checkout_draft).length > 0) {
+                    const parsed = cartRes.data.checkout_draft;
+                    if (parsed.step) setStep(parsed.step);
+                    if (parsed.maxStepReached) setMaxStepReached(parsed.maxStepReached);
+                    if (parsed.paymentMethod) setPaymentMethod(parsed.paymentMethod);
+                    if (parsed.contactEmail) setContactEmail(parsed.contactEmail);
+                    if (parsed.contactPhone) setContactPhone(parsed.contactPhone);
+                    if (parsed.billingSameAsShipping !== undefined) setBillingSameAsShipping(parsed.billingSameAsShipping);
+                    if (parsed.selectedAddressId) setSelectedAddressId(parsed.selectedAddressId);
+                    if (parsed.useNewAddress !== undefined) setUseNewAddress(parsed.useNewAddress);
+                    if (parsed.newAddress) setNewAddress(prev => ({ ...prev, ...parsed.newAddress }));
+                    if (parsed.selectedBillingAddressId) setSelectedBillingAddressId(parsed.selectedBillingAddressId);
+                    if (parsed.useNewBillingAddress !== undefined) setUseNewBillingAddress(parsed.useNewBillingAddress);
+                    if (parsed.newBillingAddress) setNewBillingAddress(prev => ({ ...prev, ...parsed.newBillingAddress }));
+                    if (parsed.redeemPoints) setRedeemPoints(parsed.redeemPoints);
+                    sessionStorage.setItem(PERSIST_KEY, JSON.stringify(parsed));
+                }
+            }).catch(() => {});
+        }
+    }, [cartId, isAuthenticated, mounted]);
 
     useEffect(() => {
         if (!isBuyNow && items.length === 0 && !orderPlaced) {
@@ -303,6 +354,40 @@ function CheckoutContent() {
             });
         }
     }, [newBillingAddress.pincode]);
+
+    // Persist changes to sessionStorage
+    useEffect(() => {
+        if (!mounted || orderPlaced) return;
+        
+        const timer = setTimeout(() => {
+            const draft = {
+                step,
+                maxStepReached,
+                paymentMethod,
+                contactEmail,
+                contactPhone,
+                billingSameAsShipping,
+                selectedAddressId,
+                useNewAddress,
+                newAddress,
+                selectedBillingAddressId,
+                useNewBillingAddress,
+                newBillingAddress,
+                redeemPoints
+            };
+            sessionStorage.setItem(PERSIST_KEY, JSON.stringify(draft));
+            if (cartId && isAuthenticated) {
+                updateCheckoutDraft(cartId, draft).catch(() => {});
+            }
+        }, 500); // Debounce saves
+        
+        return () => clearTimeout(timer);
+    }, [
+        mounted, orderPlaced, step, maxStepReached, paymentMethod, contactEmail, contactPhone, 
+        billingSameAsShipping, selectedAddressId, useNewAddress, newAddress, 
+        selectedBillingAddressId, useNewBillingAddress, newBillingAddress, redeemPoints,
+        cartId, isAuthenticated
+    ]);
 
     // Global Postal Code Auto-Fill (Shipping)
     useEffect(() => {
@@ -539,6 +624,7 @@ function CheckoutContent() {
                             const platformOrderId = verifyRes.data?.order_id || orderId;
                             setOrderId(platformOrderId || null);
                             if (!isBuyNow) { await clearCart(true); removeCoupon(); }
+                            sessionStorage.removeItem(PERSIST_KEY);
                             sessionStorage.removeItem('ksp_buy_now_item');
                             setOrderPlaced(true);
                             setPaymentFailed(false);
@@ -582,6 +668,12 @@ function CheckoutContent() {
             setPaymentProcessing(false);
             setStep(2);
             toast.error(error.message || 'Failed to initiate payment');
+            
+            // Handle session expiry gracefully
+            const errorMsg = error.message?.toLowerCase() || '';
+            if (errorMsg.includes('token') || errorMsg.includes('expire') || errorMsg.includes('unauthorized') || error.statusCode === 401) {
+                router.push('/login?redirect=/checkout');
+            }
         }
     };
 
@@ -741,13 +833,26 @@ function CheckoutContent() {
                 const createdOrderId = result.data?.order_id;
                 setOrderId(createdOrderId || null);
                 if (!isBuyNow) { await clearCart(true); removeCoupon(); }
+                sessionStorage.removeItem(PERSIST_KEY);
                 sessionStorage.removeItem('ksp_buy_now_item');
                 setOrderPlaced(true);
             } else {
                 toast.error(result.message || 'Failed to place order');
+                
+                // Handle session expiry gracefully
+                const errorMsg = result.message?.toLowerCase() || '';
+                if (errorMsg.includes('token') || errorMsg.includes('expire') || errorMsg.includes('unauthorized') || result.statusCode === 401) {
+                    router.push('/login?redirect=/checkout');
+                }
             }
-        } catch (error) {
+        } catch (error: any) {
             toast.error('Something went wrong. Please try again.');
+            
+            // Handle session expiry gracefully
+            const errorMsg = error.message?.toLowerCase() || '';
+            if (errorMsg.includes('token') || errorMsg.includes('expire') || errorMsg.includes('unauthorized') || error.statusCode === 401) {
+                router.push('/login?redirect=/checkout');
+            }
         } finally {
             setPlacing(false);
         }

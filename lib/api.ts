@@ -745,6 +745,20 @@ export async function getCart(params: { cart_id?: string; customer_id?: string }
     }
 }
 
+export async function updateCheckoutDraft(cartId: string, draftData: any) {
+    try {
+        const res = await authFetch(`${API_URL}/api/cart/${cartId}/draft`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(draftData),
+        });
+        return res.json();
+    } catch (error) {
+        console.warn('[API] updateCheckoutDraft failed:', error);
+        return { success: false, message: 'Network error' };
+    }
+}
+
 export async function addCartItem(cartId: string, itemId: string, quantity: number, isVariant = true) {
     try {
         const body: Record<string, unknown> = { cart_id: cartId, quantity };
