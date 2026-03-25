@@ -41,9 +41,19 @@ function LoginContent() {
     const [isRegister, setIsRegister] = useState(false);
     const [loading, setLoading] = useState(false);
     const [isRedirecting, setIsRedirecting] = useState(false);
-    const [form, setForm] = useState({ name: '', email: '', password: '' });
+    const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
     const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [agreeTerms, setAgreeTerms] = useState(false);
+    const [rememberMe, setRememberMe] = useState(true);
+    const [capsLockOn, setCapsLockOn] = useState(false);
+
+    const handleKeyEvent = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.getModifierState) {
+            setCapsLockOn(e.getModifierState('CapsLock'));
+        }
+    };
+
     const [showTermsModal, setShowTermsModal] = useState(false);
     const [showPrivacyModal, setShowPrivacyModal] = useState(false);
     const [legalContent, setLegalContent] = useState<{ [key: string]: { title: string, content: string } }>({});
@@ -223,7 +233,12 @@ function LoginContent() {
                 }
             }
             if (isRegister) {
-                const result = await register(form.name, form.email, form.password);
+                if (form.password !== form.confirmPassword) {
+                    toast.error('Passwords do not match');
+                    setLoading(false);
+                    return;
+                }
+                const result = await register(form.name, form.email, form.password, turnstileToken || undefined);
                 if (result?.success) {
                     toast.success('Please verify your email to complete registration.');
                     setIsRedirecting(true);
@@ -234,8 +249,8 @@ function LoginContent() {
                     toast.error(result?.error || 'Something went wrong');
                 }
             } else {
-                // Login: pass turnstile token (may be null if widget hasn't been solved yet)
-                const result = await login(form.email, form.password, turnstileToken);
+                // Login: pass rememberMe and turnstile token (may be null if widget hasn't been solved yet)
+                const result = await login(form.email, form.password, rememberMe, turnstileToken || undefined);
                 if (result?.success) {
                     const isAdmin = result.role === 'admin' || result.role === 'Super Admin';
                     if (isAdmin) {
@@ -583,6 +598,8 @@ function LoginContent() {
                                             type={showPassword ? 'text' : 'password'}
                                             value={form.password}
                                             onChange={e => setForm({ ...form, password: e.target.value })}
+                                            onKeyDown={handleKeyEvent}
+                                            onKeyUp={handleKeyEvent}
                                             className="w-full rounded-xl border border-[#d4e4d4] bg-[#f8fdf8] pl-10 pr-11 py-2.5 text-sm text-[#1a2a1a] placeholder-[#9ab09a] focus:border-[#2d5a2d] focus:ring-2 focus:ring-[#2d5a2d]/10 focus:outline-none transition-all"
                                             placeholder="••••••••"
                                             required
@@ -597,14 +614,60 @@ function LoginContent() {
                                             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                         </button>
                                     </div>
+                                    {capsLockOn && <p className="text-xs text-[#d45547] mt-1.5 font-medium animate-pulse">Caps Lock is ON</p>}
                                     {!isRegister && (
-                                        <div className="flex justify-end mt-1.5">
+                                        <div className="flex justify-between items-center mt-3 mb-1">
+                                            <label className="flex items-center gap-2 cursor-pointer group">
+                                                <div className={`w-4 h-4 rounded border transition-colors flex items-center justify-center ${rememberMe ? 'bg-[#1e3d1e] border-[#1e3d1e]' : 'border-[#9ab09a] group-hover:border-[#4a6b4a]'}`}>
+                                                    {rememberMe && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                                                </div>
+                                                <span className="text-sm font-medium text-[#4a6b4a] group-hover:text-[#2d5a2d] transition-colors select-none">Remember Me</span>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={rememberMe}
+                                                    onChange={e => setRememberMe(e.target.checked)}
+                                                    className="hidden"
+                                                />
+                                            </label>
                                             <Link href="/forgot-password" className="text-xs font-semibold text-[#2d5a2d] hover:underline transition-colors cursor-pointer">
                                                 Forgot Password?
                                             </Link>
                                         </div>
                                     )}
                                 </div>
+
+                                {/* Confirm Password */}
+                                {isRegister && (
+                                    <div className="mb-3">
+                                        <div className="mb-2">
+                                            <label className="block text-xs font-semibold text-[#3d3d3d] uppercase tracking-wider">
+                                                Confirm Password
+                                            </label>
+                                        </div>
+                                        <div className="relative">
+                                            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ab09a]" />
+                                            <input
+                                                type={showConfirmPassword ? 'text' : 'password'}
+                                                value={form.confirmPassword}
+                                                onChange={e => setForm({ ...form, confirmPassword: e.target.value })}
+                                                onKeyDown={handleKeyEvent}
+                                                onKeyUp={handleKeyEvent}
+                                                className="w-full rounded-xl border border-[#d4e4d4] bg-[#f8fdf8] pl-10 pr-11 py-2.5 text-sm text-[#1a2a1a] placeholder-[#9ab09a] focus:border-[#2d5a2d] focus:ring-2 focus:ring-[#2d5a2d]/10 focus:outline-none transition-all"
+                                                placeholder="••••••••"
+                                                required
+                                                minLength={3}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9ab09a] hover:text-[#4a6b4a] transition-colors cursor-pointer"
+                                                tabIndex={-1}
+                                            >
+                                                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Terms checkbox */}
                                 <div className="flex items-start gap-2.5 mb-3">

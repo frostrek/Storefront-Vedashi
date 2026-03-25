@@ -2,15 +2,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState, useEffect, Suspense } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
-import { getCart, clearCart as clearCartApi, checkoutOrder, getAddresses, directCheckout, createPaymentOrder, verifyPayment, initiatePaymentCheckout, lookupPostalCode, getLoyaltyWallet } from '@/lib/api';
+import { getCart, clearCart as clearCartApi, checkoutOrder, getAddresses, updateAddress, deleteAddress, directCheckout, createPaymentOrder, verifyPayment, initiatePaymentCheckout, lookupPostalCode, getLoyaltyWallet } from '@/lib/api';
 import { useCurrency } from '@/context/CurrencyContext';
 import { Address } from '@/types';
 import { COUNTRIES } from '@/lib/countries';
 import Select from 'react-select';
-import { CheckCircle, Loader2, MapPin, CreditCard, Banknote, ShieldCheck, AlertTriangle, ArrowLeft, Leaf, ChevronRight, Lock, Ticket, Globe, Info } from 'lucide-react';
+import { CheckCircle, Loader2, MapPin, CreditCard, Banknote, ShieldCheck, AlertTriangle, ArrowLeft, Leaf, ChevronRight, Lock, Ticket, Globe, Info, Pencil, Trash } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { validatePhoneNumber, validateOptionalPhoneNumber, sanitizePhoneInput, formatPhoneDisplay } from '@/lib/phoneValidation';
@@ -117,6 +118,15 @@ function CheckoutContent() {
     const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
     const [useNewAddress, setUseNewAddress] = useState(false);
     const [addressesLoading, setAddressesLoading] = useState(false);
+    const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
+    const [editAddressData, setEditAddressData] = useState<any>(null);
+    const [addressActionLoading, setAddressActionLoading] = useState<string | null>(null); // Stores the address_id being deleted/updated
+    const [addressToDelete, setAddressToDelete] = useState<string | null>(null);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // New address form fields
     const [newAddress, setNewAddress] = useState({
@@ -371,6 +381,107 @@ function CheckoutContent() {
             </div>
         );
     }
+
+    /* ─── Address Action Handlers ────────────────────────────── */
+
+    const handleDeleteAddressClick = (e: React.MouseEvent, addressId: string) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setAddressToDelete(addressId);
+    };
+
+    const confirmDeleteAddress = async () => {
+        if (!user?.id || !addressToDelete) return;
+
+        setAddressActionLoading(addressToDelete);
+        try {
+            const res = await deleteAddress(user.id, addressToDelete);
+            if (res.success) {
+                setSavedAddresses(prev => prev.filter(a => a.address_id !== addressToDelete));
+                if (selectedAddressId === addressToDelete) {
+                    setSelectedAddressId(null);
+                    setUseNewAddress(true);
+                }
+                if (selectedBillingAddressId === addressToDelete) {
+                    setSelectedBillingAddressId(null);
+                    setUseNewBillingAddress(true);
+                }
+                toast.success('Address deleted successfully');
+            } else {
+                toast.error(res.message || 'Failed to delete address');
+            }
+        } catch (error) {
+            toast.error('An error occurred while deleting the address');
+        } finally {
+            setAddressActionLoading(null);
+            setAddressToDelete(null);
+        }
+    };
+
+    const handleEditAddressClick = (e: React.MouseEvent, address: Address) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setEditingAddressId(address.address_id);
+        const currentCountryCode = (address as any).country_code || 'IN';
+        let phoneToEdit = address.phone || '';
+        
+        if (phoneToEdit) {
+            const formatRes = validateOptionalPhoneNumber(phoneToEdit, currentCountryCode);
+            if (formatRes.isValid && formatRes.normalized) {
+                // Keep the raw input or just the local part if international formatting applies
+                phoneToEdit = formatRes.normalized; 
+            }
+        }
+
+        setEditAddressData({
+            address_line1: address.address_line1 || '',
+            address_line2: address.address_line2 || '',
+            city: address.city || '',
+            state: address.state || '',
+            pincode: address.pincode || '',
+            phone: phoneToEdit,
+            country: address.country || 'India',
+            country_code: currentCountryCode,
+        });
+        setFormErrors({});
+    };
+
+    const handleSaveEditedAddress = async (addressId: string) => {
+        if (!user?.id) return;
+        
+        const errors = validateAddress(editAddressData);
+        if (Object.keys(errors).length > 0) {
+            setFormErrors(errors);
+            toast.error('Please fix address validation errors');
+            return;
+        }
+
+        setAddressActionLoading(addressId);
+        try {
+            // Normalize phone
+            let updatedData = { ...editAddressData };
+            if (updatedData.phone) {
+                const phoneRes = validateOptionalPhoneNumber(updatedData.phone, updatedData.country_code);
+                if (phoneRes.isValid && phoneRes.normalized) {
+                    updatedData.phone = phoneRes.normalized;
+                }
+            }
+
+            const res = await updateAddress(user.id, addressId, updatedData);
+            if (res.success) {
+                setSavedAddresses(prev => prev.map(a => a.address_id === addressId ? { ...a, ...updatedData } : a));
+                setEditingAddressId(null);
+                setEditAddressData(null);
+                toast.success('Address updated successfully');
+            } else {
+                toast.error(res.message || 'Failed to update address');
+            }
+        } catch (error) {
+            toast.error('An error occurred while updating the address');
+        } finally {
+            setAddressActionLoading(null);
+        }
+    };
 
     /* ─── Razorpay Checkout Handler ──────────────────────────── */
 
@@ -877,20 +988,112 @@ function CheckoutContent() {
                                     ) : savedAddresses.length > 0 && (
                                         <div className="mb-6 space-y-3">
                                             {savedAddresses.map(addr => (
-                                                <label key={addr.address_id} className={`flex items-start gap-4 rounded-xl border p-4 cursor-pointer transition-colors ${selectedAddressId === addr.address_id && !useNewAddress ? 'border-[#6B8F5E] bg-[#DFE5D9] border-2 shadow-sm' : 'border-[#D4CFC0] bg-white hover:border-[#CEDBCE]'}`}>
-                                                    <input type="radio" name="address" checked={selectedAddressId === addr.address_id && !useNewAddress} onChange={() => { setSelectedAddressId(addr.address_id); setUseNewAddress(false); }} className="mt-1 w-4 h-4 accent-[#6B8F5E]" />
-                                                    <div className="flex-1">
-                                                        <div className="flex items-center justify-between mb-1">
-                                                            <span className="font-bold text-[#1A1A1A]">{addr.label || 'Saved Address'}</span>
-                                                            {addr.is_default && <span className="bg-[#1A1A1A] text-white text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full">Default</span>}
+                                                <div key={addr.address_id} className="min-w-0">
+                                                    <label className={`flex items-start gap-4 rounded-xl border p-4 cursor-pointer transition-colors w-full ${selectedAddressId === addr.address_id && !useNewAddress && editingAddressId !== addr.address_id ? 'border-[#6B8F5E] bg-[#DFE5D9] border-2 shadow-sm' : 'border-[#D4CFC0] bg-white hover:border-[#CEDBCE]'}`}>
+                                                        <input type="radio" name="address" checked={selectedAddressId === addr.address_id && !useNewAddress && editingAddressId !== addr.address_id} onChange={() => { setSelectedAddressId(addr.address_id); setUseNewAddress(false); setEditingAddressId(null); }} className="mt-1 w-4 h-4 accent-[#6B8F5E]" />
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center justify-between mb-1">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="font-bold text-[#1A1A1A]">{addr.label || 'Saved Address'}</span>
+                                                                    {addr.is_default && <span className="bg-[#1A1A1A] text-white text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full">Default</span>}
+                                                                </div>
+                                                                {editingAddressId !== addr.address_id && (
+                                                                    <div className="flex items-center gap-2 ml-4">
+                                                                        <button type="button" onClick={(e) => handleEditAddressClick(e, addr)} disabled={addressActionLoading === addr.address_id} className="text-[#8B7A3D] hover:text-[#6B8F5E] p-1.5 rounded-full hover:bg-[#F5F4F0] transition-colors disabled:opacity-50">
+                                                                            <Pencil className="w-4 h-4" />
+                                                                        </button>
+                                                                        <button type="button" onClick={(e) => handleDeleteAddressClick(e, addr.address_id)} disabled={addressActionLoading === addr.address_id} className="text-[#8B7A3D] hover:text-red-500 p-1.5 rounded-full hover:bg-red-50 transition-colors disabled:opacity-50">
+                                                                            {addressActionLoading === addr.address_id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash className="w-4 h-4" />}
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <p className="text-sm text-[#4A4A4A] truncate">{addr.address_line1}</p>
+                                                            {addr.address_line2 && <p className="text-sm text-[#4A4A4A] truncate">{addr.address_line2}</p>}
+                                                            <p className="text-sm text-[#4A4A4A] truncate">{addr.city}, {addr.state} {addr.pincode}</p>
+                                                            {addr.phone && <p className="text-sm text-[#4A4A4A] mt-1 flex items-center gap-1.5 opacity-80"><span className="text-[10px] font-bold uppercase tracking-wider text-[#6B6B60]">PH:</span> {addr.phone}</p>}
                                                         </div>
-                                                        <p className="text-sm text-[#4A4A4A]">{addr.address_line1}</p>
-                                                        {addr.address_line2 && <p className="text-sm text-[#4A4A4A]">{addr.address_line2}</p>}
-                                                        <p className="text-sm text-[#4A4A4A]">{addr.city}, {addr.state} {addr.pincode}</p>
-                                                    </div>
-                                                </label>
+                                                    </label>
+
+                                                    {/* Inline Edit Form */}
+                                                    {editingAddressId === addr.address_id && editAddressData && (
+                                                        <div className="bg-[#F5F4F0] rounded-xl p-5 border border-[#D4CFC0] mt-3 animate-fade-in">
+                                                            <h4 className="text-sm font-bold text-[#1A1A1A] mb-4">Edit Address</h4>
+                                                            <div className="grid gap-4 sm:grid-cols-2">
+                                                                <div className="sm:col-span-2">
+                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Country *</label>
+                                                                    <div className="relative">
+                                                                        <Select
+                                                                            options={countryOptions}
+                                                                            value={countryOptions.find(opt => opt.value === editAddressData.country_code)}
+                                                                            onChange={(opt: any) => {
+                                                                                if (opt) setEditAddressData((prev: any) => ({ ...prev, country_code: opt.value, country: opt.name }));
+                                                                            }}
+                                                                            styles={customSelectStyles}
+                                                                            classNamePrefix="react-select"
+                                                                            placeholder="Search..."
+                                                                        />
+                                                                        <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8B7A3D] z-10 pointer-events-none" />
+                                                                    </div>
+                                                                </div>
+                                                                <div className="sm:col-span-2">
+                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Address Line 1 *</label>
+                                                                    <input type="text" value={editAddressData.address_line1} onChange={e => setEditAddressData({ ...editAddressData, address_line1: e.target.value })} className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.address_line1 ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Street address" />
+                                                                    {formErrors.address_line1 && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.address_line1}</p>}
+                                                                </div>
+                                                                <div className="sm:col-span-2">
+                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Address Line 2</label>
+                                                                    <input type="text" value={editAddressData.address_line2} onChange={e => setEditAddressData({ ...editAddressData, address_line2: e.target.value })} className="w-full rounded-lg border border-[#D4CFC0] px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white" placeholder="Apartment, suite, etc." />
+                                                                </div>
+                                                                <div>
+                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Pincode *</label>
+                                                                    <input type="text" value={editAddressData.pincode} onChange={e => setEditAddressData({ ...editAddressData, pincode: e.target.value })} className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.pincode ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Pincode" />
+                                                                    {formErrors.pincode && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.pincode}</p>}
+                                                                </div>
+                                                                <div>
+                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">City *</label>
+                                                                    <input type="text" value={editAddressData.city} onChange={e => setEditAddressData({ ...editAddressData, city: e.target.value })} className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.city ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="City" />
+                                                                    {formErrors.city && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.city}</p>}
+                                                                </div>
+                                                                <div>
+                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">State *</label>
+                                                                    <input type="text" value={editAddressData.state} onChange={e => setEditAddressData({ ...editAddressData, state: e.target.value })} className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.state ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="State" />
+                                                                    {formErrors.state && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.state}</p>}
+                                                                </div>
+                                                                <div>
+                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Mobile Phone (optional)</label>
+                                                                    <input 
+                                                                        type="tel" 
+                                                                        value={editAddressData.phone} 
+                                                                        onChange={e => {
+                                                                            const sanitized = sanitizePhoneInput(e.target.value);
+                                                                            setEditAddressData({ ...editAddressData, phone: sanitized });
+                                                                            if (sanitized) {
+                                                                                const currentCountryCode = (editAddressData as any).country_code || 'IN';
+                                                                                const res = validateOptionalPhoneNumber(sanitized, currentCountryCode);
+                                                                                if (!res.isValid && res.error) setFormErrors(prev => ({ ...prev, phone: res.error! }));
+                                                                                else setFormErrors(prev => { const copy = { ...prev }; delete copy.phone; return copy; });
+                                                                            } else {
+                                                                                setFormErrors(prev => { const copy = { ...prev }; delete copy.phone; return copy; });
+                                                                            }
+                                                                        }}
+                                                                        className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.phone ? 'border-red-400' : 'border-[#D4CFC0]'}`} 
+                                                                        placeholder="e.g., 9876543210" 
+                                                                    />
+                                                                    {formErrors.phone && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.phone}</p>}
+                                                                </div>
+                                                            </div>
+                                                            <div className="mt-5 flex justify-end gap-3">
+                                                                <button type="button" onClick={() => { setEditingAddressId(null); setEditAddressData(null); setFormErrors({}); }} className="px-4 py-2 text-sm font-bold text-[#8B7A3D] bg-white border border-[#D4CFC0] rounded-lg hover:bg-[#F5F4F0] transition-colors">Cancel</button>
+                                                                <button type="button" onClick={() => handleSaveEditedAddress(addr.address_id)} disabled={addressActionLoading === addr.address_id} className="px-4 py-2 text-sm font-bold text-white bg-[#6B8F5E] rounded-lg hover:bg-[#5A7A4E] transition-colors flex items-center gap-2">
+                                                                    {addressActionLoading === addr.address_id ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             ))}
-                                            <button onClick={() => setUseNewAddress(true)} className={`mt-2 flex items-center gap-2 text-sm font-semibold transition-colors ${useNewAddress ? 'text-[#6B8F5E]' : 'text-[#8B7A3D] hover:text-[#6B8F5E]'}`}>
+                                            <button onClick={() => { setUseNewAddress(true); setEditingAddressId(null); setEditAddressData(null); }} className={`mt-2 flex items-center gap-2 text-sm font-semibold transition-colors ${useNewAddress ? 'text-[#6B8F5E]' : 'text-[#8B7A3D] hover:text-[#6B8F5E]'}`}>
                                                 <MapPin className="h-4 w-4" /> Use a different address
                                             </button>
                                         </div>
@@ -1387,6 +1590,39 @@ function CheckoutContent() {
                 </div>
             </div>
 
+            {/* Delete Address Confirmation Modal */}
+            {mounted && addressToDelete && createPortal(
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-scale-in">
+                        <div className="px-6 py-8 text-center">
+                            <div className="mx-auto w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mb-5">
+                                <AlertTriangle className="h-7 w-7 text-red-500" />
+                            </div>
+                            <h3 className="text-xl font-bold text-[#1A1A1A] mb-2">Delete Address?</h3>
+                            <p className="text-sm text-[#4A4A4A] leading-relaxed">
+                                Are you sure you want to delete this address? This action cannot be undone.
+                            </p>
+                        </div>
+                        <div className="px-6 py-4 bg-[#F5F4F0] flex justify-center gap-3 rounded-b-2xl border-t border-[#D4CFC0]">
+                            <button
+                                onClick={() => setAddressToDelete(null)}
+                                disabled={!!addressActionLoading}
+                                className="flex-1 px-4 py-2.5 text-sm font-bold text-[#8B7A3D] bg-white border border-[#D4CFC0] rounded-lg hover:bg-[#E8E4DC] hover:text-[#2D3B2D] transition-colors disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDeleteAddress}
+                                disabled={!!addressActionLoading}
+                                className="flex-1 px-4 py-2.5 text-sm font-bold text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                            >
+                                {addressActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Delete'}
+                            </button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
         </div>
     );
 }

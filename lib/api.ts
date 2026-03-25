@@ -536,7 +536,7 @@ function getTrackingSessionId(): string {
 export async function trackProductView(productId: string, source: string = 'direct') {
     try {
         // Fire and forget
-        fetch(`${API_URL}/api/analytics/product-view`, {
+        authFetch(`${API_URL}/api/analytics/product-view`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -587,22 +587,22 @@ export async function checkApiHealth(): Promise<boolean> {
 
 /* ─── Auth ─── */
 
-export async function loginUser(email: string, password: string) {
+export async function loginUser(email: string, password: string, turnstileToken?: string, rememberMe: boolean = true) {
     const res = await authFetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, turnstile_token: turnstileToken, remember_me: rememberMe }),
     });
     return res.json();
 }
 
-export async function registerUser(full_name: string, email: string, password: string) {
+export async function registerUser(full_name: string, email: string, password: string, turnstileToken?: string) {
     const res = await authFetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ full_name, email, password }),
+        body: JSON.stringify({ full_name, email, password, turnstile_token: turnstileToken }),
     });
     return res.json();
 }
@@ -1217,7 +1217,7 @@ export async function updateCustomerProfile(id: string, data: Record<string, unk
 }
 
 export async function requestEmailChange(newEmail: string) {
-    const res = await authFetch(`${API_URL}/api/customers/profile/email/request`, {
+    const res = await authFetch(`${API_URL}/api/auth/request-email-change`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ new_email: newEmail }),
@@ -1225,11 +1225,11 @@ export async function requestEmailChange(newEmail: string) {
     return res.json();
 }
 
-export async function verifyEmailChangeProfile(token: string) {
-    const res = await authFetch(`${API_URL}/api/customers/profile/email/verify`, {
+export async function verifyEmailChangeProfile(otpCode: string) {
+    const res = await authFetch(`${API_URL}/api/auth/verify-email-change`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token }),
+        body: JSON.stringify({ otp_code: otpCode }),
     });
     return res.json();
 }
@@ -1623,7 +1623,22 @@ export async function advancedSearch(
 }
 
 
+export async function requestRestockNotification(productId: string, email: string, variantId?: string) {
+    try {
+        const res = await authFetch(`${API_URL}/api/products/${productId}/restock-notify`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, variant_id: variantId }),
+        });
+        return res.json();
+    } catch (error) {
+        console.warn('[API] requestRestockNotification failed:', error);
+        return { success: false, message: 'Network error' };
+    }
+}
+
 /* ─── Blog ─── */
+
 
 export interface BlogPost {
     post_id: string;
