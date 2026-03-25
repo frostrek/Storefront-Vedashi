@@ -7,7 +7,7 @@ interface AuthContextType {
     user: UserInfo | null;
     isAuthenticated: boolean;
     isLoading: boolean;
-    login: (email: string, password: string, rememberMe?: boolean, turnstileToken?: string) => Promise<{ success: boolean; error?: string; code?: string; role?: string; access_token?: string }>;
+    login: (email: string, password: string, rememberMe?: boolean, turnstileToken?: string | null) => Promise<{ success: boolean; error?: string; code?: string; role?: string; access_token?: string; requireCaptcha?: boolean; blocked?: boolean; retryAfter?: number }>;
     register: (name: string, email: string, password: string, turnstileToken?: string) => Promise<RegisterResponse>;
     /** Log-in the user directly from verification data (after OTP verified and accounts created) */
     loginFromVerification: (customerData: Record<string, unknown>, accessToken: string) => void;
@@ -123,13 +123,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const login = useCallback(async (email: string, password: string, rememberMe: boolean = true, turnstileToken?: string) => {
+    const login = useCallback(async (email: string, password: string, rememberMe: boolean = true, turnstileToken?: string | null) => {
         try {
+            const body: Record<string, any> = { email, password, remember_me: rememberMe };
+            if (turnstileToken) body.turnstile_token = turnstileToken;
+
             const res = await authFetch(`${API_URL}/api/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ email, password, remember_me: rememberMe, turnstile_token: turnstileToken }),
+                body: JSON.stringify(body),
             });
             const json = await res.json();
             if (res.ok && json.success && json.data?.customer) {
@@ -143,7 +146,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 notifyListeners('login', u);
                 return { success: true, role: u.role, access_token: json.data.access_token };
             }
-            if (json.message) return { success: false, error: json.message, code: json.code };
+            if (json.message) return {
+                success: false,
+                error: json.message,
+                code: json.code,
+                requireCaptcha: json.requireCaptcha,
+                blocked: json.blocked,
+                retryAfter: json.retryAfter,
+            };
         } catch (err) {
             console.error('[Auth] Login error:', err);
         }
