@@ -222,11 +222,19 @@ function CheckoutContent() {
     const itemsCount = isBuyNow && buyNowItem ? buyNowItem.quantity : totalItems;
     
     const baseSubtotal = isBuyNow && buyNowItem
-        ? buyNowItem.unit_price * buyNowItem.quantity
+        ? Math.round(buyNowItem.unit_price * buyNowItem.quantity)
         : items.reduce((sum, item) => sum + (item.price ?? 0) * item.quantity, 0);
 
-    const totalTaxes = isBuyNow ? 0 : items.reduce((sum, item) => sum + ((item as any).pricing?.tax_amount ?? 0), 0);
-    const subtotalWithTaxes = isBuyNow && buyNowItem ? buyNowItem.unit_price * buyNowItem.quantity : totalPrice;
+    let calculatedBuyNowTax = 0;
+    if (isBuyNow && buyNowItem) {
+        const lineSubtotal = Math.round(buyNowItem.unit_price * buyNowItem.quantity);
+        const excise = Math.round(lineSubtotal * 0.35); // 35% excise
+        const vat = Math.round((lineSubtotal + excise) * 0.10); // 10% VAT
+        calculatedBuyNowTax = excise + vat;
+    }
+
+    const totalTaxes = isBuyNow ? calculatedBuyNowTax : items.reduce((sum, item) => sum + ((item as any).pricing?.tax_amount ?? 0), 0);
+    const subtotalWithTaxes = isBuyNow && buyNowItem ? baseSubtotal + calculatedBuyNowTax : totalPrice;
     const shippingCost = couponType === 'free_shipping' ? 0 : (subtotalWithTaxes > 50 ? 0 : 15);
     const discount = isBuyNow ? 0 : couponDiscount;
 
