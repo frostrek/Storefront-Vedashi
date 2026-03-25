@@ -7,10 +7,10 @@ interface AuthContextType {
     user: UserInfo | null;
     isAuthenticated: boolean;
     isLoading: boolean;
-    login: (email: string, password: string, rememberMe?: boolean, turnstileToken?: string) => Promise<{ success: boolean; error?: string; code?: string; role?: string; access_token?: string }>;
+    login: (email: string, password: string, rememberMe?: boolean, turnstileToken?: string) => Promise<{ success: boolean; error?: string; code?: string; role?: string }>;
     register: (name: string, email: string, password: string, turnstileToken?: string) => Promise<RegisterResponse>;
     /** Log-in the user directly from verification data (after OTP verified and accounts created) */
-    loginFromVerification: (customerData: Record<string, unknown>, accessToken: string) => void;
+    loginFromVerification: (customerData: Record<string, unknown>) => void;
     socialLogin: (clerkToken: string) => Promise<{ success: boolean; error?: string; is_new_user?: boolean; account_linked?: boolean; pending_verification?: boolean; customer_id?: string; email?: string; full_name?: string }>;
     logout: () => void;
     verifyUserAge: (dateOfBirth: string) => Promise<{ success: boolean; error?: string }>;
@@ -47,7 +47,7 @@ interface UserInfo {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // API_URL imported from @/lib/api
 const USER_KEY = 'vedashi_user';
-const TOKEN_KEY = 'vedashi_token';
+// SECURITY: No TOKEN_KEY — access tokens are handled exclusively via HttpOnly cookies
 
 /** Map backend customer shape → frontend UserInfo */
 function toUserInfo(customer: Record<string, unknown>): UserInfo {
@@ -82,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         listenersRef.current.forEach(cb => cb(event, u));
     }, []);
 
-    // On mount: try to restore session from localStorage cache
+    // On mount: try to restore session from localStorage cache + validate with server
     useEffect(() => {
         if (typeof window === 'undefined') {
             setIsLoading(false);
@@ -90,18 +90,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         const stored = localStorage.getItem(USER_KEY);
-        const storedToken = localStorage.getItem(TOKEN_KEY);
 
-        if (stored && storedToken) {
+        if (stored) {
             try {
                 const cachedUser: UserInfo = JSON.parse(stored);
                 setUser(cachedUser);
                 // Notify listeners (Cart/Wishlist) about restored session
-                // Use setTimeout to ensure listeners are registered first
                 setTimeout(() => notifyListeners('login', cachedUser), 0);
 
-                // Asynchronously fetch fresh data to update fields like loyalty_tier 
-                // that may have been added to the backend schema or changed securely
+                // Validate session with server via HttpOnly cookie
                 authFetch(`${API_URL}/api/auth/me`)
                     .then(res => res.json())
                     .then(json => {
@@ -109,15 +106,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                             const updatedUser = toUserInfo(json.data);
                             setUser(updatedUser);
                             localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+                        } else {
+                            // Cookie expired or invalid — clear cached user
+                            setUser(null);
+                            localStorage.removeItem(USER_KEY);
+                            notifyListeners('logout', null);
                         }
-                    }).catch(err => console.error('[Auth] Failed to refresh profile data:', err));
+                    }).catch(() => {
+                        // Network error — keep cached user for offline resilience
+                    });
             } catch {
                 localStorage.removeItem(USER_KEY);
-                localStorage.removeItem(TOKEN_KEY);
             }
-        } else if (stored && !storedToken) {
-            // Force logout if token is missing (old session before token fix)
-            localStorage.removeItem(USER_KEY);
         }
         setIsLoading(false);
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -136,12 +136,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 const u = toUserInfo(json.data.customer);
                 setUser(u);
                 localStorage.setItem(USER_KEY, JSON.stringify(u));
-                if (json.data.access_token) {
-                    localStorage.setItem(TOKEN_KEY, json.data.access_token);
-                }
+                // SECURITY: No token stored — access token is in HttpOnly cookie
                 sessionStorage.setItem('justSignedIn', String(Date.now()));
                 notifyListeners('login', u);
-                return { success: true, role: u.role, access_token: json.data.access_token };
+                return { success: true, role: u.role };
             }
             if (json.message) return { success: false, error: json.message, code: json.code };
         } catch (err) {
@@ -181,11 +179,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, []);
 
     /** Log in the user from verification page data (after OTP created the account) */
-    const loginFromVerification = useCallback((customerData: Record<string, unknown>, accessToken: string) => {
+    const loginFromVerification = useCallback((customerData: Record<string, unknown>) => {
         const u = toUserInfo(customerData);
         setUser(u);
         localStorage.setItem(USER_KEY, JSON.stringify(u));
-        localStorage.setItem(TOKEN_KEY, accessToken);
+        // SECURITY: No token stored — access token is in HttpOnly cookie
         sessionStorage.setItem('justSignedIn', String(Date.now()));
         notifyListeners('login', u);
     }, [notifyListeners]);
@@ -207,7 +205,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         authFetch(`${API_URL}/api/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => { });
         setUser(null);
         localStorage.removeItem(USER_KEY);
-        localStorage.removeItem(TOKEN_KEY);
+        // Clear all auth-related session storage
+        sessionStorage.removeItem('justSignedIn');
+        sessionStorage.removeItem('social_otp_data');
+        // SECURITY: HttpOnly cookies are cleared server-side by the /api/auth/logout endpoint
         notifyListeners('logout', null);
     }, [notifyListeners]);
 
@@ -233,14 +234,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 };
             }
 
-            // Returning user → JWT issued immediately
+            // Returning user → JWT issued as HttpOnly cookie
             if (res.ok && json.success && json.data?.customer) {
                 const u = toUserInfo(json.data.customer);
                 setUser(u);
                 localStorage.setItem(USER_KEY, JSON.stringify(u));
-                if (json.data.access_token) {
-                    localStorage.setItem(TOKEN_KEY, json.data.access_token);
-                }
+                // SECURITY: No token stored — access token is in HttpOnly cookie
                 sessionStorage.setItem('justSignedIn', String(Date.now()));
                 notifyListeners('login', u);
                 return {

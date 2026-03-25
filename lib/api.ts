@@ -12,13 +12,9 @@ if (typeof window !== 'undefined' && (API_URL.includes('localhost') || API_URL.i
     const hostname = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
     API_URL = `${window.location.protocol}//${hostname}:5000`;
 }
-const TOKEN_KEY = 'vedashi_token';
-
-/** Read the JWT stored by AuthContext after login/register */
-function getStorefrontToken(): string | null {
-    if (typeof window === 'undefined') return null;
-    try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }
-}
+// SECURITY: Access tokens are handled exclusively via HttpOnly cookies.
+// No token is ever stored in localStorage or sent via Authorization headers.
+// All authenticated requests rely on credentials: 'include' to send cookies automatically.
 
 let cachedCsrfToken: string | null = null;
 
@@ -54,10 +50,8 @@ export async function authFetch(url: string, init?: RequestInit): Promise<Respon
         await initCsrf();
     }
 
-    const token = getStorefrontToken();
     const csrfToken = getCsrfToken();
     const headers: Record<string, string> = {};
-    if (token) headers['Authorization'] = `Bearer ${token}`;
     if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
 
     // Merge with any existing headers
@@ -312,7 +306,7 @@ export async function getFilteredProducts(
         }
         return { data: [], meta: { total_count: 0, page: 1, limit: 20, total_pages: 0, has_next_page: false, has_prev_page: false, filters_applied: {}, sort: 'newest', cache_hit: false } };
     } catch (error) {
-        console.error('[API] Failed to fetch filtered products:', error);
+        console.warn('[API] Failed to fetch filtered products:', error);
         return { data: [], meta: { total_count: 0, page: 1, limit: 20, total_pages: 0, has_next_page: false, has_prev_page: false, filters_applied: {}, sort: 'newest', cache_hit: false } };
     }
 }
@@ -366,7 +360,7 @@ export async function getBestSellers(params?: {
         }
         return { data: [], meta: { total_count: 0, page: 1, limit: 12, total_pages: 0, has_next_page: false, has_prev_page: false, filters_applied: {}, sort: 'best_sellers', cache_hit: false } };
     } catch (error) {
-        console.error('[API] Failed to fetch best sellers:', error);
+        console.warn('[API] Failed to fetch best sellers:', error);
         return { data: [], meta: { total_count: 0, page: 1, limit: 12, total_pages: 0, has_next_page: false, has_prev_page: false, filters_applied: {}, sort: 'best_sellers', cache_hit: false } };
     }
 }
@@ -426,7 +420,7 @@ export async function getNewArrivals(params?: {
         }
         return { data: [], meta: { total_count: 0, page: 1, limit: 12, total_pages: 0, has_next_page: false, has_prev_page: false, filters_applied: {}, sort: 'new_arrivals', cache_hit: false } };
     } catch (error) {
-        console.error('[API] Failed to fetch new arrivals:', error);
+        console.warn('[API] Failed to fetch new arrivals:', error);
         return { data: [], meta: { total_count: 0, page: 1, limit: 12, total_pages: 0, has_next_page: false, has_prev_page: false, filters_applied: {}, sort: 'new_arrivals', cache_hit: false } };
     }
 }
@@ -466,7 +460,7 @@ export async function getFilterOptions(): Promise<{ brands: string[]; countries:
             attributes: attrRes?.data || []
         };
     } catch (err) {
-        console.error('[API] Failed to fetch filter options:', err);
+        console.warn('[API] Failed to fetch filter options:', err);
         return { brands: [], countries: [], maxPrice: 500, categories: [], attributes: [] };
     }
 }
@@ -481,7 +475,7 @@ export async function getProduct(id: string): Promise<Product | null> {
         }
         return null;
     } catch (error) {
-        console.error('[API] Failed to fetch product:', error);
+        console.warn('[API] Failed to fetch product:', error);
         return null;
     }
 }
@@ -499,7 +493,7 @@ export async function getProductDetails(id: string): Promise<ProductWithDetails 
             images: p.thumbnail_url ? [p.thumbnail_url] : (p.images || []),
         };
     } catch (error) {
-        console.error('[API] Failed to fetch product details:', error);
+        console.warn('[API] Failed to fetch product details:', error);
         return null;
     }
 }
@@ -516,7 +510,7 @@ export async function searchProducts(query: string): Promise<Product[]> {
         }
         return [];
     } catch (error) {
-        console.error('[API] Failed to search products:', error);
+        console.warn('[API] Failed to search products:', error);
         return [];
     }
 }
@@ -1060,7 +1054,7 @@ export const lookupPostalCode = async (pincode: string, countryCode?: string) =>
 
         return { success: false, message: 'Postal code not found' };
     } catch (error) {
-        console.error('Postal code lookup error:', error);
+        console.warn('Postal code lookup error:', error);
         return { success: false, message: 'Error fetching location data' };
     }
 };
@@ -1610,7 +1604,7 @@ export async function advancedSearch(
             },
         };
     } catch (error) {
-        console.error('[API] advancedSearch failed:', error);
+        console.warn('[API] advancedSearch failed:', error);
         return {
             data: [],
             meta: {

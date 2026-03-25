@@ -59,7 +59,7 @@ export default function HomePage() {
         setBestSellers(bestRes.data);
         setFeaturedProducts(featuredRes);
       } catch (err) {
-        console.error('Failed to load home data', err);
+        console.warn('Failed to load home data', err);
       } finally {
         setLoading(false);
         setFeaturedLoading(false);

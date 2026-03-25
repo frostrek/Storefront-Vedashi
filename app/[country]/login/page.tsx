@@ -202,7 +202,7 @@ function LoginContent() {
             const json = await res.json();
             if (res.ok && json.success && json.data?.customer) {
                 toast.success('Welcome back!');
-                loginFromVerification(json.data.customer, json.data.access_token);
+                loginFromVerification(json.data.customer);
                 setIsRedirecting(true);
                 router.push(redirectTo);
             } else {
@@ -261,8 +261,8 @@ function LoginContent() {
                                 userId = userData.id || '';
                             }
                         } catch { /* noop */ }
+                        // SECURITY: Do not pass raw JWT in URL params — use cookie-only auth
                         const params = new URLSearchParams({
-                            token: result.access_token || '',
                             email: form.email,
                             name: userName,
                             id: userId,
