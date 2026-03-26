@@ -209,7 +209,7 @@ export default function AccountPage() {
     const [profileSaving, setProfileSaving] = useState(false);
     const [showNotificationModal, setShowNotificationModal] = useState(false);
     const [profileData, setProfileData] = useState({
-        full_name: '', email: '', phone: '',
+        full_name: '', email: '', phone: '', date_of_birth: '',
         is_email_verified: false, is_mobile_verified: false, has_password: false,
         created_at: '',
     });
@@ -251,6 +251,7 @@ export default function AccountPage() {
 
     // Profile image state
     const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+    const [base64Fallback, setBase64Fallback] = useState<string | null>(null);
     const [imageUploading, setImageUploading] = useState(false);
     const [isZoomModalOpen, setIsZoomModalOpen] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -481,13 +482,17 @@ export default function AccountPage() {
                     is_mobile_verified: !!res.data.is_mobile_verified,
                     has_password: hasPassword,
                     created_at: res.data.created_at || '',
+                    date_of_birth: res.data.date_of_birth ? res.data.date_of_birth.split('T')[0] : '',
                 });
                 setSelectedCountryCode(countryCode);
                 setOriginalEmail(fetchedEmail);
                 setOriginalPhone(res.data.phone || '');
+            } else if (res.message) {
+                toast.error(res.message);
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('Failed to fetch profile:', err);
+            toast.error('Failed to load profile data');
         }
     }, [user?.id]);
 
@@ -496,18 +501,23 @@ export default function AccountPage() {
         if (!user?.id) return;
         try {
             const res = await getProfileImage(user.id);
-            if (res.success && res.data?.profile_image) {
-                const imgData = res.data.profile_image;
-                let parsedResult = imgData;
-                if (!imgData.startsWith('data:')) {
-                    const mime = res.data.mime_type || 'image/jpeg';
-                    parsedResult = `data:${mime};base64,${imgData}`;
-                }
-                setProfileImageUrl(parsedResult);
+            if (res.success && res.data) {
+                const { profile_image: base64Data, avatar_url: s3Url, mime_type: mimeType } = res.data;
                 
-                // Keep global AuthContext user state synced without triggering unnecessary rerenders
-                if (user?.avatar_url !== parsedResult) {
-                    updateUser({ avatar_url: parsedResult });
+                let parsedBase64 = base64Data;
+                if (base64Data && !base64Data.startsWith('data:')) {
+                    const mime = mimeType || 'image/jpeg';
+                    parsedBase64 = `data:${mime};base64,${base64Data}`;
+                }
+
+                setBase64Fallback(parsedBase64);
+                // Priority: S3 URL > Base64
+                setProfileImageUrl(s3Url || parsedBase64);
+                
+                // Keep global AuthContext user state synced
+                const finalUrl = s3Url || parsedBase64;
+                if (user?.avatar_url !== finalUrl) {
+                    updateUser({ avatar_url: finalUrl });
                 }
             } else if (user?.avatar_url) {
                 setProfileImageUrl(user.avatar_url);
@@ -1243,7 +1253,16 @@ export default function AccountPage() {
                         <div className="h-9 w-9 rounded-full bg-white/10 flex items-center justify-center overflow-hidden border border-white/20">
                             {profileImageUrl ? (
                                 // eslint-disable-next-line @next/next/no-img-element
-                                <img src={profileImageUrl} alt="Profile" className="h-full w-full object-cover" />
+                                <img 
+                                    src={profileImageUrl} 
+                                    alt="Profile" 
+                                    className="h-full w-full object-cover"
+                                    onError={() => {
+                                        if (base64Fallback && profileImageUrl !== base64Fallback) {
+                                            setProfileImageUrl(base64Fallback);
+                                        }
+                                    }}
+                                />
                             ) : (
                                 <span className="font-bold text-white text-sm">
                                     {user?.name?.charAt(0).toUpperCase()}
@@ -1282,6 +1301,11 @@ export default function AccountPage() {
                             alt="Profile Zoom"
                             className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-[0_0_80px_rgba(0,0,0,0.5)] border border-white/10"
                             style={{ animation: 'zoomIn 0.5s cubic-bezier(0.16, 1, 0.3, 1)' }}
+                            onError={() => {
+                                if (base64Fallback && profileImageUrl !== base64Fallback) {
+                                    setProfileImageUrl(base64Fallback);
+                                }
+                            }}
                         />
                     </div>
                 </div>,
@@ -1349,6 +1373,11 @@ export default function AccountPage() {
                                                     alt="Profile"
                                                     className="h-full w-full object-cover cursor-pointer hover:scale-110 transition-transform duration-500"
                                                     onClick={() => setIsZoomModalOpen(true)}
+                                                    onError={() => {
+                                                        if (base64Fallback && profileImageUrl !== base64Fallback) {
+                                                            setProfileImageUrl(base64Fallback);
+                                                        }
+                                                    }}
                                                 />
                                             ) : (
                                                 <span className="font-serif text-6xl md:text-8xl font-bold text-[#36453A]">
@@ -2739,6 +2768,11 @@ export default function AccountPage() {
                                                         alt="Profile"
                                                         className="h-full w-full object-cover cursor-pointer hover:scale-110 transition-transform duration-500"
                                                         onClick={() => setIsZoomModalOpen(true)}
+                                                        onError={() => {
+                                                            if (base64Fallback && profileImageUrl !== base64Fallback) {
+                                                                setProfileImageUrl(base64Fallback);
+                                                            }
+                                                        }}
                                                     />
                                                 ) : (
                                                     <span className="text-3xl font-bold text-[#36453A]">
@@ -2866,6 +2900,12 @@ export default function AccountPage() {
                                                     </div>
                                                 </div>
                                                 <div>
+                                                    <label className="block flex items-center gap-1.5 text-[11px] font-bold text-warm-gray uppercase tracking-widest mb-2"><Calendar className="h-3 w-3" /> Date of Birth</label>
+                                                    <input type="date" value={profileData.date_of_birth} onChange={e => setProfileData({ ...profileData, date_of_birth: e.target.value })}
+                                                        max={new Date().toISOString().split("T")[0]}
+                                                        className="w-full bg-[#F8F5F0] border border-[#E8E1D5] rounded-xl px-4 py-[9px] text-sm focus:outline-none focus:border-[#36453A] focus:ring-1 focus:ring-[#36453A]/20 transition-all font-medium text-[#36453A] min-h-[44px]" />
+                                                </div>
+                                                <div className="md:col-span-2">
                                                     <label className="block flex items-center gap-1.5 text-[11px] font-bold text-warm-gray uppercase tracking-widest mb-2"><MapPin className="h-3 w-3" /> Current Location</label>
                                                     <div className="relative">
                                                         <input

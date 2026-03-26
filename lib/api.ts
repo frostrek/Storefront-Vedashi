@@ -7,10 +7,9 @@
 import { Product, FilteredProduct, FilterMeta, ProductWithDetails, ProductAsset, ApiResponse } from '@/types';
 import { env } from '@/lib/env';
 
-export let API_URL = env.NEXT_PUBLIC_API_URL;
+export let API_URL = env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 if (typeof window !== 'undefined' && (API_URL.includes('localhost') || API_URL.includes('127.0.0.1'))) {
-    const hostname = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
-    API_URL = `${window.location.protocol}//${hostname}:5000`;
+    API_URL = `${window.location.protocol}//${window.location.hostname}:5000`;
 }
 // SECURITY: Access tokens are handled exclusively via HttpOnly cookies.
 // No token is ever stored in localStorage or sent via Authorization headers.
@@ -230,8 +229,6 @@ export interface FilterParams {
     search?: string;
     min_price?: number;
     max_price?: number;
-    min_abv?: number;
-    max_abv?: number;
     country?: string;      // comma-separated
     form?: string;         // comma-separated
     specialities?: string; // comma-separated
@@ -262,8 +259,6 @@ export async function getFilteredProducts(
         if (params.search) sp.set('search', params.search);
         if (params.min_price != null) sp.set('min_price', String(params.min_price));
         if (params.max_price != null) sp.set('max_price', String(params.max_price));
-        if (params.min_abv != null) sp.set('min_abv', String(params.min_abv));
-        if (params.max_abv != null) sp.set('max_abv', String(params.max_abv));
         if (params.country) sp.set('country', params.country);
         if (params.form) sp.set('form', params.form);
         if (params.specialities) sp.set('specialities', params.specialities);
@@ -1545,8 +1540,6 @@ export interface SearchParams {
     sort?: string;
     min_price?: number;
     max_price?: number;
-    min_abv?: number;
-    max_abv?: number;
     country?: string;
     min_rating?: number;
     availability?: string;
@@ -1582,8 +1575,6 @@ export async function advancedSearch(
         if (params.sort) sp.set('sort', params.sort);
         if (params.min_price != null) sp.set('min_price', String(params.min_price));
         if (params.max_price != null) sp.set('max_price', String(params.max_price));
-        if (params.min_abv != null) sp.set('min_abv', String(params.min_abv));
-        if (params.max_abv != null) sp.set('max_abv', String(params.max_abv));
         if (params.country) sp.set('country', params.country);
         if (params.min_rating != null) sp.set('min_rating', String(params.min_rating));
         if (params.availability) sp.set('availability', params.availability);
