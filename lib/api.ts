@@ -7,14 +7,13 @@
 import { Product, FilteredProduct, FilterMeta, ProductWithDetails, ProductAsset, ApiResponse } from '@/types';
 import { env } from '@/lib/env';
 
-export const API_URL = env.NEXT_PUBLIC_API_URL;
-const TOKEN_KEY = 'vedashi_token';
-
-/** Read the JWT stored by AuthContext after login/register */
-function getStorefrontToken(): string | null {
-    if (typeof window === 'undefined') return null;
-    try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }
+export let API_URL = env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+if (typeof window !== 'undefined' && (API_URL.includes('localhost') || API_URL.includes('127.0.0.1'))) {
+    API_URL = `${window.location.protocol}//${window.location.hostname}:5000`;
 }
+// SECURITY: Access tokens are handled exclusively via HttpOnly cookies.
+// No token is ever stored in localStorage or sent via Authorization headers.
+// All authenticated requests rely on credentials: 'include' to send cookies automatically.
 
 let cachedCsrfToken: string | null = null;
 
@@ -50,10 +49,8 @@ export async function authFetch(url: string, init?: RequestInit): Promise<Respon
         await initCsrf();
     }
 
-    const token = getStorefrontToken();
     const csrfToken = getCsrfToken();
     const headers: Record<string, string> = {};
-    if (token) headers['Authorization'] = `Bearer ${token}`;
     if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
 
     // Merge with any existing headers
@@ -232,8 +229,6 @@ export interface FilterParams {
     search?: string;
     min_price?: number;
     max_price?: number;
-    min_abv?: number;
-    max_abv?: number;
     country?: string;      // comma-separated
     form?: string;         // comma-separated
     specialities?: string; // comma-separated
@@ -264,8 +259,6 @@ export async function getFilteredProducts(
         if (params.search) sp.set('search', params.search);
         if (params.min_price != null) sp.set('min_price', String(params.min_price));
         if (params.max_price != null) sp.set('max_price', String(params.max_price));
-        if (params.min_abv != null) sp.set('min_abv', String(params.min_abv));
-        if (params.max_abv != null) sp.set('max_abv', String(params.max_abv));
         if (params.country) sp.set('country', params.country);
         if (params.form) sp.set('form', params.form);
         if (params.specialities) sp.set('specialities', params.specialities);
@@ -308,7 +301,7 @@ export async function getFilteredProducts(
         }
         return { data: [], meta: { total_count: 0, page: 1, limit: 20, total_pages: 0, has_next_page: false, has_prev_page: false, filters_applied: {}, sort: 'newest', cache_hit: false } };
     } catch (error) {
-        console.error('[API] Failed to fetch filtered products:', error);
+        console.warn('[API] Failed to fetch filtered products:', error);
         return { data: [], meta: { total_count: 0, page: 1, limit: 20, total_pages: 0, has_next_page: false, has_prev_page: false, filters_applied: {}, sort: 'newest', cache_hit: false } };
     }
 }
@@ -362,7 +355,7 @@ export async function getBestSellers(params?: {
         }
         return { data: [], meta: { total_count: 0, page: 1, limit: 12, total_pages: 0, has_next_page: false, has_prev_page: false, filters_applied: {}, sort: 'best_sellers', cache_hit: false } };
     } catch (error) {
-        console.error('[API] Failed to fetch best sellers:', error);
+        console.warn('[API] Failed to fetch best sellers:', error);
         return { data: [], meta: { total_count: 0, page: 1, limit: 12, total_pages: 0, has_next_page: false, has_prev_page: false, filters_applied: {}, sort: 'best_sellers', cache_hit: false } };
     }
 }
@@ -422,7 +415,7 @@ export async function getNewArrivals(params?: {
         }
         return { data: [], meta: { total_count: 0, page: 1, limit: 12, total_pages: 0, has_next_page: false, has_prev_page: false, filters_applied: {}, sort: 'new_arrivals', cache_hit: false } };
     } catch (error) {
-        console.error('[API] Failed to fetch new arrivals:', error);
+        console.warn('[API] Failed to fetch new arrivals:', error);
         return { data: [], meta: { total_count: 0, page: 1, limit: 12, total_pages: 0, has_next_page: false, has_prev_page: false, filters_applied: {}, sort: 'new_arrivals', cache_hit: false } };
     }
 }
@@ -462,7 +455,7 @@ export async function getFilterOptions(): Promise<{ brands: string[]; countries:
             attributes: attrRes?.data || []
         };
     } catch (err) {
-        console.error('[API] Failed to fetch filter options:', err);
+        console.warn('[API] Failed to fetch filter options:', err);
         return { brands: [], countries: [], maxPrice: 500, categories: [], attributes: [] };
     }
 }
@@ -477,7 +470,7 @@ export async function getProduct(id: string): Promise<Product | null> {
         }
         return null;
     } catch (error) {
-        console.error('[API] Failed to fetch product:', error);
+        console.warn('[API] Failed to fetch product:', error);
         return null;
     }
 }
@@ -495,7 +488,7 @@ export async function getProductDetails(id: string): Promise<ProductWithDetails 
             images: p.thumbnail_url ? [p.thumbnail_url] : (p.images || []),
         };
     } catch (error) {
-        console.error('[API] Failed to fetch product details:', error);
+        console.warn('[API] Failed to fetch product details:', error);
         return null;
     }
 }
@@ -512,7 +505,7 @@ export async function searchProducts(query: string): Promise<Product[]> {
         }
         return [];
     } catch (error) {
-        console.error('[API] Failed to search products:', error);
+        console.warn('[API] Failed to search products:', error);
         return [];
     }
 }
@@ -1070,7 +1063,7 @@ export const lookupPostalCode = async (pincode: string, countryCode?: string) =>
 
         return { success: false, message: 'Postal code not found' };
     } catch (error) {
-        console.error('Postal code lookup error:', error);
+        console.warn('Postal code lookup error:', error);
         return { success: false, message: 'Error fetching location data' };
     }
 };
@@ -1547,8 +1540,6 @@ export interface SearchParams {
     sort?: string;
     min_price?: number;
     max_price?: number;
-    min_abv?: number;
-    max_abv?: number;
     country?: string;
     min_rating?: number;
     availability?: string;
@@ -1584,8 +1575,6 @@ export async function advancedSearch(
         if (params.sort) sp.set('sort', params.sort);
         if (params.min_price != null) sp.set('min_price', String(params.min_price));
         if (params.max_price != null) sp.set('max_price', String(params.max_price));
-        if (params.min_abv != null) sp.set('min_abv', String(params.min_abv));
-        if (params.max_abv != null) sp.set('max_abv', String(params.max_abv));
         if (params.country) sp.set('country', params.country);
         if (params.min_rating != null) sp.set('min_rating', String(params.min_rating));
         if (params.availability) sp.set('availability', params.availability);
@@ -1620,7 +1609,7 @@ export async function advancedSearch(
             },
         };
     } catch (error) {
-        console.error('[API] advancedSearch failed:', error);
+        console.warn('[API] advancedSearch failed:', error);
         return {
             data: [],
             meta: {

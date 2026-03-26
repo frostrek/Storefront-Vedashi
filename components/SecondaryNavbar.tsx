@@ -31,7 +31,7 @@ export default function SecondaryNavbar() {
         setBrands(filterOpt.brands);
       }
       setLoading(false);
-    }).catch(console.error);
+    }).catch(e => console.warn('Failed to init navbar', e));
   }, []);
 
   const parentCategories = categories.filter(c => !c.parent_id);
