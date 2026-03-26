@@ -35,8 +35,6 @@ export interface ProductSeoInput {
     thumbnail_url?: string;
     images?: string[];
     slug?: string;
-    alcohol_percentage?: number;
-    vintage_year?: number;
     sku?: string;
     rating_average?: number;
     review_count?: number;
@@ -47,7 +45,6 @@ export interface ProductSeoInput {
         price?: number;
         stock_quantity?: number;
         variant_sku?: string;
-        alcohol_percentage?: number;
     }>;
     seo?: SeoData;
 }
@@ -247,18 +244,6 @@ export function generateProductJsonLd(product: ProductSeoInput): Record<string, 
             bestRating: 5,
             worstRating: 1,
         };
-    }
-
-    // Add alcohol percentage if available
-    const abv = product.alcohol_percentage ?? product.variants?.[0]?.alcohol_percentage;
-    if (abv) {
-        schema.additionalProperty = [
-            {
-                '@type': 'PropertyValue',
-                name: 'Alcohol Content',
-                value: `${abv}% ABV`
-            }
-        ];
     }
 
     return schema;
