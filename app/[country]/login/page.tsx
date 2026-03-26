@@ -96,7 +96,10 @@ function LoginContent() {
             sitekey: TURNSTILE_SITE_KEY,
             callback: (token: string) => setTurnstileToken(token),
             'expired-callback': () => setTurnstileToken(null),
-            'error-callback': () => setTurnstileToken(null),
+            'error-callback': () => {
+                console.warn('[Turnstile] Widget error — CAPTCHA failed to load');
+                setTurnstileToken(null);
+            },
             theme: 'light',
         });
         widgetIdRef.current = id;
@@ -120,7 +123,9 @@ function LoginContent() {
 
     useEffect(() => {
         setTurnstileToken(null);
-        renderTurnstile();
+        // Defer to next tick — React needs to commit the conditional div to the DOM first
+        const timer = setTimeout(() => renderTurnstile(), 0);
+        return () => clearTimeout(timer);
     }, [isRegister, captchaRequired, renderTurnstile]);
 
     useEffect(() => {
@@ -722,11 +727,18 @@ function LoginContent() {
 
                                 {/* Cloudflare Turnstile */}
                                 {(isRegister || captchaRequired) && (
-                                    <div 
-                                        key={`turnstile-${isRegister ? 'reg' : 'login'}-${captchaRequired}`}
-                                        ref={turnstileRef} 
-                                        className="mb-4 flex justify-center min-h-[65px]" 
-                                    />
+                                    <div className="mb-4 flex flex-col items-center min-h-[65px]">
+                                        <div 
+                                            key={`turnstile-${isRegister ? 'reg' : 'login'}-${captchaRequired}`}
+                                            ref={turnstileRef} 
+                                            className="flex justify-center" 
+                                        />
+                                        {!turnstileToken && (
+                                            <p className="text-xs text-[#9ab09a] mt-1 animate-pulse">
+                                                Loading security verification...
+                                            </p>
+                                        )}
+                                    </div>
                                 )}
 
                                 {/* CTA Button */}
