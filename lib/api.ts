@@ -7,11 +7,7 @@
 import { Product, FilteredProduct, FilterMeta, ProductWithDetails, ProductAsset, ApiResponse } from '@/types';
 import { env } from '@/lib/env';
 
-export let API_URL = env.NEXT_PUBLIC_API_URL;
-if (typeof window !== 'undefined' && (API_URL.includes('localhost') || API_URL.includes('127.0.0.1'))) {
-    const hostname = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
-    API_URL = `${window.location.protocol}//${hostname}:5000`;
-}
+export const API_URL = env.NEXT_PUBLIC_API_URL;
 const TOKEN_KEY = 'vedashi_token';
 
 /** Read the JWT stored by AuthContext after login/register */
@@ -747,6 +743,20 @@ export async function getCart(params: { cart_id?: string; customer_id?: string }
         return res.json();
     } catch (error) {
         console.warn('[API] getCart failed:', error);
+        return { success: false, message: 'Network error' };
+    }
+}
+
+export async function updateCheckoutDraft(cartId: string, draftData: any) {
+    try {
+        const res = await authFetch(`${API_URL}/api/cart/${cartId}/draft`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(draftData),
+        });
+        return res.json();
+    } catch (error) {
+        console.warn('[API] updateCheckoutDraft failed:', error);
         return { success: false, message: 'Network error' };
     }
 }
