@@ -534,6 +534,17 @@ function LoginContent() {
                                 <div className="w-12 h-0.5 bg-gradient-to-r from-transparent via-[#2d5a2d]/40 to-transparent mt-2" />
                                 <p className="text-sm text-[#6b7b6b] mt-2">{cardSubtitle}</p>
                             </div>
+
+                            {/* Session expired banner */}
+                            {searchParams.get('session_expired') === '1' && (
+                                <div id="session-expired-banner" className="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 flex items-start gap-3">
+                                    <ShieldCheck className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                                    <div className="flex-1">
+                                        <p className="text-sm font-semibold text-amber-800">Session expired</p>
+                                        <p className="text-xs text-amber-700 mt-0.5">Your session expired due to inactivity. Please log in again.</p>
+                                    </div>
+                                </div>
+                            )}
                             <form onSubmit={handleSubmit} className="space-y-0 mt-6">
 
                                 {/* Name field (register) */}

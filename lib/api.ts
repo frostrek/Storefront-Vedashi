@@ -75,6 +75,28 @@ export async function authFetch(url: string, init?: RequestInit): Promise<Respon
         }
     }
 
+    // ── Inactivity session expiry interceptor ──────────────────────────
+    // When the backend returns 401 with SESSION_INACTIVE_TIMEOUT or TOKEN_VERSION_MISMATCH,
+    // clear the cached user and redirect to login with a "Session expired" banner.
+    if (res.status === 401 && typeof window !== 'undefined') {
+        // Skip interception for login/register/refresh endpoints to avoid redirect loops
+        const isAuthEndpoint = url.includes('/api/auth/login') || url.includes('/api/auth/register') || url.includes('/api/auth/refresh-token') || url.includes('/api/auth/initiate-registration');
+        if (!isAuthEndpoint) {
+            const cloned = res.clone();
+            try {
+                const data = await cloned.json();
+                if (data.code === 'SESSION_INACTIVE_TIMEOUT' || data.code === 'TOKEN_VERSION_MISMATCH') {
+                    localStorage.removeItem('vedashi_user');
+                    window.dispatchEvent(new CustomEvent('session-expired'));
+                    const pathParts = window.location.pathname.split('/');
+                    const country = pathParts[1] || 'in';
+                    window.location.href = `/${country}/login?session_expired=1`;
+                    return res;
+                }
+            } catch { /* non-json response — ignore */ }
+        }
+    }
+
     return res;
 }
 
