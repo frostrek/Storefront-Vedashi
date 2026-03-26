@@ -80,6 +80,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         listenersRef.current.forEach(cb => cb(event, u));
     }, []);
 
+    // ── Listen for session-expired event (from authFetch interceptor) ──
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const handler = () => {
+            setUser(null);
+            localStorage.removeItem(USER_KEY);
+            sessionStorage.removeItem('justSignedIn');
+            sessionStorage.removeItem('social_otp_data');
+            notifyListeners('logout', null);
+        };
+        window.addEventListener('session-expired', handler);
+        return () => window.removeEventListener('session-expired', handler);
+    }, [notifyListeners]);
+
     // On mount: try to restore session from localStorage cache + validate with server
     useEffect(() => {
         if (typeof window === 'undefined') {
