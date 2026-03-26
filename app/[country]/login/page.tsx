@@ -246,6 +246,9 @@ function LoginContent() {
                         router.push(`/verify-email?registered=true&email=${encodeURIComponent(form.email)}`);
                     }, 1500);
                 } else {
+                    if (result?.requireCaptcha) {
+                        setCaptchaRequired(true);
+                    }
                     toast.error(result?.error || 'Something went wrong');
                 }
             } else {
@@ -719,7 +722,11 @@ function LoginContent() {
 
                                 {/* Cloudflare Turnstile */}
                                 {(isRegister || captchaRequired) && (
-                                    <div ref={turnstileRef} className=" mb-3 flex justify-center" />
+                                    <div 
+                                        key={`turnstile-${isRegister ? 'reg' : 'login'}-${captchaRequired}`}
+                                        ref={turnstileRef} 
+                                        className="mb-4 flex justify-center min-h-[65px]" 
+                                    />
                                 )}
 
                                 {/* CTA Button */}

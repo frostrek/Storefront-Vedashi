@@ -27,6 +27,7 @@ interface RegisterResponse {
     email?: string;
     requires_verification?: boolean;
     error?: string;
+    requireCaptcha?: boolean;
 }
 
 interface UserInfo {
@@ -182,7 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     requires_verification: true,
                 };
             }
-            if (json.message) return { success: false, error: json.message };
+            if (json.message) return { success: false, error: json.message, requireCaptcha: json.requireCaptcha };
         } catch (err) {
             console.error('[Auth] Register error:', err);
         }
