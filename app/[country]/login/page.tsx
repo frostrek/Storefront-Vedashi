@@ -230,12 +230,11 @@ function LoginContent() {
         }
         setLoading(true);
         try {
-            if (isRegister || captchaRequired) {
-                if (!turnstileToken) {
-                    toast.error('Please complete the CAPTCHA verification.');
-                    setLoading(false);
-                    return;
-                }
+            // Only block submission if CAPTCHA was explicitly required (registration or backend demanded it)
+            if ((isRegister || captchaRequired) && !turnstileToken) {
+                toast.error('Please complete the CAPTCHA verification.');
+                setLoading(false);
+                return;
             }
             if (isRegister) {
                 if (form.password !== form.confirmPassword) {
@@ -726,7 +725,8 @@ function LoginContent() {
                                 </LegalModal>
 
                                 {/* Cloudflare Turnstile */}
-                                {(isRegister || captchaRequired) && (
+                                {/* Always render Turnstile so token is ready before first submit */}
+                                {(
                                     <div className="mb-4 flex flex-col items-center min-h-[65px]">
                                         <div 
                                             key={`turnstile-${isRegister ? 'reg' : 'login'}-${captchaRequired}`}
