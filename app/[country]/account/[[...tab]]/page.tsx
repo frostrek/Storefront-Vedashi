@@ -996,6 +996,21 @@ export default function AccountPage() {
             return;
         }
 
+        // Pincode format validation
+        const cleanPin = addressForm.pincode.toString().trim();
+        const isIndia = !addressForm.country || addressForm.country.toLowerCase() === 'india';
+        if (isIndia) {
+            if (!/^\d{6}$/.test(cleanPin)) {
+                toast.error('Pincode must be exactly 6 digits');
+                return;
+            }
+        } else {
+            if (!/^[a-zA-Z0-9\s\-]{3,10}$/.test(cleanPin)) {
+                toast.error('Postal code must be 3-10 alphanumeric characters');
+                return;
+            }
+        }
+
         try {
             if (editingAddress) {
                 const res = await apiUpdateAddress(user.id, editingAddress.address_id, addressForm as unknown as Record<string, string>);

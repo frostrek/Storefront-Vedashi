@@ -867,7 +867,21 @@ function CheckoutContent() {
         }
         if (!addr.city) errors[`${prefix}city`] = 'City is required';
         if (!addr.state) errors[`${prefix}state`] = 'State/Region is required';
-        if (!addr.pincode) errors[`${prefix}pincode`] = 'Postal Code is required';
+        if (!addr.pincode) {
+            errors[`${prefix}pincode`] = 'Postal Code is required';
+        } else {
+            const cleanPin = addr.pincode.toString().trim();
+            const isIndia = !addr.country || addr.country.toLowerCase() === 'india';
+            if (isIndia) {
+                if (!/^\d{6}$/.test(cleanPin)) {
+                    errors[`${prefix}pincode`] = 'Pincode must be exactly 6 digits';
+                }
+            } else {
+                if (!/^[a-zA-Z0-9\s\-]{3,10}$/.test(cleanPin)) {
+                    errors[`${prefix}pincode`] = 'Postal code must be 3-10 alphanumeric characters';
+                }
+            }
+        }
         
         const currentCountryCode = (((addr as any).country_code) || 'IN') as CountryCode;
         const phoneValidation = validateOptionalPhoneNumber(addr.phone, currentCountryCode);
