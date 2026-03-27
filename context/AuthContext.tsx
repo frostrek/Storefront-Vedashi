@@ -7,7 +7,7 @@ interface AuthContextType {
     user: UserInfo | null;
     isAuthenticated: boolean;
     isLoading: boolean;
-    login: (email: string, password: string, rememberMe?: boolean, turnstileToken?: string) => Promise<{ success: boolean; error?: string; code?: string; role?: string; access_token?: string }>;
+    login: (email: string, password: string, rememberMe?: boolean, turnstileToken?: string) => Promise<{ success: boolean; error?: string; code?: string; role?: string; access_token?: string; requireCaptcha?: boolean; blocked?: boolean; retryAfter?: number }>;
     register: (name: string, email: string, password: string, turnstileToken?: string) => Promise<RegisterResponse>;
     /** Log-in the user directly from verification data (after OTP verified and accounts created) */
     loginFromVerification: (customerData: Record<string, unknown>) => void;

@@ -151,12 +151,12 @@ export default function Footer() {
                         <h4 className="font-display font-bold text-[#333] text-lg mb-3">Support</h4>
                         <ul className="space-y-2">
                             <li>
-                                <Link href="/help" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
+                                <Link href="/help-center" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
                                     Help Center
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/faq" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
+                                <Link href="/help-center/faq" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
                                     Consultation FAQ
                                 </Link>
                             </li>

@@ -39,6 +39,14 @@ function LoginContent() {
 
     const [authMethod, setAuthMethod] = useState<AuthMethod>('email');
     const [isRegister, setIsRegister] = useState(false);
+
+    useEffect(() => {
+        if (searchParams.get('mode') === 'register') {
+            setIsRegister(true);
+        } else if (searchParams.get('mode') === 'login') {
+            setIsRegister(false);
+        }
+    }, [searchParams]);
     const [loading, setLoading] = useState(false);
     const [isRedirecting, setIsRedirecting] = useState(false);
     const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
@@ -563,27 +571,7 @@ function LoginContent() {
                                     </div>
                                 )}
 
-                                {/* Phone (register optional) */}
-                                {isRegister && (
-                                    <div className="mb-4">
-                                        <label className="block text-xs font-semibold text-[#3d3d3d] uppercase tracking-wider mb-2">
-                                            Phone Number <span className="text-[#9ab09a] normal-case font-normal">(optional)</span>
-                                        </label>
-                                        <div className="flex gap-2">
-                                            <div className="flex items-center px-3 rounded-xl border border-[#d4e4d4] bg-[#f0f7f0] text-sm text-[#4a6b4a] font-semibold">
-                                                +91
-                                            </div>
-                                            <input
-                                                type="tel"
-                                                value={phoneNumber}
-                                                onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                                                className="flex-1 rounded-xl border border-[#d4e4d4] bg-[#f8fdf8] px-4 py-3 text-sm text-[#1a2a1a] placeholder-[#9ab09a] focus:border-[#2d5a2d] focus:outline-none transition-all"
-                                                placeholder="10-digit mobile"
-                                                maxLength={10}
-                                            />
-                                        </div>
-                                    </div>
-                                )}
+
 
                                 {/* Email */}
                                 <div className="mb-3">

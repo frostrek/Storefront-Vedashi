@@ -358,7 +358,7 @@ export default function Navbar() {
                             <Link href="/login" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-white bg-[#3B5D3B] hover:bg-[#4A724A] transition-all shadow-md shadow-[#3B5D3B]/20">
                                <LogIn className="h-4 w-4" /> Sign In
                             </Link>
-                            <Link href="/signup" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-all">
+                            <Link href="/login?mode=register" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-all">
                                <UserPlus className="h-4 w-4" /> Create Account
                             </Link>
                           </div>
@@ -641,7 +641,7 @@ export default function Navbar() {
                   <LogIn className="h-4 w-4" /> Sign In
                 </Link>
                 <Link
-                  href="/signup"
+                  href="/login?mode=register"
                   onClick={() => setMobileOpen(false)}
                   className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-colors"
                 >
