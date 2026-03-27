@@ -464,16 +464,30 @@ function ProductDetailContent({ params }: Props) {
                             {product.product_name}
                         </h1>
 
-                        <div className="flex items-center gap-2 mt-2">
-                            <div className="flex text-[#C5A46D]">
-                                {[...Array(5)].map((_, i) => (
-                                    <svg key={i} className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                                    </svg>
-                                ))}
+                        {(product.review_count && Number(product.review_count) > 0) ? (
+                            <div className="flex items-center gap-2 mt-2">
+                                <div className="flex text-[#C5A46D]">
+                                    {[...Array(5)].map((_, i) => {
+                                        const rating = parseFloat(product.avg_rating) || 0;
+                                        const fill = Math.min(1, Math.max(0, rating - i));
+                                        return (
+                                            <svg key={i} className="w-4 h-4" viewBox="0 0 24 24">
+                                                <defs>
+                                                    <linearGradient id={`star-fill-${i}`}>
+                                                        <stop offset={`${fill * 100}%`} stopColor="#C5A46D" />
+                                                        <stop offset={`${fill * 100}%`} stopColor="#E5E7EB" />
+                                                    </linearGradient>
+                                                </defs>
+                                                <path fill={`url(#star-fill-${i})`} d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                            </svg>
+                                        );
+                                    })}
+                                </div>
+                                <span className="text-sm text-gray-500">({product.review_count} Verified Review{Number(product.review_count) !== 1 ? 's' : ''})</span>
                             </div>
-                            <span className="text-sm text-gray-500">(32 Verified Reviews)</span>
-                        </div>
+                        ) : (
+                            <p className="text-sm text-gray-400 mt-2">No reviews yet</p>
+                        )}
 
                         {/* PRICE */}
                         <div className="flex items-end gap-3 mt-4">
@@ -492,9 +506,11 @@ function ProductDetailContent({ params }: Props) {
                             )}
                         </div>
 
-                        <p className="text-[15px] leading-relaxed text-gray-600">
-                            A high-potency infusion of Ashwagandha and Saffron designed to restore vital energy (Ojas) and deeply nourish the dermal layers.
-                        </p>
+                        {(product as any).short_description && (
+                            <p className="text-[15px] leading-relaxed text-gray-600">
+                                {(product as any).short_description}
+                            </p>
+                        )}
 
                         {/* ✅ VARIANT SELECTORS: Weight, Strength, Volume, Count, Flavor, Pack */}
                         <div className="min-h-[120px]">
