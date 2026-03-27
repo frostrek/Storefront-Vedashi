@@ -53,7 +53,6 @@ export async function generateMetadata({
         thumbnail_url: product.thumbnail_url,
         slug: product.slug,
         sku: product.sku,
-        vintage_year: product.vintage_year,
         variants: product.variants,
         seo: product.seo,
     });
@@ -66,8 +65,8 @@ export default function ProductLayout({
     children: React.ReactNode;
     params: Promise<{ id: string }>;
 }) {
-    // We render JSON-LD here on the server side
-    // The actual product data fetch happens async via generateMetadata
+    // We render JSON-LD here on the server si  de
+    // The actual product data fetch hap  pens async via generateMetadata
     // For JSON-LD, we use a parallel server-side fetch
     return (
         <>
