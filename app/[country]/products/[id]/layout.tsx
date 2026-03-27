@@ -53,7 +53,6 @@ export async function generateMetadata({
         thumbnail_url: product.thumbnail_url,
         slug: product.slug,
         sku: product.sku,
-        vintage_year: product.vintage_year,
         variants: product.variants,
         seo: product.seo,
     });
