@@ -139,13 +139,18 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
 
 
     useEffect(() => {
+        if ((product as any).avg_rating !== undefined && (product as any).review_count !== undefined) {
+            setAvgRating(Number((product as any).avg_rating) || 0);
+            setTotalReviews(Number((product as any).review_count) || 0);
+            return;
+        }
         getRatingSummary(product.product_id).then(res => {
             if (res.success && res.data) {
                 setAvgRating(res.data.average_rating ?? 0);
                 setTotalReviews(res.data.total_reviews ?? 0);
             }
         }).catch(() => { });
-    }, [product.product_id]);
+    }, [product.product_id, (product as any).avg_rating, (product as any).review_count]);
 
     const handleToggleWishlist = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -952,6 +957,13 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                         {totalReviews > 0 && <span className="ml-0.5">({totalReviews})</span>}
                                     </span>
                                 </div>
+                            )}
+
+                            {/* Short Description */}
+                            {(product as any).short_description && (
+                                <p className={`text-[11px] sm:text-xs text-gray-500 mb-2 leading-relaxed ${isList ? 'line-clamp-2' : 'line-clamp-1'}`}>
+                                    {(product as any).short_description}
+                                </p>
                             )}
 
                             {/* Price */}
