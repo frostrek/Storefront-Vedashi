@@ -4,12 +4,14 @@ import { getLoyaltyWallet, getLoyaltyTransactions } from '@/lib/api';
 import { useState, useEffect } from 'react';
 import { Wallet, Star, History, ArrowUpRight, ArrowDownRight, Award, Loader2, Info, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useAuth } from '@/context/AuthContext';
 
 interface MyWalletProps {
     customerId: string;
 }
 
 export default function MyWallet({ customerId }: MyWalletProps) {
+    const { user } = useAuth();
     const [loading, setLoading] = useState(true);
     const [wallet, setWallet] = useState<any>(null);
     const [transactions, setTransactions] = useState<any[]>([]);
@@ -21,7 +23,6 @@ export default function MyWallet({ customerId }: MyWalletProps) {
     }, [customerId]);
 
     const fetchWalletData = async () => {
-        setLoading(true);
         try {
             const [walletData, txnsData] = await Promise.all([
                 getLoyaltyWallet(),
@@ -37,7 +38,8 @@ export default function MyWallet({ customerId }: MyWalletProps) {
         }
     };
 
-    if (loading) {
+    // If completely uninitialized and not in cache, wait for load
+    if (loading && !user?.loyalty_tier && !wallet) {
         return (
             <div className="flex justify-center items-center py-20">
                 <Loader2 className="h-8 w-8 animate-spin text-burgundy" />
@@ -45,7 +47,7 @@ export default function MyWallet({ customerId }: MyWalletProps) {
         );
     }
 
-    if (!wallet || !wallet.wallet) {
+    if (!loading && (!wallet || !wallet.wallet) && !user?.loyalty_tier) {
         return (
             <div className="text-center py-12 p-6 bg-white rounded-[2rem] border border-[#F0EAD6] shadow-sm animate-fadeIn">
                 <div className="w-20 h-20 bg-[#FDFBF7] rounded-full flex items-center justify-center mx-auto mb-6 border border-[#2D4F1E]/10">
@@ -63,8 +65,14 @@ export default function MyWallet({ customerId }: MyWalletProps) {
         );
     }
 
-    const { balance, lifetime_earned, lifetime_redeemed } = wallet.wallet;
-    const { tier_name, benefits, badge_color } = wallet.tier || {};
+    const walletObj = wallet?.wallet || {};
+    const tierObj = wallet?.tier || {};
+    const { balance, lifetime_earned, lifetime_redeemed } = walletObj;
+    const { tier_name, benefits, badge_color } = tierObj;
+    
+    // Auth context fallback fields
+    const displayTier = tier_name || user?.loyalty_tier || 'Bronze';
+    const displayBalance = balance ?? user?.wallet_balance ?? 0;
 
     return (
         <div className="space-y-8 w-full max-w-5xl mx-auto animate-fadeIn">
@@ -99,7 +107,7 @@ export default function MyWallet({ customerId }: MyWalletProps) {
                              <div className="h-2 w-2 rounded-full bg-[#D4A847] shadow-[0_0_10px_#D4A847] animate-pulse" />
                         </div>
                         <h3 className="text-4xl md:text-5xl font-bold text-[#D4A847] mb-4 tracking-tight">
-                            {tier_name || 'Bronze Ritualist'}
+                            {displayTier} Ritualist
                         </h3>
                         {benefits && Array.isArray(benefits) && benefits.length > 0 ? (
                             <p className="text-sm text-white/90 leading-relaxed max-w-md font-medium">
@@ -116,7 +124,7 @@ export default function MyWallet({ customerId }: MyWalletProps) {
                         <div>
                              <p className="text-[10px] uppercase font-bold text-white/50 tracking-[0.2em] mb-1">Aura Balance</p>
                              <div className="flex items-baseline gap-2">
-                                <span className="text-5xl font-black text-white">{balance || 0}</span>
+                                <span className="text-5xl font-black text-white">{displayBalance}</span>
                                 <span className="text-xs font-bold text-[#D4A847] uppercase tracking-tighter">Points</span>
                              </div>
                         </div>
@@ -178,13 +186,13 @@ export default function MyWallet({ customerId }: MyWalletProps) {
                                     <div className="h-5 w-5 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100">
                                         <Check className="h-3 w-3 text-emerald-600" />
                                     </div>
-                                    Multiplier: <span className="font-bold">{wallet.tier?.points_multiplier || 1}x</span>
+                                    Multiplier: <span className="font-bold">{tierObj.points_multiplier || 1}x</span>
                                  </li>
                                  <li className="text-[11px] font-medium text-[#1A2E1A] flex items-center gap-2">
                                     <div className="h-5 w-5 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100">
                                         <Check className="h-3 w-3 text-emerald-600" />
                                     </div>
-                                    Discount: <span className="font-bold">{wallet.tier?.discount_percent || 0}%</span>
+                                    Discount: <span className="font-bold">{tierObj.discount_percent || 0}%</span>
                                  </li>
                             </ul>
                         </div>

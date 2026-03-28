@@ -5,19 +5,15 @@
  */
 
 import { Product, FilteredProduct, FilterMeta, ProductWithDetails, ProductAsset, ApiResponse } from '@/types';
+import { env } from '@/lib/env';
 
-export let API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
+export let API_URL = env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 if (typeof window !== 'undefined' && (API_URL.includes('localhost') || API_URL.includes('127.0.0.1'))) {
-    const hostname = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
-    API_URL = `${window.location.protocol}//${hostname}:5000`;
+    API_URL = `${window.location.protocol}//${window.location.hostname}:5000`;
 }
-const TOKEN_KEY = 'vedashi_token';
-
-/** Read the JWT stored by AuthContext after login/register */
-function getStorefrontToken(): string | null {
-    if (typeof window === 'undefined') return null;
-    try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }
-}
+// SECURITY: Access tokens are handled exclusively via HttpOnly cookies.
+// No token is ever stored in localStorage or sent via Authorization headers.
+// All authenticated requests rely on credentials: 'include' to send cookies automatically.
 
 let cachedCsrfToken: string | null = null;
 
@@ -52,10 +48,8 @@ export async function authFetch(url: string, init?: RequestInit): Promise<Respon
         await initCsrf();
     }
 
-    const token = getStorefrontToken();
     const csrfToken = getCsrfToken();
     const headers: Record<string, string> = {};
-    if (token) headers['Authorization'] = `Bearer ${token}`;
     if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
 
     // Merge with any existing headers
@@ -64,15 +58,41 @@ export async function authFetch(url: string, init?: RequestInit): Promise<Respon
 
     let res = await fetch(url, { ...init, headers, credentials: 'include' });
 
-    // Handle CSRF expiration gracefully
-    if (res.status === 403 && isStateChanging) {
-        // Clear cached token and try fetching a fresh one
-        cachedCsrfToken = null;
-        await initCsrf();
-        const freshCsrf = getCsrfToken();
-        if (freshCsrf) {
-            headers['X-CSRF-Token'] = freshCsrf;
-            res = await fetch(url, { ...init, headers, credentials: 'include' });
+    // Auto-retry once on CSRF failure
+    if (res.status === 403 && isStateChanging && typeof window !== 'undefined') {
+        const cloned = res.clone();
+        try {
+            const data = await cloned.json();
+            if (data.message === 'CSRF token invalid or expired' || data.message === 'CSRF token missing') {
+                cachedCsrfToken = null;
+                await initCsrf();
+                headers['X-CSRF-Token'] = cachedCsrfToken || '';
+                res = await fetch(url, { ...init, headers, credentials: 'include' });
+            }
+        } catch {
+            // ignore non-json error
+        }
+    }
+
+    // ── Inactivity session expiry interceptor ──────────────────────────
+    // When the backend returns 401 with SESSION_INACTIVE_TIMEOUT or TOKEN_VERSION_MISMATCH,
+    // clear the cached user and redirect to login with a "Session expired" banner.
+    if (res.status === 401 && typeof window !== 'undefined') {
+        // Skip interception for login/register/refresh endpoints to avoid redirect loops
+        const isAuthEndpoint = url.includes('/api/auth/login') || url.includes('/api/auth/register') || url.includes('/api/auth/refresh-token') || url.includes('/api/auth/initiate-registration');
+        if (!isAuthEndpoint) {
+            const cloned = res.clone();
+            try {
+                const data = await cloned.json();
+                if (data.code === 'SESSION_INACTIVE_TIMEOUT' || data.code === 'TOKEN_VERSION_MISMATCH') {
+                    localStorage.removeItem('vedashi_user');
+                    window.dispatchEvent(new CustomEvent('session-expired'));
+                    const pathParts = window.location.pathname.split('/');
+                    const country = pathParts[1] || 'in';
+                    window.location.href = `/${country}/login?session_expired=1`;
+                    return res;
+                }
+            } catch { /* non-json response — ignore */ }
         }
     }
 
@@ -230,8 +250,6 @@ export interface FilterParams {
     search?: string;
     min_price?: number;
     max_price?: number;
-    min_abv?: number;
-    max_abv?: number;
     country?: string;      // comma-separated
     form?: string;         // comma-separated
     specialities?: string; // comma-separated
@@ -262,8 +280,6 @@ export async function getFilteredProducts(
         if (params.search) sp.set('search', params.search);
         if (params.min_price != null) sp.set('min_price', String(params.min_price));
         if (params.max_price != null) sp.set('max_price', String(params.max_price));
-        if (params.min_abv != null) sp.set('min_abv', String(params.min_abv));
-        if (params.max_abv != null) sp.set('max_abv', String(params.max_abv));
         if (params.country) sp.set('country', params.country);
         if (params.form) sp.set('form', params.form);
         if (params.specialities) sp.set('specialities', params.specialities);
@@ -306,7 +322,7 @@ export async function getFilteredProducts(
         }
         return { data: [], meta: { total_count: 0, page: 1, limit: 20, total_pages: 0, has_next_page: false, has_prev_page: false, filters_applied: {}, sort: 'newest', cache_hit: false } };
     } catch (error) {
-        console.error('[API] Failed to fetch filtered products:', error);
+        console.warn('[API] Failed to fetch filtered products:', error);
         return { data: [], meta: { total_count: 0, page: 1, limit: 20, total_pages: 0, has_next_page: false, has_prev_page: false, filters_applied: {}, sort: 'newest', cache_hit: false } };
     }
 }
@@ -360,7 +376,7 @@ export async function getBestSellers(params?: {
         }
         return { data: [], meta: { total_count: 0, page: 1, limit: 12, total_pages: 0, has_next_page: false, has_prev_page: false, filters_applied: {}, sort: 'best_sellers', cache_hit: false } };
     } catch (error) {
-        console.error('[API] Failed to fetch best sellers:', error);
+        console.warn('[API] Failed to fetch best sellers:', error);
         return { data: [], meta: { total_count: 0, page: 1, limit: 12, total_pages: 0, has_next_page: false, has_prev_page: false, filters_applied: {}, sort: 'best_sellers', cache_hit: false } };
     }
 }
@@ -420,7 +436,7 @@ export async function getNewArrivals(params?: {
         }
         return { data: [], meta: { total_count: 0, page: 1, limit: 12, total_pages: 0, has_next_page: false, has_prev_page: false, filters_applied: {}, sort: 'new_arrivals', cache_hit: false } };
     } catch (error) {
-        console.error('[API] Failed to fetch new arrivals:', error);
+        console.warn('[API] Failed to fetch new arrivals:', error);
         return { data: [], meta: { total_count: 0, page: 1, limit: 12, total_pages: 0, has_next_page: false, has_prev_page: false, filters_applied: {}, sort: 'new_arrivals', cache_hit: false } };
     }
 }
@@ -460,7 +476,7 @@ export async function getFilterOptions(): Promise<{ brands: string[]; countries:
             attributes: attrRes?.data || []
         };
     } catch (err) {
-        console.error('[API] Failed to fetch filter options:', err);
+        console.warn('[API] Failed to fetch filter options:', err);
         return { brands: [], countries: [], maxPrice: 500, categories: [], attributes: [] };
     }
 }
@@ -475,7 +491,7 @@ export async function getProduct(id: string): Promise<Product | null> {
         }
         return null;
     } catch (error) {
-        console.error('[API] Failed to fetch product:', error);
+        console.warn('[API] Failed to fetch product:', error);
         return null;
     }
 }
@@ -493,7 +509,7 @@ export async function getProductDetails(id: string): Promise<ProductWithDetails 
             images: p.thumbnail_url ? [p.thumbnail_url] : (p.images || []),
         };
     } catch (error) {
-        console.error('[API] Failed to fetch product details:', error);
+        console.warn('[API] Failed to fetch product details:', error);
         return null;
     }
 }
@@ -510,7 +526,7 @@ export async function searchProducts(query: string): Promise<Product[]> {
         }
         return [];
     } catch (error) {
-        console.error('[API] Failed to search products:', error);
+        console.warn('[API] Failed to search products:', error);
         return [];
     }
 }
@@ -530,7 +546,7 @@ function getTrackingSessionId(): string {
 export async function trackProductView(productId: string, source: string = 'direct') {
     try {
         // Fire and forget
-        fetch(`${API_URL}/api/analytics/product-view`, {
+        authFetch(`${API_URL}/api/analytics/product-view`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -581,22 +597,22 @@ export async function checkApiHealth(): Promise<boolean> {
 
 /* ─── Auth ─── */
 
-export async function loginUser(email: string, password: string) {
+export async function loginUser(email: string, password: string, turnstileToken?: string, rememberMe: boolean = true) {
     const res = await authFetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, turnstile_token: turnstileToken, remember_me: rememberMe }),
     });
     return res.json();
 }
 
-export async function registerUser(full_name: string, email: string, password: string) {
+export async function registerUser(full_name: string, email: string, password: string, turnstileToken?: string) {
     const res = await authFetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ full_name, email, password }),
+        body: JSON.stringify({ full_name, email, password, turnstile_token: turnstileToken }),
     });
     return res.json();
 }
@@ -741,6 +757,20 @@ export async function getCart(params: { cart_id?: string; customer_id?: string }
         return res.json();
     } catch (error) {
         console.warn('[API] getCart failed:', error);
+        return { success: false, message: 'Network error' };
+    }
+}
+
+export async function updateCheckoutDraft(cartId: string, draftData: any) {
+    try {
+        const res = await authFetch(`${API_URL}/api/cart/${cartId}/draft`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(draftData),
+        });
+        return res.json();
+    } catch (error) {
+        console.warn('[API] updateCheckoutDraft failed:', error);
         return { success: false, message: 'Network error' };
     }
 }
@@ -917,6 +947,10 @@ export async function verifyPayment(data: {
 export async function initiatePaymentCheckout(data: {
     cart_id?: string;
     items?: Array<{ product_id: string; variant_id?: string | null; quantity: number; unit_price?: number }>;
+    customer_id?: string;
+    customer_name?: string;
+    customer_email?: string;
+    customer_phone?: string;
     shipping_address_id?: string;
     shipping_address?: Record<string, any>;
     billing_address_id?: string;
@@ -924,6 +958,9 @@ export async function initiatePaymentCheckout(data: {
     coupon_code?: string;
     payment_method?: string;
     redeem_points?: number;
+    final_total?: number;
+    currency?: string;
+    order_notes?: string;
 }) {
     try {
         const res = await authFetch(`${API_URL}/api/payments/razorpay/initiate-checkout`, {
@@ -959,6 +996,7 @@ export async function directCheckout(data: {
     customer_id?: string;
     customer_name?: string;
     customer_email?: string;
+    customer_phone?: string;
     items: Array<{ product_id: string; variant_id?: string | null; quantity: number; unit_price?: number }>;
     shipping_address_id?: string;
     shipping_address?: Record<string, string>;
@@ -1046,7 +1084,7 @@ export const lookupPostalCode = async (pincode: string, countryCode?: string) =>
 
         return { success: false, message: 'Postal code not found' };
     } catch (error) {
-        console.error('Postal code lookup error:', error);
+        console.warn('Postal code lookup error:', error);
         return { success: false, message: 'Error fetching location data' };
     }
 };
@@ -1203,7 +1241,7 @@ export async function updateCustomerProfile(id: string, data: Record<string, unk
 }
 
 export async function requestEmailChange(newEmail: string) {
-    const res = await authFetch(`${API_URL}/api/customers/profile/email/request`, {
+    const res = await authFetch(`${API_URL}/api/auth/request-email-change`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ new_email: newEmail }),
@@ -1211,11 +1249,11 @@ export async function requestEmailChange(newEmail: string) {
     return res.json();
 }
 
-export async function verifyEmailChangeProfile(token: string) {
-    const res = await authFetch(`${API_URL}/api/customers/profile/email/verify`, {
+export async function verifyEmailChangeProfile(otpCode: string) {
+    const res = await authFetch(`${API_URL}/api/auth/verify-email-change`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token }),
+        body: JSON.stringify({ otp_code: otpCode }),
     });
     return res.json();
 }
@@ -1401,7 +1439,7 @@ export async function reportReview(reviewId: string, reason: string) {
 
 export async function getWishlist() {
     try {
-        const res = await authFetch(`${API_URL}/api/wishlist`);
+        const res = await authFetch(`${API_URL}/api/wishlist`, { cache: 'no-store' });
         return res.json();
     } catch (error) {
         console.warn('[API] getWishlist failed:', error);
@@ -1523,8 +1561,6 @@ export interface SearchParams {
     sort?: string;
     min_price?: number;
     max_price?: number;
-    min_abv?: number;
-    max_abv?: number;
     country?: string;
     min_rating?: number;
     availability?: string;
@@ -1560,8 +1596,6 @@ export async function advancedSearch(
         if (params.sort) sp.set('sort', params.sort);
         if (params.min_price != null) sp.set('min_price', String(params.min_price));
         if (params.max_price != null) sp.set('max_price', String(params.max_price));
-        if (params.min_abv != null) sp.set('min_abv', String(params.min_abv));
-        if (params.max_abv != null) sp.set('max_abv', String(params.max_abv));
         if (params.country) sp.set('country', params.country);
         if (params.min_rating != null) sp.set('min_rating', String(params.min_rating));
         if (params.availability) sp.set('availability', params.availability);
@@ -1596,7 +1630,7 @@ export async function advancedSearch(
             },
         };
     } catch (error) {
-        console.error('[API] advancedSearch failed:', error);
+        console.warn('[API] advancedSearch failed:', error);
         return {
             data: [],
             meta: {
@@ -1609,7 +1643,22 @@ export async function advancedSearch(
 }
 
 
+export async function requestRestockNotification(productId: string, email: string, variantId?: string) {
+    try {
+        const res = await authFetch(`${API_URL}/api/products/${productId}/restock-notify`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, variant_id: variantId }),
+        });
+        return res.json();
+    } catch (error) {
+        console.warn('[API] requestRestockNotification failed:', error);
+        return { success: false, message: 'Network error' };
+    }
+}
+
 /* ─── Blog ─── */
+
 
 export interface BlogPost {
     post_id: string;

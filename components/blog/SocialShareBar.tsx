@@ -1,6 +1,7 @@
 'use client';
 
 import { recordBlogShare } from '@/lib/api';
+import toast from 'react-hot-toast';
 
 interface SocialShareBarProps {
     shareUrls?: Record<string, string>;
@@ -40,7 +41,9 @@ export default function SocialShareBar({ shareUrls, postId, title }: SocialShare
     const handleShare = (key: string, url?: string) => {
         recordBlogShare(postId, key);
         if (key === 'copy_link') {
-            navigator.clipboard.writeText(url || window.location.href);
+            navigator.clipboard.writeText(url || window.location.href)
+                .then(() => toast.success('Link copied to clipboard!'))
+                .catch(() => toast.error('Failed to copy link'));
             return;
         }
         if (url) window.open(url, '_blank', 'width=600,height=400');

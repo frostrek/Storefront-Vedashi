@@ -215,11 +215,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const applyCoupon = useCallback(async (code: string): Promise<boolean> => {
         setCouponError(null);
         try {
-            // The items here are captured correctly because they are in the dependency array (below).
-            const res = await apiValidateCoupon(code, totalPrice);
+            // Compute cart_total from items directly to avoid stale totalPrice state
+            const computedCartTotal = items.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
+            const cartTotalToSend = computedCartTotal > 0 ? computedCartTotal : totalPrice;
+
+            if (!cartTotalToSend || cartTotalToSend <= 0) {
+                setCouponError('Please add items to your cart before applying a coupon');
+                return false;
+            }
+
+            const res = await apiValidateCoupon(code, cartTotalToSend);
             if (res.success) {
                 setCouponCode(res.data.coupon.code);
                 setCouponType(res.data.coupon.discount_type || null);
+
+                let computedDiscount = 0;
 
                 if (res.data.coupon.discount_type === 'bogo') {
                     const buyQty = res.data.coupon.bogo_buy_qty || 1;
@@ -245,11 +255,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
                     if (res.data.coupon.max_discount_cap !== null) {
                         bogoDiscount = Math.min(bogoDiscount, parseFloat(res.data.coupon.max_discount_cap));
                     }
-                    setCouponDiscount(bogoDiscount);
+                    computedDiscount = bogoDiscount;
                 } else {
-                    setCouponDiscount(res.data.discount);
+                    computedDiscount = res.data.discount;
                 }
 
+                // Enforce minimum payable of ₹1 — cap discount so total never drops below ₹MINIMUM_PAYABLE
+                const minPayable = Number(process.env.NEXT_PUBLIC_MINIMUM_PAYABLE_AMOUNT) || 1;
+                const maxAllowedDiscount = Math.max(0, cartTotalToSend - minPayable);
+                computedDiscount = Math.min(computedDiscount, maxAllowedDiscount);
+
+                setCouponDiscount(computedDiscount);
                 return true;
             } else {
                 setCouponError(res.message || 'Invalid coupon');

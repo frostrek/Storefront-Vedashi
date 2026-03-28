@@ -7,10 +7,10 @@ interface AuthContextType {
     user: UserInfo | null;
     isAuthenticated: boolean;
     isLoading: boolean;
-    login: (email: string, password: string) => Promise<{ success: boolean; error?: string; code?: string; role?: string; access_token?: string }>;
-    register: (name: string, email: string, password: string) => Promise<RegisterResponse>;
+    login: (email: string, password: string, rememberMe?: boolean, turnstileToken?: string) => Promise<{ success: boolean; error?: string; code?: string; role?: string; access_token?: string; requireCaptcha?: boolean; blocked?: boolean; retryAfter?: number }>;
+    register: (name: string, email: string, password: string, turnstileToken?: string) => Promise<RegisterResponse>;
     /** Log-in the user directly from verification data (after OTP verified and accounts created) */
-    loginFromVerification: (customerData: Record<string, unknown>, accessToken: string) => void;
+    loginFromVerification: (customerData: Record<string, unknown>) => void;
     socialLogin: (clerkToken: string) => Promise<{ success: boolean; error?: string; is_new_user?: boolean; account_linked?: boolean; pending_verification?: boolean; customer_id?: string; email?: string; full_name?: string }>;
     logout: () => void;
     /** Update partial user info (like avatar_url) dynamically in cache and context */
@@ -26,6 +26,7 @@ interface RegisterResponse {
     email?: string;
     requires_verification?: boolean;
     error?: string;
+    requireCaptcha?: boolean;
 }
 
 interface UserInfo {
@@ -38,12 +39,14 @@ interface UserInfo {
     is_email_verified?: boolean;
     is_mobile_verified?: boolean;
     phone?: string;
+    loyalty_tier?: string;
+    wallet_balance?: number;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // API_URL imported from @/lib/api
 const USER_KEY = 'vedashi_user';
-const TOKEN_KEY = 'vedashi_token';
+// SECURITY: No TOKEN_KEY — access tokens are handled exclusively via HttpOnly cookies
 
 /** Map backend customer shape → frontend UserInfo */
 function toUserInfo(customer: Record<string, unknown>): UserInfo {
@@ -57,6 +60,8 @@ function toUserInfo(customer: Record<string, unknown>): UserInfo {
         is_email_verified: !!(customer.is_email_verified),
         is_mobile_verified: !!(customer.is_mobile_verified),
         phone: (customer.phone ?? customer.mobile_phone ?? '') as string,
+        loyalty_tier: (customer.loyalty_tier as string) || 'Bronze',
+        wallet_balance: Number(customer.wallet_balance || 0),
     };
 }
 
@@ -75,7 +80,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         listenersRef.current.forEach(cb => cb(event, u));
     }, []);
 
-    // On mount: try to restore session from localStorage cache
+    // ── Listen for session-expired event (from authFetch interceptor) ──
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const handler = () => {
+            setUser(null);
+            localStorage.removeItem(USER_KEY);
+            sessionStorage.removeItem('justSignedIn');
+            sessionStorage.removeItem('social_otp_data');
+            notifyListeners('logout', null);
+        };
+        window.addEventListener('session-expired', handler);
+        return () => window.removeEventListener('session-expired', handler);
+    }, [notifyListeners]);
+
+    // On mount: try to restore session from localStorage cache + validate with server
     useEffect(() => {
         if (typeof window === 'undefined') {
             setIsLoading(false);
@@ -83,48 +102,68 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         const stored = localStorage.getItem(USER_KEY);
-        const storedToken = localStorage.getItem(TOKEN_KEY);
 
-        if (stored && storedToken) {
+        if (stored) {
             try {
                 const cachedUser: UserInfo = JSON.parse(stored);
                 setUser(cachedUser);
                 // Notify listeners (Cart/Wishlist) about restored session
-                // Use setTimeout to ensure listeners are registered first
                 setTimeout(() => notifyListeners('login', cachedUser), 0);
+
+                // Validate session with server via HttpOnly cookie
+                authFetch(`${API_URL}/api/auth/me`)
+                    .then(res => res.json())
+                    .then(json => {
+                        if (json.success && json.data) {
+                            const updatedUser = toUserInfo(json.data);
+                            setUser(updatedUser);
+                            localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+                        } else {
+                            // Cookie expired or invalid — clear cached user
+                            setUser(null);
+                            localStorage.removeItem(USER_KEY);
+                            notifyListeners('logout', null);
+                        }
+                    }).catch(() => {
+                        // Network error — keep cached user for offline resilience
+                    });
             } catch {
                 localStorage.removeItem(USER_KEY);
-                localStorage.removeItem(TOKEN_KEY);
             }
-        } else if (stored && !storedToken) {
-            // Force logout if token is missing (old session before token fix)
-            localStorage.removeItem(USER_KEY);
         }
         setIsLoading(false);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const login = useCallback(async (email: string, password: string) => {
+    const login = useCallback(async (email: string, password: string, rememberMe: boolean = true, turnstileToken?: string | null) => {
         try {
+            const body: Record<string, any> = { email, password, remember_me: rememberMe };
+            if (turnstileToken) body.turnstile_token = turnstileToken;
+
             const res = await authFetch(`${API_URL}/api/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ email, password }),
+                body: JSON.stringify(body),
             });
             const json = await res.json();
             if (res.ok && json.success && json.data?.customer) {
                 const u = toUserInfo(json.data.customer);
                 setUser(u);
                 localStorage.setItem(USER_KEY, JSON.stringify(u));
-                if (json.data.access_token) {
-                    localStorage.setItem(TOKEN_KEY, json.data.access_token);
-                }
+                // SECURITY: No token stored — access token is in HttpOnly cookie
                 sessionStorage.setItem('justSignedIn', String(Date.now()));
                 notifyListeners('login', u);
-                return { success: true, role: u.role, access_token: json.data.access_token };
+                return { success: true, role: u.role };
             }
-            if (json.message) return { success: false, error: json.message, code: json.code };
+            if (json.message) return {
+                success: false,
+                error: json.message,
+                code: json.code,
+                requireCaptcha: json.requireCaptcha,
+                blocked: json.blocked,
+                retryAfter: json.retryAfter,
+            };
         } catch (err) {
             console.error('[Auth] Login error:', err);
         }
@@ -135,14 +174,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const register = useCallback(async (
         name: string,
         email: string,
-        password: string
+        password: string,
+        turnstileToken?: string
     ): Promise<RegisterResponse> => {
         try {
             const res = await authFetch(`${API_URL}/api/auth/initiate-registration`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ full_name: name, email, password }),
+                body: JSON.stringify({ full_name: name, email, password, turnstile_token: turnstileToken }),
             });
             const json = await res.json();
             if (res.ok && json.success) {
@@ -152,7 +192,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     requires_verification: true,
                 };
             }
-            if (json.message) return { success: false, error: json.message };
+            if (json.message) return { success: false, error: json.message, requireCaptcha: json.requireCaptcha };
         } catch (err) {
             console.error('[Auth] Register error:', err);
         }
@@ -161,11 +201,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, []);
 
     /** Log in the user from verification page data (after OTP created the account) */
-    const loginFromVerification = useCallback((customerData: Record<string, unknown>, accessToken: string) => {
+    const loginFromVerification = useCallback((customerData: Record<string, unknown>) => {
         const u = toUserInfo(customerData);
         setUser(u);
         localStorage.setItem(USER_KEY, JSON.stringify(u));
-        localStorage.setItem(TOKEN_KEY, accessToken);
+        // SECURITY: No token stored — access token is in HttpOnly cookie
         sessionStorage.setItem('justSignedIn', String(Date.now()));
         notifyListeners('login', u);
     }, [notifyListeners]);
@@ -187,7 +227,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         authFetch(`${API_URL}/api/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => { });
         setUser(null);
         localStorage.removeItem(USER_KEY);
-        localStorage.removeItem(TOKEN_KEY);
+        // Clear all auth-related session storage
+        sessionStorage.removeItem('justSignedIn');
+        sessionStorage.removeItem('social_otp_data');
+        // SECURITY: HttpOnly cookies are cleared server-side by the /api/auth/logout endpoint
         notifyListeners('logout', null);
     }, [notifyListeners]);
 
@@ -213,14 +256,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 };
             }
 
-            // Returning user → JWT issued immediately
+            // Returning user → JWT issued as HttpOnly cookie
             if (res.ok && json.success && json.data?.customer) {
                 const u = toUserInfo(json.data.customer);
                 setUser(u);
                 localStorage.setItem(USER_KEY, JSON.stringify(u));
-                if (json.data.access_token) {
-                    localStorage.setItem(TOKEN_KEY, json.data.access_token);
-                }
+                // SECURITY: No token stored — access token is in HttpOnly cookie
                 sessionStorage.setItem('justSignedIn', String(Date.now()));
                 notifyListeners('login', u);
                 return {
@@ -235,6 +276,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             return { success: false, error: 'Social login failed. Please try again.' };
         }
     }, [notifyListeners]);
+
 
     return (
         <AuthContext.Provider value={{

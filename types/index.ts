@@ -34,6 +34,8 @@ export interface Product {
     is_availability_expired?: boolean;
     available_from?: string;
     available_until?: string;
+    stock_status?: string;
+    status?: string;
 }
 
 /** Shape returned by GET /api/products/filter */
@@ -65,6 +67,8 @@ export interface ProductWithDetails extends Product {
     variants?: ProductVariant[];
     compliance?: ProductCompliance | null;
     assets?: ProductAsset[];
+    review_count?: number | string;
+    avg_rating?: number | string;
 }
 
 export interface ProductSpecification {

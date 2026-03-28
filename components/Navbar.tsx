@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useParams } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
-import { ShoppingCart, User, Menu, X, Heart, ChevronDown, Search, ArrowRight, Leaf, Sparkles, LogOut, Settings, Package, UserPlus, LogIn } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, Heart, ChevronDown, Search, ArrowRight, Leaf, Sparkles, LogOut, Settings, Package, UserPlus, LogIn, Phone } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useWishlist } from '@/context/WishlistContext';
 import { useAuth } from '@/context/AuthContext';
 import { getCategories, API_URL } from '@/lib/api';
@@ -78,6 +79,8 @@ const DEFAULT_CONFIG: HeaderConfig = {
 export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
+  const params = useParams();
+  const currentCountry = (params?.country as string) || 'in';
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -100,10 +103,10 @@ export default function Navbar() {
 
   const handleWishlistClick = () => {
     if (isAuthenticated) {
-      router.push('/account/wishlist');
+      router.push(`/${currentCountry}/account/wishlist`);
     } else {
       toast('Please sign in to view your wishlist');
-      router.push('/login');
+      router.push(`/${currentCountry}/login`);
     }
   };
 
@@ -131,7 +134,6 @@ export default function Navbar() {
       const justSignedIn = sessionStorage.getItem('justSignedIn');
       if (justSignedIn) {
         const ts = parseInt(justSignedIn, 10);
-        // Fallback for 'true' or timestamp within last 15s
         if (justSignedIn === 'true' || (!isNaN(ts) && Date.now() - ts < 15000)) {
           if (totalItems > 0 && !showCartReminder) {
             setShowCartReminder(true);
@@ -142,6 +144,15 @@ export default function Navbar() {
       }
     }
   }, [isAuthenticated, totalItems, cartLoading, showCartReminder]);
+
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [mobileOpen]);
 
   useEffect(() => {
     getCategories().then(cats => {
@@ -166,33 +177,34 @@ export default function Navbar() {
           : 'bg-white border-gray-200 shadow-sm'
           }`}
       >
-        <div className="mx-auto max-w-[1600px] px-4">
-          <div className="grid grid-cols-[1fr_auto_1fr] h-16 items-center relative">
+        <div className="mx-auto max-w-[1800px] w-full px-2 sm:px-4 lg:px-6">
+          <div className="flex items-center justify-between h-16 relative">
 
             {/* Logo */}
-            <div className="flex items-center justify-start">
-              <Link href="/" className="flex-shrink-0 flex items-center gap-2">
+            <div className="flex items-center justify-start flex-shrink-0">
+              <Link href={`/${currentCountry}`} className="flex items-center gap-2">
                 {branding.logo_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={branding.logo_url} alt={branding.logo_alt} className="h-14 sm:h-16 md:h-20 w-auto object-contain" />
+                  <img src={branding.logo_url} alt={branding.logo_alt} className="h-10 sm:h-12 md:h-16 lg:h-20 w-auto object-contain transition-all" />
                 ) : (
-                  <img src="/vedashi-logo.png" alt="Vedashi" className="h-14 sm:h-16 md:h-20 w-auto object-contain" />
+                  <img src="/vedashi-logo.png" alt="Vedashi" className="h-10 sm:h-12 md:h-16 lg:h-20 w-auto object-contain transition-all" />
                 )}
               </Link>
             </div>
 
-            {/* Center Nav Links */}
-            <nav className="hidden md:flex items-center justify-center gap-6 mx-3">
+            {/* Center Nav Links (Mathematically Centered) */}
+            <nav className="hidden md:flex items-center gap-4 lg:gap-6 absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 z-10 w-max">
               {visibleLinks.map(link => {
+                const prefixedUrl = link.url.startsWith('/') ? `/${currentCountry}${link.url === '/' ? '' : link.url}` : link.url;
                 const isActive = link.url === '/'
-                  ? pathname === '/' || pathname === `/${pathname?.split('/')[1]}`
+                  ? pathname === `/${currentCountry}` || pathname === `/${currentCountry}/`
                   : pathname?.includes(link.url);
 
                 return (
                   <Link
                     key={link.label}
-                    href={link.url}
-                    className={`text-[12px] font-bold font-base uppercase tracking-[0.14em] transition-colors duration-200 relative before:content-[''] before:absolute before:-bottom-1 before:left-0 before:w-full before:h-0.5 before:bg-current before:transition-transform before:duration-300 ${isActive ? 'before:scale-x-100' : 'before:scale-x-0'}`}
+                    href={prefixedUrl}
+                    className={`text-[11px] lg:text-[13px] font-bold font-base uppercase tracking-[0.12em] lg:tracking-[0.14em] transition-colors duration-200 relative before:content-[''] before:absolute before:-bottom-1 before:left-0 before:w-full before:h-0.5 before:bg-current before:transition-transform before:duration-300 ${isActive ? 'before:scale-x-100' : 'before:scale-x-0'}`}
                     style={{ color: isActive ? colors.navbar_hover : colors.navbar_text }}
                     onMouseEnter={e => (e.currentTarget.style.color = colors.navbar_hover)}
                     onMouseLeave={e => (e.currentTarget.style.color = isActive ? colors.navbar_hover : colors.navbar_text)}
@@ -204,7 +216,7 @@ export default function Navbar() {
             </nav>
 
             {/* Right Icons + Search */}
-            <div className="flex items-center justify-end gap-1 sm:gap-2 relative">
+            <div className="flex items-center justify-end gap-3 sm:gap-4 md:gap-2 lg:gap-3 relative">
               {/* Desktop Search */}
               <div className="hidden md:block relative">
                 {searchOpen ? (
@@ -221,22 +233,11 @@ export default function Navbar() {
                 )}
               </div>
 
-              <button suppressHydrationWarning onClick={handleWishlistClick} className="relative p-2 group">
-                <Heart className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
-                {wishlistCount > 0 && (
-                  <span
-                    className="absolute -top-0.5 -right-0.5 text-white text-[9px] font-black font-ui h-4 w-4 flex items-center justify-center rounded-full tabular-nums"
-                    style={{ backgroundColor: colors.cart_badge_bg }}
-                  >
-                    {wishlistCount}
-                  </span>
-                )}
-              </button>
-
+              {/* Notification Center */}
               <NotificationCenter colors={colors} />
 
               <div className="flex items-center">
-                <Link id="navbar-cart-icon" href="/cart" className="relative p-2 group">
+                <Link id="navbar-cart-icon" href={`/${currentCountry}/cart`} className="relative p-2 group">
                   <ShoppingCart className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
                   {totalItems > 0 && (
                     <span
@@ -303,70 +304,83 @@ export default function Navbar() {
 
               {/* Profile / Account Dropdown */}
               <div className="relative group flex items-center" suppressHydrationWarning>
-                <Link href={isAuthenticated ? "/account" : "/login"} className="relative p-2 block group-hover:text-[#3B5D3B] transition-colors">
+                <Link href={isAuthenticated ? `/${currentCountry}/account` : `/${currentCountry}/login`} className="relative p-2 block group-hover:text-[#3B5D3B] transition-colors">
                   {isAuthenticated && user?.avatar_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <div className="h-[22px] w-[22px] rounded-full overflow-hidden ring-1 ring-[#D4A847]/30 group-hover:ring-[#D4A847] transition-all">
-                        <img src={user.avatar_url} alt="Profile" className="h-full w-full object-cover" />
+                      <img src={user.avatar_url} alt="Profile" className="h-full w-full object-cover" />
                     </div>
                   ) : (
                     <User className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
                   )}
                 </Link>
-                
+
                 {/* Account Dropdown Desktop */}
                 <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[120] transform origin-top-right scale-95 group-hover:scale-100 overflow-hidden">
                   <div className="py-2">
                     {isAuthenticated ? (
-                       <>
-                          <div className="px-5 py-4 border-b border-gray-50 bg-[#3B5D3B]/5">
-                            <p className="text-sm font-bold text-gray-800 truncate">{user?.name || 'My Account'}</p>
-                            <p className="text-xs text-gray-500 truncate mt-0.5">{user?.email}</p>
-                          </div>
-                          <div className="p-2 space-y-1">
-                            <Link href="/account" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:text-[#3B5D3B] hover:bg-[#3B5D3B]/5 transition-all">
-                               <Settings className="h-4 w-4" /> Account Settings
-                            </Link>
-                            <Link href="/account/orders" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:text-[#3B5D3B] hover:bg-[#3B5D3B]/5 transition-all">
-                               <Package className="h-4 w-4" /> My Orders
-                            </Link>
-                            <Link href="/account/wishlist" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:text-[#3B5D3B] hover:bg-[#3B5D3B]/5 transition-all">
-                               <Heart className="h-4 w-4" /> My Wishlist
-                            </Link>
-                          </div>
-                          <div className="border-t border-gray-100 my-1"></div>
-                          <div className="p-2">
-                            <button 
-                              onClick={() => {
-                                logout();
-                                toast.success('Logged out successfully');
-                                router.push('/');
-                              }} 
-                              className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-all font-semibold"
-                            >
-                               <LogOut className="h-4 w-4" /> Sign Out
-                            </button>
-                          </div>
-                       </>
+                      <>
+                        <div className="px-5 py-4 border-b border-gray-50 bg-[#3B5D3B]/5">
+                          <p className="text-sm font-bold text-gray-800 truncate">{user?.name || 'My Account'}</p>
+                          <p className="text-xs text-gray-500 truncate mt-0.5">{user?.email}</p>
+                        </div>
+                        <div className="p-2 space-y-1">
+                          <Link href="/account" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:text-[#3B5D3B] hover:bg-[#3B5D3B]/5 transition-all">
+                            <Settings className="h-4 w-4" /> Account Settings
+                          </Link>
+                          <Link href="/account/orders" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:text-[#3B5D3B] hover:bg-[#3B5D3B]/5 transition-all">
+                            <Package className="h-4 w-4" /> My Orders
+                          </Link>
+                          <Link href="/account/wishlist" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:text-[#3B5D3B] hover:bg-[#3B5D3B]/5 transition-all">
+                            <Heart className="h-4 w-4" /> My Wishlist
+                          </Link>
+                        </div>
+                        <div className="border-t border-gray-100 my-1"></div>
+                        <div className="p-2">
+                          <button
+                            onClick={() => {
+                              logout();
+                              toast.success('Logged out successfully');
+                              router.push(`/${currentCountry}/login`);
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-all font-semibold"
+                          >
+                            <LogOut className="h-4 w-4" /> Sign Out
+                          </button>
+                        </div>
+                      </>
                     ) : (
-                       <>
-                          <div className="px-5 py-4 border-b border-gray-50 bg-[#3B5D3B]/5">
-                             <p className="text-sm font-bold text-gray-800">Welcome to Vedashi</p>
-                             <p className="text-xs text-gray-500 mt-0.5">Sign in to easily track orders, save items, and more.</p>
-                          </div>
-                          <div className="p-2 space-y-1">
-                            <Link href="/login" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-white bg-[#3B5D3B] hover:bg-[#4A724A] transition-all shadow-md shadow-[#3B5D3B]/20">
-                               <LogIn className="h-4 w-4" /> Sign In
-                            </Link>
-                            <Link href="/signup" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-all">
-                               <UserPlus className="h-4 w-4" /> Create Account
-                            </Link>
-                          </div>
-                       </>
+                      <>
+                        <div className="px-5 py-4 border-b border-gray-50 bg-[#3B5D3B]/5">
+                          <p className="text-sm font-bold text-gray-800">Welcome to Vedashi</p>
+                          <p className="text-xs text-gray-500 mt-0.5">Sign in to easily track orders, save items, and more.</p>
+                        </div>
+                        <div className="p-2 space-y-1">
+                          <Link href={`/${currentCountry}/login`} className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-white bg-[#3B5D3B] hover:bg-[#4A724A] transition-all shadow-md shadow-[#3B5D3B]/20">
+                            <LogIn className="h-4 w-4" /> Sign In
+                          </Link>
+                          <Link href={`/${currentCountry}/login?mode=register`} className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-all">
+                            <UserPlus className="h-4 w-4" /> Create Account
+                          </Link>
+                        </div>
+                      </>
                     )}
                   </div>
                 </div>
               </div>
+
+              {/* Wishlist Icon (Shifted here) */}
+              <button suppressHydrationWarning onClick={handleWishlistClick} className="relative p-2 group">
+                <Heart className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
+                {wishlistCount > 0 && (
+                  <span
+                    className="absolute -top-0.5 -right-0.5 text-white text-[9px] font-black font-ui h-4 w-4 flex items-center justify-center rounded-full tabular-nums"
+                    style={{ backgroundColor: colors.cart_badge_bg }}
+                  >
+                    {wishlistCount}
+                  </span>
+                )}
+              </button>
 
               {/* Mobile toggle */}
               <button suppressHydrationWarning onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2" style={{ color: colors.navbar_text }}>
@@ -383,14 +397,14 @@ export default function Navbar() {
       {/* ═══════════════ STRIP BAR ═══════════════ */}
       {strip.enabled && (
         <div className="hidden md:block" style={{ backgroundColor: colors.strip_bg }}>
-          <div className="mx-auto max-w-[1600px] px-4">
+          <div className="mx-auto max-w-[1800px] w-full px-4 lg:px-6">
             <div className="flex items-center justify-between h-9 text-[12px] tracking-wide">
 
               {/* LEFT */}
               <div className="flex items-center gap-5">
                 {strip.show_track_orders && !loading && (
                   <Link
-                    href="/account"
+                    href={`/${currentCountry}/account`}
                     className="font-medium transition-colors duration-200"
                     style={{ color: colors.strip_text }}
                     onMouseEnter={e => (e.currentTarget.style.color = colors.strip_accent)}
@@ -421,7 +435,7 @@ export default function Navbar() {
                           return (
                             <div key={parent.category_id} className="relative group/cat">
                               <Link
-                                href={`/products?category=${parent.slug}`}
+                                href={`/${currentCountry}/products?category=${parent.slug}`}
                                 className="flex items-center justify-between px-5 py-2.5 text-sm font-medium transition-colors duration-150"
                                 style={{ color: colors.navbar_text }}
                                 onMouseEnter={e => (e.currentTarget.style.color = colors.navbar_hover)}
@@ -436,7 +450,7 @@ export default function Navbar() {
                                     {subs.map(sub => (
                                       <Link
                                         key={sub.category_id}
-                                        href={`/products?category=${parent.slug}&sub_category=${sub.slug}`}
+                                        href={`/${currentCountry}/products?category=${parent.slug}&sub_category=${sub.slug}`}
                                         className="block px-5 py-2 text-sm text-gray-600 transition-colors duration-150"
                                         style={{ color: colors.navbar_text }}
                                         onMouseEnter={e => {
@@ -481,183 +495,178 @@ export default function Navbar() {
         </div>
       )}
 
-      {/* ═══════════════ MOBILE MENU ═══════════════ */}
-      {mobileOpen && (
-        <div className="md:hidden bg-white shadow-lg border-t absolute w-full z-[200] max-h-[80vh] overflow-y-auto">
-          <nav className="flex flex-col p-5 gap-1">
+      {/* ═══════════════ MOBILE MENU (Right Drawer) ═══════════════ */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            {/* Backdrop Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileOpen(false)}
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000] md:hidden"
+            />
 
-            {/* Mobile Search */}
-            <div className="mb-3">
-              <SearchAutocomplete className="w-full" onClose={() => setMobileOpen(false)} placeholder="Search remedies…" />
-            </div>
-
-            {/* Main links (from config, filtered to enabled) */}
-            {visibleLinks.map(link => {
-              const isActive = link.url === '/'
-                ? pathname === '/' || pathname === `/${pathname?.split('/')[1]}`
-                : pathname?.includes(link.url);
-
-              return (
-                <Link
-                  key={link.label}
-                  href={link.url}
-                  onClick={() => setMobileOpen(false)}
-                  className="py-2.5 px-3 rounded-lg font-semibold text-sm uppercase tracking-wide transition-colors"
-                  style={{
-                    color: isActive ? colors.navbar_hover : colors.navbar_text,
-                    backgroundColor: isActive ? `${colors.navbar_hover}12` : 'transparent'
-                  }}
-                  onMouseEnter={e => {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = `${colors.navbar_hover}12`;
-                    (e.currentTarget as HTMLElement).style.color = colors.navbar_hover;
-                  }}
-                  onMouseLeave={e => {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = isActive ? `${colors.navbar_hover}12` : 'transparent';
-                    (e.currentTarget as HTMLElement).style.color = isActive ? colors.navbar_hover : colors.navbar_text;
-                  }}
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
-
-            {strip.show_track_orders && (
-              <Link
-                href="/account"
-                onClick={() => setMobileOpen(false)}
-                className="py-2.5 px-3 rounded-lg font-semibold text-sm uppercase tracking-wide transition-colors"
-                style={{ color: colors.navbar_text }}
-                onMouseEnter={e => {
-                  (e.currentTarget as HTMLElement).style.backgroundColor = `${colors.navbar_hover}12`;
-                  (e.currentTarget as HTMLElement).style.color = colors.navbar_hover;
-                }}
-                onMouseLeave={e => {
-                  (e.currentTarget as HTMLElement).style.backgroundColor = '';
-                  (e.currentTarget as HTMLElement).style.color = colors.navbar_text;
-                }}
-              >
-                Track Orders
-              </Link>
-            )}
-
-            {/* Divider */}
-            <div className="border-t border-gray-100 my-2" />
-
-            {/* Categories */}
-            <p className="px-3 text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1">Categories</p>
-            {parentCategories.map(parent => (
-              <div key={parent.category_id} className="flex flex-col">
-                <Link
-                  href={`/products?category=${parent.slug}`}
-                  onClick={() => setMobileOpen(false)}
-                  className="py-2 px-3 font-semibold text-sm transition-colors"
-                  style={{ color: colors.navbar_text }}
-                  onMouseEnter={e => (e.currentTarget.style.color = colors.navbar_hover)}
-                  onMouseLeave={e => (e.currentTarget.style.color = colors.navbar_text)}
-                >
-                  {parent.name}
-                </Link>
-                {categories.filter(c => c.parent_id === parent.category_id).map(sub => (
-                  <Link
-                    key={sub.category_id}
-                    href={`/products?category=${parent.slug}&sub_category=${sub.slug}`}
-                    onClick={() => setMobileOpen(false)}
-                    className="py-1.5 pl-7 pr-3 text-sm border-l-2 border-gray-100 ml-4 transition-colors"
-                    style={{ color: colors.navbar_text, opacity: 0.75 }}
-                    onMouseEnter={e => {
-                      (e.currentTarget as HTMLElement).style.color = colors.navbar_hover;
-                      (e.currentTarget as HTMLElement).style.opacity = '1';
-                    }}
-                    onMouseLeave={e => {
-                      (e.currentTarget as HTMLElement).style.color = colors.navbar_text;
-                      (e.currentTarget as HTMLElement).style.opacity = '0.75';
-                    }}
-                  >
-                    {sub.name}
-                  </Link>
-                ))}
-              </div>
-            ))}
-
-            {/* Profile Section */}
-            <div className="border-t border-gray-100 my-2" />
-            <p className="px-3 text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-2">My Account</p>
-            {isAuthenticated ? (
-              <div className="flex flex-col gap-1 px-2">
-                <div className="px-3 py-2 bg-[#3B5D3B]/5 rounded-lg mb-1 flex items-center gap-3">
-                  {user?.avatar_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={user.avatar_url} alt="Profile" className="h-[36px] w-[36px] rounded-full object-cover ring-1 ring-[#D4A847]/30" />
-                  ) : (
-                      <div className="h-[36px] w-[36px] rounded-full bg-[#3B5D3B]/10 flex items-center justify-center flex-shrink-0">
-                          <User className="h-[18px] w-[18px] text-[#3B5D3B]" />
-                      </div>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-bold text-gray-800 truncate">{user?.name}</p>
-                    <p className="text-xs text-gray-500 truncate">{user?.email}</p>
-                  </div>
-                </div>
-                <Link
-                  href="/account"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-3 py-2.5 px-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-[#3B5D3B]/5 transition-colors"
-                >
-                  <Settings className="h-4 w-4" /> Account Settings
-                </Link>
-                <Link
-                  href="/account/orders"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-3 py-2.5 px-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-[#3B5D3B]/5 transition-colors"
-                >
-                  <Package className="h-4 w-4" /> My Orders
-                </Link>
-                <Link
-                  href="/account/wishlist"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-3 py-2.5 px-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-[#3B5D3B]/5 transition-colors"
-                >
-                  <Heart className="h-4 w-4" /> My Wishlist
-                </Link>
+            {/* Right Side Drawer */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed right-0 top-0 h-full w-[320px] max-w-[85vw] bg-white shadow-2xl z-[2001] md:hidden flex flex-col overflow-hidden"
+            >
+              {/* Drawer Header */}
+              <div className="flex items-center justify-between p-4 border-b">
+                <img src="/vedashi-logo.png" alt="Vedashi" className="h-10 w-auto object-contain" />
                 <button
-                  onClick={() => {
-                    setMobileOpen(false);
-                    logout();
-                    toast.success('Logged out successfully');
-                    router.push('/');
-                  }}
-                  className="flex items-center gap-3 py-2.5 px-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors mt-2"
+                  onClick={() => setMobileOpen(false)}
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
                 >
-                  <LogOut className="h-4 w-4" /> Sign Out
+                  <X className="h-6 w-6" />
                 </button>
               </div>
-            ) : (
-              <div className="flex flex-col gap-2 px-3 pb-2 pt-1">
-                <Link
-                  href="/login"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium text-white bg-[#3B5D3B] hover:bg-[#4A724A] transition-colors shadow-md shadow-[#3B5D3B]/20"
-                >
-                  <LogIn className="h-4 w-4" /> Sign In
-                </Link>
-                <Link
-                  href="/signup"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-colors"
-                >
-                  <UserPlus className="h-4 w-4" /> Create Account
-                </Link>
-              </div>
-            )}
 
-            {/* Hotline */}
-            <div className="border-t border-gray-100 my-2" />
-            <p className="px-3 text-xs" style={{ color: colors.strip_text }}>
-              ✆ Hotline: <span className="font-semibold" style={{ color: colors.navbar_hover }}>{strip.hotline}</span>
-            </p>
-          </nav>
-        </div>
-      )}
+              {/* Drawer Content */}
+              <div className="flex-1 overflow-y-auto custom-scrollbar">
+                <nav className="flex flex-col p-5 gap-1">
+                  {/* Mobile Search */}
+                  <div className="mb-4">
+                    <SearchAutocomplete className="w-full" onClose={() => setMobileOpen(false)} placeholder="Search remedies…" />
+                  </div>
+
+                  {/* Main links */}
+                  <p className="px-3 text-[10px] uppercase tracking-widest text-[#3B5D3B] font-bold mb-2">Main Menu</p>
+                  <div className="space-y-1 mb-6">
+                    {visibleLinks.map(link => {
+                      const prefixedUrl = link.url.startsWith('/') ? `/${currentCountry}${link.url === '/' ? '' : link.url}` : link.url;
+                      const isActive = link.url === '/'
+                        ? pathname === `/${currentCountry}` || pathname === `/${currentCountry}/`
+                        : pathname?.includes(link.url);
+
+                      return (
+                        <Link
+                          key={link.label}
+                          href={prefixedUrl}
+                          onClick={() => setMobileOpen(false)}
+                          className={`flex items-center gap-3 py-3 px-4 rounded-xl text-sm font-bold uppercase tracking-wide transition-all ${isActive ? 'bg-[#3B5D3B]/10 text-[#3B5D3B]' : 'text-gray-600 hover:bg-gray-50'
+                            }`}
+                        >
+                          <div className={`h-1.5 w-1.5 rounded-full transition-all ${isActive ? 'bg-[#3B5D3B] scale-100' : 'bg-transparent scale-0'}`} />
+                          {link.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
+
+                  {/* Categories */}
+                  <div className="border-t border-gray-100 pt-6 mb-6">
+                    <p className="px-3 text-[10px] uppercase tracking-widest text-[#3B5D3B] font-bold mb-3">Categories</p>
+                    <div className="space-y-4">
+                      {parentCategories.map(parent => (
+                        <div key={parent.category_id} className="flex flex-col">
+                          <Link
+                            href={`/${currentCountry}/products?category=${parent.slug}`}
+                            onClick={() => setMobileOpen(false)}
+                            className="py-2 px-3 font-bold text-sm text-gray-800 hover:text-[#3B5D3B] transition-colors"
+                          >
+                            {parent.name}
+                          </Link>
+                          <div className="ml-3 mt-1 space-y-1 border-l-2 border-gray-100">
+                            {categories.filter(c => c.parent_id === parent.category_id).map(sub => (
+                              <Link
+                                key={sub.category_id}
+                                href={`/${currentCountry}/products?category=${parent.slug}&sub_category=${sub.slug}`}
+                                onClick={() => setMobileOpen(false)}
+                                className="block py-1.5 pl-6 pr-3 text-sm text-gray-500 hover:text-[#3B5D3B] transition-colors"
+                              >
+                                {sub.name}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Account Section */}
+                  <div className="border-t border-gray-100 pt-6">
+                    <p className="px-3 text-[10px] uppercase tracking-widest text-[#3B5D3B] font-bold mb-4">My Account</p>
+                    {isAuthenticated ? (
+                      <div className="flex flex-col gap-1 p-2 bg-gray-50 rounded-2xl mb-4">
+                        <div className="px-3 py-3 flex items-center gap-3 border-b border-gray-200/50 mb-2">
+                          <div className="h-10 w-10 rounded-full bg-[#3B5D3B]/10 flex items-center justify-center flex-shrink-0 overflow-hidden ring-2 ring-white">
+                            {user?.avatar_url ? (
+                              <img src={user.avatar_url} alt="Profile" className="h-full w-full object-cover" />
+                            ) : (
+                              <User className="h-5 w-5 text-[#3B5D3B]" />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-bold text-gray-800 truncate">{user?.name}</p>
+                            <p className="text-[10px] text-gray-500 truncate">{user?.email}</p>
+                          </div>
+                        </div>
+                        <div className="space-y-0.5">
+                          <Link href={`/${currentCountry}/account`} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 py-2.5 px-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-[#3B5D3B]/5 transition-colors">
+                            <Settings className="h-4 w-4" /> Account Settings
+                          </Link>
+                          <Link href={`/${currentCountry}/account/orders`} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 py-2.5 px-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-[#3B5D3B]/5 transition-colors">
+                            <Package className="h-4 w-4" /> My Orders
+                          </Link>
+                          <Link href={`/${currentCountry}/account/wishlist`} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 py-2.5 px-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-[#3B5D3B]/5 transition-colors">
+                            <Heart className="h-4 w-4" /> My Wishlist
+                          </Link>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setMobileOpen(false);
+                            logout();
+                            toast.success('Logged out successfully');
+                            router.push(`/${currentCountry}/login`);
+                          }}
+                          className="flex items-center gap-3 py-3 px-3 rounded-lg text-sm font-bold text-red-600 hover:bg-red-50 transition-colors mt-2"
+                        >
+                          <LogOut className="h-4 w-4" /> Sign Out
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-3 px-1 mb-6">
+                        <Link
+                          href={`/${currentCountry}/login`}
+                          onClick={() => setMobileOpen(false)}
+                          className="flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl text-sm font-bold text-white bg-[#3B5D3B] shadow-lg shadow-[#3B5D3B]/20"
+                        >
+                          <LogIn className="h-4 w-4" /> Sign In
+                        </Link>
+                        <Link
+                          href={`/${currentCountry}/login?mode=register`}
+                          onClick={() => setMobileOpen(false)}
+                          className="flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl text-sm font-bold text-gray-700 bg-gray-50 border border-gray-200"
+                        >
+                          <UserPlus className="h-4 w-4" /> Create Account
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                </nav>
+              </div>
+
+              {/* Drawer Footer */}
+              <div className="p-6 bg-gray-50/50 border-t border-gray-100 flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <RegionSwitcher upward={true} />
+                  <GoogleTranslateWidget upward={true} />
+                </div>
+                <div className="flex items-center gap-2 text-xs font-bold text-[#3B5D3B]">
+                  <Phone className="h-3.5 w-3.5" />
+                  Hotline: {strip.hotline}
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

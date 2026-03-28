@@ -7,7 +7,6 @@ import toast from 'react-hot-toast';
 import { Mail, RefreshCw, ArrowLeft, ShieldCheck } from 'lucide-react';
 
 // API_URL imported from @/lib/api
-const TOKEN_KEY = 'vedashi_token';
 const USER_KEY = 'vedashi_user';
 
 interface SocialOTPData {
@@ -104,25 +103,11 @@ export default function VerifySocialOTPPage() {
 
             const json = await res.json();
 
-            console.log('[OTP Debug] Response status:', res.status, 'ok:', res.ok);
-            console.log('[OTP Debug] Response JSON:', JSON.stringify(json, null, 2));
-            console.log('[OTP Debug] json.success:', json.success);
-            console.log('[OTP Debug] json.data?.customer:', json.data?.customer);
-
             if (res.ok && json.success && json.data?.customer) {
-                // OTP verified → JWT issued → store EXACTLY how AuthContext expects
+                // OTP verified → JWT issued as HttpOnly cookie → store safe user data only
                 const customer = json.data.customer;
 
-                console.log('[OTP Debug] ✅ Verification successful! Customer:', customer);
-                console.log('[OTP Debug] access_token present:', !!json.data.access_token);
-
-                // Store access token
-                if (json.data.access_token) {
-                    localStorage.setItem(TOKEN_KEY, json.data.access_token);
-                    console.log('[OTP Debug] ✅ Token stored in localStorage');
-                } else {
-                    console.error('[OTP Debug] ❌ NO access_token in response!');
-                }
+                // SECURITY: No token stored in localStorage — access token is in HttpOnly cookie
 
                 // Store user info in the EXACT format AuthContext reads
                 const userInfo = {
@@ -136,11 +121,6 @@ export default function VerifySocialOTPPage() {
                     is_mobile_verified: false,
                 };
                 localStorage.setItem(USER_KEY, JSON.stringify(userInfo));
-                console.log('[OTP Debug] ✅ User info stored:', userInfo);
-
-                // Verify localStorage was written
-                console.log('[OTP Debug] localStorage TOKEN_KEY:', localStorage.getItem(TOKEN_KEY)?.substring(0, 20) + '...');
-                console.log('[OTP Debug] localStorage USER_KEY:', localStorage.getItem(USER_KEY));
 
                 // Clean up sessionStorage
                 sessionStorage.removeItem('social_otp_data');
@@ -148,10 +128,8 @@ export default function VerifySocialOTPPage() {
                 toast.success('Email verified! Welcome to Vedashi.');
 
                 // Full page reload → AuthContext reads from localStorage → user is logged in
-                console.log(`[OTP Debug] 🚀 Redirecting to /${country} NOW...`);
                 window.location.href = `/${country}`;
             } else {
-                console.error('[OTP Debug] ❌ Verification failed:', json.message);
                 toast.error(json.message || 'Invalid OTP code.');
                 setOtp(['', '', '', '', '', '']);
                 inputRefs.current[0]?.focus();

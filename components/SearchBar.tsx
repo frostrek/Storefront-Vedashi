@@ -17,6 +17,8 @@ interface SearchBarProps {
     placeholder?: string;
     className?: string;
     autoFocus?: boolean;
+    /** If true, calls onSearch immediately as user types (debounced) and hides separate suggestions Panel */
+    live?: boolean;
 }
 
 function useDebounce<T>(value: T, delay: number): T {
@@ -35,6 +37,7 @@ export default function SearchBar({
     placeholder = 'Search products, brands, or categories...',
     className = '',
     autoFocus = false,
+    live = false,
 }: SearchBarProps) {
     const router = useRouter();
     const pathname = usePathname();
@@ -55,14 +58,22 @@ export default function SearchBar({
 
     const debouncedInput = useDebounce(inputValue, 300);
 
-    // Fetch suggestions whenever debounced input changes
+    // Fetch suggestions / trigger live search whenever debounced input changes
     useEffect(() => {
         if (debouncedInput.trim().length < 2) {
             setSuggestions([]);
             setSuggestionsOpen(false);
             setLoading(false);
+            // If live mode, clear search when input is too short
+            if (live && value !== '') onSearch('');
             return;
         }
+
+        if (live) {
+            onSearch(debouncedInput.trim());
+            return;
+        }
+
         let cancelled = false;
         setLoading(true);
         getSearchSuggestions(debouncedInput).then(results => {
@@ -73,7 +84,7 @@ export default function SearchBar({
             }
         });
         return () => { cancelled = true; };
-    }, [debouncedInput]);
+    }, [debouncedInput, live]);
 
     // Close dropdown on outside click
     useEffect(() => {
@@ -194,8 +205,8 @@ export default function SearchBar({
                 </div>
             </form>
 
-            {/* Suggestions Dropdown */}
-            {suggestionsOpen && suggestions.length > 0 && (
+            {/* Suggestions Dropdown - ONLY show in non-live mode */}
+            {!live && suggestionsOpen && suggestions.length > 0 && (
                 <div
                     id="search-suggestions"
                     role="listbox"

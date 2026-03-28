@@ -7,7 +7,9 @@ import { useEffect, useState } from 'react';
 import RegionSwitcher from './RegionSwitcher';
 import GoogleTranslateWidget from './GoogleTranslateWidget';
 import { useCookieConsent } from '@/context/CookieConsentContext';
-import { API_URL } from '@/lib/api';
+import { API_URL, subscribeNewsletter } from '@/lib/api';
+import toast from 'react-hot-toast';
+import { Loader2 } from 'lucide-react';
 
 // API_URL imported from @/lib/api
 
@@ -47,6 +49,8 @@ export default function Footer() {
     const pathname = usePathname();
     const [data, setData] = useState<FooterData | null>(null);
     const { openSettings } = useCookieConsent();
+    const [email, setEmail] = useState('');
+    const [loading, setLoading] = useState(false);
 
 
     useEffect(() => {
@@ -55,6 +59,29 @@ export default function Footer() {
             .then(res => { if (res.success) setData(res.data); })
             .catch(() => { });
     }, []);
+
+    const handleSubscribe = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!email || !email.includes('@')) {
+            toast.error('Please enter a valid email.');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const res = await subscribeNewsletter(email);
+            if (res.success) {
+                toast.success(res.message || 'Successfully subscribed!');
+                setEmail('');
+            } else {
+                toast.error(res.message || 'Failed to subscribe.');
+            }
+        } catch (error) {
+            toast.error('Communication error. Please try again later.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Shorthand helpers with safe fallbacks
     const company = data?.company;
@@ -112,18 +139,8 @@ export default function Footer() {
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/practitioners" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
-                                    Practitioners
-                                </Link>
-                            </li>
-                            <li>
                                 <Link href="/products" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
                                     Natural Products
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/quiz" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
-                                    Ayurvedic Quiz
                                 </Link>
                             </li>
                         </ul>
@@ -134,12 +151,12 @@ export default function Footer() {
                         <h4 className="font-display font-bold text-[#333] text-lg mb-3">Support</h4>
                         <ul className="space-y-2">
                             <li>
-                                <Link href="/help" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
+                                <Link href="/help-center" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
                                     Help Center
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/faq" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
+                                <Link href="/help-center/faq" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
                                     Consultation FAQ
                                 </Link>
                             </li>
@@ -172,19 +189,23 @@ export default function Footer() {
                         <p className="text-sm text-[#6b6b6b] leading-relaxed mb-4">
                             Join our community for weekly wellness rituals.
                         </p>
-                        <form onSubmit={e => e.preventDefault()} className="flex gap-2" suppressHydrationWarning>
+                        <form onSubmit={handleSubscribe} className="flex gap-2" suppressHydrationWarning>
                             <input
                                 suppressHydrationWarning
                                 type="email"
                                 placeholder="Your email"
-                                className="flex-1 min-w-0 rounded-md px-3 py-2 text-sm bg-white border border-[#d9d9d0] focus:outline-none focus:border-[#3B5D3B] focus:ring-1 focus:ring-[#3B5D3B]/20 placeholder:text-[#aaa] text-[#333] transition-all"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                disabled={loading}
+                                className="flex-1 min-w-0 rounded-md px-3 py-2 text-sm bg-white border border-[#d9d9d0] focus:outline-none focus:border-[#3B5D3B] focus:ring-1 focus:ring-[#3B5D3B]/20 placeholder:text-[#aaa] text-[#333] transition-all disabled:opacity-50"
                             />
                             <button
                                 suppressHydrationWarning
                                 type="submit"
-                                className="px-5 py-2 bg-[#3B5D3B] text-white text-xs font-black font-ui uppercase tracking-widest rounded-md hover:bg-[#2d472d] transition-colors whitespace-nowrap"
+                                disabled={loading}
+                                className="px-5 py-2 bg-[#3B5D3B] text-white text-xs font-black font-ui uppercase tracking-widest rounded-md hover:bg-[#2d472d] transition-colors whitespace-nowrap disabled:opacity-70 flex items-center justify-center min-w-[70px]"
                             >
-                                Join
+                                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Join'}
                             </button>
                         </form>
                     </div>
