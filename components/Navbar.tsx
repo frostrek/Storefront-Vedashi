@@ -178,7 +178,7 @@ export default function Navbar() {
           }`}
       >
         <div className="mx-auto max-w-[1800px] w-full px-2 sm:px-4 lg:px-6">
-          <div className="flex items-center justify-between h-16 md:h-20 lg:h-24 relative">
+          <div className="flex items-center justify-between h-16 relative">
 
             {/* Logo */}
             <div className="flex items-center justify-start flex-shrink-0">
@@ -192,8 +192,8 @@ export default function Navbar() {
               </Link>
             </div>
 
-            {/* Center Nav Links */}
-            <nav className="hidden md:flex items-center justify-center flex-1 gap-6 mx-3">
+            {/* Center Nav Links (Mathematically Centered) */}
+            <nav className="hidden md:flex items-center gap-4 lg:gap-6 absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 z-10 w-max">
               {visibleLinks.map(link => {
                 const prefixedUrl = link.url.startsWith('/') ? `/${currentCountry}${link.url === '/' ? '' : link.url}` : link.url;
                 const isActive = link.url === '/'
@@ -204,7 +204,7 @@ export default function Navbar() {
                   <Link
                     key={link.label}
                     href={prefixedUrl}
-                    className={`text-[11px] lg:text-[12px] font-bold font-base uppercase tracking-[0.12em] lg:tracking-[0.14em] transition-colors duration-200 relative before:content-[''] before:absolute before:-bottom-1 before:left-0 before:w-full before:h-0.5 before:bg-current before:transition-transform before:duration-300 ${isActive ? 'before:scale-x-100' : 'before:scale-x-0'}`}
+                    className={`text-[11px] lg:text-[13px] font-bold font-base uppercase tracking-[0.12em] lg:tracking-[0.14em] transition-colors duration-200 relative before:content-[''] before:absolute before:-bottom-1 before:left-0 before:w-full before:h-0.5 before:bg-current before:transition-transform before:duration-300 ${isActive ? 'before:scale-x-100' : 'before:scale-x-0'}`}
                     style={{ color: isActive ? colors.navbar_hover : colors.navbar_text }}
                     onMouseEnter={e => (e.currentTarget.style.color = colors.navbar_hover)}
                     onMouseLeave={e => (e.currentTarget.style.color = isActive ? colors.navbar_hover : colors.navbar_text)}
@@ -308,62 +308,62 @@ export default function Navbar() {
                   {isAuthenticated && user?.avatar_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <div className="h-[22px] w-[22px] rounded-full overflow-hidden ring-1 ring-[#D4A847]/30 group-hover:ring-[#D4A847] transition-all">
-                        <img src={user.avatar_url} alt="Profile" className="h-full w-full object-cover" />
+                      <img src={user.avatar_url} alt="Profile" className="h-full w-full object-cover" />
                     </div>
                   ) : (
                     <User className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
                   )}
                 </Link>
-                
+
                 {/* Account Dropdown Desktop */}
                 <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[120] transform origin-top-right scale-95 group-hover:scale-100 overflow-hidden">
                   <div className="py-2">
                     {isAuthenticated ? (
-                       <>
-                          <div className="px-5 py-4 border-b border-gray-50 bg-[#3B5D3B]/5">
-                            <p className="text-sm font-bold text-gray-800 truncate">{user?.name || 'My Account'}</p>
-                            <p className="text-xs text-gray-500 truncate mt-0.5">{user?.email}</p>
-                          </div>
-                          <div className="p-2 space-y-1">
-                            <Link href="/account" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:text-[#3B5D3B] hover:bg-[#3B5D3B]/5 transition-all">
-                               <Settings className="h-4 w-4" /> Account Settings
-                            </Link>
-                            <Link href="/account/orders" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:text-[#3B5D3B] hover:bg-[#3B5D3B]/5 transition-all">
-                               <Package className="h-4 w-4" /> My Orders
-                            </Link>
-                            <Link href="/account/wishlist" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:text-[#3B5D3B] hover:bg-[#3B5D3B]/5 transition-all">
-                               <Heart className="h-4 w-4" /> My Wishlist
-                            </Link>
-                          </div>
-                          <div className="border-t border-gray-100 my-1"></div>
-                          <div className="p-2">
-                            <button 
-                              onClick={() => {
-                                logout();
-                                toast.success('Logged out successfully');
-                                router.push(`/${currentCountry}/login`);
-                              }} 
-                              className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-all font-semibold"
-                            >
-                               <LogOut className="h-4 w-4" /> Sign Out
-                            </button>
-                          </div>
-                       </>
+                      <>
+                        <div className="px-5 py-4 border-b border-gray-50 bg-[#3B5D3B]/5">
+                          <p className="text-sm font-bold text-gray-800 truncate">{user?.name || 'My Account'}</p>
+                          <p className="text-xs text-gray-500 truncate mt-0.5">{user?.email}</p>
+                        </div>
+                        <div className="p-2 space-y-1">
+                          <Link href="/account" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:text-[#3B5D3B] hover:bg-[#3B5D3B]/5 transition-all">
+                            <Settings className="h-4 w-4" /> Account Settings
+                          </Link>
+                          <Link href="/account/orders" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:text-[#3B5D3B] hover:bg-[#3B5D3B]/5 transition-all">
+                            <Package className="h-4 w-4" /> My Orders
+                          </Link>
+                          <Link href="/account/wishlist" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:text-[#3B5D3B] hover:bg-[#3B5D3B]/5 transition-all">
+                            <Heart className="h-4 w-4" /> My Wishlist
+                          </Link>
+                        </div>
+                        <div className="border-t border-gray-100 my-1"></div>
+                        <div className="p-2">
+                          <button
+                            onClick={() => {
+                              logout();
+                              toast.success('Logged out successfully');
+                              router.push(`/${currentCountry}/login`);
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-all font-semibold"
+                          >
+                            <LogOut className="h-4 w-4" /> Sign Out
+                          </button>
+                        </div>
+                      </>
                     ) : (
-                       <>
-                          <div className="px-5 py-4 border-b border-gray-50 bg-[#3B5D3B]/5">
-                             <p className="text-sm font-bold text-gray-800">Welcome to Vedashi</p>
-                             <p className="text-xs text-gray-500 mt-0.5">Sign in to easily track orders, save items, and more.</p>
-                          </div>
-                          <div className="p-2 space-y-1">
-                            <Link href={`/${currentCountry}/login`} className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-white bg-[#3B5D3B] hover:bg-[#4A724A] transition-all shadow-md shadow-[#3B5D3B]/20">
-                               <LogIn className="h-4 w-4" /> Sign In
-                            </Link>
-                            <Link href={`/${currentCountry}/login?mode=register`} className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-all">
-                               <UserPlus className="h-4 w-4" /> Create Account
-                            </Link>
-                          </div>
-                       </>
+                      <>
+                        <div className="px-5 py-4 border-b border-gray-50 bg-[#3B5D3B]/5">
+                          <p className="text-sm font-bold text-gray-800">Welcome to Vedashi</p>
+                          <p className="text-xs text-gray-500 mt-0.5">Sign in to easily track orders, save items, and more.</p>
+                        </div>
+                        <div className="p-2 space-y-1">
+                          <Link href={`/${currentCountry}/login`} className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-white bg-[#3B5D3B] hover:bg-[#4A724A] transition-all shadow-md shadow-[#3B5D3B]/20">
+                            <LogIn className="h-4 w-4" /> Sign In
+                          </Link>
+                          <Link href={`/${currentCountry}/login?mode=register`} className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-all">
+                            <UserPlus className="h-4 w-4" /> Create Account
+                          </Link>
+                        </div>
+                      </>
                     )}
                   </div>
                 </div>
@@ -412,7 +412,7 @@ export default function Navbar() {
                   >
                     Track Orders
                   </Link>
-                )   }
+                )}
 
                 {strip.show_track_orders && strip.show_categories && (
                   <span style={{ color: colors.strip_text, opacity: 0.3 }}>|</span>
@@ -519,8 +519,8 @@ export default function Navbar() {
               {/* Drawer Header */}
               <div className="flex items-center justify-between p-4 border-b">
                 <img src="/vedashi-logo.png" alt="Vedashi" className="h-10 w-auto object-contain" />
-                <button 
-                  onClick={() => setMobileOpen(false)} 
+                <button
+                  onClick={() => setMobileOpen(false)}
                   className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
                 >
                   <X className="h-6 w-6" />
@@ -549,9 +549,8 @@ export default function Navbar() {
                           key={link.label}
                           href={prefixedUrl}
                           onClick={() => setMobileOpen(false)}
-                          className={`flex items-center gap-3 py-3 px-4 rounded-xl text-sm font-bold uppercase tracking-wide transition-all ${
-                            isActive ? 'bg-[#3B5D3B]/10 text-[#3B5D3B]' : 'text-gray-600 hover:bg-gray-50'
-                          }`}
+                          className={`flex items-center gap-3 py-3 px-4 rounded-xl text-sm font-bold uppercase tracking-wide transition-all ${isActive ? 'bg-[#3B5D3B]/10 text-[#3B5D3B]' : 'text-gray-600 hover:bg-gray-50'
+                            }`}
                         >
                           <div className={`h-1.5 w-1.5 rounded-full transition-all ${isActive ? 'bg-[#3B5D3B] scale-100' : 'bg-transparent scale-0'}`} />
                           {link.label}
@@ -598,9 +597,9 @@ export default function Navbar() {
                         <div className="px-3 py-3 flex items-center gap-3 border-b border-gray-200/50 mb-2">
                           <div className="h-10 w-10 rounded-full bg-[#3B5D3B]/10 flex items-center justify-center flex-shrink-0 overflow-hidden ring-2 ring-white">
                             {user?.avatar_url ? (
-                                <img src={user.avatar_url} alt="Profile" className="h-full w-full object-cover" />
+                              <img src={user.avatar_url} alt="Profile" className="h-full w-full object-cover" />
                             ) : (
-                                <User className="h-5 w-5 text-[#3B5D3B]" />
+                              <User className="h-5 w-5 text-[#3B5D3B]" />
                             )}
                           </div>
                           <div className="min-w-0 flex-1">
@@ -656,8 +655,8 @@ export default function Navbar() {
               {/* Drawer Footer */}
               <div className="p-6 bg-gray-50/50 border-t border-gray-100 flex flex-col gap-4">
                 <div className="flex items-center justify-between">
-                   <RegionSwitcher upward={true} />
-                   <GoogleTranslateWidget upward={true} />
+                  <RegionSwitcher upward={true} />
+                  <GoogleTranslateWidget upward={true} />
                 </div>
                 <div className="flex items-center gap-2 text-xs font-bold text-[#3B5D3B]">
                   <Phone className="h-3.5 w-3.5" />

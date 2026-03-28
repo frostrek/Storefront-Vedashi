@@ -50,7 +50,7 @@ export default function SecondaryNavbar() {
   return (
     <div className="hidden md:block bg-white border-b border-gray-200 shadow-sm relative z-[90]">
       <div className="mx-auto max-w-[1800px] px-4 sm:px-6 lg:px-8">
-        <div className="flex h-[46px] items-center justify-between text-[14px] font-bold text-gray-700">
+        <div className="flex h-[36px] items-center justify-between text-[14px] font-bold text-gray-700">
 
           <div className="flex items-center gap-0 h-full overflow-x-auto no-scrollbar scroll-smooth">
             {/* Individual Categories */}
