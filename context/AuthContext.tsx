@@ -13,7 +13,6 @@ interface AuthContextType {
     loginFromVerification: (customerData: Record<string, unknown>, accessToken: string) => void;
     socialLogin: (clerkToken: string) => Promise<{ success: boolean; error?: string; is_new_user?: boolean; account_linked?: boolean; pending_verification?: boolean; customer_id?: string; email?: string; full_name?: string }>;
     logout: () => void;
-    verifyUserAge: (dateOfBirth: string) => Promise<{ success: boolean; error?: string }>;
     /** Update partial user info (like avatar_url) dynamically in cache and context */
     updateUser: (updates: Partial<UserInfo>) => void;
     /** Register callbacks that run after login/logout so Carts + Wishlist can react */
@@ -36,7 +35,6 @@ interface UserInfo {
     role?: string;
     avatar_url?: string;
     auth_method?: string;
-    is_age_verified?: boolean;
     is_email_verified?: boolean;
     is_mobile_verified?: boolean;
     phone?: string;
@@ -56,7 +54,6 @@ function toUserInfo(customer: Record<string, unknown>): UserInfo {
         role: (customer.role as string) || 'customer',
         avatar_url: (customer.avatar_url as string) || undefined,
         auth_method: (customer.auth_method as string) || undefined,
-        is_age_verified: !!(customer.is_age_verified),
         is_email_verified: !!(customer.is_email_verified),
         is_mobile_verified: !!(customer.is_mobile_verified),
         phone: (customer.phone ?? customer.mobile_phone ?? '') as string,
@@ -239,31 +236,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, [notifyListeners]);
 
-    const verifyUserAge = useCallback(async (dateOfBirth: string) => {
-        if (!user?.id) return { success: false, error: "User not logged in" };
-        try {
-            const res = await authFetch(`${API_URL}/api/customers/${user.id}/verify-age`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ date_of_birth: dateOfBirth }),
-            });
-            const json = await res.json();
-            if (res.ok && json.success) {
-                const updatedUser = { ...user, is_age_verified: true };
-                setUser(updatedUser);
-                localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
-                return { success: true };
-            }
-            return { success: false, error: json.message || "Verification failed" };
-        } catch {
-            return { success: false, error: "Network error during verification" };
-        }
-    }, [user]);
-
     return (
         <AuthContext.Provider value={{
             user, isAuthenticated: !!user, isLoading,
-            login, register, loginFromVerification, socialLogin, logout, verifyUserAge, updateUser, onAuthChange,
+            login, register, loginFromVerification, socialLogin, logout, updateUser, onAuthChange,
         }}>
             {children}
         </AuthContext.Provider>

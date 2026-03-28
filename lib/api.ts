@@ -44,7 +44,6 @@ export async function initCsrf(): Promise<void> {
     }
 }
 
-/** fetch() wrapper that automatically ensures CSRF tokens and credentials: 'include' are sent */
 export async function authFetch(url: string, init?: RequestInit): Promise<Response> {
     const isStateChanging = init?.method && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(init.method.toUpperCase());
 
@@ -63,7 +62,21 @@ export async function authFetch(url: string, init?: RequestInit): Promise<Respon
     const existingHeaders = init?.headers as Record<string, string> | undefined;
     if (existingHeaders) Object.assign(headers, existingHeaders);
 
-    return fetch(url, { ...init, headers, credentials: 'include' });
+    let res = await fetch(url, { ...init, headers, credentials: 'include' });
+
+    // Handle CSRF expiration gracefully
+    if (res.status === 403 && isStateChanging) {
+        // Clear cached token and try fetching a fresh one
+        cachedCsrfToken = null;
+        await initCsrf();
+        const freshCsrf = getCsrfToken();
+        if (freshCsrf) {
+            headers['X-CSRF-Token'] = freshCsrf;
+            res = await fetch(url, { ...init, headers, credentials: 'include' });
+        }
+    }
+
+    return res;
 }
 
 /* ─── Products ─── */

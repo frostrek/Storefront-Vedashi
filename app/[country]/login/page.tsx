@@ -122,10 +122,17 @@ function LoginContent() {
 
     useEffect(() => {
         if (isAdminRedirecting.current) return;
-        if (isAuthenticated && user) router.push(redirectTo);
+        if (isAuthenticated && user) {
+            // If the user is an admin, don't redirect to customer page — wait for admin redirect
+            const isAdmin = user.role === 'admin' || user.role === 'Super Admin';
+            if (isAdmin) return;
+            router.push(redirectTo);
+        }
     }, [isAuthenticated, user, router, redirectTo]);
 
-    if (isAuthenticated && !isAdminRedirecting.current || isRedirecting) {
+    const isAdminUser = user?.role === 'admin' || user?.role === 'Super Admin';
+
+    if ((isAuthenticated && !isAdminRedirecting.current && !isAdminUser) || isRedirecting) {
         return (
             <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0d1f0d]/90 backdrop-blur-md">
                 <div className="relative flex h-24 w-24 items-center justify-center">

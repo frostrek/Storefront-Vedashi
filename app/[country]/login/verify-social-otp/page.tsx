@@ -132,7 +132,6 @@ export default function VerifySocialOTPPage() {
                     role: customer.role || 'customer',
                     avatar_url: customer.avatar_url || undefined,
                     auth_method: customer.auth_method || 'social',
-                    is_age_verified: false,
                     is_email_verified: true,
                     is_mobile_verified: false,
                 };
