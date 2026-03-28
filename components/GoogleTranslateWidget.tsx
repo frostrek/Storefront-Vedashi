@@ -154,6 +154,19 @@ export default function GoogleTranslateWidget({ upward = false }: { upward?: boo
           background: none !important;
           box-shadow: none !important;
         }
+        .gtranslate-dropdown-container {
+          left: 50% !important;
+          transform: translateX(-50%) !important;
+          transform-origin: ${upward ? 'bottom' : 'top'} !important;
+        }
+        @media (min-width: 640px) {
+          .gtranslate-dropdown-container {
+            left: auto !important;
+            right: -8px !important;
+            transform: none !important;
+            transform-origin: ${upward ? 'bottom right' : 'top right'} !important;
+          }
+        }
       `;
       document.head.appendChild(style);
     }
@@ -258,11 +271,11 @@ export default function GoogleTranslateWidget({ upward = false }: { upward?: boo
         {/* Dropdown */}
         {open && (
           <div
+            className="gtranslate-dropdown-container"
             style={{
               position: 'absolute',
               bottom: upward ? 'calc(100% + 8px)' : 'auto',
               top: upward ? 'auto' : 'calc(100% + 8px)',
-              right: '-8px',
               width: '200px',
               background: '#fff',
               border: '1px solid #e8e4dc',
@@ -270,7 +283,6 @@ export default function GoogleTranslateWidget({ upward = false }: { upward?: boo
               boxShadow: '0 12px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.04)',
               padding: '10px',
               zIndex: 9999,
-              transformOrigin: upward ? 'bottom right' : 'top right',
             }}
           >
             <div

@@ -164,7 +164,7 @@ function applyLanguageCookies(
 
 // ─── Middleware ──────────────────────────────────────────────────────
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 1. Skip static assets, API routes, Next.js internals

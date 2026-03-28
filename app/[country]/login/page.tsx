@@ -526,7 +526,12 @@ function LoginContent() {
 
             {/* ── Right Card ── */}
             <div className="relative z-20 w-full lg:w-[480px] xl:w-[540px] flex-shrink-0 h-full flex flex-col justify-center lg:py-8 lg:pr-8">
-                <div className="w-full max-w-md mx-auto overflow-y-auto max-h-full px-6 py-6 lg:bg-white/95 lg:backdrop-blur-md lg:rounded-[2rem] lg:shadow-2xl [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                <div className="w-full max-w-md mx-auto overflow-y-auto max-h-full px-6 py-6 lg:bg-white/95 lg:backdrop-blur-md lg:rounded-[2rem] lg:shadow-2xl [&::-webkit-scrollbar]:hidden" 
+                     style={{ 
+                        scrollbarWidth: 'none', 
+                        msOverflowStyle: 'none',
+                        WebkitOverflowScrolling: 'touch'
+                     }}>
 
                     {/* Phone OTP View */}
                     {authMethod === 'phone' && !isRegister ? (

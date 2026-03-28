@@ -39,10 +39,21 @@ export default function LegalContentRenderer({ content }: LegalContentRendererPr
         // Fallback for legacy HTML content
     }
 
+    // Heuristic: If it looks like escaped HTML, unescape the most common tags
+    let finalContent = content;
+    if (content.includes('&lt;') && !content.includes('<')) {
+        finalContent = content
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"')
+            .replace(/&amp;/g, '&')
+            .replace(/&nbsp;/g, ' ');
+    }
+
     return (
         <div 
             className="legal-rich-text max-w-none text-left"
-            dangerouslySetInnerHTML={{ __html: content }}
+            dangerouslySetInnerHTML={{ __html: finalContent }}
         />
     );
 }

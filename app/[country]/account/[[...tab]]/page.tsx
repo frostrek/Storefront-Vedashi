@@ -1177,9 +1177,32 @@ export default function AccountPage() {
     ];
 
     return (
-        <div className="flex bg-[#F8F5F0] min-h-[calc(100vh-128px)]">
-            {/* Left Sidebar */}
-            <aside className="w-[280px] bg-[#1D351D] text-white flex flex-col flex-shrink-0 relative z-20 shadow-[4px_0_24px_rgba(0,0,0,0.12)]">
+        <div className="flex flex-col lg:flex-row bg-[#F8F5F0] min-h-[calc(100vh-128px)]">
+            {/* Mobile Account Navigation (Visible only on < lg) */}
+            <nav className="lg:hidden sticky top-0 z-[100] bg-white border-b border-[#E8E1D5] overflow-x-auto custom-scrollbar flex items-center gap-1.5 px-4 py-3 whitespace-nowrap shadow-sm">
+                {[...coreExperienceTabs, ...identityAccessTabs].map(tab => (
+                    <button
+                        key={tab.id}
+                        onClick={() => router.push(`/${country}/account/${tab.id}`)}
+                        className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-2 ${
+                            activeTab === tab.id 
+                            ? 'bg-[#1D351D] text-white shadow-md' 
+                            : 'bg-white text-[#36453A] border border-[#E8E1D5] hover:bg-gray-50'
+                        }`}
+                    >
+                        <tab.icon className={`h-3 w-3 ${activeTab === tab.id ? 'opacity-100' : 'opacity-60'}`} />
+                        {tab.label}
+                        {tab.count !== undefined && tab.count > 0 && (
+                            <span className={`text-[9px] px-1.5 rounded-full ${activeTab === tab.id ? 'bg-[#D4A847] text-[#36453A]' : 'bg-[#E8E1D5] text-[#36453A]'}`}>
+                                {tab.count}
+                            </span>
+                        )}
+                    </button>
+                ))}
+            </nav>
+
+            {/* Left Sidebar (Desktop Only) */}
+            <aside className="hidden lg:flex w-[280px] bg-[#1D351D] text-white flex-col flex-shrink-0 relative z-20 shadow-[4px_0_24px_rgba(0,0,0,0.12)]">
                 <div className="flex-1 px-5 py-8">
                     {/* CORE EXPERIENCE */}
                     <div className="mb-8">
@@ -1329,8 +1352,8 @@ export default function AccountPage() {
 
             {/* Main Content Area */}
             <main className="flex-1 flex flex-col h-full relative z-10 overflow-hidden">
-                {/* Header */}
-                <header className="h-12 flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-[#E8E1D5] flex items-center justify-between px-8 xl:px-12 sticky top-0 z-20">
+                {/* Header (Desktop Only Breadcrumb) */}
+                <header className="hidden lg:flex h-12 flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-[#E8E1D5] items-center justify-between px-8 xl:px-12 sticky top-0 z-20">
                     <div className="flex items-center gap-3 text-sm font-medium">
                         <button onClick={() => router.push('/account')} className="text-[#36453A]/60 hover:text-[#36453A] transition-colors">Account</button>
                         <ChevronRight className="h-4 w-4 text-[#36453A]/30" />
@@ -1341,7 +1364,6 @@ export default function AccountPage() {
                                         activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
                         </span>
                     </div>
-
                 </header>
 
                 {/* Content Roll */}
