@@ -74,7 +74,7 @@ export async function authFetch(url: string, init?: RequestInit): Promise<Respon
         }
     }
 
-    // ── Inactivity session expiry interceptor ──────────────────────────
+    // ── Inactivity session expiry interceptors ──────────────────────────
     // When the backend returns 401 with SESSION_INACTIVE_TIMEOUT or TOKEN_VERSION_MISMATCH,
     // clear the cached user and redirect to login with a "Session expired" banner.
     if (res.status === 401 && typeof window !== 'undefined') {
@@ -783,7 +783,7 @@ export async function addCartItem(cartId: string, itemId: string, quantity: numb
         } else {
             body.product_id = itemId;
         }
-        
+
         // Add session logic for analytics
         if (typeof window !== 'undefined') {
             const getTrackingSessionId = () => {
