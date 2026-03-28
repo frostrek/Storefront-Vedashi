@@ -260,8 +260,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
                     computedDiscount = res.data.discount;
                 }
 
-                // Enforce minimum payable of ₹1 — cap discount so total never drops below ₹1
-                const maxAllowedDiscount = Math.max(0, cartTotalToSend - 1);
+                // Enforce minimum payable of ₹1 — cap discount so total never drops below ₹MINIMUM_PAYABLE
+                const minPayable = Number(process.env.NEXT_PUBLIC_MINIMUM_PAYABLE_AMOUNT) || 1;
+                const maxAllowedDiscount = Math.max(0, cartTotalToSend - minPayable);
                 computedDiscount = Math.min(computedDiscount, maxAllowedDiscount);
 
                 setCouponDiscount(computedDiscount);

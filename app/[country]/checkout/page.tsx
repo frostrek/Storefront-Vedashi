@@ -240,9 +240,10 @@ function CheckoutContent() {
     const subtotalWithTaxes = isBuyNow && buyNowItem ? baseSubtotal + calculatedBuyNowTax : totalPrice;
     const shippingCost = couponType === 'free_shipping' ? 0 : (subtotalWithTaxes > 50 ? 0 : 15);
     const discount = isBuyNow ? 0 : couponDiscount;
+    const minPayable = Number(process.env.NEXT_PUBLIC_MINIMUM_PAYABLE_AMOUNT) || 1;
 
     const prePointsTotal = subtotalWithTaxes + shippingCost - discount;
-    const maxRedeemablePoints = Math.min(wallet?.balance || 0, Math.max(0, Math.floor(prePointsTotal) - 1));
+    const maxRedeemablePoints = Math.min(wallet?.balance || 0, Math.max(0, Math.floor(prePointsTotal) - minPayable));
     
     // Parse valid points from input
     let pointsToRedeem = 0;
@@ -251,7 +252,7 @@ function CheckoutContent() {
     }
     
     // Assuming 1 point = 1 INR — enforce minimum payable of ₹1
-    const grandTotal = Math.max(1, prePointsTotal - pointsToRedeem);
+    const grandTotal = Math.max(minPayable, prePointsTotal - pointsToRedeem);
 
     // Load addresses
     useEffect(() => {
