@@ -242,7 +242,7 @@ function CheckoutContent() {
     const discount = isBuyNow ? 0 : couponDiscount;
 
     const prePointsTotal = subtotalWithTaxes + shippingCost - discount;
-    const maxRedeemablePoints = Math.min(wallet?.balance || 0, Math.floor(prePointsTotal));
+    const maxRedeemablePoints = Math.min(wallet?.balance || 0, Math.max(0, Math.floor(prePointsTotal) - 1));
     
     // Parse valid points from input
     let pointsToRedeem = 0;
@@ -250,8 +250,8 @@ function CheckoutContent() {
         pointsToRedeem = Math.min(parseInt(redeemPoints) || 0, maxRedeemablePoints);
     }
     
-    // Assuming 1 point = 1 INR
-    const grandTotal = Math.max(0, prePointsTotal - pointsToRedeem);
+    // Assuming 1 point = 1 INR — enforce minimum payable of ₹1
+    const grandTotal = Math.max(1, prePointsTotal - pointsToRedeem);
 
     // Load addresses
     useEffect(() => {
