@@ -7,29 +7,29 @@ import { useAuth } from '@/context/AuthContext';
 import { useClerk } from '@clerk/nextjs';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCart } from '@/context/CartContext';
-import ProductCard from '@/components/ProductCard';
+// ProductCard removed as it was unused
 import {
     getMyOrders, getAddresses, addAddress as apiAddAddress,
     updateAddress as apiUpdateAddress, deleteAddress as apiDeleteAddress,
     getCustomerProfile, updateCustomerProfile, deactivateAccount,
     uploadProfileImage, getProfileImage, removeProfileImage, getOrderById,
-    cancelOrder as apiCancelOrder, formatVND, downloadInvoice, getBestSellers,
+    cancelOrder as apiCancelOrder, downloadInvoice, getBestSellers,
     getMyEnquiries, replyToEnquiry, changePassword,
     requestEmailChange, verifyEmailChangeProfile,
     requestPhoneChange, verifyPhoneChangeProfile,
     getLoyaltyWallet, getMyNotifications, getUnreadNotificationCount,
     markNotificationAsRead, markAllNotificationsAsRead, deleteNotification,
-    lookupPostalCode, getMySupportTickets, replySupportTicket, getSupportTicketDetail,
+    lookupPostalCode, getMySupportTickets, replySupportTicket,
     getMyReviews, trackOrder
 } from '@/lib/api';
 import { Order, Address } from '@/types';
 import { COUNTRIES } from '@/lib/countries';
 import Select from 'react-select';
 import {
-    Package, MapPin, Heart, LogOut, User, Plus, Pencil, Trash2,
+    Package, MapPin, Heart, User, Plus, Pencil, Trash2,
     Loader2, ShieldOff, Camera, X, Check, Star, Phone, Calendar, Mail,
-    CheckCircle2, Smartphone, AlertCircle, Shield, FileText, MessageSquare, Send, Clock, User2, MessageCircle, Sparkles,
-    Globe, ChevronRight, Lock, CreditCard, Banknote,
+    CheckCircle2, AlertCircle, Shield, FileText, MessageSquare, Send, Clock, User2, MessageCircle, Sparkles,
+    ChevronRight,
     BadgeCheck, BellRing, Download, Search, ShoppingCart, LayoutGrid, List, Wallet, Eye, EyeOff
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
@@ -56,7 +56,7 @@ export default function AccountPage() {
     const country = params?.country || 'in';
     const { user, isAuthenticated, isLoading, logout, updateUser } = useAuth();
     const { signOut: clerkSignOut } = useClerk();
-    const { items: wishlistItems, removeItem: removeWishlistItem } = useWishlist();
+    const { items: wishlistItems, removeItem: removeWishlistItem, loading: wishlistLoading } = useWishlist();
     const { addItem: addCartItem } = useCart();
 
     // Wishlist extra state
@@ -1589,9 +1589,9 @@ export default function AccountPage() {
                                                 {wishlistItems.slice(0, 4).map((item: any) => (
                                                     <div key={item.product_id} className="flex gap-4 group cursor-pointer" onClick={() => router.push(`/products/${item.slug || item.product_id}`)}>
                                                         <div className="h-16 w-16 bg-[#F8F5F0] rounded-xl border border-[#E8E1D5] flex items-center justify-center p-2 flex-shrink-0 overflow-hidden">
-                                                            {item.primary_image_url ? (
+                                                            {item.image_url ? (
                                                                 // eslint-disable-next-line @next/next/no-img-element
-                                                                <img src={item.primary_image_url} alt={item.product_name} className="h-full w-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500" />
+                                                                <img src={item.image_url} alt={item.product_name} className="h-full w-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500" />
                                                             ) : (
                                                                 <Package className="h-6 w-6 text-warm-gray/40" />
                                                             )}
@@ -1655,12 +1655,7 @@ export default function AccountPage() {
                                         <span className="bg-[#E7F0E9] text-[#2D5A3A] text-xs font-bold px-3 py-1 rounded-full">
                                             {filteredAndSortedOrders.length} {filteredAndSortedOrders.length !== orders.length ? `of ${orders.length}` : ''} Total
                                         </span>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex items-center gap-2 bg-white border border-[#E8E1D5] rounded-full px-4 py-2 shadow-sm text-xs font-bold text-[#36453A]">
-                                            Eco-Shipping Enabled
-                                        </div>
-                                    </div>
+                                    </div> 
                                 </div>
 
                                 <div className="flex flex-col lg:flex-row gap-8 items-start">
@@ -1677,10 +1672,7 @@ export default function AccountPage() {
                                                     onChange={e => setOrderSearch(e.target.value)}
                                                     className="w-full bg-white border border-[#E8E1D5] rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-[#36453A]/40 focus:ring-1 focus:ring-[#36453A]/20 transition-all text-[#36453A] placeholder:text-warm-gray/70 shadow-sm"
                                                 />
-                                            </div>
-                                            <button className="flex items-center justify-center gap-2 bg-white border border-[#E8E1D5] rounded-xl px-4 py-3 text-sm font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors shadow-sm whitespace-nowrap">
-                                                <List className="h-4 w-4" /> Filters
-                                            </button>
+                                            </div>  
                                         </div>
 
                                         {/* Status Filters & Sort */}
@@ -1754,38 +1746,37 @@ export default function AccountPage() {
                                                     <div
                                                         key={order.order_id}
                                                         onClick={() => handleViewOrderDetails(order.order_id)}
-                                                        className={`rounded-3xl border p-4 sm:p-6 transition-all cursor-pointer shadow-sm relative overflow-hidden flex flex-col sm:flex-row sm:items-center gap-6
+                                                        className={`rounded-3xl border transition-all cursor-pointer shadow-sm relative overflow-hidden flex flex-col
                                                         ${isSelected
                                                                 ? 'bg-white border-[#36453A] ring-1 ring-[#36453A]/20'
                                                                 : 'bg-white border-[#E8E1D5] hover:border-[#36453A]/30 hover:shadow-md'
                                                             }`}
                                                     >
-                                                        {/* Selected state overlay hint */}
-                                                        {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#36453A]"></div>}
-
-                                                        {/* Image Bubble */}
-                                                        <div className="relative h-[100px] w-[100px] rounded-2xl bg-[#F8F5F0] border border-[#E8E1D5] flex-shrink-0 flex items-center justify-center overflow-hidden">
-                                                            {prodImg ? (
-                                                                // eslint-disable-next-line @next/next/no-img-element
-                                                                <img src={prodImg} alt="Product" className="h-full w-full object-cover mix-blend-multiply" />
-                                                            ) : (
-                                                                <Package className="h-8 w-8 text-warm-gray/40" />
-                                                            )}
-                                                            {itemCount > 1 && (
-                                                                <span className="absolute bottom-2 right-2 bg-[#36453A] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md">
-                                                                    +{itemCount - 1} more
-                                                                </span>
-                                                            )}
-                                                        </div>
-
-                                                        {/* Order Info */}
-                                                        <div className="flex-1 space-y-3 min-w-0">
-                                                            <div className="flex items-center gap-2">
-                                                                <h3 className="text-xl font-bold text-[#36453A] line-clamp-1">
-                                                                    {order.order_id.split('-')[0].toUpperCase()}
-                                                                </h3>
+                                                        {/* Header Row */}
+                                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#F8F5F0]/60 border-b border-[#E8E1D5] px-4 py-3 sm:px-6">
+                                                            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 w-full sm:w-auto">
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-[10px] uppercase tracking-widest text-warm-gray font-bold mb-0.5">Order ID</span>
+                                                                    <span className="text-sm font-bold text-[#36453A] flex items-center gap-1.5 line-clamp-1">
+                                                                        #{order.order_id.split('-')[0].toUpperCase()}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="hidden sm:block w-px h-6 bg-[#E8E1D5]"></div>
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-[10px] uppercase tracking-widest text-warm-gray font-bold mb-0.5">Date Placed</span>
+                                                                    <span className="text-sm font-bold text-[#36453A] flex items-center gap-1.5">
+                                                                        {dtDate}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="hidden sm:block w-px h-6 bg-[#E8E1D5]"></div>
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-[10px] uppercase tracking-widest text-warm-gray font-bold mb-0.5">Total Amount</span>
+                                                                    <span className="text-sm font-bold text-[#36453A]">
+                                                                        {formatPrice(order.final_total || order.total_amount)}
+                                                                    </span>
+                                                                </div>
                                                             </div>
-                                                            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                                                            <div className="mt-3 sm:mt-0">
                                                                 <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest border border-[#E8E1D5]
                                                                     ${order.order_status === 'DELIVERED' ? 'bg-[#F2F4EB] text-[#4A5D23]' :
                                                                         order.order_status === 'SHIPPED' ? 'bg-[#EEF2F6] text-[#2C4B7D]' :
@@ -1796,22 +1787,37 @@ export default function AccountPage() {
                                                                     {order.order_status === 'PENDING' && <Loader2 className="h-3 w-3 mr-1" />}
                                                                     {order.order_status}
                                                                 </span>
-                                                                <span className="text-sm text-warm-gray flex items-center gap-1.5">
-                                                                    <Calendar className="h-3.5 w-3.5" /> Ordered on {dtDate}
-                                                                </span>
                                                             </div>
-                                                            <p className="text-sm font-medium text-[#36453A] truncate">{prodName}</p>
                                                         </div>
 
-                                                        {/* Price & Actions */}
-                                                        <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-4 border-t sm:border-t-0 sm:border-l border-[#E8E1D5] pt-4 sm:pt-0 sm:pl-6">
-                                                            <div className="flex flex-col items-start sm:items-end w-full">
-                                                                <span className="text-[10px] font-bold tracking-widest text-warm-gray uppercase mb-1">Total Amount</span>
-                                                                <span className="text-2xl font-bold text-[#36453A]">
-                                                                    {formatPrice(order.final_total || order.total_amount)}
-                                                                </span>
+                                                        {/* Main Content */}
+                                                        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 p-4 sm:p-6 items-start sm:items-center relative">
+                                                            {/* Selected state overlay hint */}
+                                                            {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#36453A]"></div>}
+                                                            
+                                                            {/* Image */}
+                                                            <div className="relative h-20 w-20 sm:h-24 sm:w-24 rounded-2xl bg-[#F8F5F0] border border-[#E8E1D5] flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                                                {prodImg ? (
+                                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                                    <img src={prodImg} alt="Product" className="h-full w-full object-cover mix-blend-multiply" />
+                                                                ) : (
+                                                                    <Package className="h-8 w-8 text-warm-gray/40" />
+                                                                )}
                                                             </div>
-                                                            <div className="flex flex-col gap-2 w-full sm:w-auto">
+                                                            
+                                                            {/* Info */}
+                                                            <div className="flex-1 w-full min-w-0 flex flex-col justify-center">
+                                                                <p className="text-base font-bold text-[#36453A] line-clamp-2">{prodName}</p>
+                                                                {itemCount > 1 && (
+                                                                    <p className="text-sm font-semibold text-warm-gray mt-1">
+                                                                        and {itemCount - 1} more item(s)
+                                                                    </p>
+                                                                )}
+                                                                <p className="text-xs font-medium text-warm-gray mt-2">Sold by Vedashi</p>
+                                                            </div>
+                                                            
+                                                            {/* Actions */}
+                                                            <div className="flex flex-wrap sm:flex-col gap-2 w-full sm:w-auto shrink-0 mt-4 sm:mt-0 border-t sm:border-t-0 sm:border-l border-[#E8E1D5] pt-4 sm:pt-0 sm:pl-6 justify-center">
                                                                 <button
                                                                     onClick={(e) => { e.stopPropagation(); handleViewOrderDetails(order.order_id); }}
                                                                     className={`rounded-xl px-5 py-2 text-xs font-bold transition-all whitespace-nowrap border overflow-hidden
@@ -2079,7 +2085,7 @@ export default function AccountPage() {
                                                                     </div>
                                                                     <div className="relative">
                                                                         <p className="text-xs text-[#36453A] line-clamp-2 italic leading-relaxed pl-3 border-l-2 border-[#D4A847]/40">
-                                                                            "{ticket.message}"
+                                                                            &quot;{ticket.message}&quot;
                                                                         </p>
                                                                     </div>
                                                                     <button
@@ -2302,8 +2308,12 @@ export default function AccountPage() {
                                     </div>
                                 </div>
 
-                                {/* ── Product Grid ── */}
-                                {sortedWishlistItems.length === 0 ? (
+                                {wishlistLoading ? (
+                                    <div className="flex flex-col items-center justify-center py-24 rounded-[30px] border border-[#E8E1D5] bg-white">
+                                        <Loader2 className="h-10 w-10 text-[#36453A] animate-spin mb-4" />
+                                        <p className="text-xl font-bold text-[#36453A]">Opening your sanctuary...</p>
+                                    </div>
+                                ) : sortedWishlistItems.length === 0 ? (
                                     <div className="rounded-[30px] border border-[#E8E1D5] bg-white py-24 text-center">
                                         <Heart className="mx-auto h-16 w-16 text-warm-gray/30 mb-4" />
                                         <p className="text-2xl font-bold text-[#36453A]">Your sanctuary is empty</p>
@@ -2318,11 +2328,11 @@ export default function AccountPage() {
                                 ) : (
                                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                                          {sortedWishlistItems.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((prod) => {
-                                            const product = prod as any;
+                                            const product = prod;
                                             const isSelected = selectedWishlistItems.has(product.product_id);
                                             const stockStatus = (product.stock_status || '').toLowerCase();
                                             const inStock = stockStatus === 'in_stock';
-                                            const addDate = product.created_at ? new Date(product.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recently';
+
 
                                             return (
                                                 <div key={product.product_id} className="group flex flex-col rounded-3xl border border-[#E8E1D5] bg-white p-4 transition-all hover:shadow-lg relative">
@@ -2354,9 +2364,9 @@ export default function AccountPage() {
 
                                                     {/* Product Image */}
                                                     <div className="aspect-[4/5] w-full rounded-2xl overflow-hidden bg-[#F8F5F0] mb-5 relative cursor-pointer" onClick={() => router.push(`/products/${product.slug || product.product_id}`)}>
-                                                        {product.images && product.images[0] ? (
+                                                        {product.image_url ? (
                                                             // eslint-disable-next-line @next/next/no-img-element
-                                                            <img src={product.images[0]} alt={product.product_name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                                            <img src={product.image_url} alt={product.product_name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                                                         ) : (
                                                             <div className="flex h-full items-center justify-center text-warm-gray/30"><Package className="h-12 w-12" /></div>
                                                         )}
@@ -2370,20 +2380,8 @@ export default function AccountPage() {
                                                             </h3>
                                                             <span className="font-bold text-[#36453A] whitespace-nowrap">${product.price}</span>
                                                         </div>
-                                                        <p className="text-[11px] text-warm-gray font-medium mb-3">Added on {addDate}</p>
-
-                                                        <div className="flex items-center gap-1.5 mb-5 mt-auto">
-                                                            {inStock ? (
-                                                                <>
-                                                                    <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
-                                                                    <span className="text-[10px] font-bold text-green-600 tracking-widest uppercase">IN STOCK</span>
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                                                                    <span className="text-[10px] font-bold text-red-500 tracking-widest uppercase ml-1">OUT OF STOCK</span>
-                                                                </>
-                                                            )}
+                                                        <div className="flex items-center gap-1.5 mb-2 mt-auto">
+                                                            {/* Status labels removed as per request */}
                                                         </div>
 
                                                         {/* Action */}
@@ -2395,20 +2393,10 @@ export default function AccountPage() {
                                                                 toast.success('Moved to cart');
                                                             }}
                                                             disabled={!inStock}
-                                                            className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#36453A] py-3 text-sm font-bold text-white shadow-md hover:bg-[#2A362D] hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed mb-2"
+                                                            className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#36453A] py-3 text-sm font-bold text-white shadow-md hover:bg-[#2A362D] hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                                         >
-                                                            <ShoppingCart className="h-4 w-4" /> Add to Cart
+                                                            <ShoppingCart className="h-4 w-4" /> {inStock ? 'Add to Cart' : 'Out of Stock'}
                                                         </button>
-
-                                                        {inStock && (
-                                                            <div className="text-center">
-                                                                <span className="text-[10px] font-bold text-warm-gray flex items-center justify-center gap-1 uppercase tracking-widest cursor-pointer hover:text-[#36453A] transition-colors"
-                                                                    onClick={() => { addCartItem(product.product_id, null, 1); removeWishlistItem(product.product_id); toast.success('Moved to cart'); }}
-                                                                >
-                                                                    Move to Cart <ChevronRight className="h-3 w-3" />
-                                                                </span>
-                                                            </div>
-                                                        )}
                                                     </div>
                                                 </div>
                                             );
@@ -3212,7 +3200,7 @@ export default function AccountPage() {
                                                 <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
                                                     <div>
                                                         <h3 className="text-2xl font-bold text-[#D4A847] mb-2">Need to add more info?</h3>
-                                                        <p className="text-sm text-white/80 max-w-md">Our support team is here to help. You'll receive an email notification as soon as we reply.</p>
+                                                        <p className="text-sm text-white/80 max-w-md">Our support team is here to help. You&apos;ll receive an email notification as soon as we reply.</p>
                                                     </div>
                                                     <button
                                                         onClick={() => router.push(`/${country}/help-center/support`)}
@@ -3866,7 +3854,7 @@ export default function AccountPage() {
                             </div>
 
                             <p className="text-sm text-warm-gray mb-6">
-                                We've sent a secure verification code to <strong className="text-charcoal font-semibold">{profileData.email}</strong>. Please enter the code below to confirm this change.
+                                We&apos;ve sent a secure verification code to <strong className="text-charcoal font-semibold">{profileData.email}</strong>. Please enter the code below to confirm this change.
                             </p>
 
                             <div className="space-y-5">
@@ -3924,7 +3912,7 @@ export default function AccountPage() {
                             </div>
 
                             <p className="text-sm text-warm-gray mb-6">
-                                We've sent a 6-digit verification code to your new mobile number ending in <strong className="text-charcoal font-semibold">{profileData.phone.slice(-4)}</strong>.
+                                We&apos;ve sent a 6-digit verification code to your new mobile number ending in <strong className="text-charcoal font-semibold">{profileData.phone.slice(-4)}</strong>.
                             </p>
 
                             <div className="space-y-5">
