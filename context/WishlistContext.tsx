@@ -85,9 +85,17 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
             toast.error('Please log in to add to wishlist');
             return;
         }
+
+        // Normalize product before adding to local state
+        const normalizedProduct: Product = {
+            ...product,
+            stock_status: (product.stock_status || 'in_stock').toLowerCase(),
+            images: product.images || (product.image_url ? [product.image_url] : []),
+        };
+
         setItems(prev => {
-            if (prev.find(p => p.product_id === product.product_id)) return prev;
-            return [...prev, product];
+            if (prev.find(p => p.product_id === normalizedProduct.product_id)) return prev;
+            return [...prev, normalizedProduct];
         });
         toast.success('Added to wishlist');
         apiAddToWishlist(product.product_id).catch(err => {

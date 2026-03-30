@@ -56,7 +56,7 @@ export default function AccountPage() {
     const country = params?.country || 'in';
     const { user, isAuthenticated, isLoading, logout, updateUser } = useAuth();
     const { signOut: clerkSignOut } = useClerk();
-    const { items: wishlistItems, removeItem: removeWishlistItem } = useWishlist();
+    const { items: wishlistItems, removeItem: removeWishlistItem, loading: wishlistLoading } = useWishlist();
     const { addItem: addCartItem } = useCart();
 
     // Wishlist extra state
@@ -1588,9 +1588,9 @@ export default function AccountPage() {
                                                 {wishlistItems.slice(0, 4).map((item: any) => (
                                                     <div key={item.product_id} className="flex gap-4 group cursor-pointer" onClick={() => router.push(`/products/${item.slug || item.product_id}`)}>
                                                         <div className="h-16 w-16 bg-[#F8F5F0] rounded-xl border border-[#E8E1D5] flex items-center justify-center p-2 flex-shrink-0 overflow-hidden">
-                                                            {item.primary_image_url ? (
+                                                            {item.image_url ? (
                                                                 // eslint-disable-next-line @next/next/no-img-element
-                                                                <img src={item.primary_image_url} alt={item.product_name} className="h-full w-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500" />
+                                                                <img src={item.image_url} alt={item.product_name} className="h-full w-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500" />
                                                             ) : (
                                                                 <Package className="h-6 w-6 text-warm-gray/40" />
                                                             )}
@@ -2305,8 +2305,12 @@ export default function AccountPage() {
                                     </div>
                                 </div>
 
-                                {/* ── Product Grid ── */}
-                                {sortedWishlistItems.length === 0 ? (
+                                {wishlistLoading ? (
+                                    <div className="flex flex-col items-center justify-center py-24 rounded-[30px] border border-[#E8E1D5] bg-white">
+                                        <Loader2 className="h-10 w-10 text-[#36453A] animate-spin mb-4" />
+                                        <p className="text-xl font-bold text-[#36453A]">Opening your sanctuary...</p>
+                                    </div>
+                                ) : sortedWishlistItems.length === 0 ? (
                                     <div className="rounded-[30px] border border-[#E8E1D5] bg-white py-24 text-center">
                                         <Heart className="mx-auto h-16 w-16 text-warm-gray/30 mb-4" />
                                         <p className="text-2xl font-bold text-[#36453A]">Your sanctuary is empty</p>
@@ -2357,9 +2361,9 @@ export default function AccountPage() {
 
                                                     {/* Product Image */}
                                                     <div className="aspect-[4/5] w-full rounded-2xl overflow-hidden bg-[#F8F5F0] mb-5 relative cursor-pointer" onClick={() => router.push(`/products/${product.slug || product.product_id}`)}>
-                                                        {product.images && product.images[0] ? (
+                                                        {product.image_url ? (
                                                             // eslint-disable-next-line @next/next/no-img-element
-                                                            <img src={product.images[0]} alt={product.product_name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                                            <img src={product.image_url} alt={product.product_name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                                                         ) : (
                                                             <div className="flex h-full items-center justify-center text-warm-gray/30"><Package className="h-12 w-12" /></div>
                                                         )}
