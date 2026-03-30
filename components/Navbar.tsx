@@ -236,6 +236,19 @@ export default function Navbar() {
               {/* Notification Center */}
               <NotificationCenter colors={colors} />
 
+              {/* Wishlist Icon */}
+              <button suppressHydrationWarning onClick={handleWishlistClick} className="relative p-2 group">
+                <Heart className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
+                {wishlistCount > 0 && (
+                  <span
+                    className="absolute -top-0.5 -right-0.5 text-white text-[9px] font-black font-ui h-4 w-4 flex items-center justify-center rounded-full tabular-nums"
+                    style={{ backgroundColor: colors.cart_badge_bg }}
+                  >
+                    {wishlistCount}
+                  </span>
+                )}
+              </button>
+
               <div className="flex items-center">
                 <Link id="navbar-cart-icon" href={`/${currentCountry}/cart`} className="relative p-2 group">
                   <ShoppingCart className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
@@ -368,19 +381,6 @@ export default function Navbar() {
                   </div>
                 </div>
               </div>
-
-              {/* Wishlist Icon (Shifted here) */}
-              <button suppressHydrationWarning onClick={handleWishlistClick} className="relative p-2 group">
-                <Heart className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
-                {wishlistCount > 0 && (
-                  <span
-                    className="absolute -top-0.5 -right-0.5 text-white text-[9px] font-black font-ui h-4 w-4 flex items-center justify-center rounded-full tabular-nums"
-                    style={{ backgroundColor: colors.cart_badge_bg }}
-                  >
-                    {wishlistCount}
-                  </span>
-                )}
-              </button>
 
               {/* Mobile toggle */}
               <button suppressHydrationWarning onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2" style={{ color: colors.navbar_text }}>

@@ -38,11 +38,13 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
             const res = await apiGetWishlist();
             if (res.success && res.data) {
                 const wishlistItems = res.data.items || res.data || [];
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const products: Product[] = wishlistItems.map((wi: any) => {
                     const baseProduct = wi.product || wi;
                     return {
                         ...baseProduct,
                         product_id: baseProduct.product_id || wi.product_id,
+
                         sku: baseProduct.sku || wi.sku || '',
                         slug: baseProduct.slug || wi.slug || '',
                         product_name: baseProduct.product_name || wi.product_name || 'Unknown Product',
@@ -85,9 +87,17 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
             toast.error('Please log in to add to wishlist');
             return;
         }
+
+        // Normalize product before adding to local state
+        const normalizedProduct: Product = {
+            ...product,
+            stock_status: (product.stock_status || 'in_stock').toLowerCase(),
+            images: product.images || (product.image_url ? [product.image_url] : []),
+        };
+
         setItems(prev => {
-            if (prev.find(p => p.product_id === product.product_id)) return prev;
-            return [...prev, product];
+            if (prev.find(p => p.product_id === normalizedProduct.product_id)) return prev;
+            return [...prev, normalizedProduct];
         });
         toast.success('Added to wishlist');
         apiAddToWishlist(product.product_id).catch(err => {
