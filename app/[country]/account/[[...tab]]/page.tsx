@@ -131,6 +131,7 @@ export default function AccountPage() {
     const [trackingData, setTrackingData] = useState<any | null>(null);
     const [isTrackingLoading, setIsTrackingLoading] = useState(false);
     const [trackOrderStatus, setTrackOrderStatus] = useState<string | null>(null);
+    const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
 
     // Orders Filtering State
     const [orderSearch, setOrderSearch] = useState('');
@@ -2013,16 +2014,21 @@ export default function AccountPage() {
                                                     <div className="flex gap-3 pt-6 border-t border-[#E8E1D5]">
                                                         <button
                                                             onClick={async () => {
+                                                                if (isDownloadingInvoice) return;
+                                                                setIsDownloadingInvoice(true);
                                                                 try {
                                                                     await downloadInvoice(selectedOrderDetails.order_id);
                                                                     toast.success('Invoice downloaded successfully');
                                                                 } catch {
                                                                     toast.error('Failed to download invoice');
+                                                                } finally {
+                                                                    setIsDownloadingInvoice(false);
                                                                 }
                                                             }}
-                                                            className="flex-1 flex justify-center items-center gap-2 border border-[#E8E1D5] bg-white rounded-xl py-2.5 text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors shadow-sm"
+                                                            disabled={isDownloadingInvoice}
+                                                            className={`flex-1 flex justify-center items-center gap-2 border border-[#E8E1D5] bg-white rounded-xl py-2.5 text-xs font-bold text-[#36453A] transition-colors shadow-sm ${isDownloadingInvoice ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#F8F5F0]'}`}
                                                         >
-                                                            <Download className="h-3.5 w-3.5" /> Invoice
+                                                            {isDownloadingInvoice ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />} {isDownloadingInvoice ? 'Downloading...' : 'Invoice'}
                                                         </button>
                                                         {(() => {
                                                             const linkedTicket = enquiries.find(e => e._order_id === selectedOrderDetails.order_id && e._source === 'ticket');
