@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Facebook, Instagram, Twitter, Youtube, Linkedin, Globe, Mail, Phone, MapPin, Clock } from 'lucide-react';
+import { Facebook, Instagram, Twitter, Youtube, Linkedin, Globe } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import RegionSwitcher from './RegionSwitcher';
 import GoogleTranslateWidget from './GoogleTranslateWidget';
@@ -11,9 +11,14 @@ import { API_URL, subscribeNewsletter } from '@/lib/api';
 import toast from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
 
-// API_URL imported from @/lib/api
+// ─── Types ────────────────────────────────────────────────────────
+
+interface FooterSettings {
+    use_dynamic_footer?: boolean;
+}
 
 interface FooterData {
+    settings?: FooterSettings;
     company?: {
         name: string;
         description: string;
@@ -45,6 +50,60 @@ interface FooterData {
     };
 }
 
+// ─── Platform icon map ────────────────────────────────────────────
+
+const SOCIAL_ICONS: Record<string, any> = {
+    instagram: Instagram,
+    facebook: Facebook,
+    twitter: Twitter,
+    youtube: Youtube,
+    linkedin: Linkedin,
+};
+
+// ─── Static fallbacks (when CMS is missing, failed, or disabled) ──
+
+const FALLBACK: FooterData = {
+    company: {
+        name: 'Vedashi',
+        description: 'Nurturing your journey towards holistic health through the ancient wisdom of Ayurveda.',
+        logo_url: '/vedashi-logo.png',
+    },
+    links: [
+        {
+            title: 'Explore',
+            items: [
+                { label: 'Our Story', href: '/about' },
+                { label: 'Natural Products', href: '/products' },
+            ],
+        },
+        {
+            title: 'Support',
+            items: [
+                { label: 'Help Center', href: '/help-center' },
+                { label: 'Consultation FAQ', href: '/help-center/faq' },
+                { label: 'Shipping Policy', href: '/shipping' },
+                { label: 'Terms of Service', href: '/terms' },
+                { label: 'Privacy Policy', href: '/privacy' },
+            ],
+        },
+    ],
+    social: [
+        { platform: 'Instagram', url: '#', icon_name: 'instagram' },
+        { platform: 'Facebook', url: '#', icon_name: 'facebook' },
+        { platform: 'Twitter', url: '#', icon_name: 'twitter' },
+    ],
+    newsletter: {
+        title: 'Newsletter',
+        description: 'Join our community for weekly wellness rituals.',
+    },
+    bottom_bar: {
+        copyright: `© ${new Date().getFullYear()} Vedashi. All rights reserved.`,
+        text: 'Gently crafted for modern balance.',
+    },
+};
+
+// ─── Footer Component ─────────────────────────────────────────────
+
 export default function Footer() {
     const pathname = usePathname();
     const [data, setData] = useState<FooterData | null>(null);
@@ -52,47 +111,36 @@ export default function Footer() {
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
 
-
     useEffect(() => {
         fetch(`${API_URL}/api/footer`, { credentials: 'include' })
             .then(r => r.json())
-            .then(res => { if (res.success) setData(res.data); })
-            .catch(() => { });
+            .then(res => { if (res.success && res.data) setData(res.data); })
+            .catch(() => { /* Use fallback silently */ });
     }, []);
 
     const handleSubscribe = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!email || !email.includes('@')) {
-            toast.error('Please enter a valid email.');
-            return;
-        }
-
+        if (!email || !email.includes('@')) { toast.error('Please enter a valid email.'); return; }
         setLoading(true);
         try {
             const res = await subscribeNewsletter(email);
-            if (res.success) {
-                toast.success(res.message || 'Successfully subscribed!');
-                setEmail('');
-            } else {
-                toast.error(res.message || 'Failed to subscribe.');
-            }
-        } catch (error) {
-            toast.error('Communication error. Please try again later.');
-        } finally {
-            setLoading(false);
-        }
+            if (res.success) { toast.success(res.message || 'Successfully subscribed!'); setEmail(''); }
+            else toast.error(res.message || 'Failed to subscribe.');
+        } catch { toast.error('Communication error. Please try again later.'); }
+        finally { setLoading(false); }
     };
 
-    // Shorthand helpers with safe fallbacks
-    const company = data?.company;
-    const columns = data?.links ?? [];
-    const social = data?.social ?? [];
-    const contact = data?.contact;
-    const legal = data?.legal ?? [];
-    const newsletter = data?.newsletter;
-    const bottomBar = data?.bottom_bar;
-
     if (pathname?.endsWith('/login') || pathname?.endsWith('/signup')) return null;
+
+    // Check if the dynamic footer is explicitly disabled from the CMS settings
+    const isDynamic = data?.settings?.use_dynamic_footer !== false;
+
+    // If dynamic is enabled AND data exists, use it. Otherwise, use FALLBACK.
+    const company = (isDynamic && data?.company) ? data.company : FALLBACK.company;
+    const columns = (isDynamic && data?.links && data.links.length > 0) ? data.links : (FALLBACK.links ?? []);
+    const social = (isDynamic && data?.social && data.social.length > 0) ? data.social : (FALLBACK.social ?? []);
+    const newsletter = (isDynamic && data?.newsletter) ? data.newsletter : FALLBACK.newsletter;
+    const bottomBar = (isDynamic && data?.bottom_bar) ? data.bottom_bar : FALLBACK.bottom_bar;
 
     return (
         <footer className="bg-cream text-[#4a4a4a] border-t border-[#e8e8e0] relative z-10">
@@ -103,125 +151,115 @@ export default function Footer() {
                     {/* Brand column */}
                     <div>
                         <Link href="/" className="flex items-center gap-2 mb-4 group">
-                            <img src="/vedashi-logo.png" alt="Vedashi" className="h-16 w-auto object-contain" />
+                            <img
+                                src={company?.logo_url || '/vedashi-logo.png'}
+                                alt={company?.name || 'Vedashi'}
+                                className="h-16 w-auto object-contain"
+                            />
                         </Link>
                         <p className="text-sm leading-relaxed text-[#6b6b6b] max-w-[260px]">
-                            Nurturing your journey towards holistic health through the ancient wisdom of Ayurveda.
+                            {company?.description}
                         </p>
 
                         {/* Social icons */}
-                        <div className="mt-4 flex gap-3">
-                            <a href="#" aria-label="Instagram" className="text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
-                                <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-                                </svg>
-                            </a>
-                            <a href="#" aria-label="Twitter" className="text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
-                                <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z" />
-                                </svg>
-                            </a>
-                            <a href="#" aria-label="Facebook" className="text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
-                                <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" />
-                                </svg>
-                            </a>
+                        {social.length > 0 && (
+                            <div className="mt-4 flex gap-3">
+                                {social.map((s, i) => {
+                                    const IconComp = SOCIAL_ICONS[s.icon_name ?? s.platform?.toLowerCase()] ?? Globe;
+                                    if (!s.url) return null;
+                                    return (
+                                        <a
+                                            key={i}
+                                            href={s.url}
+                                            aria-label={s.platform}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors"
+                                        >
+                                            <IconComp className="w-[18px] h-[18px]" />
+                                        </a>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Dynamic link columns */}
+                    {columns.map((col, ci) => (
+                        <div key={ci}>
+                            <h4 className="font-display font-bold text-[#333] text-lg mb-3">{col.title}</h4>
+                            <ul className="space-y-2">
+                                {col.items.map((item, ii) => (
+                                    <li key={ii}>
+                                        <Link
+                                            href={item.href}
+                                            className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors"
+                                        >
+                                            {item.label}
+                                        </Link>
+                                    </li>
+                                ))}
+                                {/* Cookie Settings is always injected into the last column */}
+                                {ci === columns.length - 1 && (
+                                    <li>
+                                        <button
+                                            suppressHydrationWarning
+                                            onClick={openSettings}
+                                            className="text-sm font-medium text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors bg-transparent border-none p-0 cursor-pointer text-left"
+                                        >
+                                            Cookie Settings
+                                        </button>
+                                    </li>
+                                )}
+                            </ul>
                         </div>
-                    </div>
-
-                    {/* Explore column */}
-                    <div>
-                        <h4 className="font-display font-bold text-[#333] text-lg mb-3">Explore</h4>
-                        <ul className="space-y-2">
-                            <li>
-                                <Link href="/about" className="text-sm font-base font-medium text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
-                                    Our Story
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/products" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
-                                    Natural Products
-                                </Link>
-                            </li>
-                        </ul>
-                    </div>
-
-                    {/* Support column */}
-                    <div>
-                        <h4 className="font-display font-bold text-[#333] text-lg mb-3">Support</h4>
-                        <ul className="space-y-2">
-                            <li>
-                                <Link href="/help-center" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
-                                    Help Center
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/help-center/faq" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
-                                    Consultation FAQ
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/shipping" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
-                                    Shipping Policy
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/terms" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
-                                    Terms of Service
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/privacy" className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors">
-                                    Privacy Policy
-                                </Link>
-                            </li>
-                            <li>
-                                <button suppressHydrationWarning onClick={openSettings} className="text-sm font-base font-medium text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors bg-transparent border-none p-0 cursor-pointer text-left">
-                                    Cookie Settings
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
+                    ))}
 
                     {/* Newsletter column */}
-                    <div>
-                        <h4 className="font-display font-bold text-[#333] text-lg mb-3">Newsletter</h4>
-                        <p className="text-sm text-[#6b6b6b] leading-relaxed mb-4">
-                            Join our community for weekly wellness rituals.
-                        </p>
-                        <form onSubmit={handleSubscribe} className="flex gap-2" suppressHydrationWarning>
-                            <input
-                                suppressHydrationWarning
-                                type="email"
-                                placeholder="Your email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                disabled={loading}
-                                className="flex-1 min-w-0 rounded-md px-3 py-2 text-sm bg-white border border-[#d9d9d0] focus:outline-none focus:border-[#3B5D3B] focus:ring-1 focus:ring-[#3B5D3B]/20 placeholder:text-[#aaa] text-[#333] transition-all disabled:opacity-50"
-                            />
-                            <button
-                                suppressHydrationWarning
-                                type="submit"
-                                disabled={loading}
-                                className="px-5 py-2 bg-[#3B5D3B] text-white text-xs font-black font-ui uppercase tracking-widest rounded-md hover:bg-[#2d472d] transition-colors whitespace-nowrap disabled:opacity-70 flex items-center justify-center min-w-[70px]"
-                            >
-                                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Join'}
-                            </button>
-                        </form>
-                    </div>
+                    {newsletter && (
+                        <div>
+                            <h4 className="font-display font-bold text-[#333] text-lg mb-3">
+                                {newsletter.title || 'Newsletter'}
+                            </h4>
+                            <p className="text-sm text-[#6b6b6b] leading-relaxed mb-4">
+                                {newsletter.description}
+                            </p>
+                            <form onSubmit={handleSubscribe} className="flex gap-2" suppressHydrationWarning>
+                                <input
+                                    suppressHydrationWarning
+                                    type="email"
+                                    placeholder="Your email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    disabled={loading}
+                                    className="flex-1 min-w-0 rounded-md px-3 py-2 text-sm bg-white border border-[#d9d9d0] focus:outline-none focus:border-[#3B5D3B] focus:ring-1 focus:ring-[#3B5D3B]/20 placeholder:text-[#aaa] text-[#333] transition-all disabled:opacity-50"
+                                />
+                                <button
+                                    suppressHydrationWarning
+                                    type="submit"
+                                    disabled={loading}
+                                    className="px-5 py-2 bg-[#3B5D3B] text-white text-xs font-black font-ui uppercase tracking-widest rounded-md hover:bg-[#2d472d] transition-colors whitespace-nowrap disabled:opacity-70 flex items-center justify-center min-w-[70px]"
+                                >
+                                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Join'}
+                                </button>
+                            </form>
+                        </div>
+                    )}
                 </div>
 
                 {/* ── Bottom bar ── */}
                 <div className="mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[#e8e8e0]">
                     <p className="text-[10px] font-bold font-base uppercase tracking-widest text-[#999]">
-                        © 2026 Vedashi. All rights reserved.
+                        {bottomBar?.copyright || `© ${new Date().getFullYear()} Vedashi. All rights reserved.`}
                     </p>
                     <div className="flex items-center gap-6">
                         <RegionSwitcher upward={true} />
                         <GoogleTranslateWidget upward={true} />
-                        <p className="text-xs text-[#999] italic font-accent">
-                            Gently crafted for modern balance.
-                        </p>
+                        {bottomBar?.text && (
+                            <p className="text-xs text-[#999] italic font-accent">
+                                {bottomBar.text}
+                            </p>
+                        )}
                     </div>
                 </div>
             </div>
