@@ -128,8 +128,6 @@ function ProductsContent() {
         if (filters.newArrivals) params.newArrival = true;
         if (filters.discountMin) params.discount_min = filters.discountMin;
         if (Object.keys(filters.attributes).length > 0) params.attributes = filters.attributes;
-        if (filters.bestSellers) params.bestSeller = true;
-        if (filters.newArrivals) params.newArrival = true;
         return params;
     }, [filters]);
 

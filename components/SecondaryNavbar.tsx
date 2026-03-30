@@ -145,8 +145,8 @@ export default function SecondaryNavbar() {
           </div>
 
           <div className="flex items-center gap-6 h-full text-[13px] font-bold tracking-wide shrink-0 ml-4">
-            <Link href={`/${country}/products?bestSellers=true`} className="text-gray-900 hover:text-[#3B5D3B] h-full flex items-center">Best Sellers</Link>
-            <Link href={`/${country}/products?newArrivals=true`} className="text-gray-900 hover:text-[#3B5D3B] h-full flex items-center">New Arrivals</Link>
+            <Link href={`/${country}/products?bestSeller=true`} className="text-gray-900 hover:text-[#3B5D3B] h-full flex items-center">Best Sellers</Link>
+            <Link href={`/${country}/products?newArrival=true`} className="text-gray-900 hover:text-[#3B5D3B] h-full flex items-center">New Arrivals</Link>
           </div>
         </div>
       </div>

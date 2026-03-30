@@ -274,7 +274,7 @@ function LoginContent() {
                 // Login: pass rememberMe and turnstile token (may be null if widget hasn't been solved yet)
                 const result = await login(form.email, form.password, rememberMe, turnstileToken || undefined);
                 if (result?.success) {
-                    const isAdmin = result.role === 'admin' || result.role === 'Super Admin';
+                    const isAdmin = ['admin', 'Super Admin', 'owner'].includes(result.role || '');
                     if (isAdmin) {
                         isAdminRedirecting.current = true;
                         toast.success('Welcome, Admin! Redirecting to dashboard...');

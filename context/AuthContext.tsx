@@ -102,7 +102,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         const stored = localStorage.getItem(USER_KEY);
-
         if (stored) {
             try {
                 const cachedUser: UserInfo = JSON.parse(stored);
@@ -116,6 +115,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     .then(json => {
                         if (json.success && json.data) {
                             const updatedUser = toUserInfo(json.data);
+                            
+                            // ── SECURITY ROLE CHECK ──────────────────────────
+                            // Prevent admins from using the storefront app as a user
+                            if (['admin', 'Super Admin', 'owner'].includes(updatedUser.role || '')) {
+                                console.warn('[Auth] Admin role detected in storefront - clearing session');
+                                setUser(null);
+                                localStorage.removeItem(USER_KEY);
+                                notifyListeners('logout', null);
+                                return;
+                            }
+                            
                             setUser(updatedUser);
                             localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
                         } else {
@@ -130,6 +140,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             } catch {
                 localStorage.removeItem(USER_KEY);
             }
+        } else {
+             // ── SILENT RECOVERY CHECK ──────────────────────────
+             // If no local storage but cookies exist, try to restore customer session
+             authFetch(`${API_URL}/api/auth/me`)
+                .then(res => res.json())
+                .then(json => {
+                    if (json.success && json.data) {
+                        const updatedUser = toUserInfo(json.data);
+                        // ONLY auto-log if it is NOT an admin
+                        if (!['admin', 'Super Admin', 'owner'].includes(updatedUser.role || '')) {
+                            setUser(updatedUser);
+                            localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+                            notifyListeners('login', updatedUser);
+                        } else {
+                            // If it is an admin, we might want to return success for manual login 
+                            // but for auto-login we just stay as guest.
+                        }
+                    }
+                }).catch(() => {});
         }
         setIsLoading(false);
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -149,6 +178,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const json = await res.json();
             if (res.ok && json.success && json.data?.customer) {
                 const u = toUserInfo(json.data.customer);
+                
+                // ── SECURITY ROLE CHECK ──────────────────────────
+                // Prevent admins from being authenticated as customers in the storefront state
+                if (['admin', 'Super Admin', 'owner'].includes(u.role || '')) {
+                    console.info('[Auth] Admin login detected - returning success for redirection');
+                    // We return success: true so the login page can redirect to the admin panel,
+                    // but we DO NOT call setUser(u) or store the user locally.
+                    return { success: true, role: u.role };
+                }
+                
                 setUser(u);
                 localStorage.setItem(USER_KEY, JSON.stringify(u));
                 // SECURITY: No token stored — access token is in HttpOnly cookie

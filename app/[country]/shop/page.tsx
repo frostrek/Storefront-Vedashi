@@ -167,7 +167,7 @@ export default function ShopPage() {
               loading={loading}
               title="Best Sellers"
               subtitle="Shop our most loved essentials"
-              viewAllLink="/products?sort=popular&bestSellers=true"
+              viewAllLink="/products?sort=popular&bestSeller=true"
               viewAllText="Explore our Best Sellers"
             />
           </div>
@@ -247,7 +247,7 @@ export default function ShopPage() {
               loading={loading}
               title="New Arrivals"
               subtitle="Discover the newest additions to our natural wellness collection."
-              viewAllLink="/products?newArrivals=true"
+              viewAllLink="/products?newArrival=true"
               viewAllText="Shop New Arrivals"
             />
           </div>
