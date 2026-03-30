@@ -1654,12 +1654,7 @@ export default function AccountPage() {
                                         <span className="bg-[#E7F0E9] text-[#2D5A3A] text-xs font-bold px-3 py-1 rounded-full">
                                             {filteredAndSortedOrders.length} {filteredAndSortedOrders.length !== orders.length ? `of ${orders.length}` : ''} Total
                                         </span>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex items-center gap-2 bg-white border border-[#E8E1D5] rounded-full px-4 py-2 shadow-sm text-xs font-bold text-[#36453A]">
-                                            Eco-Shipping Enabled
-                                        </div>
-                                    </div>
+                                    </div> 
                                 </div>
 
                                 <div className="flex flex-col lg:flex-row gap-8 items-start">
@@ -2378,20 +2373,8 @@ export default function AccountPage() {
                                                             </h3>
                                                             <span className="font-bold text-[#36453A] whitespace-nowrap">${product.price}</span>
                                                         </div>
-                                                        <p className="text-[11px] text-warm-gray font-medium mb-3">Added on {addDate}</p>
-
-                                                        <div className="flex items-center gap-1.5 mb-5 mt-auto">
-                                                            {inStock ? (
-                                                                <>
-                                                                    <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
-                                                                    <span className="text-[10px] font-bold text-green-600 tracking-widest uppercase">IN STOCK</span>
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                                                                    <span className="text-[10px] font-bold text-red-500 tracking-widest uppercase ml-1">OUT OF STOCK</span>
-                                                                </>
-                                                            )}
+                                                        <div className="flex items-center gap-1.5 mb-2 mt-auto">
+                                                            {/* Status labels removed as per request */}
                                                         </div>
 
                                                         {/* Action */}
@@ -2403,20 +2386,10 @@ export default function AccountPage() {
                                                                 toast.success('Moved to cart');
                                                             }}
                                                             disabled={!inStock}
-                                                            className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#36453A] py-3 text-sm font-bold text-white shadow-md hover:bg-[#2A362D] hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed mb-2"
+                                                            className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#36453A] py-3 text-sm font-bold text-white shadow-md hover:bg-[#2A362D] hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                                         >
-                                                            <ShoppingCart className="h-4 w-4" /> Add to Cart
+                                                            <ShoppingCart className="h-4 w-4" /> {inStock ? 'Add to Cart' : 'Out of Stock'}
                                                         </button>
-
-                                                        {inStock && (
-                                                            <div className="text-center">
-                                                                <span className="text-[10px] font-bold text-warm-gray flex items-center justify-center gap-1 uppercase tracking-widest cursor-pointer hover:text-[#36453A] transition-colors"
-                                                                    onClick={() => { addCartItem(product.product_id, null, 1); removeWishlistItem(product.product_id); toast.success('Moved to cart'); }}
-                                                                >
-                                                                    Move to Cart <ChevronRight className="h-3 w-3" />
-                                                                </span>
-                                                            </div>
-                                                        )}
                                                     </div>
                                                 </div>
                                             );
