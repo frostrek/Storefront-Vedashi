@@ -198,8 +198,6 @@ function CheckoutContent() {
     const [wallet, setWallet] = useState<any>(null);
     const [redeemPoints, setRedeemPoints] = useState<string>('');
 
-    // Tax Tooltip UI
-    const [showTaxTooltip, setShowTaxTooltip] = useState(false);
 
 
     useEffect(() => {
@@ -228,21 +226,11 @@ function CheckoutContent() {
         ? Math.round(buyNowItem.unit_price * buyNowItem.quantity)
         : items.reduce((sum, item) => sum + (item.price ?? 0) * item.quantity, 0);
 
-    let calculatedBuyNowTax = 0;
-    if (isBuyNow && buyNowItem) {
-        const lineSubtotal = Math.round(buyNowItem.unit_price * buyNowItem.quantity);
-        const excise = Math.round(lineSubtotal * 0.35); // 35% excise
-        const vat = Math.round((lineSubtotal + excise) * 0.10); // 10% VAT
-        calculatedBuyNowTax = excise + vat;
-    }
-
-    const totalTaxes = isBuyNow ? calculatedBuyNowTax : items.reduce((sum, item) => sum + ((item as any).pricing?.tax_amount ?? 0), 0);
-    const subtotalWithTaxes = isBuyNow && buyNowItem ? baseSubtotal + calculatedBuyNowTax : totalPrice;
-    const shippingCost = couponType === 'free_shipping' ? 0 : (subtotalWithTaxes > 50 ? 0 : 15);
+    const shippingCost = couponType === 'free_shipping' ? 0 : (baseSubtotal > 50 ? 0 : 15);
     const discount = isBuyNow ? 0 : couponDiscount;
     const minPayable = Number(process.env.NEXT_PUBLIC_MINIMUM_PAYABLE_AMOUNT) || 1;
 
-    const prePointsTotal = subtotalWithTaxes + shippingCost - discount;
+    const prePointsTotal = baseSubtotal + shippingCost - discount;
     const maxRedeemablePoints = Math.min(wallet?.balance || 0, Math.max(0, Math.floor(prePointsTotal) - minPayable));
     
     // Parse valid points from input
@@ -1604,40 +1592,7 @@ function CheckoutContent() {
                                         <span className="label">Shipping</span>
                                         <span className="value">{shippingCost === 0 ? 'FREE' : formatPrice(shippingCost)}</span>
                                     </div>
-                                    {totalTaxes > 0 && (
-                                        <div className="ritual-summary-row relative">
-                                            <span className="label flex items-center gap-1.5">
-                                                Federal Tax
-                                                <div className="relative group inline-block">
-                                                    <button
-                                                        type="button"
-                                                        className="text-[rgba(255,255,255,0.4)] hover:text-white transition-colors focus:outline-none"
-                                                        onMouseEnter={() => setShowTaxTooltip(true)}
-                                                        onMouseLeave={() => setShowTaxTooltip(false)}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setShowTaxTooltip(!showTaxTooltip);
-                                                        }}
-                                                        aria-label="Tax information"
-                                                    >
-                                                        <Info size={14} className="cursor-help" />
-                                                    </button>
-                                                    
-                                                    {/* Tooltip */}
-                                                    <div 
-                                                        className={`absolute bottom-full left-0 mb-3 w-56 p-3 bg-[#1A1B16] text-white text-[11px] leading-relaxed rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] border border-[rgba(255,255,255,0.1)] transition-all duration-300 pointer-events-none z-50 ${showTaxTooltip ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-2 scale-95 md:group-hover:opacity-100 md:group-hover:translate-y-0 md:group-hover:scale-100'}`}
-                                                        style={{ left: '-10px' }}
-                                                    >
-                                                        <div className="relative z-10">
-                                                            Taxes are calculated based on your shipping address and applicable government regulations.
-                                                        </div>
-                                                        <div className="absolute top-[98%] left-[18px] border-[6px] border-transparent border-t-[#1A1B16]" />
-                                                    </div>
-                                                </div>
-                                            </span>
-                                            <span className="value">{formatPrice(totalTaxes)}</span>
-                                        </div>
-                                    )}
+
                                 </div>
 
                                 <div className="ritual-summary-total">

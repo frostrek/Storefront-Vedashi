@@ -2000,10 +2000,8 @@ export default function AccountPage() {
                                                                 <span>Eco-Shipping</span>
                                                                 <span className="text-[#36453A] font-bold">FREE</span>
                                                             </div>
-                                                            <div className="flex items-center justify-between text-xs text-warm-gray font-medium">
-                                                                <span>Tax</span>
-                                                                <span className="text-[#36453A] font-bold">{formatPrice(selectedOrderDetails.vat_amount || 0)}</span>
-                                                            </div>
+
+
                                                             <div className="pt-3 border-t border-[#E8E1D5] flex items-center justify-between">
                                                                 <span className="text-sm font-bold text-[#36453A]">Total</span>
                                                                 <span className="text-lg font-bold text-[#36453A]">{formatPrice(selectedOrderDetails.final_total || selectedOrderDetails.total_amount || 0)}</span>

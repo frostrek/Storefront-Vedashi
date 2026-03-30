@@ -220,7 +220,6 @@ export interface BackendCartItem {
         discount_amount: number;
         discount_source: string | null;
         line_subtotal: number;
-        line_tax: number;
         line_total: number;
         currency?: string;
     };
@@ -243,7 +242,6 @@ export interface BackendCart {
         item_count: number;
         unique_items: number;
         subtotal: number;
-        total_tax: number;
         grand_total: number;
     };
     /* Legacy flat fields (fallback) */
@@ -272,7 +270,6 @@ export interface Order {
     customer_email?: string;
     // Legacy fields (kept for backward compat)
     total_amount: string | number;
-    total_tax?: string | number;
     grand_total?: number;
     // VND breakdown fields (new)
     subtotal?: number;
@@ -280,8 +277,7 @@ export interface Order {
     coupon_discount_amount?: number;
     discount_amount?: number;
     coupon_code?: string;
-    taxable_amount?: number;
-    vat_amount?: number;
+
     shipping_amount?: number;
     final_total?: number;
     currency?: string;
@@ -311,7 +307,6 @@ export interface OrderItem {
     product_id?: string;
     quantity: number;
     unit_price: number;
-    tax_amount?: number;
     product_name?: string;
     product_name_snapshot?: string;
     variant_name_snapshot?: string;

@@ -98,7 +98,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 const flatItems = (cart.items || []).map(flattenCartItem);
                 setItems(flatItems);
                 setTotalItems(cart.summary?.item_count ?? cart.total_items ?? flatItems.reduce((s: number, i: BackendCartItem) => s + i.quantity, 0));
-                setTotalPrice(cart.summary?.grand_total ?? cart.total_amount ?? flatItems.reduce((s: number, i: BackendCartItem) => s + (i.price || 0) * i.quantity, 0));
+                setTotalPrice(cart.summary?.grand_total || cart.total_amount || flatItems.reduce((s: number, i: BackendCartItem) => s + (i.price || 0) * i.quantity, 0));
             }
             await fetchSavedItems(cId);
         } catch (err) {
