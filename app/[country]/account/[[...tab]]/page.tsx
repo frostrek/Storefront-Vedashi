@@ -7,29 +7,29 @@ import { useAuth } from '@/context/AuthContext';
 import { useClerk } from '@clerk/nextjs';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCart } from '@/context/CartContext';
-import ProductCard from '@/components/ProductCard';
+// ProductCard removed as it was unused
 import {
     getMyOrders, getAddresses, addAddress as apiAddAddress,
     updateAddress as apiUpdateAddress, deleteAddress as apiDeleteAddress,
     getCustomerProfile, updateCustomerProfile, deactivateAccount,
     uploadProfileImage, getProfileImage, removeProfileImage, getOrderById,
-    cancelOrder as apiCancelOrder, formatVND, downloadInvoice, getBestSellers,
+    cancelOrder as apiCancelOrder, downloadInvoice, getBestSellers,
     getMyEnquiries, replyToEnquiry, changePassword,
     requestEmailChange, verifyEmailChangeProfile,
     requestPhoneChange, verifyPhoneChangeProfile,
     getLoyaltyWallet, getMyNotifications, getUnreadNotificationCount,
     markNotificationAsRead, markAllNotificationsAsRead, deleteNotification,
-    lookupPostalCode, getMySupportTickets, replySupportTicket, getSupportTicketDetail,
+    lookupPostalCode, getMySupportTickets, replySupportTicket,
     getMyReviews, trackOrder
 } from '@/lib/api';
 import { Order, Address } from '@/types';
 import { COUNTRIES } from '@/lib/countries';
 import Select from 'react-select';
 import {
-    Package, MapPin, Heart, LogOut, User, Plus, Pencil, Trash2,
+    Package, MapPin, Heart, User, Plus, Pencil, Trash2,
     Loader2, ShieldOff, Camera, X, Check, Star, Phone, Calendar, Mail,
-    CheckCircle2, Smartphone, AlertCircle, Shield, FileText, MessageSquare, Send, Clock, User2, MessageCircle, Sparkles,
-    Globe, ChevronRight, Lock, CreditCard, Banknote,
+    CheckCircle2, AlertCircle, Shield, FileText, MessageSquare, Send, Clock, User2, MessageCircle, Sparkles,
+    ChevronRight,
     BadgeCheck, BellRing, Download, Search, ShoppingCart, LayoutGrid, List, Wallet, Eye, EyeOff
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
@@ -1671,10 +1671,7 @@ export default function AccountPage() {
                                                     onChange={e => setOrderSearch(e.target.value)}
                                                     className="w-full bg-white border border-[#E8E1D5] rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-[#36453A]/40 focus:ring-1 focus:ring-[#36453A]/20 transition-all text-[#36453A] placeholder:text-warm-gray/70 shadow-sm"
                                                 />
-                                            </div>
-                                            <button className="flex items-center justify-center gap-2 bg-white border border-[#E8E1D5] rounded-xl px-4 py-3 text-sm font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors shadow-sm whitespace-nowrap">
-                                                <List className="h-4 w-4" /> Filters
-                                            </button>
+                                            </div>  
                                         </div>
 
                                         {/* Status Filters & Sort */}
@@ -2082,7 +2079,7 @@ export default function AccountPage() {
                                                                     </div>
                                                                     <div className="relative">
                                                                         <p className="text-xs text-[#36453A] line-clamp-2 italic leading-relaxed pl-3 border-l-2 border-[#D4A847]/40">
-                                                                            "{ticket.message}"
+                                                                            &quot;{ticket.message}&quot;
                                                                         </p>
                                                                     </div>
                                                                     <button
@@ -2325,11 +2322,11 @@ export default function AccountPage() {
                                 ) : (
                                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                                          {sortedWishlistItems.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((prod) => {
-                                            const product = prod as any;
+                                            const product = prod;
                                             const isSelected = selectedWishlistItems.has(product.product_id);
                                             const stockStatus = (product.stock_status || '').toLowerCase();
                                             const inStock = stockStatus === 'in_stock';
-                                            const addDate = product.created_at ? new Date(product.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recently';
+
 
                                             return (
                                                 <div key={product.product_id} className="group flex flex-col rounded-3xl border border-[#E8E1D5] bg-white p-4 transition-all hover:shadow-lg relative">
@@ -3197,7 +3194,7 @@ export default function AccountPage() {
                                                 <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
                                                     <div>
                                                         <h3 className="text-2xl font-bold text-[#D4A847] mb-2">Need to add more info?</h3>
-                                                        <p className="text-sm text-white/80 max-w-md">Our support team is here to help. You'll receive an email notification as soon as we reply.</p>
+                                                        <p className="text-sm text-white/80 max-w-md">Our support team is here to help. You&apos;ll receive an email notification as soon as we reply.</p>
                                                     </div>
                                                     <button
                                                         onClick={() => router.push(`/${country}/help-center/support`)}
@@ -3851,7 +3848,7 @@ export default function AccountPage() {
                             </div>
 
                             <p className="text-sm text-warm-gray mb-6">
-                                We've sent a secure verification code to <strong className="text-charcoal font-semibold">{profileData.email}</strong>. Please enter the code below to confirm this change.
+                                We&apos;ve sent a secure verification code to <strong className="text-charcoal font-semibold">{profileData.email}</strong>. Please enter the code below to confirm this change.
                             </p>
 
                             <div className="space-y-5">
@@ -3909,7 +3906,7 @@ export default function AccountPage() {
                             </div>
 
                             <p className="text-sm text-warm-gray mb-6">
-                                We've sent a 6-digit verification code to your new mobile number ending in <strong className="text-charcoal font-semibold">{profileData.phone.slice(-4)}</strong>.
+                                We&apos;ve sent a 6-digit verification code to your new mobile number ending in <strong className="text-charcoal font-semibold">{profileData.phone.slice(-4)}</strong>.
                             </p>
 
                             <div className="space-y-5">

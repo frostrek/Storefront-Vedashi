@@ -36,6 +36,9 @@ export interface Product {
     available_until?: string;
     stock_status?: string;
     status?: string;
+    image_url?: string;
+    base64_image?: string;
+    added_at?: string;
 }
 
 /** Shape returned by GET /api/products/filter */
