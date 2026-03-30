@@ -1753,38 +1753,37 @@ export default function AccountPage() {
                                                     <div
                                                         key={order.order_id}
                                                         onClick={() => handleViewOrderDetails(order.order_id)}
-                                                        className={`rounded-3xl border p-4 sm:p-6 transition-all cursor-pointer shadow-sm relative overflow-hidden flex flex-col sm:flex-row sm:items-center gap-6
+                                                        className={`rounded-3xl border transition-all cursor-pointer shadow-sm relative overflow-hidden flex flex-col
                                                         ${isSelected
                                                                 ? 'bg-white border-[#36453A] ring-1 ring-[#36453A]/20'
                                                                 : 'bg-white border-[#E8E1D5] hover:border-[#36453A]/30 hover:shadow-md'
                                                             }`}
                                                     >
-                                                        {/* Selected state overlay hint */}
-                                                        {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#36453A]"></div>}
-
-                                                        {/* Image Bubble */}
-                                                        <div className="relative h-[100px] w-[100px] rounded-2xl bg-[#F8F5F0] border border-[#E8E1D5] flex-shrink-0 flex items-center justify-center overflow-hidden">
-                                                            {prodImg ? (
-                                                                // eslint-disable-next-line @next/next/no-img-element
-                                                                <img src={prodImg} alt="Product" className="h-full w-full object-cover mix-blend-multiply" />
-                                                            ) : (
-                                                                <Package className="h-8 w-8 text-warm-gray/40" />
-                                                            )}
-                                                            {itemCount > 1 && (
-                                                                <span className="absolute bottom-2 right-2 bg-[#36453A] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md">
-                                                                    +{itemCount - 1} more
-                                                                </span>
-                                                            )}
-                                                        </div>
-
-                                                        {/* Order Info */}
-                                                        <div className="flex-1 space-y-3 min-w-0">
-                                                            <div className="flex items-center gap-2">
-                                                                <h3 className="text-xl font-bold text-[#36453A] line-clamp-1">
-                                                                    {order.order_id.split('-')[0].toUpperCase()}
-                                                                </h3>
+                                                        {/* Header Row */}
+                                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#F8F5F0]/60 border-b border-[#E8E1D5] px-4 py-3 sm:px-6">
+                                                            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 w-full sm:w-auto">
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-[10px] uppercase tracking-widest text-warm-gray font-bold mb-0.5">Order ID</span>
+                                                                    <span className="text-sm font-bold text-[#36453A] flex items-center gap-1.5 line-clamp-1">
+                                                                        #{order.order_id.split('-')[0].toUpperCase()}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="hidden sm:block w-px h-6 bg-[#E8E1D5]"></div>
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-[10px] uppercase tracking-widest text-warm-gray font-bold mb-0.5">Date Placed</span>
+                                                                    <span className="text-sm font-bold text-[#36453A] flex items-center gap-1.5">
+                                                                        {dtDate}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="hidden sm:block w-px h-6 bg-[#E8E1D5]"></div>
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-[10px] uppercase tracking-widest text-warm-gray font-bold mb-0.5">Total Amount</span>
+                                                                    <span className="text-sm font-bold text-[#36453A]">
+                                                                        {formatPrice(order.final_total || order.total_amount)}
+                                                                    </span>
+                                                                </div>
                                                             </div>
-                                                            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                                                            <div className="mt-3 sm:mt-0">
                                                                 <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest border border-[#E8E1D5]
                                                                     ${order.order_status === 'DELIVERED' ? 'bg-[#F2F4EB] text-[#4A5D23]' :
                                                                         order.order_status === 'SHIPPED' ? 'bg-[#EEF2F6] text-[#2C4B7D]' :
@@ -1795,22 +1794,37 @@ export default function AccountPage() {
                                                                     {order.order_status === 'PENDING' && <Loader2 className="h-3 w-3 mr-1" />}
                                                                     {order.order_status}
                                                                 </span>
-                                                                <span className="text-sm text-warm-gray flex items-center gap-1.5">
-                                                                    <Calendar className="h-3.5 w-3.5" /> Ordered on {dtDate}
-                                                                </span>
                                                             </div>
-                                                            <p className="text-sm font-medium text-[#36453A] truncate">{prodName}</p>
                                                         </div>
 
-                                                        {/* Price & Actions */}
-                                                        <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-4 border-t sm:border-t-0 sm:border-l border-[#E8E1D5] pt-4 sm:pt-0 sm:pl-6">
-                                                            <div className="flex flex-col items-start sm:items-end w-full">
-                                                                <span className="text-[10px] font-bold tracking-widest text-warm-gray uppercase mb-1">Total Amount</span>
-                                                                <span className="text-2xl font-bold text-[#36453A]">
-                                                                    {formatPrice(order.final_total || order.total_amount)}
-                                                                </span>
+                                                        {/* Main Content */}
+                                                        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 p-4 sm:p-6 items-start sm:items-center relative">
+                                                            {/* Selected state overlay hint */}
+                                                            {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#36453A]"></div>}
+                                                            
+                                                            {/* Image */}
+                                                            <div className="relative h-20 w-20 sm:h-24 sm:w-24 rounded-2xl bg-[#F8F5F0] border border-[#E8E1D5] flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                                                {prodImg ? (
+                                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                                    <img src={prodImg} alt="Product" className="h-full w-full object-cover mix-blend-multiply" />
+                                                                ) : (
+                                                                    <Package className="h-8 w-8 text-warm-gray/40" />
+                                                                )}
                                                             </div>
-                                                            <div className="flex flex-col gap-2 w-full sm:w-auto">
+                                                            
+                                                            {/* Info */}
+                                                            <div className="flex-1 w-full min-w-0 flex flex-col justify-center">
+                                                                <p className="text-base font-bold text-[#36453A] line-clamp-2">{prodName}</p>
+                                                                {itemCount > 1 && (
+                                                                    <p className="text-sm font-semibold text-warm-gray mt-1">
+                                                                        and {itemCount - 1} more item(s)
+                                                                    </p>
+                                                                )}
+                                                                <p className="text-xs font-medium text-warm-gray mt-2">Sold by Vedashi</p>
+                                                            </div>
+                                                            
+                                                            {/* Actions */}
+                                                            <div className="flex flex-wrap sm:flex-col gap-2 w-full sm:w-auto shrink-0 mt-4 sm:mt-0 border-t sm:border-t-0 sm:border-l border-[#E8E1D5] pt-4 sm:pt-0 sm:pl-6 justify-center">
                                                                 <button
                                                                     onClick={(e) => { e.stopPropagation(); handleViewOrderDetails(order.order_id); }}
                                                                     className={`rounded-xl px-5 py-2 text-xs font-bold transition-all whitespace-nowrap border overflow-hidden
