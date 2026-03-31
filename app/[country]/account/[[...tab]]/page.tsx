@@ -1149,8 +1149,21 @@ export default function AccountPage() {
         );
     }
 
-    if (!isAuthenticated) {
-        return null;
+    if (isLoading || !isAuthenticated) {
+        return (
+            <div className="min-h-screen bg-[#F8F5F0] flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="relative">
+                        <div className="absolute inset-0 rounded-full border-4 border-[#36453A]/10 animate-pulse" />
+                        <Loader2 className="h-12 w-12 animate-spin text-[#36453A] relative z-10" />
+                    </div>
+                    <div className="flex flex-col items-center">
+                        <h2 className="text-[#36453A] font-serif text-xl font-medium tracking-tight">Vedashi Sanctuary</h2>
+                        <p className="text-[#36453A]/60 text-sm italic mt-1">Preparing your sacred space...</p>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     const getStatusColor = (status: string) => {
