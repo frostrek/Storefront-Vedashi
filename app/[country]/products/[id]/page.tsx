@@ -3,7 +3,7 @@
 import { useState, useEffect, use, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { getProduct, getProductDetails, getRelatedProducts, getBestSellers, trackProductView, requestRestockNotification } from '@/lib/api';
+import { getProduct, getProductDetails, getBestSellers, trackProductView, requestRestockNotification } from '@/lib/api';
 
 import { useCurrency } from '@/context/CurrencyContext';
 import { Product, ProductWithDetails } from '@/types';
@@ -32,66 +32,20 @@ const RecentlyViewedProducts = dynamic(
     { ssr: false }
 );
 
+const SimilarProducts = dynamic(
+    () => import('@/components/SimilarProducts'),
+    { ssr: false }
+);
+
+const ProductCarousel = dynamic(
+    () => import('@/components/ProductCarousel'),
+    { ssr: false }
+);
+
 interface Props {
     params: Promise<{ id: string }>;
 }
 
-/** Lazy-loaded related products section with deferred API call */
-function LazyRelatedProducts({ productId, type, title, icon }: {
-    productId: string;
-    type: string;
-    title: string;
-    icon?: React.ReactNode;
-}) {
-    const [products, setProducts] = useState<Product[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        let cancelled = false;
-        getRelatedProducts(productId, type, 4).then(data => {
-            if (!cancelled) {
-                setProducts(data);
-                setLoading(false);
-            }
-        }).catch(() => {
-            if (!cancelled) setLoading(false);
-        });
-        return () => { cancelled = true; };
-    }, [productId, type]);
-
-    if (!loading && products.length === 0) return null;
-
-    return (
-        <div className="mt-16 border-t border-gray-100 pt-16">
-            <div className="flex items-center justify-between mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                    {icon}
-                    {title}
-                </h2>
-            </div>
-            {loading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {Array.from({ length: 4 }).map((_, i) => (
-                        <div key={i} className="overflow-hidden rounded-xl border border-light-border bg-white">
-                            <div style={{ aspectRatio: '1/1' }} className="animate-shimmer" />
-                            <div className="space-y-3 p-4">
-                                <div className="h-4 w-3/4 rounded animate-shimmer" />
-                                <div className="h-3 w-1/2 rounded animate-shimmer" />
-                                <div className="h-5 w-1/3 rounded animate-shimmer" />
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {products.map(p => (
-                        <ProductCard key={p.product_id} product={p} />
-                    ))}
-                </div>
-            )}
-        </div>
-    );
-}
 
 
 /** Lazy-loaded best sellers section with deferred API call */
@@ -104,7 +58,7 @@ function LazyBestSellers({ title, icon }: {
 
     useEffect(() => {
         let cancelled = false;
-        getBestSellers({ limit: 4 }).then(res => {
+        getBestSellers({ limit: 12 }).then(res => {
             if (!cancelled) {
                 if (res && res.data) {
                     setProducts(res.data as Product[]);
@@ -119,37 +73,14 @@ function LazyBestSellers({ title, icon }: {
         return () => { cancelled = true; };
     }, []);
 
-    if (!loading && products.length === 0) return null;
-
     return (
-        <div className="mt-16 border-t border-gray-100 pt-16">
-            <div className="flex items-center justify-between mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                    {icon}
-                    {title}
-                </h2>
-            </div>
-            {loading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {Array.from({ length: 4 }).map((_, i) => (
-                        <div key={i} className="overflow-hidden rounded-xl border border-light-border bg-white">
-                            <div style={{ aspectRatio: '1/1' }} className="animate-shimmer" />
-                            <div className="space-y-3 p-4">
-                                <div className="h-4 w-3/4 rounded animate-shimmer" />
-                                <div className="h-3 w-1/2 rounded animate-shimmer" />
-                                <div className="h-5 w-1/3 rounded animate-shimmer" />
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {products.slice(0, 4).map(p => (
-                        <ProductCard key={p.product_id} product={p} />
-                    ))}
-                </div>
-            )}
-        </div>
+        <ProductCarousel
+            title={title}
+            icon={icon}
+            products={products}
+            loading={loading}
+            idPrefix="best-sellers"
+        />
     );
 }
 
@@ -1283,18 +1214,13 @@ function ProductDetailContent({ params }: Props) {
                             />
                         </LazySection>
 
-                        {/* CUSTOMERS ALSO VIEWED — lazy loaded with deferred API call */}
+                        {/* SIMILAR PRODUCTS — horizontal scroll carousel */}
                         <LazySection
                             minHeight="400px"
                             rootMargin="400px"
-                            skeleton={<SkeletonProductRow title="Customers Also Viewed" />}
+                            skeleton={<SkeletonProductRow title="Similar Products" />}
                         >
-                            <LazyRelatedProducts
-                                productId={product.product_id}
-                                type="similar"
-                                title="Customers Also Viewed"
-                                icon={<LeafIcon className="h-6 w-6 text-[#3d5c3a]" />}
-                            />
+                            <SimilarProducts productId={product.product_id} />
                         </LazySection>
 
                         {/* BEST SELLERS — lazy loaded */}

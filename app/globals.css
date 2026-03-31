@@ -1265,3 +1265,26 @@ div.skiptranslate,
   scrollbar-width: thin;
   scrollbar-color: #3B5D3B #FAF8F0;
 }
+
+/* ============================================
+   Similar Products — Responsive Card Widths
+   ============================================ */
+
+/* Default (desktop): 4 cards visible, 3 gaps of 16px */
+:root {
+  --similar-card-width: calc((100% - 48px) / 4);
+}
+
+/* Tablet: 2 cards visible, 1 gap of 16px */
+@media (max-width: 1024px) {
+  :root {
+    --similar-card-width: calc((100% - 16px) / 2);
+  }
+}
+
+/* Mobile: ~1.5 cards visible for peek effect */
+@media (max-width: 640px) {
+  :root {
+    --similar-card-width: 70%;
+  }
+}

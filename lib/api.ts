@@ -159,6 +159,28 @@ export async function getRelatedProducts(productId: string, type: string = 'simi
     }
 }
 
+export async function getSimilarProducts(productId: string, limit: number = 8): Promise<Product[]> {
+    try {
+        const url = `${API_URL}/api/products/${productId}/similar?limit=${limit}`;
+        const res = await fetch(url, { credentials: 'include' });
+        if (!res.ok) return [];
+        const json: ApiResponse<any> = await res.json();
+
+        let products: any[] = [];
+        if (json.success && Array.isArray(json.data)) {
+            products = json.data;
+        }
+
+        return products.map(p => ({
+            ...p,
+            images: p.thumbnail_url ? [p.thumbnail_url] : []
+        }));
+    } catch (error) {
+        console.warn(`[API] Failed to fetch similar products for ${productId}`);
+        return [];
+    }
+}
+
 /* ─── Featured Products ─── */
 
 export async function getFeaturedProducts(): Promise<Product[]> {
