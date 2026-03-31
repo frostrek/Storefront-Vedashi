@@ -136,9 +136,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         }
                     }).catch(() => {
                         // Network error — keep cached user for offline resilience
+                    }).finally(() => {
+                        setIsLoading(false);
                     });
             } catch {
                 localStorage.removeItem(USER_KEY);
+                setIsLoading(false);
             }
         } else {
              // ── SILENT RECOVERY CHECK ──────────────────────────
@@ -153,20 +156,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                             setUser(updatedUser);
                             localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
                             notifyListeners('login', updatedUser);
-                        } else {
-                            // If it is an admin, we might want to return success for manual login 
-                            // but for auto-login we just stay as guest.
                         }
                     }
-                }).catch(() => {});
+                })
+                .catch(() => {})
+                .finally(() => {
+                    setIsLoading(false);
+                });
         }
-        setIsLoading(false);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const login = useCallback(async (email: string, password: string, rememberMe: boolean = true, turnstileToken?: string | null) => {
         try {
-            const body: Record<string, any> = { email, password, remember_me: rememberMe };
+            const body: Record<string, any> = { email, password, remember_me: rememberMe, source: 'storefront' };
             if (turnstileToken) body.turnstile_token = turnstileToken;
 
             const res = await authFetch(`${API_URL}/api/auth/login`, {

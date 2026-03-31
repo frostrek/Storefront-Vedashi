@@ -624,7 +624,7 @@ export async function loginUser(email: string, password: string, turnstileToken?
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ email, password, turnstile_token: turnstileToken, remember_me: rememberMe }),
+        body: JSON.stringify({ email, password, turnstile_token: turnstileToken, remember_me: rememberMe, source: 'storefront' }),
     });
     return res.json();
 }
