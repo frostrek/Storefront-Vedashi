@@ -390,6 +390,7 @@ function ProductDetailContent({ params }: Props) {
             image_url: (product as any).thumbnail_url || '',
         };
         sessionStorage.setItem('ksp_buy_now_item', JSON.stringify(buyNowItem));
+        sessionStorage.removeItem('vedashi_checkout_draft');
         router.push('/checkout?buyNow=true');
     };
 
