@@ -510,11 +510,11 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                             : 'bg-gray-100 text-gray-700 group-hover:bg-[#3d5c3a]/10 group-hover:text-[#3d5c3a]'
                                                         }
                                                     `}>
-                                                        {formatPrice(v.price)}
+                                                        {formatPrice(v.price, (v as any).country_prices || (product as any).country_prices)}
                                                     </span>
                                                     {v.is_on_sale && v.original_price && (
                                                         <span className={`text-[10px] line-through ${isSelected ? 'text-white/50' : 'text-gray-400'}`}>
-                                                            {formatPrice(v.original_price)}
+                                                            {formatPrice(v.original_price, (v as any).country_prices || (product as any).country_prices)}
                                                         </span>
                                                     )}
                                                     {!isInactive && isOut && (
@@ -566,11 +566,11 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                 }
                                 <span>
                                     {addingToCart
-                                        ? 'Adding to cart…'
+                                        ? 'Adding to cart...'
                                         : justAdded
                                             ? 'Added to bag!'
                                             : selectedVariant
-                                                ? `Add to Cart · ${formatPrice(selectedVariant.price * quantity)}`
+                                                ? `Add to Cart · ${formatPrice((selectedVariant?.price ?? 0) * quantity, (selectedVariant as any)?.country_prices || (product as any).country_prices)}`
                                                 : 'Select an option'
                                     }
                                 </span>
@@ -712,9 +712,9 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                     </div>
 
                                                     <div className="text-right flex-shrink-0">
-                                                        <p className={`text-sm font-bold transition-colors duration-300 ${isSelected ? 'text-[#3d5c3a]' : 'text-gray-900'}`}>{formatPrice(v.price)}</p>
+                                                        <p className={`text-sm font-bold transition-colors duration-300 ${isSelected ? 'text-[#3d5c3a]' : 'text-gray-900'}`}>{formatPrice(v.price, (v as any).country_prices || (product as any).country_prices)}</p>
                                                         {v.is_on_sale && v.original_price && (
-                                                            <p className="text-[10px] text-gray-400 line-through">{formatPrice(v.original_price)}</p>
+                                                            <p className="text-[10px] text-gray-400 line-through">{formatPrice(v.original_price, (v as any).country_prices || (product as any).country_prices)}</p>
                                                         )}
                                                     </div>
                                                 </div>
@@ -753,7 +753,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             ) : (
                                 <ShoppingCart className="h-4 w-4" />
                             )}
-                            {addingToCart ? 'Processing...' : justAdded ? 'Added to Bag' : `Add to Cart - ${formatPrice((hasVariants ? (selectedVariant?.price ?? 0) : displayPrice) * quantity)}`}
+                            {addingToCart ? 'Processing...' : justAdded ? 'Added to Bag' : `Add to Cart - ${formatPrice((hasVariants ? (selectedVariant?.price ?? 0) : displayPrice) * quantity, hasVariants ? ((selectedVariant as any)?.country_prices || (product as any).country_prices) : (product as any).country_prices)}`}
                         </button>
                     ) : (
                         <div className="flex items-center gap-2 bg-gray-50/50 p-1 rounded-xl border border-gray-100 shadow-sm">
@@ -969,12 +969,12 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             {/* Price */}
                             <div className="flex items-center gap-2 flex-wrap">
                                 <p className="text-xl font-black text-[#3d5c3a] font-ui tabular-nums tracking-tight">
-                                    {formatPrice(displayPrice)}
+                                    {formatPrice(displayPrice, (product as any).country_prices)}
                                 </p>
                                 {isOnSale && originalPrice && (
                                     <>
                                         <p className="text-xs text-gray-400 line-through">
-                                            {formatPrice(originalPrice)}
+                                            {formatPrice(originalPrice, (product as any).country_prices)}
                                         </p>
                                         <span className="bg-red-50 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded border border-red-100">
                                             {discountPercent}% OFF

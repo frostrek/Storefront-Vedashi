@@ -424,12 +424,12 @@ function ProductDetailContent({ params }: Props) {
                         {/* PRICE */}
                         <div className="flex items-end gap-3 mt-4">
                             <p className="text-2xl font-bold text-gray-900">
-                                {formatPrice(displayPrice)} <span className="text-sm font-normal text-gray-500">/ set</span>
+                                {formatPrice(displayPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)} <span className="text-sm font-normal text-gray-500">/ set</span>
                             </p>
                             {isOnSale && originalPrice && (
                                 <>
                                     <p className="text-base text-gray-400 line-through mb-0.5">
-                                        {formatPrice(originalPrice)}
+                                        {formatPrice(originalPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
                                     </p>
                                     <span className="bg-[#3d5c3a]/10 text-[#3d5c3a] text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wide mb-1">
                                         {discountPercent}% OFF

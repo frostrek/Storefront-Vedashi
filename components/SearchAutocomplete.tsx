@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, X, Loader2 } from 'lucide-react';
 import { searchAutocomplete, type SearchSuggestion } from '@/lib/api';
+import { useCurrency } from '@/context/CurrencyContext';
 
 interface SearchAutocompleteProps {
     /** Called when the sea rch overlay should close (e.g. mobile) */
@@ -20,6 +21,7 @@ export default function SearchAutocomplete({
     className = '',
 }: SearchAutocompleteProps) {
     const router = useRouter();
+    const { formatPrice } = useCurrency();
     const [query, setQuery] = useState('');
     const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
     const [isOpen, setIsOpen] = useState(false);
@@ -154,16 +156,7 @@ export default function SearchAutocomplete({
         }
     };
 
-    // ── Format price ───────────────────────────────────────────
-    const formatPrice = (price?: number) => {
-        if (price == null) return '';
-        return new Intl.NumberFormat('en-IN', {
-            style: 'currency',
-            currency: 'INR',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0,
-        }).format(price);
-    };
+
 
     return (
         <div ref={containerRef} className={`relative ${className}`}>
