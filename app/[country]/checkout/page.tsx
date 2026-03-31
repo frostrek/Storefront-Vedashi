@@ -259,8 +259,7 @@ function CheckoutContent() {
                             const draft = sessionStorage.getItem(PERSIST_KEY);
                             if (draft) {
                                 const parsed = JSON.parse(draft);
-                                if (parsed.step) setStep(parsed.step);
-                                if (parsed.maxStepReached) setMaxStepReached(parsed.maxStepReached);
+                                // Intentionally omitted parsed.step to enforce starting at step 1
                                 if (parsed.paymentMethod) setPaymentMethod(parsed.paymentMethod);
                                 if (parsed.contactEmail) setContactEmail(parsed.contactEmail);
                                 if (parsed.contactPhone) setContactPhone(parsed.contactPhone);
@@ -298,8 +297,7 @@ function CheckoutContent() {
             getCart({ cart_id: cartId }).then(cartRes => {
                 if (cartRes.success && cartRes.data?.checkout_draft && Object.keys(cartRes.data.checkout_draft).length > 0) {
                     const parsed = cartRes.data.checkout_draft;
-                    if (parsed.step) setStep(parsed.step);
-                    if (parsed.maxStepReached) setMaxStepReached(parsed.maxStepReached);
+                    // Intentionally omitted parsed.step to enforce starting at step 1
                     if (parsed.paymentMethod) setPaymentMethod(parsed.paymentMethod);
                     if (parsed.contactEmail) setContactEmail(parsed.contactEmail);
                     if (parsed.contactPhone) setContactPhone(parsed.contactPhone);
@@ -350,8 +348,7 @@ function CheckoutContent() {
         
         const timer = setTimeout(() => {
             const draft = {
-                step,
-                maxStepReached,
+                // Not saving step to enforce step-based routing on page load
                 paymentMethod,
                 contactEmail,
                 contactPhone,
