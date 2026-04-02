@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { gsap } from 'gsap';
 import Image from 'next/image';
 import { Heart, ShoppingCart, Eye, X, Check, AlertTriangle, Loader2, Plus, Minus } from 'lucide-react';
-import { Product } from '@/types';
+import { Product, ProductVariant } from '@/types';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCart } from '@/context/CartContext';
 import { getRatingSummary, getProductDetails } from '@/lib/api';
@@ -13,6 +13,7 @@ import StarRating from '@/components/reviews/StarRating';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import toast from 'react-hot-toast';
+import { trackEcommerce } from '@/lib/analytics/gtag';
 
 
 const BLUR_DATA_URL =
@@ -23,9 +24,11 @@ interface ProductCardProps {
     onMoveToCart?: (e: React.MouseEvent) => void;
     priority?: boolean;
     layout?: 'grid' | 'list';
+    listName?: string;
+    listIndex?: number;
 }
 
-export default function ProductCard({ product, onMoveToCart, priority = false, layout = 'grid' }: ProductCardProps) {
+export default function ProductCard({ product, onMoveToCart, priority = false, layout = 'grid', listName, listIndex }: ProductCardProps) {
     const { formatPrice } = useCurrency();
     const { isInWishlist, toggleItem } = useWishlist();
     const { addItem, updateQuantity, removeItem, items, loading: cartLoading } = useCart();
@@ -37,8 +40,8 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
 
     // Variant preview / Cart modal state
     const [showCartModal, setShowCartModal] = useState(false);
-    const [variants, setVariants] = useState<any[]>([]);
-    const [selectedVariant, setSelectedVariant] = useState<any>(null);
+    const [variants, setVariants] = useState<ProductVariant[]>([]);
+    const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
     const [loadingVariants, setLoadingVariants] = useState(false);
     const [addingToCart, setAddingToCart] = useState(false);
     const [isClosing, setIsClosing] = useState(false);
@@ -139,9 +142,9 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
 
 
     useEffect(() => {
-        if ((product as any).avg_rating !== undefined && (product as any).review_count !== undefined) {
-            setAvgRating(Number((product as any).avg_rating) || 0);
-            setTotalReviews(Number((product as any).review_count) || 0);
+        if (product.avg_rating !== undefined && product.review_count !== undefined) {
+            setAvgRating(Number(product.avg_rating) || 0);
+            setTotalReviews(Number(product.review_count) || 0);
             return;
         }
         getRatingSummary(product.product_id).then(res => {
@@ -150,7 +153,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                 setTotalReviews(res.data.total_reviews ?? 0);
             }
         }).catch(() => { });
-    }, [product.product_id, (product as any).avg_rating, (product as any).review_count]);
+    }, [product.product_id, product.avg_rating, product.review_count]);
 
     const handleToggleWishlist = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -159,7 +162,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
     };
 
     // Determine if product has variants from the product data
-    const hasVariants = (product as any).variant_count > 1 || (product as any).variants?.length > 1;
+    const hasVariants = (product.variant_count ?? 0) > 1 || (product.variants?.length ?? 0) > 1;
 
     // Display values (default variant or product level)
     const displayPrice = product.price ?? 0;
@@ -167,7 +170,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
     const originalPrice = product.original_price ?? displayPrice;
     const discountPercent = product.discount_percentage ?? 0;
 
-    const imageSrc = (product as any).thumbnail_url || product.images?.[0] || '/herbal_placeholder.png';
+    const imageSrc = product.thumbnail_url || product.images?.[0] || '/herbal_placeholder.png';
     const isExternal = imageSrc.startsWith('http');
     const isBase64 = imageSrc.startsWith('data:');
     const productUrl = `/products/${product.slug || product.product_id}`;
@@ -209,7 +212,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
         e.stopPropagation();
 
         if (!hasVariants) {
-            const maxStock = (product as any).stock_quantity ?? 99;
+            const maxStock = product.stock_quantity ?? 99;
             if (maxStock <= 0) {
                 toast.error('This item is out of stock');
                 return;
@@ -224,7 +227,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                     detail: { startX, startY }
                 }));
 
-                const variantIdToUse = (product as any).default_variant_id || null;
+                const variantIdToUse = product.default_variant_id || null;
                 await addItem(product.product_id, variantIdToUse, 1);
                 toast.success(`${product.product_name} added to cart!`);
                 setQuantity(1);
@@ -256,7 +259,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
             const details = await getProductDetails(product.product_id);
             if (details?.variants?.length) {
                 setVariants(details.variants);
-                const defaultV = details.variants.find((v: any) => v.is_default === true) || details.variants[0];
+                const defaultV = details.variants.find((v: ProductVariant) => v.is_default === true) || details.variants[0];
                 setSelectedVariant(defaultV);
                 const existing = items.find(i => i.variant_id === defaultV.variant_id);
                 setQuantity(existing ? existing.quantity : 1);
@@ -272,9 +275,9 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
     const handleModalAddToCart = async (e: React.MouseEvent) => {
         if (hasVariants && !selectedVariant) return;
 
-        const maxStock = hasVariants
+        const maxStock = hasVariants && selectedVariant
             ? (selectedVariant.stock_quantity ?? 99)
-            : ((product as any).stock_quantity ?? 99);
+            : (product.stock_quantity ?? 99);
 
         if (maxStock <= 0) {
             toast.error('This item is out of stock');
@@ -290,7 +293,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                 detail: { startX, startY }
             }));
 
-            const variantIdToUse = hasVariants ? selectedVariant.variant_id : ((product as any).default_variant_id || null);
+            const variantIdToUse = (hasVariants && selectedVariant) ? selectedVariant.variant_id : (product.default_variant_id || null);
             await addItem(product.product_id, variantIdToUse, quantity);
             toast.success(`${product.product_name} added to cart!`);
             triggerAddedFeedback();
@@ -312,9 +315,9 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
         if (!currentItemInCart) return;
         setAddingToCart(true);
         try {
-            const maxStock = hasVariants
+            const maxStock = hasVariants && selectedVariant
                 ? (selectedVariant.stock_quantity ?? 99)
-                : ((product as any).stock_quantity ?? 99);
+                : (product.stock_quantity ?? 99);
 
             if (currentItemInCart.quantity < maxStock) {
                 const newQty = currentItemInCart.quantity + 1;
@@ -422,7 +425,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             </div>
                         ) : variants.length > 0 ? (
                             <div ref={variantButtonsRef} className="flex flex-col gap-1">
-                                {variants.map((v: any) => {
+                                {variants.map((v: ProductVariant) => {
                                     const isSelected = selectedVariant?.variant_id === v.variant_id;
                                     const isInactive = v.status === 'Inactive' || v.is_active === false;
                                     const isOut = v.stock_quantity !== null && v.stock_quantity !== undefined && v.stock_quantity <= 0;
@@ -436,14 +439,14 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                         if (!g) return '';
                                         return g >= 1000 ? `${(g / 1000).toFixed(g % 1000 === 0 ? 0 : g % 100 === 0 ? 1 : 2)} kg` : `${Math.round(g)} g`;
                                     };
-                                    const volLabel = formatVolume(v.volume_ml);
-                                    const weightLabel = formatWeight(v.weight_g);
+                                    const volLabel = formatVolume(v.volume_ml ?? 0);
+                                    const weightLabel = formatWeight(v.weight_g ?? 0);
                                     const countLabel = v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : '';
                                     const strengthLabel = v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : '';
                                     const labelParts = [
                                         v.size_label, weightLabel, volLabel, countLabel,
                                         strengthLabel, v.flavor,
-                                        v.pack_quantity > 1 ? `Pack of ${v.pack_quantity}` : ''
+                                        (v.pack_quantity ?? 0) > 1 ? `Pack of ${v.pack_quantity}` : ''
                                     ].filter(Boolean);
                                     const label = labelParts.join(' · ') || v.sku || 'Standard';
 
@@ -543,11 +546,11 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                         {!isInCart ? (
                             <button
                                 onClick={(e) => handleModalAddToCart(e)}
-                                disabled={
-                                    (hasVariants && !selectedVariant) ||
-                                    addingToCart || cartLoading || justAdded ||
-                                    (hasVariants && selectedVariant?.stock_quantity <= 0)
-                                }
+                                    disabled={!!(
+                                        (hasVariants && !selectedVariant) ||
+                                        addingToCart || cartLoading || justAdded ||
+                                        (hasVariants && selectedVariant && (selectedVariant.stock_quantity ?? 0) <= 0)
+                                    )}
                                 className={`
                                     w-full py-2.5 rounded-xl text-white text-[11px] font-bold
                                     flex items-center justify-center gap-2 transition-all duration-200
@@ -570,7 +573,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                         : justAdded
                                             ? 'Added to bag!'
                                             : selectedVariant
-                                                ? `Add to Cart · ${formatPrice(selectedVariant.price * quantity)}`
+                                                ? `Add to Cart · ${formatPrice((selectedVariant.price ?? 0) * quantity)}`
                                                 : 'Select an option'
                                     }
                                 </span>
@@ -642,10 +645,10 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                     </p>
                                 </div>
                                 <div className="grid grid-cols-1 gap-1.5">
-                                    {variants.map((v: any) => {
+                                    {variants.map((v: ProductVariant) => {
                                         const isSelected = selectedVariant?.variant_id === v.variant_id;
                                         const isInactive = v.status === 'Inactive' || v.is_active === false;
-                                        const isOut = v.stock_quantity !== null && v.stock_quantity !== undefined && v.stock_quantity <= 0;
+                                        const isOut = v.stock_quantity !== null && v.stock_quantity !== undefined && (v.stock_quantity ?? 0) <= 0;
                                         const isDisabled = isOut || isInactive;
                                         const formatVolume = (ml: number) => {
                                             if (!ml) return '';
@@ -655,8 +658,8 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                             if (!g) return '';
                                             return g >= 1000 ? `${(g / 1000).toFixed(g % 1000 === 0 ? 0 : g % 100 === 0 ? 1 : 2)} kg` : `${Math.round(g)} g`;
                                         };
-                                        const volLabel = formatVolume(v.volume_ml);
-                                        const weightLabel = formatWeight(v.weight_g);
+                                        const volLabel = formatVolume(v.volume_ml ?? 0);
+                                        const weightLabel = formatWeight(v.weight_g ?? 0);
                                         const countLabel = v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : '';
                                         const strengthLabel = v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : '';
 
@@ -667,7 +670,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                             countLabel,
                                             strengthLabel,
                                             v.flavor,
-                                            v.pack_quantity > 1 ? `Pack of ${v.pack_quantity}` : ''
+                                            (v.pack_quantity ?? 0) > 1 ? `Pack of ${v.pack_quantity}` : ''
                                         ].filter(Boolean);
                                         const label = labelParts.join(' · ') || v.sku || 'Standard';
 
@@ -743,7 +746,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                     {!isInCart ? (
                         <button
                             onClick={(e) => handleModalAddToCart(e)}
-                            disabled={(hasVariants && !selectedVariant) || addingToCart || cartLoading || justAdded || (hasVariants && selectedVariant?.stock_quantity <= 0) || (!hasVariants && (product as any).stock_quantity <= 0)}
+                            disabled={!!((hasVariants && !selectedVariant) || addingToCart || cartLoading || justAdded || (hasVariants && selectedVariant && (selectedVariant.stock_quantity ?? 0) <= 0) || (!hasVariants && (product.stock_quantity ?? 0) <= 0))}
                             className={`w-full py-3.5 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2 transition-all duration-300 disabled:opacity-50 cursor-pointer shadow-lg font-ui ${justAdded ? 'bg-[#2a4d2e] shadow-[#2a4d2e]/20' : 'bg-[#3d5c3a] hover:bg-[#2d4a2a] shadow-[#3d5c3a]/20 hover:shadow-[#3d5c3a]/40'}`}
                         >
                             {addingToCart ? (
@@ -804,7 +807,22 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
         <>
             <div className="relative group block h-full" ref={cardRef}>
                 {/* ═══════ FRONT OF CARD (Link) ═══════ */}
-                <Link href={productUrl} className="block h-full">
+                <Link href={productUrl} className="block h-full" onClick={() => {
+                    trackEcommerce('select_item', {
+                        currency: 'INR',
+                        value: Number(displayPrice),
+                        items: [{
+                            item_id: product.product_id,
+                            item_name: product.product_name,
+                            price: Number(displayPrice),
+                            quantity: 1,
+                            item_category: product.category,
+                            item_brand: product.brand,
+                            item_list_name: listName,
+                            index: listIndex,
+                        }]
+                    });
+                }}>
                     <div className={`h-full overflow-hidden bg-white border border-gray-100 transition-all duration-300 ${isList ? 'flex flex-row p-3 hover:bg-gray-50/50 hover:border-[#3d5c3a]/30 rounded-2xl gap-4 sm:gap-6 items-center shadow-sm hover:shadow-md' : 'flex flex-col rounded-2xl hover:-translate-y-1 hover:shadow-xl'}`}>
                         <div className={`relative overflow-hidden bg-gradient-to-br from-[#f5f2ed] to-[#ece6dd] ${isList ? 'w-[100px] h-[100px] sm:w-[150px] sm:h-[150px] rounded-xl flex-shrink-0 border border-gray-100/50' : ''}`} style={isList ? {} : { aspectRatio: '1 / 1' }}>
                             <div className="absolute inset-0 flex items-center justify-center p-4">
@@ -960,9 +978,9 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             )}
 
                             {/* Short Description */}
-                            {(product as any).short_description && (
+                            {product.short_description && (
                                 <p className={`text-[11px] sm:text-xs text-gray-500 mb-2 leading-relaxed ${isList ? 'line-clamp-2' : 'line-clamp-1'}`}>
-                                    {(product as any).short_description}
+                                    {product.short_description}
                                 </p>
                             )}
 

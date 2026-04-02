@@ -169,7 +169,7 @@ export default function SearchAutocomplete({
         <div ref={containerRef} className={`relative ${className}`}>
             {/* ─── Search Input ─── */}
             <div className="relative flex items-center">
-                <Search className="absolute left-3 h-4 w-4 text-gray-400 pointer-events-none" />
+                <Search className="absolute left-4 h-4 w-4 text-gray-400 pointer-events-none" />
                 <input
                     ref={inputRef}
                     type="text"
@@ -188,7 +188,7 @@ export default function SearchAutocomplete({
                     placeholder={placeholder}
                     autoComplete="off"
                     className="
-            w-full pl-9 pr-9 py-2 rounded-full
+            w-full pl-11 pr-9 py-2 rounded-full
             bg-gray-100 border border-gray-200
             text-sm text-gray-800 placeholder-gray-400
             focus:outline-none focus:ring-2 focus:ring-[#4b0f1a]/30 focus:border-[#4b0f1a]/40

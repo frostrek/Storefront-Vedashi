@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import Script from "next/script";
+import { Suspense } from "react";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -15,6 +16,7 @@ import { CookieConsentProvider } from "@/context/CookieConsentContext";
 import CookieBanner from "@/components/CookieBanner";
 import LanguageSuggestionBanner from "@/components/LanguageSuggestionBanner";
 import DynamicScriptLoader from "@/components/DynamicScriptLoader";
+import RouteTracker from "@/components/RouteTracker";
 import MaintenancePage from "@/components/MaintenancePage";
 import { generateOrganizationJsonLd, generateWebSiteJsonLd } from "@/lib/seo";
 import ButterflyEffect from "@/components/animations/ButterflyEffect";
@@ -93,6 +95,14 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
       <body className={`min-h-screen flex flex-col ${inter.className}`} suppressHydrationWarning>
+        {/* GA4 — Set default consent BEFORE any gtag scripts load */}
+        <Script id="ga4-default-consent" strategy="beforeInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){window.dataLayer.push(arguments);}
+            gtag('consent', 'default', { analytics_storage: 'denied' });
+          `}
+        </Script>
         <Script
           id="structured-data-organization"
           type="application/ld+json"
@@ -116,6 +126,9 @@ export default async function RootLayout({
           />
           <CookieConsentProvider>
             <DynamicScriptLoader />
+            <Suspense fallback={null}>
+              <RouteTracker />
+            </Suspense>
             <AuthProvider>
               <CartProvider>
                 <WishlistProvider>

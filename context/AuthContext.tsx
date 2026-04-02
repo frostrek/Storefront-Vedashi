@@ -2,6 +2,8 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
 import { authFetch, API_URL } from '@/lib/api';
+import { setUserId, clearUserId } from '@/lib/analytics/gtag';
+import { useCookieConsent } from '@/context/CookieConsentContext';
 
 interface AuthContextType {
     user: UserInfo | null;
@@ -69,6 +71,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<UserInfo | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const listenersRef = useRef<Set<AuthChangeCallback>>(new Set());
+    const { consent } = useCookieConsent();
+
+    /** Helper: push user_id to dataLayer only if analytics consent is granted */
+    const pushUserId = useCallback((userId: string) => {
+        if (consent?.analytics) setUserId(userId);
+    }, [consent]);
+
+    /** Helper: clear user_id from dataLayer only if analytics consent is granted */
+    const pushClearUserId = useCallback(() => {
+        if (consent?.analytics) clearUserId();
+    }, [consent]);
 
     /** Subscribe to auth events — returns unsubscribe function */
     const onAuthChange = useCallback((cb: AuthChangeCallback) => {
@@ -88,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             localStorage.removeItem(USER_KEY);
             sessionStorage.removeItem('justSignedIn');
             sessionStorage.removeItem('social_otp_data');
+            pushClearUserId();
             notifyListeners('logout', null);
         };
         window.addEventListener('session-expired', handler);
@@ -106,6 +120,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             try {
                 const cachedUser: UserInfo = JSON.parse(stored);
                 setUser(cachedUser);
+                // Push user_id for analytics (consent-gated)
+                pushUserId(cachedUser.id);
                 // Notify listeners (Cart/Wishlist) about restored session
                 setTimeout(() => notifyListeners('login', cachedUser), 0);
 
@@ -128,10 +144,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                             
                             setUser(updatedUser);
                             localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+                            // Re-push user_id with verified data
+                            pushUserId(updatedUser.id);
                         } else {
                             // Cookie expired or invalid — clear cached user
                             setUser(null);
                             localStorage.removeItem(USER_KEY);
+                            pushClearUserId();
                             notifyListeners('logout', null);
                         }
                     }).catch(() => {
@@ -155,6 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         if (!['admin', 'Super Admin', 'owner'].includes(updatedUser.role || '')) {
                             setUser(updatedUser);
                             localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+                            pushUserId(updatedUser.id);
                             notifyListeners('login', updatedUser);
                         }
                     }
@@ -169,7 +189,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const login = useCallback(async (email: string, password: string, rememberMe: boolean = true, turnstileToken?: string | null) => {
         try {
-            const body: Record<string, any> = { email, password, remember_me: rememberMe, source: 'storefront' };
+            const body: Record<string, unknown> = { email, password, remember_me: rememberMe, source: 'storefront' };
             if (turnstileToken) body.turnstile_token = turnstileToken;
 
             const res = await authFetch(`${API_URL}/api/auth/login`, {
@@ -195,6 +215,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 localStorage.setItem(USER_KEY, JSON.stringify(u));
                 // SECURITY: No token stored — access token is in HttpOnly cookie
                 sessionStorage.setItem('justSignedIn', String(Date.now()));
+                pushUserId(u.id);
                 notifyListeners('login', u);
                 return { success: true, role: u.role };
             }
@@ -249,8 +270,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem(USER_KEY, JSON.stringify(u));
         // SECURITY: No token stored — access token is in HttpOnly cookie
         sessionStorage.setItem('justSignedIn', String(Date.now()));
+        pushUserId(u.id);
         notifyListeners('login', u);
-    }, [notifyListeners]);
+    }, [notifyListeners, pushUserId]);
 
     /** Update user fields dynamically */
     const updateUser = useCallback((updates: Partial<UserInfo>) => {
@@ -273,8 +295,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         sessionStorage.removeItem('justSignedIn');
         sessionStorage.removeItem('social_otp_data');
         // SECURITY: HttpOnly cookies are cleared server-side by the /api/auth/logout endpoint
+        pushClearUserId();
         notifyListeners('logout', null);
-    }, [notifyListeners]);
+    }, [notifyListeners, pushClearUserId]);
 
     /** Social login via Clerk token → backend JWT (or pending OTP for new users) */
     const socialLogin = useCallback(async (clerkToken: string) => {
@@ -305,6 +328,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 localStorage.setItem(USER_KEY, JSON.stringify(u));
                 // SECURITY: No token stored — access token is in HttpOnly cookie
                 sessionStorage.setItem('justSignedIn', String(Date.now()));
+                pushUserId(u.id);
                 notifyListeners('login', u);
                 return {
                     success: true,

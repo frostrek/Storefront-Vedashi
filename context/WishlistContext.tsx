@@ -38,9 +38,8 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
             const res = await apiGetWishlist();
             if (res.success && res.data) {
                 const wishlistItems = res.data.items || res.data || [];
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const products: Product[] = wishlistItems.map((wi: any) => {
-                    const baseProduct = wi.product || wi;
+                const products: Product[] = wishlistItems.map((wi: Record<string, unknown>) => {
+                    const baseProduct = (wi.product as Record<string, unknown>) || wi;
                     return {
                         ...baseProduct,
                         product_id: baseProduct.product_id || wi.product_id,
@@ -52,7 +51,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
                         brand: baseProduct.brand || wi.brand,
                         images: baseProduct.image_url ? [baseProduct.image_url] : (baseProduct.images || wi.images || []),
                         // Force normalized 'stock_status' even if nested inside wi or baseProduct
-                        stock_status: (baseProduct.stock_status || wi.stock_status || 'in_stock').toLowerCase(),
+                        stock_status: String(baseProduct.stock_status || wi.stock_status || 'in_stock').toLowerCase(),
                         created_at: wi.added_at || wi.created_at || baseProduct.created_at,
                     } as Product;
                 });

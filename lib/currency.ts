@@ -42,7 +42,7 @@ export function formatPrice(
   }
 
   // Convert
-  let converted = n * rate;
+  const converted = n * rate;
 
   // Formatting rules specific to currency
   let formattedCurrency = '';

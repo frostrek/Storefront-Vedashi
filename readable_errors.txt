@@ -1,0 +1,535 @@
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:65 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:131 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:163 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:163 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:176 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:176 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:309 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:311 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:370 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:403 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:403 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:494 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:543 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:561 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:561 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:573 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:611 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:652 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:779 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:1079 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:1467 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:1478 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:1566 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:1602 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:1748 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:1959 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:2620 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:2915 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:2918 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:2918 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:3150 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:3353 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:3530 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\account\[[...tab]]\page.tsx:3695 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\cart\page.tsx:64 Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\cart\page.tsx:64:9
+  62 |
+  63 |     useEffect(() => {
+> 64 |         setIsMounted(true);
+     |         ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  65 |     }, []);
+  66 |
+  67 |     if (loading && items.length === 0) {
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\cart\page.tsx:129 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\cart\page.tsx:133 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\cart\page.tsx:248 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\cart\page.tsx:259 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\cart\page.tsx:320 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\cart\page.tsx:324 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\collections\[slug]\page.tsx:23 Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\collections\[slug]\page.tsx:23:9
+  21 |     useEffect(() => {
+  22 |         if (!slug) return;
+> 23 |         setLoading(true);
+     |         ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  24 |         getCollectionBySlug(slug, LIMIT, 0).then(data => {
+  25 |             setCollection(data);
+  26 |             setOffset(LIMIT);
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\forgot-password\page.tsx:74 `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\help-center\customer-enquiry\page.tsx:337 `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\help-center\customer-enquiry\page.tsx:338 `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\help-center\knowledge-base\[slug]\page.tsx:12 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\help-center\knowledge-base\[slug]\page.tsx:116 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\help-center\knowledge-base\page.tsx:37 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\help-center\knowledge-base\page.tsx:38 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\help-center\knowledge-base\page.tsx:41 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\help-center\knowledge-base\page.tsx:169 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\help-center\knowledge-base\page.tsx:215 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\help-center\page.tsx:13 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\help-center\page.tsx:15 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\help-center\page.tsx:18 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\help-center\page.tsx:34 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\help-center\page.tsx:35 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\help-center\page.tsx:36 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\help-center\page.tsx:223 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\help-center\support\[ticketId]\page.tsx:40 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\help-center\support\[ticketId]\page.tsx:124 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\help-center\support\[ticketId]\page.tsx:125 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\help-center\support\[ticketId]\page.tsx:218 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\help-center\support\page.tsx:59 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\help-center\support\page.tsx:78 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\help-center\support\page.tsx:423 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\login\page.tsx:481 Do not use an `<a>` element to navigate to `/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\login\page.tsx:481 Do not use an `<a>` element to navigate to `/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\login\page.tsx:481 Do not use an `<a>` element to navigate to `/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\login\page.tsx:481 Do not use an `<a>` element to navigate to `/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\login\page.tsx:481 Do not use an `<a>` element to navigate to `/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\login\page.tsx:481 Do not use an `<a>` element to navigate to `/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\login\page.tsx:481 Do not use an `<a>` element to navigate to `/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\login\page.tsx:481 Do not use an `<a>` element to navigate to `/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\products\[id]\page.tsx:352 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\products\[id]\page.tsx:484 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\products\[id]\page.tsx:493 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\products\[id]\page.tsx:504 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\products\[id]\page.tsx:505 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\products\[id]\page.tsx:506 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\products\[id]\page.tsx:507 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\products\[id]\page.tsx:508 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\products\[id]\page.tsx:509 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\products\[id]\page.tsx:526 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\products\[id]\page.tsx:527 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\products\[id]\page.tsx:538 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\products\[id]\page.tsx:539 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\products\page.tsx:285 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\products\page.tsx:401 Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\shop\page.tsx:33 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\shop\page.tsx:47 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\[country]\shop\page.tsx:317 `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\sitemap.ts:8 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\app\sitemap.ts:9 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\CookieBanner.tsx:76 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\CookieBanner.tsx:91 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\Footer.tsx:55 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\GoogleTranslateWidget.tsx:8 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\HeroCarousel.tsx:177 Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\HeroCarousel.tsx:177:32
+  175 |         >
+  176 |             {/* ── Slides ── */}
+> 177 |             {displaySlides.map((s, i) => (
+      |                                ^^^^^^^^^^^
+> 178 |                 <div
+      | ^^^^^^^^^^^^^^^^^^^^
+> 179 |                     key={s.id}
+      …
+      | ^^^^^^^^^^^^^^^^^^^^
+> 192 |                 </div>
+      | ^^^^^^^^^^^^^^^^^^^^
+> 193 |             ))}
+      | ^^^^^^^^^^^^^^ Cannot access ref value during render
+  194 |
+  195 |             {/* ── Content ── */}
+  196 |             <div className="relative z-20 mx-auto max-w-7xl px-6 py-12 sm:py-16 md:py-20 text-center w-full">
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\HeroSection.tsx:89 Do not use an `<a>` element to navigate to `/about/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\HeroSection.tsx:89 Do not use an `<a>` element to navigate to `/about/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\HeroSection.tsx:89 Do not use an `<a>` element to navigate to `/about/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\HeroSection.tsx:89 Do not use an `<a>` element to navigate to `/about/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\HeroSection.tsx:89 Do not use an `<a>` element to navigate to `/about/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\HeroSection.tsx:89 Do not use an `<a>` element to navigate to `/about/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\HeroSection.tsx:89 Do not use an `<a>` element to navigate to `/about/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\HeroSection.tsx:89 Do not use an `<a>` element to navigate to `/about/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\LanguageSuggestionBanner.tsx:32 Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\LanguageSuggestionBanner.tsx:32:7
+  30 |     const userLang = getUserLanguage();
+  31 |     if (userLang) {
+> 32 |       setVisible(false);
+     |       ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  33 |       return;
+  34 |     }
+  35 |
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\Navbar.tsx:139 Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\Navbar.tsx:139:13
+  137 |         if (justSignedIn === 'true' || (!isNaN(ts) && Date.now() - ts < 15000)) {
+  138 |           if (totalItems > 0 && !showCartReminder) {
+> 139 |             setShowCartReminder(true);
+      |             ^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  140 |           }
+  141 |         } else {
+  142 |           sessionStorage.removeItem('justSignedIn');
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\ProductCard.tsx:249 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\ProductReel.tsx:11 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\RecentlyViewedProducts.tsx:41 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\RegionSwitcher.tsx:37 Error: This value cannot be modified
+
+Modifying a variable defined outside a component or hook is not allowed. Consider using an effect.
+
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\RegionSwitcher.tsx:37:5
+  35 |
+  36 |     // Set cookies (7 days)
+> 37 |     document.cookie = `geo_country=${newCountry}; max-age=${7 * 24 * 60 * 60}; path=/`;
+     |     ^^^^^^^^ value cannot be modified
+  38 |     const currencyMap: Record<string, string> = { in: 'INR', us: 'USD', gb: 'GBP', ae: 'AED', ca: 'CAD', au: 'AUD', ru: 'RUB', kr: 'KRW' };
+  39 |     document.cookie = `geo_currency=${currencyMap[newCountry] || 'USD'}; max-age=${7 * 24 * 60 * 60}; path=/`;
+  40 |
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\RegionSwitcher.tsx:39 Error: This value cannot be modified
+
+Modifying a variable defined outside a component or hook is not allowed. Consider using an effect.
+
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\RegionSwitcher.tsx:39:5
+  37 |     document.cookie = `geo_country=${newCountry}; max-age=${7 * 24 * 60 * 60}; path=/`;
+  38 |     const currencyMap: Record<string, string> = { in: 'INR', us: 'USD', gb: 'GBP', ae: 'AED', ca: 'CAD', au: 'AUD', ru: 'RUB', kr: 'KRW' };
+> 39 |     document.cookie = `geo_currency=${currencyMap[newCountry] || 'USD'}; max-age=${7 * 24 * 60 * 60}; path=/`;
+     |     ^^^^^^^^ value cannot be modified
+  40 |
+  41 |     // Replace country code in pathname
+  42 |     const parts = pathname.split('/');
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\SimilarProducts.tsx:19 Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\SimilarProducts.tsx:19:9
+  17 |     useEffect(() => {
+  18 |         let cancelled = false;
+> 19 |         setLoading(true);
+     |         ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  20 |
+  21 |         getSimilarProducts(productId, 12)
+  22 |             .then(data => {
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\SocialLoginButtons.tsx:75 Error: This value cannot be modified
+
+Modifying a variable defined outside a component or hook is not allowed. Consider using an effect.
+
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\SocialLoginButtons.tsx:75:13
+  73 |         // This avoids the "You're already signed in" error entirely.
+  74 |         if (session) {
+> 75 |             window.location.href = currentPath + '/sso-complete';
+     |             ^^^^^^^^^^^^^^^ value cannot be modified
+  76 |             return;
+  77 |         }
+  78 |
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\SocialLoginButtons.tsx:89 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\SocialLoginButtons.tsx:93 Error: This value cannot be modified
+
+Modifying a variable defined outside a component or hook is not allowed. Consider using an effect.
+
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\SocialLoginButtons.tsx:93:17
+  91 |             const message = err?.message || '';
+  92 |             if (message.includes('signed in') || message.toLowerCase().includes('already')) {
+> 93 |                 window.location.href = currentPath + '/sso-callback';
+     |                 ^^^^^^^^^^^^^^^ value cannot be modified
+  94 |                 return;
+  95 |             }
+  96 |
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\SocialLoginButtons.tsx:107 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\SocialLoginButtons.tsx:110 Error: This value cannot be modified
+
+Modifying a variable defined outside a component or hook is not allowed. Consider using an effect.
+
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\SocialLoginButtons.tsx:110:25
+  108 |                     const msg = signInErr?.message || '';
+  109 |                     if (msg.includes('signed in') || msg.toLowerCase().includes('already')) {
+> 110 |                         window.location.href = currentPath + '/sso-callback';
+      |                         ^^^^^^^^^^^^^^^ value cannot be modified
+  111 |                         return;
+  112 |                     }
+  113 |                     console.error(`[Social Login] signIn fallback failed:`, signInErr);
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\account\MyWallet.tsx:16 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\account\MyWallet.tsx:17 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\account\MyWallet.tsx:293 `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\account\MyWallet.tsx:293 `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\account\NotificationCenter.tsx:19 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\account\NotificationCenter.tsx:37 Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\account\NotificationCenter.tsx:37:5
+  35 |
+  36 |   useEffect(() => {
+> 37 |     fetchNotifications();
+     |     ^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  38 |     
+  39 |     // Listen for updates from other components
+  40 |     const handleUpdate = () => {
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\account\NotificationCenter.tsx:99 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\account\NotificationCenter.tsx:169 `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\account\NotificationCenter.tsx:216 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\account\PrivacyDashboard.tsx:10 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\account\PrivacyDashboard.tsx:101 Do not use an `<a>` element to navigate to `/privacy-policy/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\account\PrivacyDashboard.tsx:101 Do not use an `<a>` element to navigate to `/privacy-policy/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\account\PrivacyDashboard.tsx:101 Do not use an `<a>` element to navigate to `/privacy-policy/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\account\PrivacyDashboard.tsx:101 Do not use an `<a>` element to navigate to `/privacy-policy/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\account\PrivacyDashboard.tsx:101 Do not use an `<a>` element to navigate to `/privacy-policy/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\account\PrivacyDashboard.tsx:101 Do not use an `<a>` element to navigate to `/privacy-policy/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\account\PrivacyDashboard.tsx:101 Do not use an `<a>` element to navigate to `/privacy-policy/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\account\PrivacyDashboard.tsx:101 Do not use an `<a>` element to navigate to `/privacy-policy/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\account\PrivacyDashboard.tsx:160 `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\account\PrivacyDashboard.tsx:160 `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\animations\ButterflyEffect.tsx:52 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\blog\BlogCommentSection.tsx:114 Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\blog\BlogCommentSection.tsx:114:24
+  112 |     useEffect(() => {
+  113 |         if (isAuthenticated && user) {
+> 114 |             if (!name) setName(user.name || '');
+      |                        ^^^^^^^ Avoid calling setState() directly within an effect
+  115 |             if (!email) setEmail(user.email || '');
+  116 |         }
+  117 |     }, [isAuthenticated, user]);
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\blog\FallingLeafBackground.tsx:85 Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\blog\FallingLeafBackground.tsx:85:5
+  83 |
+  84 |   useEffect(() => {
+> 85 |     setMounted(true);
+     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  86 |   }, []);
+  87 |
+  88 |   if (!mounted) return null;
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\blog\QuoteBlock.tsx:13 `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\blog\QuoteBlock.tsx:13 `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\gallery\ImageZoom.tsx:57 Error: Cannot access variable before it is declared
+
+`tick` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\gallery\ImageZoom.tsx:57:47
+  55 |
+  56 |         panel.style.backgroundPosition = `${pctX}% ${pctY}%`;
+> 57 |         rafId.current = requestAnimationFrame(tick);
+     |                                               ^^^^ `tick` accessed before it is declared
+  58 |     }, [imageRef, panelRef]);
+  59 |
+  60 |     // Attach native event listeners (not React synthetic — avoids overhead)
+
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\gallery\ImageZoom.tsx:44:5
+  42 |
+  43 |     // rAF loop — reads mouse position ref, writes to zoom panel DOM
+> 44 |     const tick = useCallback(() => {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 45 |         const container = imageRef.current;
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 46 |         const panel = panelRef.current;
+     …
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 57 |         rafId.current = requestAnimationFrame(tick);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 58 |     }, [imageRef, panelRef]);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `tick` is declared here
+  59 |
+  60 |     // Attach native event listeners (not React synthetic — avoids overhead)
+  61 |     useEffect(() => {
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\gallery\ProductImageGallery.tsx:181 Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\gallery\ProductImageGallery.tsx:181:9
+  179 |
+  180 |     useEffect(() => {
+> 181 |         setActiveIndex(0);
+      |         ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  182 |         setImageLoaded(false);
+  183 |         setImageError(false);
+  184 |     }, [variantId, images.length]);
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\gallery\ProductImageGallery.tsx:187 Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\gallery\ProductImageGallery.tsx:187:9
+  185 |
+  186 |     useEffect(() => {
+> 187 |         setImageLoaded(false);
+      |         ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  188 |         setImageError(false);
+  189 |     }, [activeIndex]);
+  190 |
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\reviews\ReviewCard.tsx:107 `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\reviews\ReviewCard.tsx:107 `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\reviews\ReviewSection.tsx:32 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\reviews\ReviewSection.tsx:33 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\ui\ConfirmModal.tsx:30 Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\ui\ConfirmModal.tsx:30:9
+  28 |
+  29 |     useEffect(() => {
+> 30 |         setIsMounted(true);
+     |         ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  31 |     }, []);
+  32 |
+  33 |     // Prevent scrolling when modal is open 
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\ui\LegalContentRenderer.tsx:21 Error: Avoid constructing JSX within try/catch
+
+React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\ui\LegalContentRenderer.tsx:21:17
+  19 |         if (Array.isArray(blocks) && blocks.length > 0 && blocks[0].type) {
+  20 |             return (
+> 21 |                 <div className="space-y-8">
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 22 |                     {blocks.map((block: Block, idx: number) => (
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 23 |                         <div key={idx}>
+     …
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 34 |                     ))}
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 35 |                 </div>
+     | ^^^^^^^^^^^^^^^^^^^^^^^ Avoid constructing JSX within try/catch
+  36 |             );
+  37 |         }
+  38 |     } catch (e) {
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\ui\LegalModal.tsx:23 Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\components\ui\LegalModal.tsx:23:9
+  21 |
+  22 |     useEffect(() => {
+> 23 |         setIsMounted(true);
+     |         ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  24 |     }, []);
+  25 |
+  26 |     // Prevent scrolling when modal is open
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\hooks\useFilters.ts:134 Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `setForm`, but the source dependencies were [filters, setBrands, setCountry, setRatings, setCategory, setSubCategory, setSearch, setPriceRange, setInStock, setBestSellers, setNewArrivals, setSort, setDiscountMin, setAttribute, setParam]. Inferred different dependency than source.
+
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\hooks\useFilters.ts:134:38
+  132 |
+  133 |     // Remove a single chip
+> 134 |     const removeFilter = useCallback((key: string, value: string) => {
+      |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 135 |         if (key.startsWith('attr_')) {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 136 |             const attrKey = key.replace('attr_', '');
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 157 |         }
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 158 |     }, [filters, setBrands, setCountry, setRatings, setCategory, setSubCategory, setSearch, setPriceRange, setInStock, setBestSellers, setNewArrivals, setSort, setDiscountMin, setAttribute, setParam]);
+      | ^^^^^^ Could not preserve existing manual memoization
+  159 |
+  160 |     // Build chips from active filters
+  161 |     const activeChips = useMemo(() => {
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\hooks\useFilters.ts:134 Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `setSpecialities`, but the source dependencies were [filters, setBrands, setCountry, setRatings, setCategory, setSubCategory, setSearch, setPriceRange, setInStock, setBestSellers, setNewArrivals, setSort, setDiscountMin, setAttribute, setParam]. Inferred different dependency than source.
+
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\hooks\useFilters.ts:134:38
+  132 |
+  133 |     // Remove a single chip
+> 134 |     const removeFilter = useCallback((key: string, value: string) => {
+      |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 135 |         if (key.startsWith('attr_')) {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 136 |             const attrKey = key.replace('attr_', '');
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 157 |         }
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 158 |     }, [filters, setBrands, setCountry, setRatings, setCategory, setSubCategory, setSearch, setPriceRange, setInStock, setBestSellers, setNewArrivals, setSort, setDiscountMin, setAttribute, setParam]);
+      | ^^^^^^ Could not preserve existing manual memoization
+  159 |
+  160 |     // Build chips from active filters
+  161 |     const activeChips = useMemo(() => {
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:50 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:53 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:77 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:142 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:144 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:163 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:165 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:185 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:187 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:208 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:211 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:256 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:269 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:273 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:358 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:402 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:462 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:487 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:487 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:529 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:544 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:562 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:564 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:806 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:997 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:999 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:1546 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:1551 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:1659 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\api.ts:2138 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\seo.ts:206 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\lib\seo.ts:269 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\types\index.ts:29 Unexpected any. Specify a different type.
+C:\Users\Sweta Shukla\Desktop\VEDASHI\Storefront-Vedashi\types\index.ts:48 Unexpected any. Specify a different type.

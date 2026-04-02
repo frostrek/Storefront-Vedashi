@@ -34,7 +34,7 @@ export function CurrencyProvider({
           if (data.success && data.data) {
             // Convert array of { target_currency, rate } into object
             const ratesObj: Record<string, number> = { INR: 1 };
-            data.data.forEach((r: any) => {
+            data.data.forEach((r: { target_currency: string; rate: number | string }) => {
               ratesObj[r.target_currency] = Number(r.rate);
             });
             setRates(ratesObj);
@@ -84,7 +84,7 @@ export function useCurrency() {
     return {
       countryConfig: SUPPORTED_COUNTRIES['in'],
       rates: { INR: 1 },
-      formatPrice: (amount: any) => formatPrice(amount, 'INR', 1, 'en-IN'),
+      formatPrice: (amount: number | string | null | undefined) => formatPrice(amount, 'INR', 1, 'en-IN'),
       isLoadingRates: false
     };
   }

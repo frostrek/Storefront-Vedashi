@@ -193,7 +193,7 @@ export default function Navbar() {
             </div>
 
             {/* Center Nav Links (Mathematically Centered) */}
-            <nav className="hidden md:flex items-center gap-4 lg:gap-6 absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 z-10 w-max">
+            <nav className={`hidden md:flex items-center gap-4 lg:gap-6 absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 z-10 w-max transition-all duration-300 ${searchOpen ? 'opacity-0 pointer-events-none translate-y-[-60%]' : 'opacity-100 translate-y-[-50%]'}`}>
               {visibleLinks.map(link => {
                 const prefixedUrl = link.url.startsWith('/') ? `/${currentCountry}${link.url === '/' ? '' : link.url}` : link.url;
                 const isActive = link.url === '/'
@@ -206,8 +206,8 @@ export default function Navbar() {
                     href={prefixedUrl}
                     className={`text-[11px] lg:text-[13px] font-bold font-base uppercase tracking-[0.12em] lg:tracking-[0.14em] transition-colors duration-200 relative before:content-[''] before:absolute before:-bottom-1 before:left-0 before:w-full before:h-0.5 before:bg-current before:transition-transform before:duration-300 ${isActive ? 'before:scale-x-100' : 'before:scale-x-0'}`}
                     style={{ color: isActive ? colors.navbar_hover : colors.navbar_text }}
-                    onMouseEnter={e => (e.currentTarget.style.color = colors.navbar_hover)}
-                    onMouseLeave={e => (e.currentTarget.style.color = isActive ? colors.navbar_hover : colors.navbar_text)}
+                    onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.color = colors.navbar_hover)}
+                    onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.color = isActive ? colors.navbar_hover : colors.navbar_text)}
                   >
                     {link.label}
                   </Link>
@@ -319,7 +319,7 @@ export default function Navbar() {
               <div className="relative group flex items-center" suppressHydrationWarning>
                 <Link href={isAuthenticated ? `/${currentCountry}/account` : `/${currentCountry}/login`} className="relative p-2 block group-hover:text-[#3B5D3B] transition-colors">
                   {isAuthenticated && user?.avatar_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
+                     
                     <div className="h-[22px] w-[22px] rounded-full overflow-hidden ring-1 ring-[#D4A847]/30 group-hover:ring-[#D4A847] transition-all">
                       <img src={user.avatar_url} alt="Profile" className="h-full w-full object-cover" />
                     </div>
@@ -438,8 +438,8 @@ export default function Navbar() {
                                 href={`/${currentCountry}/products?category=${parent.slug}`}
                                 className="flex items-center justify-between px-5 py-2.5 text-sm font-medium transition-colors duration-150"
                                 style={{ color: colors.navbar_text }}
-                                onMouseEnter={e => (e.currentTarget.style.color = colors.navbar_hover)}
-                                onMouseLeave={e => (e.currentTarget.style.color = colors.navbar_text)}
+                                onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.color = colors.navbar_hover)}
+                                onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.color = colors.navbar_text)}
                               >
                                 {parent.name}
                                 {subs.length > 0 && <ChevronDown className="h-3.5 w-3.5 -rotate-90 text-gray-400" />}
@@ -453,11 +453,11 @@ export default function Navbar() {
                                         href={`/${currentCountry}/products?category=${parent.slug}&sub_category=${sub.slug}`}
                                         className="block px-5 py-2 text-sm text-gray-600 transition-colors duration-150"
                                         style={{ color: colors.navbar_text }}
-                                        onMouseEnter={e => {
+                                        onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => {
                                           (e.currentTarget as HTMLElement).style.backgroundColor = colors.navbar_hover;
                                           (e.currentTarget as HTMLElement).style.color = '#ffffff';
                                         }}
-                                        onMouseLeave={e => {
+                                        onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => {
                                           (e.currentTarget as HTMLElement).style.backgroundColor = '';
                                           (e.currentTarget as HTMLElement).style.color = colors.navbar_text;
                                         }}

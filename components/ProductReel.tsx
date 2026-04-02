@@ -116,7 +116,11 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
                                 transition={{ delay: i * 0.05 }}
                                 viewport={{ once: true }}
                             >
-                                <ProductCard product={product} />
+                                <ProductCard 
+                                    product={product} 
+                                    listName={title || 'Product Reel'}
+                                    listIndex={i + 1}
+                                />
                             </motion.div>
                         ))
                     )}
