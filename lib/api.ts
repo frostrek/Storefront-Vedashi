@@ -6,6 +6,8 @@
 
 import { Product, FilteredProduct, FilterMeta, ProductWithDetails, ProductAsset, ApiResponse } from '@/types';
 import { env } from '@/lib/env';
+import PerformanceStore from '@/lib/analytics/performance';
+import { isConsentGranted } from '@/lib/analytics/gtag';
 
 export let API_URL = env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 if (typeof window !== 'undefined' && (API_URL.includes('localhost') || API_URL.includes('127.0.0.1'))) {
@@ -30,13 +32,61 @@ export async function initCsrf(): Promise<void> {
     if (typeof window === 'undefined') return;
     if (cachedCsrfToken) return;
     try {
-        const res = await fetch(`${API_URL}/api/csrf-token`, { credentials: 'include' });
+        const res = await apiFetch(`${API_URL}/api/csrf-token`, { credentials: 'include' });
         const json = await res.json();
         if (json.success && json.data?.csrfToken) {
             cachedCsrfToken = json.data.csrfToken;
         }
     } catch {
         // Non-critical
+    }
+}
+
+const lastApiLatencies: Record<string, number> = {};
+
+/** Centralized helper to track API latency */
+async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
+    const startTime = performance.now();
+    try {
+        const res = await fetch(url, init);
+        const latency = Math.round(performance.now() - startTime);
+
+        if (typeof window !== 'undefined' && isConsentGranted()) {
+            try {
+                const urlObj = new URL(url, window.location.origin);
+                const path = urlObj.pathname;
+                
+                // Sensitive endpoint filtering
+                if (!path.includes('/api/auth/') && !path.includes('/api/csrf-token') && !path.includes('/api/gdpr/')) {
+                    // Throttling (100ms per endpoint)
+                    const now = Date.now();
+                    const lastSent = lastApiLatencies[path] || 0;
+                    if (now - lastSent > 100) {
+                        lastApiLatencies[path] = now;
+                        
+                        // Storage for purchase correlation
+                        PerformanceStore.recordApiLatency(latency);
+                        
+                        // Push with category
+                        const category = PerformanceStore.getPerformanceCategory(latency, 'api');
+                        
+                        if ((window as any).dataLayer) {
+                            (window as any).dataLayer.push({
+                                event: 'api_latency',
+                                api_endpoint: path,
+                                latency_ms: latency,
+                                latency_category: category,
+                                status_code: res.status,
+                                method: init?.method?.toUpperCase() || 'GET'
+                            });
+                        }
+                    }
+                }
+            } catch { /* ignore parse error */ }
+        }
+        return res;
+    } catch (error) {
+        throw error;
     }
 }
 
@@ -49,14 +99,10 @@ export async function authFetch(url: string, init?: RequestInit): Promise<Respon
     }
 
     const csrfToken = getCsrfToken();
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string> = { ...((init?.headers as any) || {}) };
     if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
 
-    // Merge with any existing headers
-    const existingHeaders = init?.headers as Record<string, string> | undefined;
-    if (existingHeaders) Object.assign(headers, existingHeaders);
-
-    let res = await fetch(url, { ...init, headers, credentials: 'include' });
+    let res = await apiFetch(url, { ...init, headers, credentials: 'include' });
 
     // Auto-retry once on CSRF failure
     if (res.status === 403 && isStateChanging && typeof window !== 'undefined') {
@@ -67,7 +113,7 @@ export async function authFetch(url: string, init?: RequestInit): Promise<Respon
                 cachedCsrfToken = null;
                 await initCsrf();
                 headers['X-CSRF-Token'] = cachedCsrfToken || '';
-                res = await fetch(url, { ...init, headers, credentials: 'include' });
+                res = await apiFetch(url, { ...init, headers, credentials: 'include' });
             }
         } catch {
             // ignore non-json error
@@ -75,10 +121,7 @@ export async function authFetch(url: string, init?: RequestInit): Promise<Respon
     }
 
     // ── Inactivity session expiry interceptors ──────────────────────────
-    // When the backend returns 401 with SESSION_INACTIVE_TIMEOUT or TOKEN_VERSION_MISMATCH,
-    // clear the cached user and redirect to login with a "Session expired" banner.
     if (res.status === 401 && typeof window !== 'undefined') {
-        // Skip interception for login/register/refresh endpoints to avoid redirect loops
         const isAuthEndpoint = url.includes('/api/auth/login') || url.includes('/api/auth/register') || url.includes('/api/auth/refresh-token') || url.includes('/api/auth/initiate-registration');
         if (!isAuthEndpoint) {
             const cloned = res.clone();
@@ -92,7 +135,7 @@ export async function authFetch(url: string, init?: RequestInit): Promise<Respon
                     window.location.href = `/${country}/login?session_expired=1`;
                     return res;
                 }
-            } catch { /* non-json response — ignore */ }
+            } catch { /* ignore */ }
         }
     }
 
@@ -119,7 +162,7 @@ export async function getProducts(params?: {
         if (params?.status) searchParams.set('status', params.status);
 
         const url = `${API_URL}/api/products${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
-        const res = await fetch(url, { credentials: 'include' });
+        const res = await apiFetch(url, { credentials: 'include' });
         if (!res.ok) return [];
         const json: ApiResponse<any> = await res.json();
         // Backend may return data as { products: [...], meta } or as a direct array
@@ -140,7 +183,7 @@ export async function getProducts(params?: {
 export async function getRelatedProducts(productId: string, type: string = 'similar', limit: number = 4): Promise<Product[]> {
     try {
         const url = `${API_URL}/api/products/${productId}/related?type=${type}&limit=${limit}`;
-        const res = await fetch(url, { credentials: 'include' });
+        const res = await apiFetch(url, { credentials: 'include' });
         if (!res.ok) return [];
         const json: ApiResponse<any> = await res.json();
 
@@ -162,7 +205,7 @@ export async function getRelatedProducts(productId: string, type: string = 'simi
 export async function getSimilarProducts(productId: string, limit: number = 8): Promise<Product[]> {
     try {
         const url = `${API_URL}/api/products/${productId}/similar?limit=${limit}`;
-        const res = await fetch(url, { credentials: 'include' });
+        const res = await apiFetch(url, { credentials: 'include' });
         if (!res.ok) return [];
         const json: ApiResponse<any> = await res.json();
 
@@ -185,7 +228,7 @@ export async function getSimilarProducts(productId: string, limit: number = 8): 
 
 export async function getFeaturedProducts(): Promise<Product[]> {
     try {
-        const res = await fetch(`${API_URL}/api/products/featured`, { cache: 'no-store', credentials: 'include' });
+        const res = await apiFetch(`${API_URL}/api/products/featured`, { cache: 'no-store', credentials: 'include' });
         if (!res.ok) return [];
         const json: ApiResponse<any> = await res.json();
         console.log('[getFeaturedProducts] response:', json);
@@ -207,6 +250,8 @@ export async function getFeaturedProducts(): Promise<Product[]> {
 /* ─── Filtered Products (backend-powered) ─── */
 
 /* ─── Seasonal Collections ─── */
+
+import { TrafficSource } from '@/lib/analytics/attribution';
 
 export interface StorefrontCollection {
     collection_id: string;
@@ -624,7 +669,7 @@ export async function loginUser(email: string, password: string, turnstileToken?
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ email, password, turnstile_token: turnstileToken, remember_me: rememberMe }),
+        body: JSON.stringify({ email, password, turnstile_token: turnstileToken, remember_me: rememberMe, source: 'storefront' }),
     });
     return res.json();
 }
@@ -983,6 +1028,8 @@ export async function initiatePaymentCheckout(data: {
     final_total?: number;
     currency?: string;
     order_notes?: string;
+    ga_client_id?: string;
+    attribution?: TrafficSource | null;
 }) {
     try {
         const res = await authFetch(`${API_URL}/api/payments/razorpay/initiate-checkout`, {
@@ -1028,6 +1075,8 @@ export async function directCheckout(data: {
     order_notes?: string;
     coupon_code?: string;
     redeem_points?: number;
+    ga_client_id?: string;
+    attribution?: TrafficSource | null;
 }) {
     try {
         const res = await authFetch(`${API_URL}/api/orders/direct`, {

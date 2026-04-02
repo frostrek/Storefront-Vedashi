@@ -138,7 +138,7 @@ export function useCurrency() {
       countryCode: 'in' as SupportedCountryCode,
       countryConfig: SUPPORTED_COUNTRIES['in'],
       currencyConfigs: [],
-      formatPrice: (amount: any) => formatPrice(amount, 'INR', 1, 'en-IN'),
+      formatPrice: (amount: number | string | null | undefined, countryPrices?: CountryPriceOverride[] | null) => formatPrice(amount, 'INR', 1, 'en-IN'),
       isLoadingRates: false,
     };
   }

@@ -10,6 +10,15 @@ import {
 import { getFaqs, searchFaqs } from '@/lib/api';
 import { generateFAQPageJsonLd } from '@/lib/seo';
 
+interface Faq {
+    faq_id: string;
+    question: string;
+    answer: string;
+    category: string;
+    sort_order?: number;
+    is_active?: boolean;
+}
+
 /* ── Category icon mapping ─────────────────────────────────── */
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
     'Account & Billing': CreditCard,
@@ -24,14 +33,14 @@ function getCategoryIcon(category: string) {
 }
 
 export default function FAQPage() {
-    const [faqData, setFaqData] = useState<any>({ faqs: [], grouped: {} });
+    const [faqData, setFaqData] = useState<{ faqs: Faq[]; grouped: Record<string, Faq[]> }>({ faqs: [], grouped: {} });
     const [searchQuery, setSearchQuery] = useState('');
-    const [searchResults, setSearchResults] = useState<any[] | null>(null);
+    const [searchResults, setSearchResults] = useState<Faq[] | null>(null);
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        getFaqs().then((data: any) => {
+        getFaqs().then((data) => {
             setFaqData(data || { faqs: [], grouped: {} });
             setLoading(false);
         });
@@ -128,7 +137,7 @@ export default function FAQPage() {
                         </div>
                         {searchResults.length > 0 ? (
                             <div className="grid gap-4 mb-12">
-                                {searchResults.map((faq: any) => (
+                                {searchResults.map((faq: Faq) => (
                                     <div
                                         key={faq.faq_id}
                                         className="bg-white rounded-2xl border border-[#4A5D23]/5 overflow-hidden transition-all hover:border-[#4A5D23]/20 hover:shadow-xl group"
@@ -228,7 +237,7 @@ export default function FAQPage() {
 
                                             {/* FAQ items */}
                                             <div className="grid gap-4">
-                                                {faqs.map((faq: any) => {
+                                                {faqs.map((faq: Faq) => {
                                                     const isExpanded = expandedId === faq.faq_id;
                                                     return (
                                                         <div
@@ -298,19 +307,12 @@ export default function FAQPage() {
                                         ].map((item) => (
                                             <li key={item} className="flex items-center gap-3 text-sm text-[#FDFBF7] font-semibold">
                                                 <div className="w-2 h-2 rounded-full bg-[#A6BF8F] shadow-[0_0_8px_rgba(166,191,143,0.5)]" />
-                                                {item}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                    <Link
-                                        href="/about"
-                                        className="inline-flex items-center gap-2 py-4 px-8 w-full justify-center bg-[#F2E8CF] text-[#1a2408] rounded-2xl font-bold hover:bg-white transition-all shadow-lg"
-                                    >
-                                        Full Report
-                                        <ArrowUpRight className="h-4 w-4" />
-                                    </Link>
-                                </div>
-                            </div>
+                                        {item}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
 
                             {/* Still need help? */}
                             <div className="bg-white rounded-[40px] border border-[#4A5D23]/5 p-10 shadow-xl relative overflow-hidden">

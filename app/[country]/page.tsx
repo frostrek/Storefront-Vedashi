@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { ArrowRight, Star, Sparkles, Leaf, ShieldCheck, Beaker, Heart, Stethoscope, Salad, FlaskConical, CalendarCheck, Loader2 } from 'lucide-react';
 import { getBestSellers, getFeaturedProducts as fetchFeatured, subscribeNewsletter } from '@/lib/api';
+import { trackEcommerce, EcommerceItem } from '@/lib/analytics/gtag';
 import { Product } from '@/types';
 import ProductCard from '@/components/ProductCard';
 import ProductReel from '@/components/ProductReel';
@@ -67,6 +68,33 @@ export default function HomePage() {
     }
     loadData();
   }, []);
+
+  const viewListHashRef = useRef<string>('');
+  useEffect(() => {
+    if (featuredProducts.length === 0 && bestSellers.length === 0) return;
+    
+    const allP = featuredProducts.length > 0 ? featuredProducts : bestSellers;
+    const currentHash = allP.map(p => p.product_id).join(',');
+    if (viewListHashRef.current === currentHash) return;
+    viewListHashRef.current = currentHash;
+
+    const gaItems: EcommerceItem[] = allP.slice(0, 10).map((item, index) => ({
+      item_id: item.product_id,
+      item_name: item.product_name,
+      price: Number(item.price ?? 0),
+      quantity: 1,
+      index: index + 1,
+      item_list_name: 'Homepage Curated Spotlight',
+      item_category: item.category,
+      item_brand: item.brand
+    }));
+    
+    trackEcommerce('view_item_list', {
+      currency: 'INR',
+      value: gaItems.reduce((acc, curr) => acc + curr.price, 0),
+      items: gaItems
+    });
+  }, [featuredProducts, bestSellers]);
 
   const allProducts = featuredProducts.length > 0 ? featuredProducts : bestSellers;
   const productsLoading = featuredLoading && loading;

@@ -1,7 +1,7 @@
 'use client';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
@@ -16,6 +16,9 @@ import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { validatePhoneNumber, validateOptionalPhoneNumber, sanitizePhoneInput, formatPhoneDisplay } from '@/lib/phoneValidation';
 import { CountryCode } from 'libphonenumber-js';
+import { trackPurchase, EcommerceItem, trackEvent, trackCheckoutStep, clearCheckoutStepKeys } from '@/lib/analytics/gtag';
+import { getGAClientId, getAttribution } from '@/lib/analytics/attribution';
+import PerformanceStore from '@/lib/analytics/performance';
 
 /* ─── Types ─────────────────────────────────────────────────── */
 
@@ -321,6 +324,25 @@ function CheckoutContent() {
         }
     }, [items.length, orderPlaced, router, isBuyNow]);
 
+    // GA4: begin_checkout — fires once per checkout session (sessionStorage dedup)
+    useEffect(() => {
+        if (checkoutItems.length === 0) return;
+
+        const ga4Items: EcommerceItem[] = checkoutItems.map((item: any) => ({
+            item_id: item.product_id || '',
+            item_name: item.product_name || 'Product',
+            price: Number(item.price ?? item.unit_price ?? 0),
+            quantity: item.quantity,
+        }));
+
+        trackCheckoutStep('begin_checkout', 1, {
+            currency: 'INR',
+            value: baseSubtotal,
+            items: ga4Items,
+            coupon: couponCode || undefined,
+        });
+    }, [checkoutItems, baseSubtotal, couponCode]);
+
     // Clear pincode errors immediately on change
     useEffect(() => {
         if (newAddress.pincode.length < 4) {
@@ -530,7 +552,7 @@ function CheckoutContent() {
         setAddressActionLoading(addressId);
         try {
             // Normalize phone
-            let updatedData = { ...editAddressData };
+            const updatedData = { ...editAddressData };
             if (updatedData.phone) {
                 const phoneRes = validateOptionalPhoneNumber(updatedData.phone, updatedData.country_code);
                 if (phoneRes.isValid && phoneRes.normalized) {
@@ -595,6 +617,7 @@ function CheckoutContent() {
                         setStep(2); // Go back to payment step
                         if (orderId) setFailedOrderId(orderId);
                         toast.error('Payment was not completed. You can retry anytime.');
+                        trackEvent('payment_failed', { reason: 'user_dismissed_modal', order_id: orderId });
                     },
                 },
                 handler: async (response: any) => {
@@ -609,9 +632,29 @@ function CheckoutContent() {
                         if (verifyRes.success) {
                             const platformOrderId = verifyRes.data?.order_id || orderId;
                             setOrderId(platformOrderId || null);
+
+                            // GA4: purchase (Razorpay) — deduplicated
+                            const purchaseItems: EcommerceItem[] = checkoutItems.map((item: any) => ({
+                                item_id: item.product_id || '',
+                                item_name: item.product_name || 'Product',
+                                price: Number(item.price ?? item.unit_price ?? 0),
+                                quantity: item.quantity,
+                            }));
+                            trackPurchase({
+                                currency: 'INR',
+                                value: grandTotal,
+                                transaction_id: platformOrderId || undefined,
+                                items: purchaseItems,
+                                coupon: couponCode || undefined,
+                                shipping: shippingCost,
+                                payment_type: 'razorpay',
+                                ...PerformanceStore.getPerformanceSummary(),
+                            });
+
                             if (!isBuyNow) { await clearCart(true); removeCoupon(); }
                             sessionStorage.removeItem(PERSIST_KEY);
                             sessionStorage.removeItem('ksp_buy_now_item');
+                            clearCheckoutStepKeys();
                             setOrderPlaced(true);
                             setPaymentFailed(false);
                             setFailedOrderId(null);
@@ -620,12 +663,14 @@ function CheckoutContent() {
                             setStep(2);
                             if (orderId) setFailedOrderId(orderId);
                             toast.error(verifyRes.message || 'Payment verification failed');
+                            trackEvent('payment_failed', { reason: 'verification_failed', details: verifyRes.message, order_id: orderId });
                         }
                     } catch {
                         setPaymentFailed(true);
                         setStep(2);
                         if (orderId) setFailedOrderId(orderId);
                         toast.error('Payment verification failed. Please contact support.');
+                        trackEvent('payment_failed', { reason: 'verification_exception', order_id: orderId });
                     }
                     setPaymentProcessing(false);
                 },
@@ -648,12 +693,14 @@ function CheckoutContent() {
                 setStep(2);
                 setFailedOrderId(orderId);
                 toast.error(response.error?.description || 'Payment failed. Please try again.');
+                trackEvent('payment_failed', { reason: 'gateway_error', descriptions: response.error?.description, order_id: orderId });
             });
             rzp.open();
         } catch (error: any) {
             setPaymentProcessing(false);
             setStep(2);
             toast.error(error.message || 'Failed to initiate payment');
+            trackEvent('payment_failed', { reason: 'initiation_exception', details: error.message });
             
             // Handle session expiry gracefully
             const errorMsg = error.message?.toLowerCase() || '';
@@ -669,10 +716,12 @@ function CheckoutContent() {
         if (useNewAddress && (!newAddress.address_line1 || !newAddress.city || !newAddress.state || !newAddress.pincode)) {
             setStep(1);
             toast.error('Please fill in all required address fields');
+            trackEvent('checkout_error', { reason: 'missing_address_fields' });
             return;
         } else if (!useNewAddress && !selectedAddressId) {
             setStep(1);
             toast.error('Please select a shipping address');
+            trackEvent('checkout_error', { reason: 'missing_address_selection' });
             return;
         }
 
@@ -730,8 +779,10 @@ function CheckoutContent() {
                         billing_address: !billingSameAsShipping && useNewBillingAddress ? finalNewBillingAddress : (billingSameAsShipping && useNewAddress ? finalNewAddress : undefined),
                         order_notes: orderNotes.trim() || undefined,
                         redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
-                        final_total: grandTotal, // We pass the total for initial order creation
-                        currency: 'INR'
+                        final_total: grandTotal,
+                        currency: 'INR',
+                        ga_client_id: getGAClientId() || undefined,
+                        attribution: getAttribution() || undefined,
                     };
                 } else if (isAuthenticated && cartId && user?.id) {
                     checkoutData = {
@@ -746,7 +797,9 @@ function CheckoutContent() {
                         order_notes: orderNotes.trim() || undefined,
                         redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
                         final_total: grandTotal,
-                        currency: 'INR'
+                        currency: 'INR',
+                        ga_client_id: getGAClientId() || undefined,
+                        attribution: getAttribution() || undefined,
                     };
                 } else {
                     checkoutData = {
@@ -761,7 +814,9 @@ function CheckoutContent() {
                         order_notes: orderNotes.trim() || undefined,
                         redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
                         final_total: grandTotal,
-                        currency: 'INR'
+                        currency: 'INR',
+                        ga_client_id: getGAClientId() || undefined,
+                        attribution: getAttribution() || undefined,
                     };
                 }
 
@@ -771,7 +826,7 @@ function CheckoutContent() {
 
             let result;
             if (isBuyNow && buyNowItem) {
-                result = await directCheckout({
+            result = await directCheckout({
                     customer_id: user?.id || undefined,
                     customer_name: user?.name || undefined,
                     customer_email: user?.email || contactEmail || undefined,
@@ -784,6 +839,8 @@ function CheckoutContent() {
                     payment_method: paymentMethod,
                     order_notes: orderNotes.trim() || undefined,
                     redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
+                    ga_client_id: getGAClientId() || undefined,
+                    attribution: getAttribution() || undefined,
                 });
             } else if (isAuthenticated && cartId && user?.id) {
                 result = await checkoutOrder({
@@ -798,6 +855,8 @@ function CheckoutContent() {
                     order_notes: orderNotes.trim() || undefined,
                     payment_method: paymentMethod,
                     redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
+                    ga_client_id: getGAClientId() || undefined,
+                    attribution: getAttribution() || undefined,
                 } as any);
             } else {
                 result = await directCheckout({
@@ -812,18 +871,41 @@ function CheckoutContent() {
                     coupon_code: couponCode || undefined,
                     order_notes: orderNotes.trim() || undefined,
                     redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
+                    ga_client_id: getGAClientId() || undefined,
+                    attribution: getAttribution() || undefined,
                 });
             }
 
             if (result.success) {
                 const createdOrderId = result.data?.order_id;
                 setOrderId(createdOrderId || null);
+
+                // GA4: purchase (COD) — deduplicated
+                const purchaseItems: EcommerceItem[] = checkoutItems.map((item: any) => ({
+                    item_id: item.product_id || '',
+                    item_name: item.product_name || 'Product',
+                    price: Number(item.price ?? item.unit_price ?? 0),
+                    quantity: item.quantity,
+                }));
+                trackPurchase({
+                    currency: 'INR',
+                    value: grandTotal,
+                    transaction_id: createdOrderId || undefined,
+                    items: purchaseItems,
+                    coupon: couponCode || undefined,
+                    shipping: shippingCost,
+                    payment_type: paymentMethod,
+                    ...PerformanceStore.getPerformanceSummary(),
+                });
+
                 if (!isBuyNow) { await clearCart(true); removeCoupon(); }
                 sessionStorage.removeItem(PERSIST_KEY);
                 sessionStorage.removeItem('ksp_buy_now_item');
+                clearCheckoutStepKeys();
                 setOrderPlaced(true);
             } else {
                 toast.error(result.message || 'Failed to place order');
+                trackEvent('checkout_error', { reason: 'api_failed', details: result.message });
                 
                 // Handle session expiry gracefully
                 const errorMsg = result.message?.toLowerCase() || '';
@@ -833,6 +915,7 @@ function CheckoutContent() {
             }
         } catch (error: any) {
             toast.error('Something went wrong. Please try again.');
+            trackEvent('checkout_error', { reason: 'exception', details: error.message });
             
             // Handle session expiry gracefully
             const errorMsg = error.message?.toLowerCase() || '';
@@ -918,6 +1001,21 @@ function CheckoutContent() {
         }
 
         setStep(2);
+
+        // GA4: add_shipping_info — fires once when address is confirmed (step 2)
+        const shippingItems: EcommerceItem[] = checkoutItems.map((item: any) => ({
+            item_id: item.product_id || '',
+            item_name: item.product_name || 'Product',
+            price: Number(item.price ?? item.unit_price ?? 0),
+            quantity: item.quantity,
+        }));
+        trackCheckoutStep('add_shipping_info', 2, {
+            currency: 'INR',
+            value: grandTotal,
+            items: shippingItems,
+            coupon: couponCode || undefined,
+        });
+
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -937,6 +1035,21 @@ function CheckoutContent() {
                 return;
             }
         }
+        // GA4: add_payment_info — fires once when payment method is confirmed (step 3)
+        const paymentInfoItems: EcommerceItem[] = checkoutItems.map((item: any) => ({
+            item_id: item.product_id || '',
+            item_name: item.product_name || 'Product',
+            price: Number(item.price ?? item.unit_price ?? 0),
+            quantity: item.quantity,
+        }));
+        trackCheckoutStep('add_payment_info', 3, {
+            currency: 'INR',
+            value: grandTotal,
+            items: paymentInfoItems,
+            coupon: couponCode || undefined,
+            payment_type: paymentMethod,
+        });
+
         setStep(3);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };

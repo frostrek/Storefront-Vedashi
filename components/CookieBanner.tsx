@@ -97,7 +97,7 @@ export default function CookieBanner() {
                         const rawText: string = b.text || '';
                         // Split on real newlines (backend may use \n)
                         const lines = rawText.split(/\n/);
-                        let outputParts: string[] = [];
+                        const outputParts: string[] = [];
                         let pendingBullets: string[] = [];
 
                         const flushBullets = () => {
@@ -134,7 +134,7 @@ export default function CookieBanner() {
                             }
 
                             // Regular paragraph line — check if it contains an inline heading
-                            let processed = line;
+                            const processed = line;
                             let hadInlineHeading = false;
                             for (const h of sectionHeadings) {
                                 if (processed.includes(h)) {

@@ -4,9 +4,10 @@ import { useState, useEffect, use, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { getProduct, getProductDetails, getBestSellers, trackProductView, requestRestockNotification } from '@/lib/api';
+import { trackEcommerce } from '@/lib/analytics/gtag';
 
 import { useCurrency } from '@/context/CurrencyContext';
-import { Product, ProductWithDetails } from '@/types';
+import { Product, ProductWithDetails, ProductVariant } from '@/types';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { useWishlist } from '@/context/WishlistContext';
@@ -93,8 +94,8 @@ function ProductDetailContent({ params }: Props) {
     const [pageQuantity, setPageQuantity] = useState(1);
 
     // ✅ Variant state
-    const [variants, setVariants] = useState<any[]>([]);
-    const [selectedVariant, setSelectedVariant] = useState<any>(null);
+    const [variants, setVariants] = useState<ProductVariant[]>([]);
+    const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
     const [selectedWeight, setSelectedWeight] = useState<number | null>(null);
     const [selectedStrength, setSelectedStrength] = useState<string | null>(null);
     const [selectedVolume, setSelectedVolume] = useState<number | null>(null);
@@ -162,11 +163,11 @@ function ProductDetailContent({ params }: Props) {
 
                 const requestedVariantId = searchParams.get('variant');
                 const matchedVariant = requestedVariantId 
-                    ? vs.find((v: any) => v.variant_id === requestedVariantId)
+                    ? vs.find((v: ProductVariant) => v.variant_id === requestedVariantId)
                     : null;
 
                 // Pick requested variant, or default (is_default=true), falling back to first
-                const targetV = matchedVariant || vs.find((v: any) => v.is_default === true) || vs[0];
+                const targetV = matchedVariant || vs.find((v: ProductVariant) => v.is_default === true) || vs[0];
                 
                 setSelectedWeight(targetV?.weight_g ?? null);
                 setSelectedStrength(targetV?.strength ? `${targetV.strength} ${targetV.strength_unit || ''}`.trim() : null);
@@ -194,6 +195,21 @@ function ProductDetailContent({ params }: Props) {
             if (data) {
                 trackRecentlyViewed(id);
                 trackProductView(data.product_id);
+
+                // GA4: view_item event
+                const viewPrice = Number(data.variants?.find((v: ProductVariant) => v.is_default)?.price ?? data.price ?? 0);
+                trackEcommerce('view_item', {
+                    currency: 'INR',
+                    value: viewPrice,
+                    items: [{
+                        item_id: data.product_id,
+                        item_name: data.product_name,
+                        price: viewPrice,
+                        quantity: 1,
+                        item_category: data.category || undefined,
+                        item_brand: data.brand || undefined,
+                    }],
+                });
             }
         };
 
@@ -217,7 +233,7 @@ function ProductDetailContent({ params }: Props) {
                     size_label: selectedVariant?.size_label || '',
                     quantity: 1, // Default to 1 on express redirect
                     unit_price: Number(selectedVariant?.price ?? product.price ?? 0),
-                    image_url: (product as any).thumbnail_url || '',
+                    image_url: product.thumbnail_url || '',
                 };
                 sessionStorage.setItem('ksp_buy_now_item', JSON.stringify(buyNowItem));
                 router.push('/checkout?buyNow=true');
@@ -318,7 +334,7 @@ function ProductDetailContent({ params }: Props) {
             size_label: selectedVariant?.size_label || '',
             quantity: pageQuantity,
             unit_price: Number(selectedVariant?.price ?? product.price ?? 0),
-            image_url: (product as any).thumbnail_url || '',
+            image_url: product.thumbnail_url || '',
         };
         sessionStorage.setItem('ksp_buy_now_item', JSON.stringify(buyNowItem));
         sessionStorage.removeItem('vedashi_checkout_draft');
@@ -330,7 +346,10 @@ function ProductDetailContent({ params }: Props) {
             {/* Structured Data */}
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(generateProductJsonLd(product as any)) }}
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(generateProductJsonLd({
+                    ...product,
+                    review_count: Number(product.review_count || 0)
+                } as any)) }}
             />
             <script
                 type="application/ld+json"
@@ -373,7 +392,7 @@ function ProductDetailContent({ params }: Props) {
                             assets={product.assets}
                             productName={product.product_name}
                             variantId={selectedVariant?.variant_id}
-                            defaultVariantId={product.variants?.find((v: any) => v.is_default)?.variant_id}
+                            defaultVariantId={product.variants?.find((v: ProductVariant) => v.is_default)?.variant_id || product.variants?.[0]?.variant_id}
                             fallbackImages={product.images}
                             brand={product.brand || undefined}
                             category={product.category || undefined}
@@ -438,21 +457,21 @@ function ProductDetailContent({ params }: Props) {
                             )}
                         </div>
 
-                        {(product as any).short_description && (
+                        {product.short_description && (
                             <p className="text-[15px] leading-relaxed text-gray-600">
-                                {(product as any).short_description}
+                                {product.short_description}
                             </p>
                         )}
 
                         {/* ✅ VARIANT SELECTORS: Weight, Strength, Volume, Count, Flavor, Pack */}
                         <div className="min-h-[120px]">
                         {variants.length > 0 && (() => {
-                            const uniqueWeights = [...new Set(variants.map((v: any) => v.weight_g as number))].filter(Boolean).sort((a, b) => a - b);
-                            const uniqueStrengths = [...new Set(variants.map((v: any) => v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : null))].filter(Boolean);
-                            const uniqueVolumes = [...new Set(variants.map((v: any) => v.volume_ml as number))].filter(Boolean).sort((a, b) => a - b);
-                            const uniqueCounts = [...new Set(variants.map((v: any) => v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : null))].filter(Boolean);
-                            const uniqueFlavors = [...new Set(variants.map((v: any) => v.flavor as string))].filter(Boolean);
-                            const uniquePacks = [...new Set(variants.map((v: any) => (v.pack_quantity ?? 1) as number))].filter(Boolean).sort((a, b) => a - b);
+                            const uniqueWeights = [...new Set(variants.map((v: ProductVariant) => v.weight_g as number))].filter(Boolean).sort((a, b) => a - b);
+                            const uniqueStrengths = [...new Set(variants.map((v: ProductVariant) => v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : null))].filter(Boolean);
+                            const uniqueVolumes = [...new Set(variants.map((v: ProductVariant) => v.volume_ml as number))].filter(Boolean).sort((a, b) => a - b);
+                            const uniqueCounts = [...new Set(variants.map((v: ProductVariant) => v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : null))].filter(Boolean);
+                            const uniqueFlavors = [...new Set(variants.map((v: ProductVariant) => v.flavor as string))].filter(Boolean);
+                            const uniquePacks = [...new Set(variants.map((v: ProductVariant) => (v.pack_quantity ?? 1) as number))].filter(Boolean).sort((a, b) => a - b);
 
                             const formatVolume = (ml: number) => {
                                 return ml >= 999 ? `${(ml / 1000).toFixed(ml % 1000 === 0 ? 0 : 1)} L` : `${ml} ml`;
@@ -961,10 +980,6 @@ function ProductDetailContent({ params }: Props) {
                                         <span className="text-sm font-semibold tracking-wide">Ethically Wild-Harvested Ingredients</span>
                                     </li>
                                 </ul>
-
-                                <button className="bg-white text-[#3d5c3a] px-6 py-3.5 rounded-xl font-bold text-sm w-max hover:bg-gray-50 transition-colors shadow-lg">
-                                    Download Certificate of Analysis (PDF)
-                                </button>
                             </div>
 
                             {/* Right Grid Collage */}
