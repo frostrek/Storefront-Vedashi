@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { ArrowRight, Star, Sparkles, Leaf, ShieldCheck, Beaker, Heart, Stethoscope, Salad, FlaskConical, CalendarCheck, Loader2 } from 'lucide-react';
 import { getBestSellers, getFeaturedProducts as fetchFeatured, subscribeNewsletter } from '@/lib/api';
+import { trackEcommerce, EcommerceItem } from '@/lib/analytics/gtag';
 import { Product } from '@/types';
 import ProductCard from '@/components/ProductCard';
 import ProductReel from '@/components/ProductReel';
@@ -59,7 +60,7 @@ export default function HomePage() {
         setBestSellers(bestRes.data);
         setFeaturedProducts(featuredRes);
       } catch (err) {
-        console.error('Failed to load home data', err);
+        console.warn('Failed to load home data', err);
       } finally {
         setLoading(false);
         setFeaturedLoading(false);
@@ -67,6 +68,33 @@ export default function HomePage() {
     }
     loadData();
   }, []);
+
+  const viewListHashRef = useRef<string>('');
+  useEffect(() => {
+    if (featuredProducts.length === 0 && bestSellers.length === 0) return;
+    
+    const allP = featuredProducts.length > 0 ? featuredProducts : bestSellers;
+    const currentHash = allP.map(p => p.product_id).join(',');
+    if (viewListHashRef.current === currentHash) return;
+    viewListHashRef.current = currentHash;
+
+    const gaItems: EcommerceItem[] = allP.slice(0, 10).map((item, index) => ({
+      item_id: item.product_id,
+      item_name: item.product_name,
+      price: Number(item.price ?? 0),
+      quantity: 1,
+      index: index + 1,
+      item_list_name: 'Homepage Curated Spotlight',
+      item_category: item.category,
+      item_brand: item.brand
+    }));
+    
+    trackEcommerce('view_item_list', {
+      currency: 'INR',
+      value: gaItems.reduce((acc, curr) => acc + curr.price, 0),
+      items: gaItems
+    });
+  }, [featuredProducts, bestSellers]);
 
   const allProducts = featuredProducts.length > 0 ? featuredProducts : bestSellers;
   const productsLoading = featuredLoading && loading;
@@ -85,10 +113,10 @@ export default function HomePage() {
       {/* ═══ 2. DOSHA DISCOVERY ═══ */}
       <section className="py-12 sm:py-20 lg:py-24 px-4">
         <AnimateOnScroll animation="fadeUp" className="mx-auto max-w-7xl">
-          <div className="rounded-3xl bg-[#F5F2E8] border border-[#E0DCCF] overflow-hidden">
+          <div className="rounded-3xl bg-[#F5F2E8] border border-[#E0DCCF] overflow-hidden shadow-sm relative z-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
               {/* Left — Text */}
-              <div className="p-8 sm:p-12 lg:p-16 flex flex-col justify-center">
+              <div className="p-8 sm:p-12 lg:p-16 flex flex-col justify-center relative">
                 <div className="flex items-center gap-2 mb-4">
                   <Sparkles className="h-4 w-4 text-[#8B7A3D]" />
                   <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#8B7A3D]">
@@ -103,22 +131,12 @@ export default function HomePage() {
                   Knowing your Vata, Pitta, or Kapha profile is the first step
                   toward personalized healing and lasting energy.
                 </p>
-                <div className="mt-8 flex flex-wrap items-center gap-4">
-                  <Link
-                    href="/about"
-                    className="inline-flex items-center gap-2.5 rounded-full bg-[#3B5D3B] px-7 py-3.5 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:bg-[#2D4A2D] hover:-translate-y-0.5 hover:shadow-xl"
-                  >
-                    Start Assessment
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                  <span className="text-xs text-[#8B7A3D] font-medium">Takes only 3 minutes</span>
-                </div>
               </div>
               {/* Right — Image + Testimonial */}
               <div className="relative hidden lg:block min-h-[420px]">
                 <img src="/dosha-woman.png" alt="Woman enjoying herbal tea" className="absolute inset-0 w-full h-full object-cover" />
                 <div className="absolute bottom-8 right-8 left-8 max-w-xs ml-auto">
-                  <div className="rounded-xl bg-white/95 backdrop-blur-md p-5 shadow-xl">
+                  <div className="rounded-xl bg-white p-5 shadow-xl border border-[#E0DCCF]/40">
                     <p className="text-sm text-[#2C2C2C] leading-relaxed">
                       &ldquo;This assessment changed how I view my
                       energy cycles entirely. It&apos;s more than a
@@ -228,7 +246,16 @@ export default function HomePage() {
       </section>
 
       {/* ═══ 5. HEALING SERVICES ═══ */}
-      <section className="py-12 sm:py-20 lg:py-24 px-4 bg-white relative z-10">
+      <section className="py-12 sm:py-20 lg:py-24 px-4 bg-white relative z-10 overflow-hidden">
+        {/* Decorative Background Elements */}
+        <div className="absolute inset-0 pointer-events-none opacity-[0.08]" style={{
+          backgroundImage: `url("/ayurvedic-texture.png")`,
+          backgroundSize: '300px 300px',
+          backgroundRepeat: 'repeat'
+        }} />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#8B7A3D]/15 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#3B5D3B]/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+
         <div className="mx-auto max-w-7xl text-center">
           <AnimateOnScroll animation="fadeUp">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C2C2C]">
@@ -247,7 +274,7 @@ export default function HomePage() {
               { icon: CalendarCheck, title: 'Lifestyle Coaching', desc: 'Daily routines (Dinacharya) to harmonize with cosmic cycles.', color: 'bg-[#F5EFE4]' },
             ].map((service, i) => (
               <AnimateOnScroll key={i} animation="fadeUp" delay={i * 0.1}>
-                <div className={`rounded-2xl p-8 text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group bg-white border border-[#E0DCCF] shadow-sm`}>
+                <div className={`rounded-2xl p-8 text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group bg-[#F5F2E8] border border-[#E0DCCF] shadow-sm`}>
                   <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#3B5D3B]/10 group-hover:bg-[#3B5D3B]/15 transition-colors">
                     <service.icon className="h-6 w-6 text-[#3B5D3B]" />
                   </div>

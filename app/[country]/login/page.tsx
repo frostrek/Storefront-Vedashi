@@ -23,7 +23,7 @@ type AuthMethod = 'email' | 'phone';
 
 function LoginContent() {
     const router = useRouter();
-    const { login, register, isAuthenticated, user, logout, loginFromVerification } = useAuth();
+    const { login, register, isAuthenticated, user, logout, loginFromVerification, isLoading } = useAuth();
     const { signOut: clerkSignOut } = useClerk();
     const searchParams = useSearchParams();
 
@@ -39,11 +39,29 @@ function LoginContent() {
 
     const [authMethod, setAuthMethod] = useState<AuthMethod>('email');
     const [isRegister, setIsRegister] = useState(false);
+
+    useEffect(() => {
+        if (searchParams.get('mode') === 'register') {
+            setIsRegister(true);
+        } else if (searchParams.get('mode') === 'login') {
+            setIsRegister(false);
+        }
+    }, [searchParams]);
     const [loading, setLoading] = useState(false);
     const [isRedirecting, setIsRedirecting] = useState(false);
-    const [form, setForm] = useState({ name: '', email: '', password: '' });
+    const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
     const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [agreeTerms, setAgreeTerms] = useState(false);
+    const [rememberMe, setRememberMe] = useState(true);
+    const [capsLockOn, setCapsLockOn] = useState(false);
+
+    const handleKeyEvent = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.getModifierState) {
+            setCapsLockOn(e.getModifierState('CapsLock'));
+        }
+    };
+
     const [showTermsModal, setShowTermsModal] = useState(false);
     const [showPrivacyModal, setShowPrivacyModal] = useState(false);
     const [legalContent, setLegalContent] = useState<{ [key: string]: { title: string, content: string } }>({});
@@ -72,6 +90,7 @@ function LoginContent() {
     const isAdminRedirecting = useRef(false);
 
     const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+    const [captchaRequired, setCaptchaRequired] = useState(false);
     const turnstileRef = useRef<HTMLDivElement>(null);
     const widgetIdRef = useRef<string | null>(null);
 
@@ -85,7 +104,10 @@ function LoginContent() {
             sitekey: TURNSTILE_SITE_KEY,
             callback: (token: string) => setTurnstileToken(token),
             'expired-callback': () => setTurnstileToken(null),
-            'error-callback': () => setTurnstileToken(null),
+            'error-callback': () => {
+                console.warn('[Turnstile] Widget error — CAPTCHA failed to load');
+                setTurnstileToken(null);
+            },
             theme: 'light',
         });
         widgetIdRef.current = id;
@@ -109,8 +131,10 @@ function LoginContent() {
 
     useEffect(() => {
         setTurnstileToken(null);
-        renderTurnstile();
-    }, [isRegister, renderTurnstile]);
+        // Defer to next tick — React needs to commit the conditional div to the DOM first
+        const timer = setTimeout(() => renderTurnstile(), 0);
+        return () => clearTimeout(timer);
+    }, [isRegister, captchaRequired, renderTurnstile]);
 
     useEffect(() => {
         if (cooldown <= 0) return;
@@ -122,10 +146,17 @@ function LoginContent() {
 
     useEffect(() => {
         if (isAdminRedirecting.current) return;
-        if (isAuthenticated && user) router.push(redirectTo);
+        if (isAuthenticated && user) {
+            // If the user is an admin, don't redirect to customer page — wait for admin redirect
+            const isAdmin = user.role === 'admin' || user.role === 'Super Admin';
+            if (isAdmin) return;
+            router.push(redirectTo);
+        }
     }, [isAuthenticated, user, router, redirectTo]);
 
-    if (isAuthenticated && !isAdminRedirecting.current || isRedirecting) {
+    const isAdminUser = user?.role === 'admin' || user?.role === 'Super Admin';
+
+    if (isLoading || (isAuthenticated && !isAdminRedirecting.current && !isAdminUser) || isRedirecting) {
         return (
             <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0d1f0d]/90 backdrop-blur-md">
                 <div className="relative flex h-24 w-24 items-center justify-center">
@@ -192,7 +223,7 @@ function LoginContent() {
             const json = await res.json();
             if (res.ok && json.success && json.data?.customer) {
                 toast.success('Welcome back!');
-                loginFromVerification(json.data.customer, json.data.access_token);
+                loginFromVerification(json.data.customer);
                 setIsRedirecting(true);
                 router.push(redirectTo);
             } else {
@@ -208,18 +239,25 @@ function LoginContent() {
     // ── Email/Password Submit ────────────────────────────────────────
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!turnstileToken) {
-            toast.error('Please complete the CAPTCHA verification.');
-            return;
-        }
         if (!agreeTerms) {
             toast.error('You must agree to the Terms of Service and Privacy Policy to continue.');
             return;
         }
         setLoading(true);
         try {
+            // Only block submission if CAPTCHA was explicitly required (registration or backend demanded it)
+            if ((isRegister || captchaRequired) && !turnstileToken) {
+                toast.error('Please complete the CAPTCHA verification.');
+                setLoading(false);
+                return;
+            }
             if (isRegister) {
-                const result = await register(form.name, form.email, form.password);
+                if (form.password !== form.confirmPassword) {
+                    toast.error('Passwords do not match');
+                    setLoading(false);
+                    return;
+                }
+                const result = await register(form.name, form.email, form.password, turnstileToken || undefined);
                 if (result?.success) {
                     toast.success('Please verify your email to complete registration.');
                     setIsRedirecting(true);
@@ -227,12 +265,16 @@ function LoginContent() {
                         router.push(`/verify-email?registered=true&email=${encodeURIComponent(form.email)}`);
                     }, 1500);
                 } else {
+                    if (result?.requireCaptcha) {
+                        setCaptchaRequired(true);
+                    }
                     toast.error(result?.error || 'Something went wrong');
                 }
             } else {
-                const result = await login(form.email, form.password);
+                // Login: pass rememberMe and turnstile token (may be null if widget hasn't been solved yet)
+                const result = await login(form.email, form.password, rememberMe, turnstileToken || undefined);
                 if (result?.success) {
-                    const isAdmin = result.role === 'admin' || result.role === 'Super Admin';
+                    const isAdmin = ['admin', 'Super Admin', 'owner'].includes(result.role || '');
                     if (isAdmin) {
                         isAdminRedirecting.current = true;
                         toast.success('Welcome, Admin! Redirecting to dashboard...');
@@ -246,8 +288,8 @@ function LoginContent() {
                                 userId = userData.id || '';
                             }
                         } catch { /* noop */ }
+                        // SECURITY: Do not pass raw JWT in URL params — use cookie-only auth
                         const params = new URLSearchParams({
-                            token: result.access_token || '',
                             email: form.email,
                             name: userName,
                             id: userId,
@@ -259,7 +301,21 @@ function LoginContent() {
                     setIsRedirecting(true);
                     router.push(redirectTo);
                 } else {
-                    toast.error(result?.error || 'Login failed. Please check your credentials.');
+                    // Handle security-related responses
+                    if (result?.requireCaptcha) {
+                        setCaptchaRequired(true);
+                    }
+
+                    if (result?.blocked) {
+                        const minutes = result.retryAfter ? Math.ceil(result.retryAfter / 60) : 15;
+                        toast.error(`Too many failed attempts. Please try again in ${minutes} minute${minutes !== 1 ? 's' : ''}.`);
+                    } else if (result?.requireCaptcha && !turnstileToken) {
+                        toast.error('Please complete the CAPTCHA verification to continue.');
+                        // Re-render Turnstile to ensure widget is visible
+                        renderTurnstile();
+                    } else {
+                        toast.error(result?.error || 'Login failed. Please check your credentials.');
+                    }
                 }
             }
         } catch (error) {
@@ -382,7 +438,7 @@ function LoginContent() {
             <div className="mt-6 pt-5 border-t border-[#e8f0e8] flex flex-col items-center gap-3">
                 <button
                     type="button"
-                    onClick={() => { setAuthMethod('email'); setOtpSent(false); setOtpCode(''); }}
+                    onClick={() => { setAuthMethod('email'); setOtpSent(false); setOtpCode(''); setCaptchaRequired(false); setTurnstileToken(null); }}
                     className="flex items-center gap-1.5 text-xs font-semibold text-[#4a6b4a] hover:text-[#1e3d1e] transition-colors cursor-pointer"
                 >
                     <ArrowLeft className="w-3.5 h-3.5" />
@@ -390,7 +446,7 @@ function LoginContent() {
                 </button>
                 <p className="text-sm text-[#6b7b6b]">
                     Don&apos;t have an account?{' '}
-                    <button type="button" onClick={() => { setIsRegister(true); setAuthMethod('email'); }}
+                    <button type="button" onClick={() => { setIsRegister(true); setAuthMethod('email'); setCaptchaRequired(false); setTurnstileToken(null); }}
                         className="font-semibold text-[#2d5a2d] hover:underline cursor-pointer">Create Account</button>
                 </p>
                 <Link href="/" className="text-sm font-semibold text-[#2d5a2d] hover:underline cursor-pointer">Continue as Guest</Link>
@@ -477,7 +533,12 @@ function LoginContent() {
 
             {/* ── Right Card ── */}
             <div className="relative z-20 w-full lg:w-[480px] xl:w-[540px] flex-shrink-0 h-full flex flex-col justify-center lg:py-8 lg:pr-8">
-                <div className="w-full max-w-md mx-auto overflow-y-auto max-h-full scrollbar-hide px-6 py-6 lg:bg-white/95 lg:backdrop-blur-md lg:rounded-[2rem] lg:shadow-2xl">
+                <div className="w-full max-w-md mx-auto overflow-y-auto max-h-full px-6 py-6 lg:bg-white/95 lg:backdrop-blur-md lg:rounded-[2rem] lg:shadow-2xl [&::-webkit-scrollbar]:hidden" 
+                     style={{ 
+                        scrollbarWidth: 'none', 
+                        msOverflowStyle: 'none',
+                        WebkitOverflowScrolling: 'touch'
+                     }}>
 
                     {/* Phone OTP View */}
                     {authMethod === 'phone' && !isRegister ? (
@@ -492,6 +553,17 @@ function LoginContent() {
                                 <div className="w-12 h-0.5 bg-gradient-to-r from-transparent via-[#2d5a2d]/40 to-transparent mt-2" />
                                 <p className="text-sm text-[#6b7b6b] mt-2">{cardSubtitle}</p>
                             </div>
+
+                            {/* Session expired banner */}
+                            {searchParams.get('session_expired') === '1' && (
+                                <div id="session-expired-banner" className="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 flex items-start gap-3">
+                                    <ShieldCheck className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                                    <div className="flex-1">
+                                        <p className="text-sm font-semibold text-amber-800">Session expired</p>
+                                        <p className="text-xs text-amber-700 mt-0.5">Your session expired due to inactivity. Please log in again.</p>
+                                    </div>
+                                </div>
+                            )}
                             <form onSubmit={handleSubmit} className="space-y-0 mt-6">
 
                                 {/* Name field (register) */}
@@ -511,27 +583,7 @@ function LoginContent() {
                                     </div>
                                 )}
 
-                                {/* Phone (register optional) */}
-                                {isRegister && (
-                                    <div className="mb-4">
-                                        <label className="block text-xs font-semibold text-[#3d3d3d] uppercase tracking-wider mb-2">
-                                            Phone Number <span className="text-[#9ab09a] normal-case font-normal">(optional)</span>
-                                        </label>
-                                        <div className="flex gap-2">
-                                            <div className="flex items-center px-3 rounded-xl border border-[#d4e4d4] bg-[#f0f7f0] text-sm text-[#4a6b4a] font-semibold">
-                                                +91
-                                            </div>
-                                            <input
-                                                type="tel"
-                                                value={phoneNumber}
-                                                onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                                                className="flex-1 rounded-xl border border-[#d4e4d4] bg-[#f8fdf8] px-4 py-3 text-sm text-[#1a2a1a] placeholder-[#9ab09a] focus:border-[#2d5a2d] focus:outline-none transition-all"
-                                                placeholder="10-digit mobile"
-                                                maxLength={10}
-                                            />
-                                        </div>
-                                    </div>
-                                )}
+
 
                                 {/* Email */}
                                 <div className="mb-3">
@@ -564,6 +616,8 @@ function LoginContent() {
                                             type={showPassword ? 'text' : 'password'}
                                             value={form.password}
                                             onChange={e => setForm({ ...form, password: e.target.value })}
+                                            onKeyDown={handleKeyEvent}
+                                            onKeyUp={handleKeyEvent}
                                             className="w-full rounded-xl border border-[#d4e4d4] bg-[#f8fdf8] pl-10 pr-11 py-2.5 text-sm text-[#1a2a1a] placeholder-[#9ab09a] focus:border-[#2d5a2d] focus:ring-2 focus:ring-[#2d5a2d]/10 focus:outline-none transition-all"
                                             placeholder="••••••••"
                                             required
@@ -578,14 +632,60 @@ function LoginContent() {
                                             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                         </button>
                                     </div>
+                                    {capsLockOn && <p className="text-xs text-[#d45547] mt-1.5 font-medium animate-pulse">Caps Lock is ON</p>}
                                     {!isRegister && (
-                                        <div className="flex justify-end mt-1.5">
+                                        <div className="flex justify-between items-center mt-3 mb-1">
+                                            <label className="flex items-center gap-2 cursor-pointer group">
+                                                <div className={`w-4 h-4 rounded border transition-colors flex items-center justify-center ${rememberMe ? 'bg-[#1e3d1e] border-[#1e3d1e]' : 'border-[#9ab09a] group-hover:border-[#4a6b4a]'}`}>
+                                                    {rememberMe && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                                                </div>
+                                                <span className="text-sm font-medium text-[#4a6b4a] group-hover:text-[#2d5a2d] transition-colors select-none">Remember Me</span>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={rememberMe}
+                                                    onChange={e => setRememberMe(e.target.checked)}
+                                                    className="hidden"
+                                                />
+                                            </label>
                                             <Link href="/forgot-password" className="text-xs font-semibold text-[#2d5a2d] hover:underline transition-colors cursor-pointer">
                                                 Forgot Password?
                                             </Link>
                                         </div>
                                     )}
                                 </div>
+
+                                {/* Confirm Password */}
+                                {isRegister && (
+                                    <div className="mb-3">
+                                        <div className="mb-2">
+                                            <label className="block text-xs font-semibold text-[#3d3d3d] uppercase tracking-wider">
+                                                Confirm Password
+                                            </label>
+                                        </div>
+                                        <div className="relative">
+                                            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ab09a]" />
+                                            <input
+                                                type={showConfirmPassword ? 'text' : 'password'}
+                                                value={form.confirmPassword}
+                                                onChange={e => setForm({ ...form, confirmPassword: e.target.value })}
+                                                onKeyDown={handleKeyEvent}
+                                                onKeyUp={handleKeyEvent}
+                                                className="w-full rounded-xl border border-[#d4e4d4] bg-[#f8fdf8] pl-10 pr-11 py-2.5 text-sm text-[#1a2a1a] placeholder-[#9ab09a] focus:border-[#2d5a2d] focus:ring-2 focus:ring-[#2d5a2d]/10 focus:outline-none transition-all"
+                                                placeholder="••••••••"
+                                                required
+                                                minLength={3}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9ab09a] hover:text-[#4a6b4a] transition-colors cursor-pointer"
+                                                tabIndex={-1}
+                                            >
+                                                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Terms checkbox */}
                                 <div className="flex items-start gap-2.5 mb-3">
@@ -636,7 +736,21 @@ function LoginContent() {
                                 </LegalModal>
 
                                 {/* Cloudflare Turnstile */}
-                                <div ref={turnstileRef} className=" mb-3 flex justify-center" />
+                                {/* Always render Turnstile so token is ready before first submit */}
+                                {(
+                                    <div className="mb-4 flex flex-col items-center min-h-[65px]">
+                                        <div 
+                                            key={`turnstile-${isRegister ? 'reg' : 'login'}-${captchaRequired}`}
+                                            ref={turnstileRef} 
+                                            className="flex justify-center" 
+                                        />
+                                        {!turnstileToken && (
+                                            <p className="text-xs text-[#9ab09a] mt-1 animate-pulse">
+                                                Loading security verification...
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
 
                                 {/* CTA Button */}
                                 <button
@@ -726,7 +840,7 @@ function LoginContent() {
                                     <div className="text-center space-y-1">
                                         <p className="text-sm text-[#6b7b6b]">
                                             {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
-                                            <button type="button" onClick={() => setIsRegister(!isRegister)}
+                                            <button type="button" onClick={() => { setIsRegister(!isRegister); setCaptchaRequired(false); setTurnstileToken(null); }}
                                                 className="font-semibold text-[#2d5a2d] hover:underline cursor-pointer">
                                                 {isRegister ? 'Sign In' : 'Create Account'}
                                             </button>

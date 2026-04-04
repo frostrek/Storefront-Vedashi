@@ -55,7 +55,6 @@ export default function CartPage() {
     const [couponInput, setCouponInput] = useState('');
     const [applyingCoupon, setApplyingCoupon] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
-    const [showTaxTooltip, setShowTaxTooltip] = useState(false);
 
     // Shipping estimation state
     const [shippingCountry, setShippingCountry] = useState('India');
@@ -179,7 +178,6 @@ export default function CartPage() {
     // Calculate totals using ONLY in-stock items
     const totalMRP = inStockItems.reduce((sum, item) => sum + (item.original_price ?? item.price ?? 0) * item.quantity, 0);
     const saleDiscount = totalMRP - inStockItems.reduce((sum, item) => sum + (item.price ?? 0) * item.quantity, 0);
-    const totalTaxes = inStockItems.reduce((sum, item) => sum + ((item as any).pricing?.tax_amount ?? 0), 0);
     const inStockTotal = inStockItems.reduce((sum, item) => sum + (item.price ?? 0) * item.quantity, 0);
     const deliveryFee = couponType === 'free_shipping' ? 0 : (inStockTotal > 50 ? 0 : 15);
     const grandTotal = inStockTotal - couponDiscount + deliveryFee;
@@ -502,63 +500,7 @@ export default function CartPage() {
                                         <span className="label">Vedic Shipping <span className="text-[9px] uppercase tracking-wider opacity-70 ml-1">(Standard)</span></span>
                                         <span className="value">{deliveryFee === 0 ? 'FREE' : formatPrice(deliveryFee)}</span>
                                     </div>
-                                    {totalTaxes > 0 && (
-                                        <div className="ritual-summary-row relative">
-                                            <span className="label flex items-center gap-1.5">
-                                                Ayurvedic Levy (Tax)
-                                                <button
-                                                    type="button"
-                                                    className={`transition-colors focus:outline-none flex items-center ${showTaxTooltip ? 'text-white' : 'text-[rgba(255,255,255,0.4)] hover:text-white'}`}
-                                                    onMouseEnter={() => setShowTaxTooltip(true)}
-                                                    onMouseLeave={() => setShowTaxTooltip(false)}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setShowTaxTooltip(!showTaxTooltip);
-                                                    }}
-                                                    aria-label="Tax information"
-                                                >
-                                                    <Info size={14} className="cursor-help" />
-                                                </button>
-                                            </span>
-                                            <span className="value">{formatPrice(totalTaxes)}</span>
-                                            
-                                            {/* Tooltip Popup - Fits the row width perfectly */}
-                                            <div 
-                                                className={`absolute bottom-[calc(100%+8px)] left-0 right-0 p-4 bg-[#1A1B16] text-white text-[11px] leading-relaxed rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] border border-gold/20 transition-all duration-300 pointer-events-none z-[100] ${showTaxTooltip ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-95'}`}
-                                            >
-                                                <div className="relative z-10 space-y-3">
-                                                    <div className="flex items-center gap-2 border-b border-gold/10 pb-2">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-gold" />
-                                                        <div className="font-bold text-gold uppercase tracking-[1.5px] text-[10px]">Levy Breakout</div>
-                                                    </div>
-                                                    
-                                                    <div className="space-y-2">
-                                                        <div className="flex justify-between items-center text-white/90">
-                                                            <span className="font-medium">Vedic VAT (12%)</span>
-                                                            <span className="font-mono text-gold/80">{formatPrice(totalTaxes * 0.727)}</span>
-                                                        </div>
-                                                        <div className="flex justify-between items-center text-white/90">
-                                                            <span className="font-medium">Ayurvedic Cess (3%)</span>
-                                                            <span className="font-mono text-gold/80">{formatPrice(totalTaxes * 0.182)}</span>
-                                                        </div>
-                                                        <div className="flex justify-between items-center text-white/90">
-                                                            <span className="font-medium">Service Duty (1.5%)</span>
-                                                            <span className="font-mono text-gold/80">{formatPrice(totalTaxes * 0.091)}</span>
-                                                        </div>
-                                                    </div>
 
-                                                    <div className="pt-2 border-t border-white/5">
-                                                        <p className="text-[9px] italic text-white/30 leading-relaxed font-light m-0">
-                                                            Based on standard regulations for {shippingCountry}.
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                {/* Arrow pointing to the icon */}
-                                                <div className="absolute top-[99%] left-[125px] border-[6px] border-transparent border-t-gold/20" />
-                                                <div className="absolute top-[99%] left-[125px] mt-[-1px] border-[6px] border-transparent border-t-[#1A1B16]" />
-                                            </div>
-                                        </div>
-                                    )}
                                 </div>
 
                                 <div className="ritual-summary-total">

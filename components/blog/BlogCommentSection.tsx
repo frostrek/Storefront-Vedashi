@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { BlogComment, postBlogComment, getBlogComments } from '@/lib/api';
+import { useEffect, useState } from 'react';
+import { BlogComment, postBlogComment, getBlogComments, subscribeNewsletter } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
+import toast from 'react-hot-toast';
 
 interface CommentSectionProps {
     postId: string;
@@ -104,6 +106,15 @@ export default function BlogCommentSection({ postId, initialComments }: CommentS
     const [email, setEmail] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [message, setMessage] = useState('');
+    const { user, isAuthenticated } = useAuth();
+
+    // Auto-fill user info if logged in
+    useEffect(() => {
+        if (isAuthenticated && user) {
+            if (!name) setName(user.name || '');
+            if (!email) setEmail(user.email || '');
+        }
+    }, [isAuthenticated, user]);
 
     const refresh = async () => {
         const fresh = await getBlogComments(postId);

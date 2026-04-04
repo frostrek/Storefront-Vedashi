@@ -1,18 +1,24 @@
 'use client';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
-import { getCart, clearCart as clearCartApi, checkoutOrder, getAddresses, directCheckout, createPaymentOrder, verifyPayment, initiatePaymentCheckout, lookupPostalCode, getLoyaltyWallet } from '@/lib/api';
+import { getCart, clearCart as clearCartApi, checkoutOrder, getAddresses, updateAddress, deleteAddress, directCheckout, createPaymentOrder, verifyPayment, initiatePaymentCheckout, lookupPostalCode, getLoyaltyWallet, updateCheckoutDraft } from '@/lib/api';
 import { useCurrency } from '@/context/CurrencyContext';
 import { Address } from '@/types';
 import { COUNTRIES } from '@/lib/countries';
 import Select from 'react-select';
-import { CheckCircle, Loader2, MapPin, CreditCard, Banknote, ShieldCheck, AlertTriangle, ArrowLeft, Leaf, ChevronRight, Lock, Ticket, Globe, Info } from 'lucide-react';
+import { CheckCircle, Loader2, MapPin, CreditCard, Banknote, ShieldCheck, AlertTriangle, ArrowLeft, Leaf, ChevronRight, Lock, Ticket, Globe, Info, Pencil, Trash } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
+import { validatePhoneNumber, validateOptionalPhoneNumber, sanitizePhoneInput, formatPhoneDisplay } from '@/lib/phoneValidation';
+import { CountryCode } from 'libphonenumber-js';
+import { trackPurchase, EcommerceItem, trackEvent, trackCheckoutStep, clearCheckoutStepKeys } from '@/lib/analytics/gtag';
+import { getGAClientId, getAttribution } from '@/lib/analytics/attribution';
+import PerformanceStore from '@/lib/analytics/performance';
 
 /* ─── Types ─────────────────────────────────────────────────── */
 
@@ -99,6 +105,9 @@ function CheckoutContent() {
     const [placing, setPlacing] = useState(false);
     const [orderId, setOrderId] = useState<string | null>(null);
 
+    // Persistence Key
+    const PERSIST_KEY = 'vedashi_checkout_draft';
+
     // Payment method selection
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('razorpay');
     const [paymentProcessing, setPaymentProcessing] = useState(false);
@@ -115,6 +124,15 @@ function CheckoutContent() {
     const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
     const [useNewAddress, setUseNewAddress] = useState(false);
     const [addressesLoading, setAddressesLoading] = useState(false);
+    const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
+    const [editAddressData, setEditAddressData] = useState<any>(null);
+    const [addressActionLoading, setAddressActionLoading] = useState<string | null>(null); // Stores the address_id being deleted/updated
+    const [addressToDelete, setAddressToDelete] = useState<string | null>(null);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // New address form fields
     const [newAddress, setNewAddress] = useState({
@@ -130,6 +148,7 @@ function CheckoutContent() {
 
     // Validation state
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+    const [contactPhoneError, setContactPhoneError] = useState<string>('');
     const [isLookupLoading, setIsLookupLoading] = useState(false);
 
     // Track manual edits to prevent auto-fill overwrite
@@ -182,8 +201,6 @@ function CheckoutContent() {
     const [wallet, setWallet] = useState<any>(null);
     const [redeemPoints, setRedeemPoints] = useState<string>('');
 
-    // Tax Tooltip UI
-    const [showTaxTooltip, setShowTaxTooltip] = useState(false);
 
 
     useEffect(() => {
@@ -209,16 +226,15 @@ function CheckoutContent() {
     const itemsCount = isBuyNow && buyNowItem ? buyNowItem.quantity : totalItems;
     
     const baseSubtotal = isBuyNow && buyNowItem
-        ? buyNowItem.unit_price * buyNowItem.quantity
+        ? Math.round(buyNowItem.unit_price * buyNowItem.quantity)
         : items.reduce((sum, item) => sum + (item.price ?? 0) * item.quantity, 0);
 
-    const totalTaxes = isBuyNow ? 0 : items.reduce((sum, item) => sum + ((item as any).pricing?.tax_amount ?? 0), 0);
-    const subtotalWithTaxes = isBuyNow && buyNowItem ? buyNowItem.unit_price * buyNowItem.quantity : totalPrice;
-    const shippingCost = couponType === 'free_shipping' ? 0 : (subtotalWithTaxes > 50 ? 0 : 15);
+    const shippingCost = couponType === 'free_shipping' ? 0 : (baseSubtotal > 50 ? 0 : 15);
     const discount = isBuyNow ? 0 : couponDiscount;
+    const minPayable = Number(process.env.NEXT_PUBLIC_MINIMUM_PAYABLE_AMOUNT) || 1;
 
-    const prePointsTotal = subtotalWithTaxes + shippingCost - discount;
-    const maxRedeemablePoints = Math.min(wallet?.balance || 0, Math.floor(prePointsTotal));
+    const prePointsTotal = baseSubtotal + shippingCost - discount;
+    const maxRedeemablePoints = Math.min(wallet?.balance || 0, Math.max(0, Math.floor(prePointsTotal) - minPayable));
     
     // Parse valid points from input
     let pointsToRedeem = 0;
@@ -226,8 +242,8 @@ function CheckoutContent() {
         pointsToRedeem = Math.min(parseInt(redeemPoints) || 0, maxRedeemablePoints);
     }
     
-    // Assuming 1 point = 1 INR
-    const grandTotal = Math.max(0, prePointsTotal - pointsToRedeem);
+    // Assuming 1 point = 1 INR — enforce minimum payable of ₹1
+    const grandTotal = Math.max(minPayable, prePointsTotal - pointsToRedeem);
 
     // Load addresses
     useEffect(() => {
@@ -240,6 +256,28 @@ function CheckoutContent() {
                         const defaultAddr = res.data.find((a: Address) => a.is_default) || res.data[0];
                         if (defaultAddr) setSelectedAddressId(defaultAddr.address_id);
                         else setUseNewAddress(true);
+                        
+                        // After loading addresses, check if we have a persisted draft to restore
+                        try {
+                            const draft = sessionStorage.getItem(PERSIST_KEY);
+                            if (draft) {
+                                const parsed = JSON.parse(draft);
+                                // Intentionally omitted parsed.step to enforce starting at step 1
+                                if (parsed.paymentMethod) setPaymentMethod(parsed.paymentMethod);
+                                if (parsed.contactEmail) setContactEmail(parsed.contactEmail);
+                                if (parsed.contactPhone) setContactPhone(parsed.contactPhone);
+                                if (parsed.billingSameAsShipping !== undefined) setBillingSameAsShipping(parsed.billingSameAsShipping);
+                                if (parsed.selectedAddressId) setSelectedAddressId(parsed.selectedAddressId);
+                                if (parsed.useNewAddress !== undefined) setUseNewAddress(parsed.useNewAddress);
+                                if (parsed.newAddress) setNewAddress(prev => ({ ...prev, ...parsed.newAddress }));
+                                if (parsed.selectedBillingAddressId) setSelectedBillingAddressId(parsed.selectedBillingAddressId);
+                                if (parsed.useNewBillingAddress !== undefined) setUseNewBillingAddress(parsed.useNewBillingAddress);
+                                if (parsed.newBillingAddress) setNewBillingAddress(prev => ({ ...prev, ...parsed.newBillingAddress }));
+                                if (parsed.redeemPoints) setRedeemPoints(parsed.redeemPoints);
+                            }
+                        } catch (e) {
+                            console.error('Failed to restore checkout draft:', e);
+                        }
                     } else setUseNewAddress(true);
                 })
                 .catch(() => setUseNewAddress(true))
@@ -256,11 +294,54 @@ function CheckoutContent() {
         }
     }, [user]);
 
+    // Try to restore draft from backend if missing locally
+    useEffect(() => {
+        if (cartId && isAuthenticated && mounted && !sessionStorage.getItem(PERSIST_KEY)) {
+            getCart({ cart_id: cartId }).then(cartRes => {
+                if (cartRes.success && cartRes.data?.checkout_draft && Object.keys(cartRes.data.checkout_draft).length > 0) {
+                    const parsed = cartRes.data.checkout_draft;
+                    // Intentionally omitted parsed.step to enforce starting at step 1
+                    if (parsed.paymentMethod) setPaymentMethod(parsed.paymentMethod);
+                    if (parsed.contactEmail) setContactEmail(parsed.contactEmail);
+                    if (parsed.contactPhone) setContactPhone(parsed.contactPhone);
+                    if (parsed.billingSameAsShipping !== undefined) setBillingSameAsShipping(parsed.billingSameAsShipping);
+                    if (parsed.selectedAddressId) setSelectedAddressId(parsed.selectedAddressId);
+                    if (parsed.useNewAddress !== undefined) setUseNewAddress(parsed.useNewAddress);
+                    if (parsed.newAddress) setNewAddress(prev => ({ ...prev, ...parsed.newAddress }));
+                    if (parsed.selectedBillingAddressId) setSelectedBillingAddressId(parsed.selectedBillingAddressId);
+                    if (parsed.useNewBillingAddress !== undefined) setUseNewBillingAddress(parsed.useNewBillingAddress);
+                    if (parsed.newBillingAddress) setNewBillingAddress(prev => ({ ...prev, ...parsed.newBillingAddress }));
+                    if (parsed.redeemPoints) setRedeemPoints(parsed.redeemPoints);
+                    sessionStorage.setItem(PERSIST_KEY, JSON.stringify(parsed));
+                }
+            }).catch(() => {});
+        }
+    }, [cartId, isAuthenticated, mounted]);
+
     useEffect(() => {
         if (!isBuyNow && items.length === 0 && !orderPlaced) {
             router.push('/cart');
         }
     }, [items.length, orderPlaced, router, isBuyNow]);
+
+    // GA4: begin_checkout — fires once per checkout session (sessionStorage dedup)
+    useEffect(() => {
+        if (checkoutItems.length === 0) return;
+
+        const ga4Items: EcommerceItem[] = checkoutItems.map((item: any) => ({
+            item_id: item.product_id || '',
+            item_name: item.product_name || 'Product',
+            price: Number(item.price ?? item.unit_price ?? 0),
+            quantity: item.quantity,
+        }));
+
+        trackCheckoutStep('begin_checkout', 1, {
+            currency: 'INR',
+            value: baseSubtotal,
+            items: ga4Items,
+            coupon: couponCode || undefined,
+        });
+    }, [checkoutItems, baseSubtotal, couponCode]);
 
     // Clear pincode errors immediately on change
     useEffect(() => {
@@ -282,6 +363,39 @@ function CheckoutContent() {
             });
         }
     }, [newBillingAddress.pincode]);
+
+    // Persist changes to sessionStorage
+    useEffect(() => {
+        if (!mounted || orderPlaced) return;
+        
+        const timer = setTimeout(() => {
+            const draft = {
+                // Not saving step to enforce step-based routing on page load
+                paymentMethod,
+                contactEmail,
+                contactPhone,
+                billingSameAsShipping,
+                selectedAddressId,
+                useNewAddress,
+                newAddress,
+                selectedBillingAddressId,
+                useNewBillingAddress,
+                newBillingAddress,
+                redeemPoints
+            };
+            sessionStorage.setItem(PERSIST_KEY, JSON.stringify(draft));
+            if (cartId && isAuthenticated) {
+                updateCheckoutDraft(cartId, draft).catch(() => {});
+            }
+        }, 500); // Debounce saves
+        
+        return () => clearTimeout(timer);
+    }, [
+        mounted, orderPlaced, step, maxStepReached, paymentMethod, contactEmail, contactPhone, 
+        billingSameAsShipping, selectedAddressId, useNewAddress, newAddress, 
+        selectedBillingAddressId, useNewBillingAddress, newBillingAddress, redeemPoints,
+        cartId, isAuthenticated
+    ]);
 
     // Global Postal Code Auto-Fill (Shipping)
     useEffect(() => {
@@ -361,6 +475,107 @@ function CheckoutContent() {
         );
     }
 
+    /* ─── Address Action Handlers ────────────────────────────── */
+
+    const handleDeleteAddressClick = (e: React.MouseEvent, addressId: string) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setAddressToDelete(addressId);
+    };
+
+    const confirmDeleteAddress = async () => {
+        if (!user?.id || !addressToDelete) return;
+
+        setAddressActionLoading(addressToDelete);
+        try {
+            const res = await deleteAddress(user.id, addressToDelete);
+            if (res.success) {
+                setSavedAddresses(prev => prev.filter(a => a.address_id !== addressToDelete));
+                if (selectedAddressId === addressToDelete) {
+                    setSelectedAddressId(null);
+                    setUseNewAddress(true);
+                }
+                if (selectedBillingAddressId === addressToDelete) {
+                    setSelectedBillingAddressId(null);
+                    setUseNewBillingAddress(true);
+                }
+                toast.success('Address deleted successfully');
+            } else {
+                toast.error(res.message || 'Failed to delete address');
+            }
+        } catch (error) {
+            toast.error('An error occurred while deleting the address');
+        } finally {
+            setAddressActionLoading(null);
+            setAddressToDelete(null);
+        }
+    };
+
+    const handleEditAddressClick = (e: React.MouseEvent, address: Address) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setEditingAddressId(address.address_id);
+        const currentCountryCode = (address as any).country_code || 'IN';
+        let phoneToEdit = address.phone || '';
+        
+        if (phoneToEdit) {
+            const formatRes = validateOptionalPhoneNumber(phoneToEdit, currentCountryCode);
+            if (formatRes.isValid && formatRes.normalized) {
+                // Keep the raw input or just the local part if international formatting applies
+                phoneToEdit = formatRes.normalized; 
+            }
+        }
+
+        setEditAddressData({
+            address_line1: address.address_line1 || '',
+            address_line2: address.address_line2 || '',
+            city: address.city || '',
+            state: address.state || '',
+            pincode: address.pincode || '',
+            phone: phoneToEdit,
+            country: address.country || 'India',
+            country_code: currentCountryCode,
+        });
+        setFormErrors({});
+    };
+
+    const handleSaveEditedAddress = async (addressId: string) => {
+        if (!user?.id) return;
+        
+        const errors = validateAddress(editAddressData);
+        if (Object.keys(errors).length > 0) {
+            setFormErrors(errors);
+            toast.error('Please fix address validation errors');
+            return;
+        }
+
+        setAddressActionLoading(addressId);
+        try {
+            // Normalize phone
+            const updatedData = { ...editAddressData };
+            if (updatedData.phone) {
+                const phoneRes = validateOptionalPhoneNumber(updatedData.phone, updatedData.country_code);
+                if (phoneRes.isValid && phoneRes.normalized) {
+                    updatedData.phone = phoneRes.normalized;
+                }
+            }
+
+            const res = await updateAddress(user.id, addressId, updatedData);
+            if (res.success) {
+                setSavedAddresses(prev => prev.map(a => a.address_id === addressId ? { ...a, ...updatedData } : a));
+                setEditingAddressId(null);
+                setEditAddressData(null);
+                toast.success('Address updated successfully');
+            } else {
+                toast.error(res.message || 'Failed to update address');
+            }
+        } catch (error) {
+            toast.error('An error occurred while updating the address');
+        } finally {
+            setAddressActionLoading(null);
+        }
+    };
+
     /* ─── Razorpay Checkout Handler ──────────────────────────── */
 
     const openRazorpayCheckout = async (orderId: string | null, checkoutData?: any) => {
@@ -402,6 +617,7 @@ function CheckoutContent() {
                         setStep(2); // Go back to payment step
                         if (orderId) setFailedOrderId(orderId);
                         toast.error('Payment was not completed. You can retry anytime.');
+                        trackEvent('payment_failed', { reason: 'user_dismissed_modal', order_id: orderId });
                     },
                 },
                 handler: async (response: any) => {
@@ -416,8 +632,29 @@ function CheckoutContent() {
                         if (verifyRes.success) {
                             const platformOrderId = verifyRes.data?.order_id || orderId;
                             setOrderId(platformOrderId || null);
+
+                            // GA4: purchase (Razorpay) — deduplicated
+                            const purchaseItems: EcommerceItem[] = checkoutItems.map((item: any) => ({
+                                item_id: item.product_id || '',
+                                item_name: item.product_name || 'Product',
+                                price: Number(item.price ?? item.unit_price ?? 0),
+                                quantity: item.quantity,
+                            }));
+                            trackPurchase({
+                                currency: 'INR',
+                                value: grandTotal,
+                                transaction_id: platformOrderId || undefined,
+                                items: purchaseItems,
+                                coupon: couponCode || undefined,
+                                shipping: shippingCost,
+                                payment_type: 'razorpay',
+                                ...PerformanceStore.getPerformanceSummary(),
+                            });
+
                             if (!isBuyNow) { await clearCart(true); removeCoupon(); }
+                            sessionStorage.removeItem(PERSIST_KEY);
                             sessionStorage.removeItem('ksp_buy_now_item');
+                            clearCheckoutStepKeys();
                             setOrderPlaced(true);
                             setPaymentFailed(false);
                             setFailedOrderId(null);
@@ -426,12 +663,14 @@ function CheckoutContent() {
                             setStep(2);
                             if (orderId) setFailedOrderId(orderId);
                             toast.error(verifyRes.message || 'Payment verification failed');
+                            trackEvent('payment_failed', { reason: 'verification_failed', details: verifyRes.message, order_id: orderId });
                         }
                     } catch {
                         setPaymentFailed(true);
                         setStep(2);
                         if (orderId) setFailedOrderId(orderId);
                         toast.error('Payment verification failed. Please contact support.');
+                        trackEvent('payment_failed', { reason: 'verification_exception', order_id: orderId });
                     }
                     setPaymentProcessing(false);
                 },
@@ -454,12 +693,20 @@ function CheckoutContent() {
                 setStep(2);
                 setFailedOrderId(orderId);
                 toast.error(response.error?.description || 'Payment failed. Please try again.');
+                trackEvent('payment_failed', { reason: 'gateway_error', descriptions: response.error?.description, order_id: orderId });
             });
             rzp.open();
         } catch (error: any) {
             setPaymentProcessing(false);
             setStep(2);
             toast.error(error.message || 'Failed to initiate payment');
+            trackEvent('payment_failed', { reason: 'initiation_exception', details: error.message });
+            
+            // Handle session expiry gracefully
+            const errorMsg = error.message?.toLowerCase() || '';
+            if (errorMsg.includes('token') || errorMsg.includes('expire') || errorMsg.includes('unauthorized') || error.statusCode === 401) {
+                router.push('/login?redirect=/checkout');
+            }
         }
     };
 
@@ -469,10 +716,12 @@ function CheckoutContent() {
         if (useNewAddress && (!newAddress.address_line1 || !newAddress.city || !newAddress.state || !newAddress.pincode)) {
             setStep(1);
             toast.error('Please fill in all required address fields');
+            trackEvent('checkout_error', { reason: 'missing_address_fields' });
             return;
         } else if (!useNewAddress && !selectedAddressId) {
             setStep(1);
             toast.error('Please select a shipping address');
+            trackEvent('checkout_error', { reason: 'missing_address_selection' });
             return;
         }
 
@@ -480,6 +729,37 @@ function CheckoutContent() {
         setPaymentFailed(false);
 
         try {
+            // Determine the shipping country to use as default for phone validation
+            const currentShippingCountryCode = ((useNewAddress ? newAddress.country_code : (savedAddresses.find(a => a.address_id === selectedAddressId) as any)?.country_code) || 'IN') as CountryCode;
+
+            // Ensure numbers are properly normalized before sending to backend
+            const contactPhoneResult = validatePhoneNumber(contactPhone, currentShippingCountryCode);
+            const finalContactPhone = contactPhoneResult.isValid ? contactPhoneResult.normalized || contactPhone : contactPhone;
+            
+            let finalNewAddress = newAddress;
+            if (useNewAddress || (billingSameAsShipping && useNewAddress) || (!billingSameAsShipping && useNewAddress)) {
+                if (newAddress.phone) {
+                    const addressPhoneResult = validateOptionalPhoneNumber(newAddress.phone, currentShippingCountryCode);
+                    finalNewAddress = { 
+                        ...newAddress, 
+                        phone: addressPhoneResult.isValid ? (addressPhoneResult.normalized || newAddress.phone) : newAddress.phone 
+                    };
+                }
+            }
+
+            let finalNewBillingAddress = newBillingAddress;
+            if (!billingSameAsShipping && useNewBillingAddress) {
+                const currentBillingCountryCode = (((newBillingAddress as any).country_code) || 'IN') as CountryCode;
+                // Assuming newBillingAddress has phone too, if not it won't hurt
+                if ((newBillingAddress as any).phone) {
+                    const billingPhoneResult = validateOptionalPhoneNumber((newBillingAddress as any).phone, currentBillingCountryCode);
+                    finalNewBillingAddress = { 
+                        ...newBillingAddress, 
+                        phone: billingPhoneResult.isValid ? (billingPhoneResult.normalized || (newBillingAddress as any).phone) : (newBillingAddress as any).phone 
+                    } as any;
+                }
+            }
+
             // NEW RAZORPAY FLOW:
             if (paymentMethod === 'razorpay') {
                 setPlacing(false);
@@ -491,43 +771,52 @@ function CheckoutContent() {
                         customer_id: user?.id || undefined,
                         customer_name: user?.name || undefined,
                         customer_email: user?.email || contactEmail || undefined,
+                        customer_phone: finalContactPhone || undefined,
                         items: [{ product_id: buyNowItem.product_id, variant_id: buyNowItem.variant_id, quantity: buyNowItem.quantity, unit_price: buyNowItem.unit_price }],
                         shipping_address_id: useNewAddress ? undefined : selectedAddressId || undefined,
-                        shipping_address: useNewAddress ? newAddress : undefined,
+                        shipping_address: useNewAddress ? finalNewAddress : undefined,
                         billing_address_id: billingSameAsShipping ? (useNewAddress ? undefined : selectedAddressId || undefined) : (useNewBillingAddress ? undefined : selectedBillingAddressId || undefined),
-                        billing_address: !billingSameAsShipping && useNewBillingAddress ? newBillingAddress : (billingSameAsShipping && useNewAddress ? newAddress : undefined),
+                        billing_address: !billingSameAsShipping && useNewBillingAddress ? finalNewBillingAddress : (billingSameAsShipping && useNewAddress ? finalNewAddress : undefined),
                         order_notes: orderNotes.trim() || undefined,
                         redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
-                        final_total: grandTotal, // We pass the total for initial order creation
-                        currency: 'INR'
+                        final_total: grandTotal,
+                        currency: 'INR',
+                        ga_client_id: getGAClientId() || undefined,
+                        attribution: getAttribution() || undefined,
                     };
                 } else if (isAuthenticated && cartId && user?.id) {
                     checkoutData = {
                         cart_id: cartId,
                         customer_id: user.id,
+                        customer_phone: finalContactPhone || undefined,
                         shipping_address_id: useNewAddress ? undefined : selectedAddressId || undefined,
-                        shipping_address: useNewAddress ? newAddress : undefined,
+                        shipping_address: useNewAddress ? finalNewAddress : undefined,
                         billing_address_id: billingSameAsShipping ? (useNewAddress ? undefined : selectedAddressId || undefined) : (useNewBillingAddress ? undefined : selectedBillingAddressId || undefined),
-                        billing_address: !billingSameAsShipping && useNewBillingAddress ? newBillingAddress : (billingSameAsShipping && useNewAddress ? newAddress : undefined),
+                        billing_address: !billingSameAsShipping && useNewBillingAddress ? finalNewBillingAddress : (billingSameAsShipping && useNewAddress ? finalNewAddress : undefined),
                         coupon_code: couponCode || undefined,
                         order_notes: orderNotes.trim() || undefined,
                         redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
                         final_total: grandTotal,
-                        currency: 'INR'
+                        currency: 'INR',
+                        ga_client_id: getGAClientId() || undefined,
+                        attribution: getAttribution() || undefined,
                     };
                 } else {
                     checkoutData = {
                         customer_id: user?.id || undefined,
                         customer_name: user?.name || undefined,
                         customer_email: user?.email || contactEmail || undefined,
+                        customer_phone: finalContactPhone || undefined,
                         items: checkoutItems.map(item => ({ product_id: (item as any).product_id || '', variant_id: (item as any).variant_id, quantity: item.quantity, unit_price: Number((item as any).price || (item as any).unit_price) || 0 })),
-                        shipping_address: useNewAddress ? newAddress : undefined,
-                        billing_address: !billingSameAsShipping && useNewBillingAddress ? newBillingAddress : (billingSameAsShipping && useNewAddress ? newAddress : undefined),
+                        shipping_address: useNewAddress ? finalNewAddress : undefined,
+                        billing_address: !billingSameAsShipping && useNewBillingAddress ? finalNewBillingAddress : (billingSameAsShipping && useNewAddress ? finalNewAddress : undefined),
                         coupon_code: couponCode || undefined,
                         order_notes: orderNotes.trim() || undefined,
                         redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
                         final_total: grandTotal,
-                        currency: 'INR'
+                        currency: 'INR',
+                        ga_client_id: getGAClientId() || undefined,
+                        attribution: getAttribution() || undefined,
                     };
                 }
 
@@ -537,58 +826,102 @@ function CheckoutContent() {
 
             let result;
             if (isBuyNow && buyNowItem) {
-                result = await directCheckout({
+            result = await directCheckout({
                     customer_id: user?.id || undefined,
                     customer_name: user?.name || undefined,
                     customer_email: user?.email || contactEmail || undefined,
+                    customer_phone: finalContactPhone || undefined,
                     items: [{ product_id: buyNowItem.product_id, variant_id: buyNowItem.variant_id, quantity: buyNowItem.quantity, unit_price: buyNowItem.unit_price }],
                     shipping_address_id: useNewAddress ? undefined : selectedAddressId || undefined,
-                    shipping_address: useNewAddress ? newAddress as unknown as Record<string, string> : undefined,
+                    shipping_address: useNewAddress ? finalNewAddress as unknown as Record<string, string> : undefined,
                     billing_address_id: billingSameAsShipping ? (useNewAddress ? undefined : selectedAddressId || undefined) : (useNewBillingAddress ? undefined : selectedBillingAddressId || undefined),
-                    billing_address: !billingSameAsShipping && useNewBillingAddress ? newBillingAddress as unknown as Record<string, string> : (billingSameAsShipping && useNewAddress ? newAddress as unknown as Record<string, string> : undefined),
+                    billing_address: !billingSameAsShipping && useNewBillingAddress ? finalNewBillingAddress as unknown as Record<string, string> : (billingSameAsShipping && useNewAddress ? finalNewAddress as unknown as Record<string, string> : undefined),
                     payment_method: paymentMethod,
                     order_notes: orderNotes.trim() || undefined,
                     redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
+                    ga_client_id: getGAClientId() || undefined,
+                    attribution: getAttribution() || undefined,
                 });
             } else if (isAuthenticated && cartId && user?.id) {
                 result = await checkoutOrder({
                     cart_id: cartId,
                     customer_id: user.id,
+                    customer_phone: finalContactPhone || undefined,
                     shipping_address_id: useNewAddress ? undefined : selectedAddressId || undefined,
-                    shipping_address: useNewAddress ? newAddress as unknown as Record<string, string> : undefined,
+                    shipping_address: useNewAddress ? finalNewAddress as unknown as Record<string, string> : undefined,
                     billing_address_id: billingSameAsShipping ? (useNewAddress ? undefined : selectedAddressId || undefined) : (useNewBillingAddress ? undefined : selectedBillingAddressId || undefined),
-                    billing_address: !billingSameAsShipping && useNewBillingAddress ? newBillingAddress as unknown as Record<string, string> : (billingSameAsShipping && useNewAddress ? newAddress as unknown as Record<string, string> : undefined),
+                    billing_address: !billingSameAsShipping && useNewBillingAddress ? finalNewBillingAddress as unknown as Record<string, string> : (billingSameAsShipping && useNewAddress ? finalNewAddress as unknown as Record<string, string> : undefined),
                     coupon_code: couponCode || undefined,
                     order_notes: orderNotes.trim() || undefined,
                     payment_method: paymentMethod,
                     redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
+                    ga_client_id: getGAClientId() || undefined,
+                    attribution: getAttribution() || undefined,
                 } as any);
             } else {
                 result = await directCheckout({
                     customer_id: user?.id || undefined,
                     customer_name: user?.name || undefined,
                     customer_email: user?.email || contactEmail || undefined,
+                    customer_phone: finalContactPhone || undefined,
                     items: checkoutItems.map(item => ({ product_id: (item as any).product_id || '', variant_id: (item as any).variant_id, quantity: item.quantity, unit_price: Number((item as any).price || (item as any).unit_price) || 0 })),
-                    shipping_address: useNewAddress ? newAddress as unknown as Record<string, string> : undefined,
-                    billing_address: !billingSameAsShipping && useNewBillingAddress ? newBillingAddress as unknown as Record<string, string> : (billingSameAsShipping && useNewAddress ? newAddress as unknown as Record<string, string> : undefined),
+                    shipping_address: useNewAddress ? finalNewAddress as unknown as Record<string, string> : undefined,
+                    billing_address: !billingSameAsShipping && useNewBillingAddress ? finalNewBillingAddress as unknown as Record<string, string> : (billingSameAsShipping && useNewAddress ? finalNewAddress as unknown as Record<string, string> : undefined),
                     payment_method: paymentMethod,
                     coupon_code: couponCode || undefined,
                     order_notes: orderNotes.trim() || undefined,
                     redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
+                    ga_client_id: getGAClientId() || undefined,
+                    attribution: getAttribution() || undefined,
                 });
             }
 
             if (result.success) {
                 const createdOrderId = result.data?.order_id;
                 setOrderId(createdOrderId || null);
+
+                // GA4: purchase (COD) — deduplicated
+                const purchaseItems: EcommerceItem[] = checkoutItems.map((item: any) => ({
+                    item_id: item.product_id || '',
+                    item_name: item.product_name || 'Product',
+                    price: Number(item.price ?? item.unit_price ?? 0),
+                    quantity: item.quantity,
+                }));
+                trackPurchase({
+                    currency: 'INR',
+                    value: grandTotal,
+                    transaction_id: createdOrderId || undefined,
+                    items: purchaseItems,
+                    coupon: couponCode || undefined,
+                    shipping: shippingCost,
+                    payment_type: paymentMethod,
+                    ...PerformanceStore.getPerformanceSummary(),
+                });
+
                 if (!isBuyNow) { await clearCart(true); removeCoupon(); }
+                sessionStorage.removeItem(PERSIST_KEY);
                 sessionStorage.removeItem('ksp_buy_now_item');
+                clearCheckoutStepKeys();
                 setOrderPlaced(true);
             } else {
                 toast.error(result.message || 'Failed to place order');
+                trackEvent('checkout_error', { reason: 'api_failed', details: result.message });
+                
+                // Handle session expiry gracefully
+                const errorMsg = result.message?.toLowerCase() || '';
+                if (errorMsg.includes('token') || errorMsg.includes('expire') || errorMsg.includes('unauthorized') || result.statusCode === 401) {
+                    router.push('/login?redirect=/checkout');
+                }
             }
-        } catch (error) {
+        } catch (error: any) {
             toast.error('Something went wrong. Please try again.');
+            trackEvent('checkout_error', { reason: 'exception', details: error.message });
+            
+            // Handle session expiry gracefully
+            const errorMsg = error.message?.toLowerCase() || '';
+            if (errorMsg.includes('token') || errorMsg.includes('expire') || errorMsg.includes('unauthorized') || error.statusCode === 401) {
+                router.push('/login?redirect=/checkout');
+            }
         } finally {
             setPlacing(false);
         }
@@ -603,10 +936,26 @@ function CheckoutContent() {
         }
         if (!addr.city) errors[`${prefix}city`] = 'City is required';
         if (!addr.state) errors[`${prefix}state`] = 'State/Region is required';
-        if (!addr.pincode) errors[`${prefix}pincode`] = 'Postal Code is required';
+        if (!addr.pincode) {
+            errors[`${prefix}pincode`] = 'Postal Code is required';
+        } else {
+            const cleanPin = addr.pincode.toString().trim();
+            const isIndia = !addr.country || addr.country.toLowerCase() === 'india';
+            if (isIndia) {
+                if (!/^\d{6}$/.test(cleanPin)) {
+                    errors[`${prefix}pincode`] = 'Pincode must be exactly 6 digits';
+                }
+            } else {
+                if (!/^[a-zA-Z0-9\s\-]{3,10}$/.test(cleanPin)) {
+                    errors[`${prefix}pincode`] = 'Postal code must be 3-10 alphanumeric characters';
+                }
+            }
+        }
         
-        if (addr.phone && !/^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/.test(addr.phone)) {
-            errors[`${prefix}phone`] = 'Please enter a valid phone format';
+        const currentCountryCode = (((addr as any).country_code) || 'IN') as CountryCode;
+        const phoneValidation = validateOptionalPhoneNumber(addr.phone, currentCountryCode);
+        if (!phoneValidation.isValid && phoneValidation.error) {
+            errors[`${prefix}phone`] = phoneValidation.error;
         }
 
         return errors;
@@ -616,6 +965,23 @@ function CheckoutContent() {
 
     const goToPayment = () => {
         setFormErrors({});
+        setContactPhoneError('');
+
+        const currentShippingCountryCode = ((useNewAddress ? newAddress.country_code : (savedAddresses.find(a => a.address_id === selectedAddressId) as any)?.country_code) || 'IN') as CountryCode;
+
+        // Validate Contact Phone
+        const contactPhoneResult = validatePhoneNumber(contactPhone, currentShippingCountryCode);
+        if (!contactPhoneResult.isValid) {
+            setContactPhoneError(contactPhoneResult.error || 'Invalid mobile number');
+            toast.error('Please fix contact phone validation error');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+        
+        // Normalize Contact Phone
+        if (contactPhoneResult.normalized) {
+            setContactPhone(contactPhoneResult.normalized);
+        }
         
         if (useNewAddress) {
             const errors = validateAddress(newAddress);
@@ -624,12 +990,32 @@ function CheckoutContent() {
                 toast.error('Please fix address validation errors');
                 return;
             }
+            // Normalize Address Phone
+            const addressPhoneResult = validateOptionalPhoneNumber(newAddress.phone, currentShippingCountryCode);
+            if (addressPhoneResult.isValid && addressPhoneResult.normalized) {
+                setNewAddress(prev => ({ ...prev, phone: addressPhoneResult.normalized! }));
+            }
         } else if (!selectedAddressId) {
             toast.error('Please select a shipping address');
             return;
         }
 
         setStep(2);
+
+        // GA4: add_shipping_info — fires once when address is confirmed (step 2)
+        const shippingItems: EcommerceItem[] = checkoutItems.map((item: any) => ({
+            item_id: item.product_id || '',
+            item_name: item.product_name || 'Product',
+            price: Number(item.price ?? item.unit_price ?? 0),
+            quantity: item.quantity,
+        }));
+        trackCheckoutStep('add_shipping_info', 2, {
+            currency: 'INR',
+            value: grandTotal,
+            items: shippingItems,
+            coupon: couponCode || undefined,
+        });
+
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -649,6 +1035,21 @@ function CheckoutContent() {
                 return;
             }
         }
+        // GA4: add_payment_info — fires once when payment method is confirmed (step 3)
+        const paymentInfoItems: EcommerceItem[] = checkoutItems.map((item: any) => ({
+            item_id: item.product_id || '',
+            item_name: item.product_name || 'Product',
+            price: Number(item.price ?? item.unit_price ?? 0),
+            quantity: item.quantity,
+        }));
+        trackCheckoutStep('add_payment_info', 3, {
+            currency: 'INR',
+            value: grandTotal,
+            items: paymentInfoItems,
+            coupon: couponCode || undefined,
+            payment_type: paymentMethod,
+        });
+
         setStep(3);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -762,7 +1163,32 @@ function CheckoutContent() {
                                         </div>
                                         <div>
                                             <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Mobile Phone *</label>
-                                            <input type="tel" value={contactPhone} onChange={e => setContactPhone(e.target.value)} className="w-full rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-[#F5F4F0]" placeholder="Enter your mobile number" />
+                                            <input 
+                                                type="tel" 
+                                                value={contactPhone} 
+                                                onChange={e => {
+                                                    const currentShippingCountryCode = ((useNewAddress ? newAddress.country_code : (savedAddresses.find(a => a.address_id === selectedAddressId) as any)?.country_code) || 'IN') as CountryCode;
+                                                    const sanitized = sanitizePhoneInput(e.target.value);
+                                                    setContactPhone(sanitized);
+                                                    if (sanitized) {
+                                                        const res = validatePhoneNumber(sanitized, currentShippingCountryCode);
+                                                        setContactPhoneError(res.isValid ? '' : res.error || '');
+                                                    } else {
+                                                        setContactPhoneError('');
+                                                    }
+                                                }}
+                                                onBlur={e => {
+                                                    const currentShippingCountryCode = ((useNewAddress ? newAddress.country_code : (savedAddresses.find(a => a.address_id === selectedAddressId) as any)?.country_code) || 'IN') as CountryCode;
+                                                    const res = validatePhoneNumber(e.target.value, currentShippingCountryCode);
+                                                    setContactPhoneError(res.isValid ? '' : res.error || '');
+                                                    if (res.isValid && res.normalized) {
+                                                        setContactPhone(formatPhoneDisplay(res.normalized, currentShippingCountryCode));
+                                                    }
+                                                }}
+                                                className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-[#F5F4F0] ${contactPhoneError ? 'border-red-400' : 'border-[#D4CFC0]'}`} 
+                                                placeholder="Enter mobile number" 
+                                            />
+                                            {contactPhoneError && <p className="text-[10px] text-red-500 mt-1 font-bold">{contactPhoneError}</p>}
                                         </div>
                                     </div>
                                     <p className="mt-3 text-xs text-[#8B7A3D]">We will send order updates and Ayurvedic guidelines to these contacts.</p>
@@ -780,20 +1206,112 @@ function CheckoutContent() {
                                     ) : savedAddresses.length > 0 && (
                                         <div className="mb-6 space-y-3">
                                             {savedAddresses.map(addr => (
-                                                <label key={addr.address_id} className={`flex items-start gap-4 rounded-xl border p-4 cursor-pointer transition-colors ${selectedAddressId === addr.address_id && !useNewAddress ? 'border-[#6B8F5E] bg-[#DFE5D9] border-2 shadow-sm' : 'border-[#D4CFC0] bg-white hover:border-[#CEDBCE]'}`}>
-                                                    <input type="radio" name="address" checked={selectedAddressId === addr.address_id && !useNewAddress} onChange={() => { setSelectedAddressId(addr.address_id); setUseNewAddress(false); }} className="mt-1 w-4 h-4 accent-[#6B8F5E]" />
-                                                    <div className="flex-1">
-                                                        <div className="flex items-center justify-between mb-1">
-                                                            <span className="font-bold text-[#1A1A1A]">{addr.label || 'Saved Address'}</span>
-                                                            {addr.is_default && <span className="bg-[#1A1A1A] text-white text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full">Default</span>}
+                                                <div key={addr.address_id} className="min-w-0">
+                                                    <label className={`flex items-start gap-4 rounded-xl border p-4 cursor-pointer transition-colors w-full ${selectedAddressId === addr.address_id && !useNewAddress && editingAddressId !== addr.address_id ? 'border-[#6B8F5E] bg-[#DFE5D9] border-2 shadow-sm' : 'border-[#D4CFC0] bg-white hover:border-[#CEDBCE]'}`}>
+                                                        <input type="radio" name="address" checked={selectedAddressId === addr.address_id && !useNewAddress && editingAddressId !== addr.address_id} onChange={() => { setSelectedAddressId(addr.address_id); setUseNewAddress(false); setEditingAddressId(null); }} className="mt-1 w-4 h-4 accent-[#6B8F5E]" />
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center justify-between mb-1">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="font-bold text-[#1A1A1A]">{addr.label || 'Saved Address'}</span>
+                                                                    {addr.is_default && <span className="bg-[#1A1A1A] text-white text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full">Default</span>}
+                                                                </div>
+                                                                {editingAddressId !== addr.address_id && (
+                                                                    <div className="flex items-center gap-2 ml-4">
+                                                                        <button type="button" onClick={(e) => handleEditAddressClick(e, addr)} disabled={addressActionLoading === addr.address_id} className="text-[#8B7A3D] hover:text-[#6B8F5E] p-1.5 rounded-full hover:bg-[#F5F4F0] transition-colors disabled:opacity-50">
+                                                                            <Pencil className="w-4 h-4" />
+                                                                        </button>
+                                                                        <button type="button" onClick={(e) => handleDeleteAddressClick(e, addr.address_id)} disabled={addressActionLoading === addr.address_id} className="text-[#8B7A3D] hover:text-red-500 p-1.5 rounded-full hover:bg-red-50 transition-colors disabled:opacity-50">
+                                                                            {addressActionLoading === addr.address_id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash className="w-4 h-4" />}
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <p className="text-sm text-[#4A4A4A] truncate">{addr.address_line1}</p>
+                                                            {addr.address_line2 && <p className="text-sm text-[#4A4A4A] truncate">{addr.address_line2}</p>}
+                                                            <p className="text-sm text-[#4A4A4A] truncate">{addr.city}, {addr.state} {addr.pincode}</p>
+                                                            {addr.phone && <p className="text-sm text-[#4A4A4A] mt-1 flex items-center gap-1.5 opacity-80"><span className="text-[10px] font-bold uppercase tracking-wider text-[#6B6B60]">PH:</span> {addr.phone}</p>}
                                                         </div>
-                                                        <p className="text-sm text-[#4A4A4A]">{addr.address_line1}</p>
-                                                        {addr.address_line2 && <p className="text-sm text-[#4A4A4A]">{addr.address_line2}</p>}
-                                                        <p className="text-sm text-[#4A4A4A]">{addr.city}, {addr.state} {addr.pincode}</p>
-                                                    </div>
-                                                </label>
+                                                    </label>
+
+                                                    {/* Inline Edit Form */}
+                                                    {editingAddressId === addr.address_id && editAddressData && (
+                                                        <div className="bg-[#F5F4F0] rounded-xl p-5 border border-[#D4CFC0] mt-3 animate-fade-in">
+                                                            <h4 className="text-sm font-bold text-[#1A1A1A] mb-4">Edit Address</h4>
+                                                            <div className="grid gap-4 sm:grid-cols-2">
+                                                                <div className="sm:col-span-2">
+                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Country *</label>
+                                                                    <div className="relative">
+                                                                        <Select
+                                                                            options={countryOptions}
+                                                                            value={countryOptions.find(opt => opt.value === editAddressData.country_code)}
+                                                                            onChange={(opt: any) => {
+                                                                                if (opt) setEditAddressData((prev: any) => ({ ...prev, country_code: opt.value, country: opt.name }));
+                                                                            }}
+                                                                            styles={customSelectStyles}
+                                                                            classNamePrefix="react-select"
+                                                                            placeholder="Search..."
+                                                                        />
+                                                                        <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8B7A3D] z-10 pointer-events-none" />
+                                                                    </div>
+                                                                </div>
+                                                                <div className="sm:col-span-2">
+                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Address Line 1 *</label>
+                                                                    <input type="text" value={editAddressData.address_line1} onChange={e => setEditAddressData({ ...editAddressData, address_line1: e.target.value })} className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.address_line1 ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Street address" />
+                                                                    {formErrors.address_line1 && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.address_line1}</p>}
+                                                                </div>
+                                                                <div className="sm:col-span-2">
+                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Address Line 2</label>
+                                                                    <input type="text" value={editAddressData.address_line2} onChange={e => setEditAddressData({ ...editAddressData, address_line2: e.target.value })} className="w-full rounded-lg border border-[#D4CFC0] px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white" placeholder="Apartment, suite, etc." />
+                                                                </div>
+                                                                <div>
+                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Pincode *</label>
+                                                                    <input type="text" value={editAddressData.pincode} onChange={e => setEditAddressData({ ...editAddressData, pincode: e.target.value })} className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.pincode ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Pincode" />
+                                                                    {formErrors.pincode && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.pincode}</p>}
+                                                                </div>
+                                                                <div>
+                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">City *</label>
+                                                                    <input type="text" value={editAddressData.city} onChange={e => setEditAddressData({ ...editAddressData, city: e.target.value })} className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.city ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="City" />
+                                                                    {formErrors.city && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.city}</p>}
+                                                                </div>
+                                                                <div>
+                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">State *</label>
+                                                                    <input type="text" value={editAddressData.state} onChange={e => setEditAddressData({ ...editAddressData, state: e.target.value })} className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.state ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="State" />
+                                                                    {formErrors.state && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.state}</p>}
+                                                                </div>
+                                                                <div>
+                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Mobile Phone (optional)</label>
+                                                                    <input 
+                                                                        type="tel" 
+                                                                        value={editAddressData.phone} 
+                                                                        onChange={e => {
+                                                                            const sanitized = sanitizePhoneInput(e.target.value);
+                                                                            setEditAddressData({ ...editAddressData, phone: sanitized });
+                                                                            if (sanitized) {
+                                                                                const currentCountryCode = (editAddressData as any).country_code || 'IN';
+                                                                                const res = validateOptionalPhoneNumber(sanitized, currentCountryCode);
+                                                                                if (!res.isValid && res.error) setFormErrors(prev => ({ ...prev, phone: res.error! }));
+                                                                                else setFormErrors(prev => { const copy = { ...prev }; delete copy.phone; return copy; });
+                                                                            } else {
+                                                                                setFormErrors(prev => { const copy = { ...prev }; delete copy.phone; return copy; });
+                                                                            }
+                                                                        }}
+                                                                        className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.phone ? 'border-red-400' : 'border-[#D4CFC0]'}`} 
+                                                                        placeholder="e.g., 9876543210" 
+                                                                    />
+                                                                    {formErrors.phone && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.phone}</p>}
+                                                                </div>
+                                                            </div>
+                                                            <div className="mt-5 flex justify-end gap-3">
+                                                                <button type="button" onClick={() => { setEditingAddressId(null); setEditAddressData(null); setFormErrors({}); }} className="px-4 py-2 text-sm font-bold text-[#8B7A3D] bg-white border border-[#D4CFC0] rounded-lg hover:bg-[#F5F4F0] transition-colors">Cancel</button>
+                                                                <button type="button" onClick={() => handleSaveEditedAddress(addr.address_id)} disabled={addressActionLoading === addr.address_id} className="px-4 py-2 text-sm font-bold text-white bg-[#6B8F5E] rounded-lg hover:bg-[#5A7A4E] transition-colors flex items-center gap-2">
+                                                                    {addressActionLoading === addr.address_id ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             ))}
-                                            <button onClick={() => setUseNewAddress(true)} className={`mt-2 flex items-center gap-2 text-sm font-semibold transition-colors ${useNewAddress ? 'text-[#6B8F5E]' : 'text-[#8B7A3D] hover:text-[#6B8F5E]'}`}>
+                                            <button onClick={() => { setUseNewAddress(true); setEditingAddressId(null); setEditAddressData(null); }} className={`mt-2 flex items-center gap-2 text-sm font-semibold transition-colors ${useNewAddress ? 'text-[#6B8F5E]' : 'text-[#8B7A3D] hover:text-[#6B8F5E]'}`}>
                                                 <MapPin className="h-4 w-4" /> Use a different address
                                             </button>
                                         </div>
@@ -850,7 +1368,51 @@ function CheckoutContent() {
                                             </div>
                                             <div>
                                                 <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Mobile Phone (optional)</label>
-                                                <input type="tel" value={newAddress.phone} onChange={e => setNewAddress({ ...newAddress, phone: e.target.value })} className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.phone ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Secondary Phone" />
+                                                <input 
+                                                    type="tel" 
+                                                    value={newAddress.phone} 
+                                                    onChange={e => {
+                                                        const sanitized = sanitizePhoneInput(e.target.value);
+                                                        setNewAddress({ ...newAddress, phone: sanitized });
+                                                        if (sanitized) {
+                                                            const currentCountryCode = ((newAddress as any).country_code || 'IN') as CountryCode;
+                                                            const res = validateOptionalPhoneNumber(sanitized, currentCountryCode);
+                                                            if (!res.isValid && res.error) {
+                                                                setFormErrors(prev => ({ ...prev, phone: res.error! }));
+                                                            } else {
+                                                                setFormErrors(prev => {
+                                                                    const copy = { ...prev };
+                                                                    delete copy.phone;
+                                                                    return copy;
+                                                                });
+                                                            }
+                                                        } else {
+                                                            setFormErrors(prev => {
+                                                                const copy = { ...prev };
+                                                                delete copy.phone;
+                                                                return copy;
+                                                            });
+                                                        }
+                                                    }}
+                                                    onBlur={e => {
+                                                        const currentCountryCode = ((newAddress as any).country_code || 'IN') as CountryCode;
+                                                        const res = validateOptionalPhoneNumber(e.target.value, currentCountryCode);
+                                                        if (!res.isValid && res.error) {
+                                                            setFormErrors(prev => ({ ...prev, phone: res.error! }));
+                                                        } else {
+                                                            setFormErrors(prev => {
+                                                                const copy = { ...prev };
+                                                                delete copy.phone;
+                                                                return copy;
+                                                            });
+                                                            if (res.isValid && res.normalized) {
+                                                                setNewAddress(prev => ({ ...prev, phone: formatPhoneDisplay(res.normalized!, currentCountryCode) }));
+                                                            }
+                                                        }
+                                                    }}
+                                                    className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.phone ? 'border-red-400' : 'border-[#D4CFC0]'}`} 
+                                                    placeholder="e.g., 9876543210" 
+                                                />
                                                 {formErrors.phone && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.phone}</p>}
                                             </div>
                                         </div>
@@ -1140,40 +1702,7 @@ function CheckoutContent() {
                                         <span className="label">Shipping</span>
                                         <span className="value">{shippingCost === 0 ? 'FREE' : formatPrice(shippingCost)}</span>
                                     </div>
-                                    {totalTaxes > 0 && (
-                                        <div className="ritual-summary-row relative">
-                                            <span className="label flex items-center gap-1.5">
-                                                Federal Tax
-                                                <div className="relative group inline-block">
-                                                    <button
-                                                        type="button"
-                                                        className="text-[rgba(255,255,255,0.4)] hover:text-white transition-colors focus:outline-none"
-                                                        onMouseEnter={() => setShowTaxTooltip(true)}
-                                                        onMouseLeave={() => setShowTaxTooltip(false)}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setShowTaxTooltip(!showTaxTooltip);
-                                                        }}
-                                                        aria-label="Tax information"
-                                                    >
-                                                        <Info size={14} className="cursor-help" />
-                                                    </button>
-                                                    
-                                                    {/* Tooltip */}
-                                                    <div 
-                                                        className={`absolute bottom-full left-0 mb-3 w-56 p-3 bg-[#1A1B16] text-white text-[11px] leading-relaxed rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] border border-[rgba(255,255,255,0.1)] transition-all duration-300 pointer-events-none z-50 ${showTaxTooltip ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-2 scale-95 md:group-hover:opacity-100 md:group-hover:translate-y-0 md:group-hover:scale-100'}`}
-                                                        style={{ left: '-10px' }}
-                                                    >
-                                                        <div className="relative z-10">
-                                                            Taxes are calculated based on your shipping address and applicable government regulations.
-                                                        </div>
-                                                        <div className="absolute top-[98%] left-[18px] border-[6px] border-transparent border-t-[#1A1B16]" />
-                                                    </div>
-                                                </div>
-                                            </span>
-                                            <span className="value">{formatPrice(totalTaxes)}</span>
-                                        </div>
-                                    )}
+
                                 </div>
 
                                 <div className="ritual-summary-total">
@@ -1246,6 +1775,39 @@ function CheckoutContent() {
                 </div>
             </div>
 
+            {/* Delete Address Confirmation Modal */}
+            {mounted && addressToDelete && createPortal(
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-scale-in">
+                        <div className="px-6 py-8 text-center">
+                            <div className="mx-auto w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mb-5">
+                                <AlertTriangle className="h-7 w-7 text-red-500" />
+                            </div>
+                            <h3 className="text-xl font-bold text-[#1A1A1A] mb-2">Delete Address?</h3>
+                            <p className="text-sm text-[#4A4A4A] leading-relaxed">
+                                Are you sure you want to delete this address? This action cannot be undone.
+                            </p>
+                        </div>
+                        <div className="px-6 py-4 bg-[#F5F4F0] flex justify-center gap-3 rounded-b-2xl border-t border-[#D4CFC0]">
+                            <button
+                                onClick={() => setAddressToDelete(null)}
+                                disabled={!!addressActionLoading}
+                                className="flex-1 px-4 py-2.5 text-sm font-bold text-[#8B7A3D] bg-white border border-[#D4CFC0] rounded-lg hover:bg-[#E8E4DC] hover:text-[#2D3B2D] transition-colors disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDeleteAddress}
+                                disabled={!!addressActionLoading}
+                                className="flex-1 px-4 py-2.5 text-sm font-bold text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                            >
+                                {addressActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Delete'}
+                            </button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
         </div>
     );
 }

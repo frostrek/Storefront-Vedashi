@@ -101,7 +101,7 @@ export default function HeroCarousel() {
             prevIndexRef.current = current;
             setCurrent(nextIndex);
         } else {
-            let nextIndex = (index + displaySlides.length) % displaySlides.length;
+            const nextIndex = (index + displaySlides.length) % displaySlides.length;
 
             // Determine logical direction for infinite loop
             if (current === displaySlides.length - 1 && nextIndex === 0) directionRef.current = 'next';
@@ -193,13 +193,20 @@ export default function HeroCarousel() {
             ))}
 
             {/* ── Content ── */}
-            <div className="relative z-20 mx-auto max-w-7xl px-4 py-16 text-center w-full">
+            <div className="relative z-20 mx-auto max-w-7xl px-6 py-12 sm:py-16 md:py-20 text-center w-full">
                 {/* Dynamic Headings */}
                 <div className="animate-fade-in-up space-y-2 mb-6 shadow-black/20 drop-shadow-2xl">
                     {slide.headings?.map(h => {
                         const isNum = !isNaN(Number(h.fontSize)) && h.fontSize !== '';
                         return (
-                            <h1 key={h.id} style={{ color: h.color, fontSize: isNum ? `${h.fontSize}px` : undefined }} className={`font-bold leading-tight ${!isNum ? `text-${h.fontSize}` : ''}`}>
+                            <h1 
+                                key={h.id} 
+                                style={{ 
+                                    color: h.color, 
+                                    fontSize: isNum ? `clamp(1.75rem, 7vw, ${h.fontSize}px)` : undefined 
+                                }} 
+                                className={`font-bold leading-[1.1] ${!isNum ? `text-${h.fontSize}` : ''}`}
+                            >
                                 {h.text}
                             </h1>
                         )
@@ -211,7 +218,14 @@ export default function HeroCarousel() {
                     {slide.subheadings?.map(s => {
                         const isNum = !isNaN(Number(s.fontSize)) && s.fontSize !== '';
                         return (
-                            <p key={s.id} style={{ color: s.color, fontSize: isNum ? `${s.fontSize}px` : undefined }} className={`leading-relaxed ${!isNum ? `text-${s.fontSize}` : ''}`}>
+                            <p 
+                                key={s.id} 
+                                style={{ 
+                                    color: s.color, 
+                                    fontSize: isNum ? `clamp(0.875rem, 3vw, ${s.fontSize}px)` : undefined 
+                                }} 
+                                className={`leading-relaxed mx-auto max-w-[90%] sm:max-w-none ${!isNum ? `text-${s.fontSize}` : ''}`}
+                            >
                                 {s.text}
                             </p>
                         )

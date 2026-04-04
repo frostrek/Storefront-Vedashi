@@ -115,7 +115,7 @@ function VerifyEmailContent() {
                 // Check if this was a new account creation (deferred registration)
                 if (res.data?.account_created && res.data?.customer) {
                     // Log in the user via AuthContext
-                    loginFromVerification(res.data.customer, res.data.access_token);
+                    loginFromVerification(res.data.customer);
 
                     // Create cart for the new user
                     try {

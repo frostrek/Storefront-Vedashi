@@ -2,9 +2,9 @@
 
 import { useState, useEffect, Suspense, useCallback, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { getCategories, getFilterOptions, getBestSellers, getNewArrivals, getFilteredProducts } from '@/lib/api';
+import { getCategories, getFilterOptions, getBestSellers, getNewArrivals, getFilteredProducts, subscribeNewsletter } from '@/lib/api';
 import { useCurrency } from '@/context/CurrencyContext';
-import { FilteredProduct, FilterMeta } from '@/types';
+import { FilteredProduct, FilterMeta, Category } from '@/types';
 import ProductCard from '@/components/ProductCard';
 import { SkeletonProductGrid } from '@/components/Skeleton';
 import SearchBar from '@/components/SearchBar';
@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useFilters } from '@/hooks/useFilters';
 import { FILTER_CONFIGS, SORT_OPTIONS } from '@/lib/filterConfig';
+import { trackEcommerce, EcommerceItem } from '@/lib/analytics/gtag';
 
 // Filter components
 import FilterSection from '@/components/filters/FilterSection';
@@ -26,6 +27,13 @@ import CountryDropdown from '@/components/filters/CountryDropdown';
 import { COUNTRIES } from '@/lib/countries';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
+
+interface FilterAttribute {
+    attribute_id: string;
+    attribute_name: string;
+    attribute_slug: string;
+    values: { value_name: string; value_slug: string }[];
+}
 
 const ITEMS_PER_PAGE = 24;
 
@@ -65,6 +73,10 @@ function ProductsContent() {
     const [mobileOpen, setMobileOpen] = useState(false);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [isMounted, setIsMounted] = useState(false);
+    
+    // Newsletter State
+    const [newsletterEmail, setNewsletterEmail] = useState('');
+    const [isSubscribing, setIsSubscribing] = useState(false);
 
     useEffect(() => {
         setIsMounted(true);
@@ -80,8 +92,8 @@ function ProductsContent() {
     const [brandOptions, setBrandOptions] = useState<string[]>([]);
     const [countryOptions, setCountryOptions] = useState<string[]>([]);
     const [priceMax, setPriceMax] = useState<number>(5000);
-    const [categories, setCategories] = useState<any[]>([]);
-    const [filterAttributes, setFilterAttributes] = useState<any[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [filterAttributes, setFilterAttributes] = useState<FilterAttribute[]>([]);
 
     const displayCountryOptions = Array.from(
         new Set([...COUNTRIES.map(c => c.name), ...countryOptions])
@@ -100,7 +112,7 @@ function ProductsContent() {
     }, []);
 
     const buildParams = useCallback((page: number) => {
-        const params: Record<string, any> = {
+        const params: Record<string, string | number | boolean | string[]> = {
             page,
             limit: ITEMS_PER_PAGE,
         };
@@ -123,9 +135,7 @@ function ProductsContent() {
         if (filters.bestSellers) params.bestSeller = true;
         if (filters.newArrivals) params.newArrival = true;
         if (filters.discountMin) params.discount_min = filters.discountMin;
-        if (Object.keys(filters.attributes).length > 0) params.attributes = filters.attributes;
-        if (filters.bestSellers) params.bestSeller = true;
-        if (filters.newArrivals) params.newArrival = true;
+        if (Object.keys(filters.attributes).length > 0) params.attributes = JSON.stringify(filters.attributes);
         return params;
     }, [filters]);
 
@@ -144,6 +154,28 @@ function ProductsContent() {
             setLoading(false);
         }
     }, [buildParams]);
+    
+    const handleSubscribe = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newsletterEmail || !newsletterEmail.includes('@')) {
+            toast.error('Please enter a valid email.');
+            return;
+        }
+        setIsSubscribing(true);
+        try {
+            const res = await subscribeNewsletter(newsletterEmail);
+            if (res.success) {
+                toast.success(res.message || 'Successfully subscribed!');
+                setNewsletterEmail('');
+            } else {
+                toast.error(res.message || 'Failed to subscribe.');
+            }
+        } catch (error) {
+            toast.error('An error occurred. Please try again.');
+        } finally {
+            setIsSubscribing(false);
+        }
+    };
 
     // Reset to page 1 whenever filters change
     useEffect(() => {
@@ -152,6 +184,34 @@ function ProductsContent() {
         fetchPage(1, cancelled);
         return () => { cancelled.value = true; };
     }, [filtersKey]);
+
+    // GA4: view_item_list
+    // Fire whenever products change, deduplicated by hash
+    const viewListHashRef = useRef<string>('');
+    useEffect(() => {
+        if (products.length > 0) {
+            const currentHash = products.map(p => p.product_id).join(',');
+            if (viewListHashRef.current === currentHash) return;
+            viewListHashRef.current = currentHash;
+
+            const gaItems: EcommerceItem[] = products.slice(0, 24).map((item, index) => ({
+                item_id: item.product_id,
+                item_name: item.product_name,
+                price: Number(item.price ?? 0),
+                quantity: 1,
+                index: index + 1,
+                item_list_name: 'Shop All Products Grid',
+                item_category: item.category,
+                item_brand: item.brand
+            }));
+            
+            trackEcommerce('view_item_list', {
+                currency: 'INR',
+                value: gaItems.reduce((acc, curr) => acc + curr.price, 0),
+                items: gaItems
+            });
+        }
+    }, [products]);
 
     // Handle manual page change
     const handlePageChange = (page: number) => {
@@ -216,20 +276,20 @@ function ProductsContent() {
                             }}
                         >
                             <option value="">All Categories</option>
-                            {categories.map((cat: any) => (
+                            {categories.map((cat: Category) => (
                                 <option key={cat.category_id} value={cat.slug}>{cat.name}</option>
                             ))}
                         </select>
 
                         {/* Subcategory */}
-                        {filters.category && categories.find((c: any) => c.slug === filters.category)?.children?.length > 0 && (
+                        {filters.category && (categories.find((c: any) => c.slug === filters.category)?.children?.length ?? 0) > 0 && (
                             <select
                                 className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-[#3d5c3a] focus:outline-none focus:ring-1 focus:ring-[#3d5c3a] text-gray-700"
                                 value={filters.sub_category}
                                 onChange={(e) => setSubCategory(e.target.value)}
                             >
                                 <option value="">All Subcategories</option>
-                                {categories.find((c: any) => c.slug === filters.category).children.map((sub: any) => (
+                                {categories.find((c: Category) => c.slug === filters.category)?.children?.map((sub: Category) => (
                                     <option key={sub.category_id} value={sub.slug}>{sub.name}</option>
                                 ))}
                             </select>
@@ -331,13 +391,13 @@ function ProductsContent() {
                 />
             </FilterSection>
 
-            {filterAttributes.map((attr: any) => (
+            {filterAttributes.map((attr: FilterAttribute) => (
                 <FilterSection key={attr.attribute_id} title={attr.attribute_name} defaultOpen={false}>
                     <CheckboxGroup
-                        options={attr.values.map((v: any) => v.value_name)}
-                        selected={filters.attributes[attr.attribute_slug] ? filters.attributes[attr.attribute_slug].map(slug => attr.values.find((v:any) => v.value_slug === slug)?.value_name || slug) : []}
+                        options={attr.values.map((v) => v.value_name)}
+                        selected={filters.attributes[attr.attribute_slug] ? filters.attributes[attr.attribute_slug].map(slug => attr.values.find((v) => v.value_slug === slug)?.value_name || slug) : []}
                         onChange={(selectedNames) => {
-                            const selectedSlugs = selectedNames.map(name => attr.values.find((v:any) => v.value_name === name)?.value_slug || name);
+                            const selectedSlugs = selectedNames.map(name => attr.values.find((v) => v.value_name === name)?.value_slug || name);
                             // @ts-ignore - useFilters hook exports setAttribute
                             setAttribute(attr.attribute_slug, selectedSlugs);
                         }}
@@ -407,6 +467,7 @@ function ProductsContent() {
                         value={filters.search}
                         onSearch={setSearch}
                         variant="hero"
+                        live={true}
                         className="max-w-md mx-auto"
                         placeholder="Search products, brands, or categories..."
                     />
@@ -529,6 +590,8 @@ function ProductsContent() {
                                                 product={product}
                                                 priority={i < 4}
                                                 layout={viewMode}
+                                                listName="Shop All Products Grid"
+                                                listIndex={i + 1}
                                             />
                                         </div>
                                     ))}
@@ -657,17 +720,22 @@ function ProductsContent() {
                     <p className="text-sm text-gray-500 mb-6">
                         Receive weekly Ayurvedic rituals, seasonal detox guides, and exclusive early access to limited harvest remedies.
                     </p>
-                    <form className="flex gap-2 max-w-sm mx-auto" onSubmit={(e) => { e.preventDefault(); toast.success('Subscribed!'); }}>
+                    <form className="flex gap-2 max-w-sm mx-auto" onSubmit={handleSubscribe}>
                         <input
                             type="email"
                             placeholder="Enter your email address"
-                            className="flex-1 px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#3d5c3a]/20 focus:border-[#3d5c3a]"
+                            value={newsletterEmail}
+                            onChange={(e) => setNewsletterEmail(e.target.value)}
+                            disabled={isSubscribing}
+                            required
+                            className="flex-1 px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#3d5c3a]/20 focus:border-[#3d5c3a] disabled:opacity-50"
                         />
                         <button
                             type="submit"
-                            className="px-6 py-3 rounded-xl bg-[#3d5c3a] text-white text-sm font-bold hover:bg-[#2d4a2a] transition-colors cursor-pointer"
+                            disabled={isSubscribing}
+                            className="px-6 py-3 rounded-xl bg-[#3d5c3a] text-white text-sm font-bold hover:bg-[#2d4a2a] transition-colors cursor-pointer disabled:opacity-70 flex items-center justify-center min-w-[120px]"
                         >
-                            Subscribe
+                            {isSubscribing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Subscribe'}
                         </button>
                     </form>
                     <p className="text-[10px] text-gray-400 mt-3">VEDASHI © 2026. PRIVACY POLICY. TERMS & CONDITIONS.</p>

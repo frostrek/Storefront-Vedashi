@@ -7,29 +7,30 @@ import { useAuth } from '@/context/AuthContext';
 import { useClerk } from '@clerk/nextjs';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCart } from '@/context/CartContext';
-import ProductCard from '@/components/ProductCard';
+// ProductCard removed as it was unused
 import {
     getMyOrders, getAddresses, addAddress as apiAddAddress,
     updateAddress as apiUpdateAddress, deleteAddress as apiDeleteAddress,
     getCustomerProfile, updateCustomerProfile, deactivateAccount,
     uploadProfileImage, getProfileImage, removeProfileImage, getOrderById,
-    cancelOrder as apiCancelOrder, formatVND, downloadInvoice, getBestSellers,
+    cancelOrder as apiCancelOrder, downloadInvoice, getBestSellers,
     getMyEnquiries, replyToEnquiry, changePassword,
     requestEmailChange, verifyEmailChangeProfile,
     requestPhoneChange, verifyPhoneChangeProfile,
     getLoyaltyWallet, getMyNotifications, getUnreadNotificationCount,
     markNotificationAsRead, markAllNotificationsAsRead, deleteNotification,
-    lookupPostalCode, getMySupportTickets, replySupportTicket, getSupportTicketDetail,
+    lookupPostalCode, getMySupportTickets, replySupportTicket,
     getMyReviews, trackOrder
 } from '@/lib/api';
+import { trackRefund, EcommerceItem } from '@/lib/analytics/gtag';
 import { Order, Address } from '@/types';
 import { COUNTRIES } from '@/lib/countries';
 import Select from 'react-select';
 import {
-    Package, MapPin, Heart, LogOut, User, Plus, Pencil, Trash2,
+    Package, MapPin, Heart, User, Plus, Pencil, Trash2,
     Loader2, ShieldOff, Camera, X, Check, Star, Phone, Calendar, Mail,
-    CheckCircle2, Smartphone, AlertCircle, Shield, FileText, MessageSquare, Send, Clock, User2, MessageCircle, Sparkles,
-    Globe, ChevronRight, Lock, CreditCard, Banknote,
+    CheckCircle2, AlertCircle, Shield, FileText, MessageSquare, Send, Clock, User2, MessageCircle, Sparkles,
+    ChevronRight,
     BadgeCheck, BellRing, Download, Search, ShoppingCart, LayoutGrid, List, Wallet, Eye, EyeOff
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
@@ -56,7 +57,7 @@ export default function AccountPage() {
     const country = params?.country || 'in';
     const { user, isAuthenticated, isLoading, logout, updateUser } = useAuth();
     const { signOut: clerkSignOut } = useClerk();
-    const { items: wishlistItems, removeItem: removeWishlistItem } = useWishlist();
+    const { items: wishlistItems, removeItem: removeWishlistItem, loading: wishlistLoading } = useWishlist();
     const { addItem: addCartItem } = useCart();
 
     // Wishlist extra state
@@ -99,6 +100,8 @@ export default function AccountPage() {
         setConfirmingBulkRemove(false);
     };
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 10;
     const [confirmingBulkRemove, setConfirmingBulkRemove] = useState(false);
     const [confirmingIndividualRemove, setConfirmingIndividualRemove] = useState<string | null>(null);
 
@@ -129,6 +132,7 @@ export default function AccountPage() {
     const [trackingData, setTrackingData] = useState<any | null>(null);
     const [isTrackingLoading, setIsTrackingLoading] = useState(false);
     const [trackOrderStatus, setTrackOrderStatus] = useState<string | null>(null);
+    const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
 
     // Orders Filtering State
     const [orderSearch, setOrderSearch] = useState('');
@@ -249,9 +253,17 @@ export default function AccountPage() {
 
     // Profile image state
     const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+    const [base64Fallback, setBase64Fallback] = useState<string | null>(null);
     const [imageUploading, setImageUploading] = useState(false);
     const [isZoomModalOpen, setIsZoomModalOpen] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Sync social avatar if no custom image is loaded yet
+    useEffect(() => {
+        if (user?.avatar_url) {
+            setProfileImageUrl((prev) => prev || user.avatar_url!);
+        }
+    }, [user?.avatar_url]);
 
     // Deactivation state
     const [showDeactivateModal, setShowDeactivateModal] = useState(false);
@@ -271,6 +283,25 @@ export default function AccountPage() {
         try {
             const res = await apiCancelOrder(orderId);
             if (res.success || res.order) {
+                // GA4: Frontend refund tracking
+                const canceledOrder = orders.find((o: any) => o.order_id === orderId) || selectedOrderDetails;
+                if (canceledOrder) {
+                    const refundItems: EcommerceItem[] = (canceledOrder.items || []).map((item: any, i: number) => ({
+                        item_id: item.product?.product_id || item.product_id || '',
+                        item_name: item.product?.product_name || item.product_name || 'Product',
+                        price: Number(item.unit_price ?? item.price ?? 0),
+                        quantity: Number(item.quantity || 1),
+                        index: i + 1
+                    }));
+
+                    trackRefund({
+                        currency: canceledOrder.currency || 'INR',
+                        value: Number(canceledOrder.final_total || canceledOrder.total_amount || 0),
+                        transaction_id: orderId,
+                        items: refundItems,
+                    });
+                }
+
                 toast.success('Order cancelled successfully.');
                 setCancellingOrderId(null);
                 setCancelReason('');
@@ -468,18 +499,21 @@ export default function AccountPage() {
                     full_name: res.data.full_name || '',
                     email: fetchedEmail,
                     phone: localNumber,
-                    date_of_birth: res.data.date_of_birth ? res.data.date_of_birth.split('T')[0] : '',
                     is_email_verified: !!res.data.is_email_verified,
                     is_mobile_verified: !!res.data.is_mobile_verified,
                     has_password: hasPassword,
                     created_at: res.data.created_at || '',
+                    date_of_birth: res.data.date_of_birth ? res.data.date_of_birth.split('T')[0] : '',
                 });
                 setSelectedCountryCode(countryCode);
                 setOriginalEmail(fetchedEmail);
                 setOriginalPhone(res.data.phone || '');
+            } else if (res.message) {
+                toast.error(res.message);
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('Failed to fetch profile:', err);
+            toast.error('Failed to load profile data');
         }
     }, [user?.id]);
 
@@ -488,24 +522,34 @@ export default function AccountPage() {
         if (!user?.id) return;
         try {
             const res = await getProfileImage(user.id);
-            if (res.success && res.data?.profile_image) {
-                const imgData = res.data.profile_image;
-                let parsedResult = imgData;
-                if (!imgData.startsWith('data:')) {
-                    const mime = res.data.mime_type || 'image/jpeg';
-                    parsedResult = `data:${mime};base64,${imgData}`;
-                }
-                setProfileImageUrl(parsedResult);
+            if (res.success && res.data) {
+                const { profile_image: base64Data, avatar_url: s3Url, mime_type: mimeType } = res.data;
                 
-                // Keep global AuthContext user state synced without triggering unnecessary rerenders
-                if (user?.avatar_url !== parsedResult) {
-                    updateUser({ avatar_url: parsedResult });
+                let parsedBase64 = base64Data;
+                if (base64Data && !base64Data.startsWith('data:')) {
+                    const mime = mimeType || 'image/jpeg';
+                    parsedBase64 = `data:${mime};base64,${base64Data}`;
                 }
+
+                setBase64Fallback(parsedBase64);
+                // Priority: S3 URL > Base64
+                setProfileImageUrl(s3Url || parsedBase64);
+                
+                // Keep global AuthContext user state synced
+                const finalUrl = s3Url || parsedBase64;
+                if (user?.avatar_url !== finalUrl) {
+                    updateUser({ avatar_url: finalUrl });
+                }
+            } else if (user?.avatar_url) {
+                setProfileImageUrl(user.avatar_url);
             }
         } catch {
             // No image or error, stay with fallback
+            if (user?.avatar_url) {
+                setProfileImageUrl(user.avatar_url);
+            }
         }
-    }, [user?.id]);
+    }, [user?.id, user?.avatar_url, updateUser]);
 
     // ── Fetch enquiries + support tickets ─────────────────────────────
     const fetchEnquiries = useCallback(async () => {
@@ -650,6 +694,7 @@ export default function AccountPage() {
 
 
     useEffect(() => {
+        setCurrentPage(1);
         if (!user?.id) return;
         
         // Always fetch profile details and image for the sidebar and header
@@ -657,15 +702,14 @@ export default function AccountPage() {
         fetchProfileImage();
 
         // Tab-specific fetching
+        fetchLoyaltyData();
         if (activeTab === 'orders') fetchOrders();
         if (activeTab === 'addresses') fetchAddresses();
         if (activeTab === 'support') fetchEnquiries();
         if (activeTab === 'notifications') fetchNotificationsData();
-        if (activeTab === 'wallet' || activeTab === 'overview') fetchLoyaltyData();
         if (activeTab === 'profile' || activeTab === 'overview') {
             fetchOrders();
             fetchReviewsCount();
-            fetchLoyaltyData();
         }
     }, [activeTab, user?.id, fetchOrders, fetchAddresses, fetchProfile, fetchProfileImage, fetchEnquiries, fetchLoyaltyData, fetchReviewsCount]);
 
@@ -679,8 +723,10 @@ export default function AccountPage() {
         return () => window.removeEventListener('notifications-updated', handleUpdate);
     }, [fetchNotificationsData]);
 
-    const activeTier = loyaltyData?.tier?.tier_name || 'Bronze';
-    const activePoints = loyaltyData?.wallet?.balance || 0;
+    const loyaltyWalletObj = loyaltyData?.wallet || {};
+    const loyaltyTierObj = loyaltyData?.tier || {};
+    const activeTier = loyaltyTierObj.tier_name || user?.loyalty_tier || 'Bronze';
+    const activePoints = loyaltyWalletObj.balance || 0;
 
     // ── Profile save handler ─────────────────────────────────────────
     const handleProfileSave = async () => {
@@ -971,6 +1017,21 @@ export default function AccountPage() {
             return;
         }
 
+        // Pincode format validation
+        const cleanPin = addressForm.pincode.toString().trim();
+        const isIndia = !addressForm.country || addressForm.country.toLowerCase() === 'india';
+        if (isIndia) {
+            if (!/^\d{6}$/.test(cleanPin)) {
+                toast.error('Pincode must be exactly 6 digits');
+                return;
+            }
+        } else {
+            if (!/^[a-zA-Z0-9\s\-]{3,10}$/.test(cleanPin)) {
+                toast.error('Postal code must be 3-10 alphanumeric characters');
+                return;
+            }
+        }
+
         try {
             if (editingAddress) {
                 const res = await apiUpdateAddress(user.id, editingAddress.address_id, addressForm as unknown as Record<string, string>);
@@ -1108,8 +1169,21 @@ export default function AccountPage() {
         );
     }
 
-    if (!isAuthenticated) {
-        return null;
+    if (isLoading || !isAuthenticated) {
+        return (
+            <div className="min-h-screen bg-[#F8F5F0] flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="relative">
+                        <div className="absolute inset-0 rounded-full border-4 border-[#36453A]/10 animate-pulse" />
+                        <Loader2 className="h-12 w-12 animate-spin text-[#36453A] relative z-10" />
+                    </div>
+                    <div className="flex flex-col items-center">
+                        <h2 className="text-[#36453A] font-serif text-xl font-medium tracking-tight">Vedashi Sanctuary</h2>
+                        <p className="text-[#36453A]/60 text-sm italic mt-1">Preparing your sacred space...</p>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     const getStatusColor = (status: string) => {
@@ -1137,9 +1211,32 @@ export default function AccountPage() {
     ];
 
     return (
-        <div className="flex bg-[#F8F5F0] min-h-[calc(100vh-128px)]">
-            {/* Left Sidebar */}
-            <aside className="w-[280px] bg-[#36453A] text-white flex flex-col flex-shrink-0 relative z-20 shadow-[4px_0_24px_rgba(0,0,0,0.12)]">
+        <div className="flex flex-col lg:flex-row bg-[#F8F5F0] min-h-[calc(100vh-128px)]">
+            {/* Mobile Account Navigation (Visible only on < lg) */}
+            <nav className="lg:hidden sticky top-0 z-[100] bg-white border-b border-[#E8E1D5] overflow-x-auto custom-scrollbar flex items-center gap-1.5 px-4 py-3 whitespace-nowrap shadow-sm">
+                {[...coreExperienceTabs, ...identityAccessTabs].map(tab => (
+                    <button
+                        key={tab.id}
+                        onClick={() => router.push(`/${country}/account/${tab.id}`)}
+                        className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-2 ${
+                            activeTab === tab.id 
+                            ? 'bg-[#1D351D] text-white shadow-md' 
+                            : 'bg-white text-[#36453A] border border-[#E8E1D5] hover:bg-gray-50'
+                        }`}
+                    >
+                        <tab.icon className={`h-3 w-3 ${activeTab === tab.id ? 'opacity-100' : 'opacity-60'}`} />
+                        {tab.label}
+                        {tab.count !== undefined && tab.count > 0 && (
+                            <span className={`text-[9px] px-1.5 rounded-full ${activeTab === tab.id ? 'bg-[#D4A847] text-[#36453A]' : 'bg-[#E8E1D5] text-[#36453A]'}`}>
+                                {tab.count}
+                            </span>
+                        )}
+                    </button>
+                ))}
+            </nav>
+
+            {/* Left Sidebar (Desktop Only) */}
+            <aside className="hidden lg:flex w-[280px] bg-[#1D351D] text-white flex-col flex-shrink-0 relative z-20 shadow-[4px_0_24px_rgba(0,0,0,0.12)]">
                 <div className="flex-1 px-5 py-8">
                     {/* CORE EXPERIENCE */}
                     <div className="mb-8">
@@ -1228,7 +1325,16 @@ export default function AccountPage() {
                         <div className="h-9 w-9 rounded-full bg-white/10 flex items-center justify-center overflow-hidden border border-white/20">
                             {profileImageUrl ? (
                                 // eslint-disable-next-line @next/next/no-img-element
-                                <img src={profileImageUrl} alt="Profile" className="h-full w-full object-cover" />
+                                <img 
+                                    src={profileImageUrl} 
+                                    alt="Profile" 
+                                    className="h-full w-full object-cover"
+                                    onError={() => {
+                                        if (base64Fallback && profileImageUrl !== base64Fallback) {
+                                            setProfileImageUrl(base64Fallback);
+                                        }
+                                    }}
+                                />
                             ) : (
                                 <span className="font-bold text-white text-sm">
                                     {user?.name?.charAt(0).toUpperCase()}
@@ -1267,6 +1373,11 @@ export default function AccountPage() {
                             alt="Profile Zoom"
                             className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-[0_0_80px_rgba(0,0,0,0.5)] border border-white/10"
                             style={{ animation: 'zoomIn 0.5s cubic-bezier(0.16, 1, 0.3, 1)' }}
+                            onError={() => {
+                                if (base64Fallback && profileImageUrl !== base64Fallback) {
+                                    setProfileImageUrl(base64Fallback);
+                                }
+                            }}
                         />
                     </div>
                 </div>,
@@ -1275,8 +1386,8 @@ export default function AccountPage() {
 
             {/* Main Content Area */}
             <main className="flex-1 flex flex-col h-full relative z-10 overflow-hidden">
-                {/* Header */}
-                <header className="h-12 flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-[#E8E1D5] flex items-center justify-between px-8 xl:px-12 sticky top-0 z-20">
+                {/* Header (Desktop Only Breadcrumb) */}
+                <header className="hidden lg:flex h-12 flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-[#E8E1D5] items-center justify-between px-8 xl:px-12 sticky top-0 z-20">
                     <div className="flex items-center gap-3 text-sm font-medium">
                         <button onClick={() => router.push('/account')} className="text-[#36453A]/60 hover:text-[#36453A] transition-colors">Account</button>
                         <ChevronRight className="h-4 w-4 text-[#36453A]/30" />
@@ -1287,7 +1398,6 @@ export default function AccountPage() {
                                         activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
                         </span>
                     </div>
-
                 </header>
 
                 {/* Content Roll */}
@@ -1334,6 +1444,11 @@ export default function AccountPage() {
                                                     alt="Profile"
                                                     className="h-full w-full object-cover cursor-pointer hover:scale-110 transition-transform duration-500"
                                                     onClick={() => setIsZoomModalOpen(true)}
+                                                    onError={() => {
+                                                        if (base64Fallback && profileImageUrl !== base64Fallback) {
+                                                            setProfileImageUrl(base64Fallback);
+                                                        }
+                                                    }}
                                                 />
                                             ) : (
                                                 <span className="font-serif text-6xl md:text-8xl font-bold text-[#36453A]">
@@ -1380,7 +1495,7 @@ export default function AccountPage() {
                                         <div>
                                             <p className="text-xs font-bold text-warm-gray uppercase tracking-wider mb-1">Saved Items</p>
                                             <h3 className="text-2xl font-bold text-[#36453A] mb-1">{wishlistItems.length} Items</h3>
-                                            <p className="text-[11px] text-warm-gray font-medium">Waitlisting {wishlistItems.filter((i: any) => i.stock_status === 'OUT_OF_STOCK').length} items</p>
+                                            <p className="text-[11px] text-warm-gray font-medium">Waitlisting {wishlistItems.filter((i: any) => (i.stock_status || '').toLowerCase() === 'out_of_stock').length} items</p>
                                         </div>
                                     </div>
 
@@ -1507,9 +1622,9 @@ export default function AccountPage() {
                                                 {wishlistItems.slice(0, 4).map((item: any) => (
                                                     <div key={item.product_id} className="flex gap-4 group cursor-pointer" onClick={() => router.push(`/products/${item.slug || item.product_id}`)}>
                                                         <div className="h-16 w-16 bg-[#F8F5F0] rounded-xl border border-[#E8E1D5] flex items-center justify-center p-2 flex-shrink-0 overflow-hidden">
-                                                            {item.primary_image_url ? (
+                                                            {item.image_url ? (
                                                                 // eslint-disable-next-line @next/next/no-img-element
-                                                                <img src={item.primary_image_url} alt={item.product_name} className="h-full w-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500" />
+                                                                <img src={item.image_url} alt={item.product_name} className="h-full w-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500" />
                                                             ) : (
                                                                 <Package className="h-6 w-6 text-warm-gray/40" />
                                                             )}
@@ -1549,13 +1664,9 @@ export default function AccountPage() {
 
                                             <div className="relative z-10">
                                                 <p className="text-[10px] font-bold tracking-widest text-[#D4A847] uppercase mb-1">Vedashi Wallet</p>
-                                                <h3 className="text-3xl font-bold mb-1">${(Number((user as any)?.wallet_balance || 0)).toFixed(2)}</h3>
+                                                <h3 className="text-3xl font-bold mb-1">${(Number(user?.wallet_balance || 0)).toFixed(2)}</h3>
                                                 <p className="text-[10px] text-white/70 tracking-wide">Available balance for quick checkout</p>
                                             </div>
-
-                                            <button className="relative z-10 bg-white text-[#36453A] text-xs font-bold py-2 px-4 rounded-lg w-fit shadow-sm hover:shadow-md transition-shadow">
-                                                Add Credits
-                                            </button>
                                         </div>
 
                                     </div>
@@ -1573,12 +1684,7 @@ export default function AccountPage() {
                                         <span className="bg-[#E7F0E9] text-[#2D5A3A] text-xs font-bold px-3 py-1 rounded-full">
                                             {filteredAndSortedOrders.length} {filteredAndSortedOrders.length !== orders.length ? `of ${orders.length}` : ''} Total
                                         </span>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex items-center gap-2 bg-white border border-[#E8E1D5] rounded-full px-4 py-2 shadow-sm text-xs font-bold text-[#36453A]">
-                                            Eco-Shipping Enabled
-                                        </div>
-                                    </div>
+                                    </div> 
                                 </div>
 
                                 <div className="flex flex-col lg:flex-row gap-8 items-start">
@@ -1595,10 +1701,7 @@ export default function AccountPage() {
                                                     onChange={e => setOrderSearch(e.target.value)}
                                                     className="w-full bg-white border border-[#E8E1D5] rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-[#36453A]/40 focus:ring-1 focus:ring-[#36453A]/20 transition-all text-[#36453A] placeholder:text-warm-gray/70 shadow-sm"
                                                 />
-                                            </div>
-                                            <button className="flex items-center justify-center gap-2 bg-white border border-[#E8E1D5] rounded-xl px-4 py-3 text-sm font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors shadow-sm whitespace-nowrap">
-                                                <List className="h-4 w-4" /> Filters
-                                            </button>
+                                            </div>  
                                         </div>
 
                                         {/* Status Filters & Sort */}
@@ -1645,11 +1748,17 @@ export default function AccountPage() {
                                             {!ordersLoading && filteredAndSortedOrders.length === 0 && (
                                                 <div className="rounded-3xl border border-[#E8E1D5] bg-white py-16 text-center shadow-sm">
                                                     <Package className="mx-auto h-12 w-12 text-warm-gray/30 mb-4" />
-                                                    <p className="text-xl font-bold text-[#36453A]">No orders found</p>
-                                                    <p className="mt-2 text-sm text-warm-gray">{orderSearch || orderStatusFilter !== 'All' ? 'Try adjusting your filters.' : "You haven't placed any orders yet."}</p>
+                                                    <p className="text-xl font-bold text-[#36453A]">No orders yet</p>
+                                                    <p className="mt-2 text-sm text-warm-gray mb-6">{orderSearch || orderStatusFilter !== 'All' ? 'Try adjusting your filters.' : "You haven't placed any orders yet."}</p>
+                                                    <button
+                                                        onClick={() => router.push(`/${country}/shop`)}
+                                                        className="rounded-xl bg-[#36453A] px-10 py-3 text-sm font-bold text-white shadow-md hover:bg-[#2A362D] transition-all"
+                                                    >
+                                                        Browse Shop
+                                                    </button>
                                                 </div>
                                             )}
-                                            {!ordersLoading && filteredAndSortedOrders.map(order => {
+                                            {!ordersLoading && filteredAndSortedOrders.slice((currentPage - 1) * pageSize, currentPage * pageSize).map(order => {
                                                 const dtDate = new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
                                                 // Extract items from order payload regardless of formatting variations
                                                 const orderItemsData = order.items || [];
@@ -1666,38 +1775,37 @@ export default function AccountPage() {
                                                     <div
                                                         key={order.order_id}
                                                         onClick={() => handleViewOrderDetails(order.order_id)}
-                                                        className={`rounded-3xl border p-4 sm:p-6 transition-all cursor-pointer shadow-sm relative overflow-hidden flex flex-col sm:flex-row sm:items-center gap-6
+                                                        className={`rounded-3xl border transition-all cursor-pointer shadow-sm relative overflow-hidden flex flex-col
                                                         ${isSelected
                                                                 ? 'bg-white border-[#36453A] ring-1 ring-[#36453A]/20'
                                                                 : 'bg-white border-[#E8E1D5] hover:border-[#36453A]/30 hover:shadow-md'
                                                             }`}
                                                     >
-                                                        {/* Selected state overlay hint */}
-                                                        {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#36453A]"></div>}
-
-                                                        {/* Image Bubble */}
-                                                        <div className="relative h-[100px] w-[100px] rounded-2xl bg-[#F8F5F0] border border-[#E8E1D5] flex-shrink-0 flex items-center justify-center overflow-hidden">
-                                                            {prodImg ? (
-                                                                // eslint-disable-next-line @next/next/no-img-element
-                                                                <img src={prodImg} alt="Product" className="h-full w-full object-cover mix-blend-multiply" />
-                                                            ) : (
-                                                                <Package className="h-8 w-8 text-warm-gray/40" />
-                                                            )}
-                                                            {itemCount > 1 && (
-                                                                <span className="absolute bottom-2 right-2 bg-[#36453A] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md">
-                                                                    +{itemCount - 1} more
-                                                                </span>
-                                                            )}
-                                                        </div>
-
-                                                        {/* Order Info */}
-                                                        <div className="flex-1 space-y-3 min-w-0">
-                                                            <div className="flex items-center gap-2">
-                                                                <h3 className="text-xl font-bold text-[#36453A] line-clamp-1">
-                                                                    {order.order_id.split('-')[0].toUpperCase()}
-                                                                </h3>
+                                                        {/* Header Row */}
+                                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#F8F5F0]/60 border-b border-[#E8E1D5] px-4 py-3 sm:px-6">
+                                                            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 w-full sm:w-auto">
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-[10px] uppercase tracking-widest text-warm-gray font-bold mb-0.5">Order ID</span>
+                                                                    <span className="text-sm font-bold text-[#36453A] flex items-center gap-1.5 line-clamp-1">
+                                                                        #{order.order_id.split('-')[0].toUpperCase()}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="hidden sm:block w-px h-6 bg-[#E8E1D5]"></div>
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-[10px] uppercase tracking-widest text-warm-gray font-bold mb-0.5">Date Placed</span>
+                                                                    <span className="text-sm font-bold text-[#36453A] flex items-center gap-1.5">
+                                                                        {dtDate}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="hidden sm:block w-px h-6 bg-[#E8E1D5]"></div>
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-[10px] uppercase tracking-widest text-warm-gray font-bold mb-0.5">Total Amount</span>
+                                                                    <span className="text-sm font-bold text-[#36453A]">
+                                                                        {formatPrice(order.final_total || order.total_amount)}
+                                                                    </span>
+                                                                </div>
                                                             </div>
-                                                            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                                                            <div className="mt-3 sm:mt-0">
                                                                 <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest border border-[#E8E1D5]
                                                                     ${order.order_status === 'DELIVERED' ? 'bg-[#F2F4EB] text-[#4A5D23]' :
                                                                         order.order_status === 'SHIPPED' ? 'bg-[#EEF2F6] text-[#2C4B7D]' :
@@ -1708,22 +1816,37 @@ export default function AccountPage() {
                                                                     {order.order_status === 'PENDING' && <Loader2 className="h-3 w-3 mr-1" />}
                                                                     {order.order_status}
                                                                 </span>
-                                                                <span className="text-sm text-warm-gray flex items-center gap-1.5">
-                                                                    <Calendar className="h-3.5 w-3.5" /> Ordered on {dtDate}
-                                                                </span>
                                                             </div>
-                                                            <p className="text-sm font-medium text-[#36453A] truncate">{prodName}</p>
                                                         </div>
 
-                                                        {/* Price & Actions */}
-                                                        <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-4 border-t sm:border-t-0 sm:border-l border-[#E8E1D5] pt-4 sm:pt-0 sm:pl-6">
-                                                            <div className="flex flex-col items-start sm:items-end w-full">
-                                                                <span className="text-[10px] font-bold tracking-widest text-warm-gray uppercase mb-1">Total Amount</span>
-                                                                <span className="text-2xl font-bold text-[#36453A]">
-                                                                    {formatPrice(order.final_total || order.total_amount)}
-                                                                </span>
+                                                        {/* Main Content */}
+                                                        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 p-4 sm:p-6 items-start sm:items-center relative">
+                                                            {/* Selected state overlay hint */}
+                                                            {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#36453A]"></div>}
+                                                            
+                                                            {/* Image */}
+                                                            <div className="relative h-20 w-20 sm:h-24 sm:w-24 rounded-2xl bg-[#F8F5F0] border border-[#E8E1D5] flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                                                {prodImg ? (
+                                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                                    <img src={prodImg} alt="Product" className="h-full w-full object-cover mix-blend-multiply" />
+                                                                ) : (
+                                                                    <Package className="h-8 w-8 text-warm-gray/40" />
+                                                                )}
                                                             </div>
-                                                            <div className="flex flex-col gap-2 w-full sm:w-auto">
+                                                            
+                                                            {/* Info */}
+                                                            <div className="flex-1 w-full min-w-0 flex flex-col justify-center">
+                                                                <p className="text-base font-bold text-[#36453A] line-clamp-2">{prodName}</p>
+                                                                {itemCount > 1 && (
+                                                                    <p className="text-sm font-semibold text-warm-gray mt-1">
+                                                                        and {itemCount - 1} more item(s)
+                                                                    </p>
+                                                                )}
+                                                                <p className="text-xs font-medium text-warm-gray mt-2">Sold by Vedashi</p>
+                                                            </div>
+                                                            
+                                                            {/* Actions */}
+                                                            <div className="flex flex-wrap sm:flex-col gap-2 w-full sm:w-auto shrink-0 mt-4 sm:mt-0 border-t sm:border-t-0 sm:border-l border-[#E8E1D5] pt-4 sm:pt-0 sm:pl-6 justify-center">
                                                                 <button
                                                                     onClick={(e) => { e.stopPropagation(); handleViewOrderDetails(order.order_id); }}
                                                                     className={`rounded-xl px-5 py-2 text-xs font-bold transition-all whitespace-nowrap border overflow-hidden
@@ -1760,14 +1883,39 @@ export default function AccountPage() {
                                         </div>
 
                                         {/* Pagination Bottom */}
-                                        {!ordersLoading && filteredAndSortedOrders.length > 0 && (
+                                        {!ordersLoading && filteredAndSortedOrders.length > pageSize && (
                                             <div className="flex items-center justify-between pt-6 border-t border-[#E8E1D5]">
-                                                <span className="text-sm font-medium text-warm-gray">Showing <strong className="text-[#36453A]">1-{filteredAndSortedOrders.length}</strong> of <strong className="text-[#36453A]">{filteredAndSortedOrders.length}</strong> orders</span>
+                                                <span className="text-sm font-medium text-warm-gray">
+                                                    Showing <strong className="text-[#36453A]">
+                                                        {Math.min((currentPage - 1) * pageSize + 1, filteredAndSortedOrders.length)}-{Math.min(currentPage * pageSize, filteredAndSortedOrders.length)}
+                                                    </strong> of <strong className="text-[#36453A]">{filteredAndSortedOrders.length}</strong> orders
+                                                </span>
                                                 <div className="flex items-center gap-2">
-                                                    <button className="px-4 py-2 text-sm font-bold text-warm-gray bg-white border border-[#E8E1D5] rounded-xl opacity-50 cursor-not-allowed">Previous</button>
-                                                    <button className="h-9 w-9 rounded-xl bg-[#36453A] text-white font-bold text-sm shadow-sm flex items-center justify-center">1</button>
-                                                    <button className="h-9 w-9 rounded-xl bg-white text-[#36453A] border border-[#E8E1D5] font-bold text-sm flex items-center justify-center hover:bg-[#F8F5F0]">2</button>
-                                                    <button className="px-4 py-2 text-sm font-bold text-[#36453A] bg-white border border-[#E8E1D5] rounded-xl hover:bg-[#F8F5F0] transition-colors shadow-sm">Next</button>
+                                                    <button 
+                                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                                        disabled={currentPage === 1}
+                                                        className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === 1 ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-[#F8F5F0]'}`}
+                                                    >
+                                                        Previous
+                                                    </button>
+                                                    
+                                                    {Array.from({ length: Math.ceil(filteredAndSortedOrders.length / pageSize) }).map((_, i) => (
+                                                        <button 
+                                                            key={i}
+                                                            onClick={() => setCurrentPage(i + 1)}
+                                                            className={`h-9 w-9 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center transition-all ${currentPage === i + 1 ? 'bg-[#36453A] text-white' : 'bg-white text-[#36453A] border border-[#E8E1D5] hover:bg-[#F8F5F0]'}`}
+                                                        >
+                                                            {i + 1}
+                                                        </button>
+                                                    ))}
+
+                                                    <button 
+                                                        onClick={() => setCurrentPage(p => Math.min(Math.ceil(filteredAndSortedOrders.length / pageSize), p + 1))}
+                                                        disabled={currentPage === Math.ceil(filteredAndSortedOrders.length / pageSize)}
+                                                        className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === Math.ceil(filteredAndSortedOrders.length / pageSize) ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-[#F8F5F0]'}`}
+                                                    >
+                                                        Next
+                                                    </button>
                                                 </div>
                                             </div>
                                         )}
@@ -1888,10 +2036,8 @@ export default function AccountPage() {
                                                                 <span>Eco-Shipping</span>
                                                                 <span className="text-[#36453A] font-bold">FREE</span>
                                                             </div>
-                                                            <div className="flex items-center justify-between text-xs text-warm-gray font-medium">
-                                                                <span>Tax</span>
-                                                                <span className="text-[#36453A] font-bold">{formatPrice(selectedOrderDetails.vat_amount || 0)}</span>
-                                                            </div>
+
+
                                                             <div className="pt-3 border-t border-[#E8E1D5] flex items-center justify-between">
                                                                 <span className="text-sm font-bold text-[#36453A]">Total</span>
                                                                 <span className="text-lg font-bold text-[#36453A]">{formatPrice(selectedOrderDetails.final_total || selectedOrderDetails.total_amount || 0)}</span>
@@ -1903,16 +2049,21 @@ export default function AccountPage() {
                                                     <div className="flex gap-3 pt-6 border-t border-[#E8E1D5]">
                                                         <button
                                                             onClick={async () => {
+                                                                if (isDownloadingInvoice) return;
+                                                                setIsDownloadingInvoice(true);
                                                                 try {
                                                                     await downloadInvoice(selectedOrderDetails.order_id);
                                                                     toast.success('Invoice downloaded successfully');
                                                                 } catch {
                                                                     toast.error('Failed to download invoice');
+                                                                } finally {
+                                                                    setIsDownloadingInvoice(false);
                                                                 }
                                                             }}
-                                                            className="flex-1 flex justify-center items-center gap-2 border border-[#E8E1D5] bg-white rounded-xl py-2.5 text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors shadow-sm"
+                                                            disabled={isDownloadingInvoice}
+                                                            className={`flex-1 flex justify-center items-center gap-2 border border-[#E8E1D5] bg-white rounded-xl py-2.5 text-xs font-bold text-[#36453A] transition-colors shadow-sm ${isDownloadingInvoice ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#F8F5F0]'}`}
                                                         >
-                                                            <Download className="h-3.5 w-3.5" /> Invoice
+                                                            {isDownloadingInvoice ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />} {isDownloadingInvoice ? 'Downloading...' : 'Invoice'}
                                                         </button>
                                                         {(() => {
                                                             const linkedTicket = enquiries.find(e => e._order_id === selectedOrderDetails.order_id && e._source === 'ticket');
@@ -1963,7 +2114,7 @@ export default function AccountPage() {
                                                                     </div>
                                                                     <div className="relative">
                                                                         <p className="text-xs text-[#36453A] line-clamp-2 italic leading-relaxed pl-3 border-l-2 border-[#D4A847]/40">
-                                                                            "{ticket.message}"
+                                                                            &quot;{ticket.message}&quot;
                                                                         </p>
                                                                     </div>
                                                                     <button
@@ -2186,20 +2337,31 @@ export default function AccountPage() {
                                     </div>
                                 </div>
 
-                                {/* ── Product Grid ── */}
-                                {sortedWishlistItems.length === 0 ? (
+                                {wishlistLoading ? (
+                                    <div className="flex flex-col items-center justify-center py-24 rounded-[30px] border border-[#E8E1D5] bg-white">
+                                        <Loader2 className="h-10 w-10 text-[#36453A] animate-spin mb-4" />
+                                        <p className="text-xl font-bold text-[#36453A]">Opening your sanctuary...</p>
+                                    </div>
+                                ) : sortedWishlistItems.length === 0 ? (
                                     <div className="rounded-[30px] border border-[#E8E1D5] bg-white py-24 text-center">
                                         <Heart className="mx-auto h-16 w-16 text-warm-gray/30 mb-4" />
                                         <p className="text-2xl font-bold text-[#36453A]">Your sanctuary is empty</p>
                                         <p className="mt-2 text-warm-gray text-lg">{wishlistItems.length > 0 ? "No matches found for your current sort." : "Save your favorite organic rituals here."}</p>
+                                        <button
+                                            onClick={() => router.push(`/${country}/shop`)}
+                                            className="mt-8 rounded-xl bg-[#36453A] px-10 py-3 text-sm font-bold text-white shadow-md hover:bg-[#2A362D] transition-all"
+                                        >
+                                            Browse Shop
+                                        </button>
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                                        {sortedWishlistItems.map((prod) => {
-                                            const product = prod as any;
+                                         {sortedWishlistItems.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((prod) => {
+                                            const product = prod;
                                             const isSelected = selectedWishlistItems.has(product.product_id);
-                                            const inStock = product.stock_status === 'in_stock';
-                                            const addDate = product.created_at ? new Date(product.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'Recently';
+                                            const stockStatus = (product.stock_status || '').toLowerCase();
+                                            const inStock = stockStatus === 'in_stock';
+
 
                                             return (
                                                 <div key={product.product_id} className="group flex flex-col rounded-3xl border border-[#E8E1D5] bg-white p-4 transition-all hover:shadow-lg relative">
@@ -2231,9 +2393,9 @@ export default function AccountPage() {
 
                                                     {/* Product Image */}
                                                     <div className="aspect-[4/5] w-full rounded-2xl overflow-hidden bg-[#F8F5F0] mb-5 relative cursor-pointer" onClick={() => router.push(`/products/${product.slug || product.product_id}`)}>
-                                                        {product.images && product.images[0] ? (
+                                                        {product.image_url ? (
                                                             // eslint-disable-next-line @next/next/no-img-element
-                                                            <img src={product.images[0]} alt={product.product_name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                                            <img src={product.image_url} alt={product.product_name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                                                         ) : (
                                                             <div className="flex h-full items-center justify-center text-warm-gray/30"><Package className="h-12 w-12" /></div>
                                                         )}
@@ -2247,20 +2409,8 @@ export default function AccountPage() {
                                                             </h3>
                                                             <span className="font-bold text-[#36453A] whitespace-nowrap">${product.price}</span>
                                                         </div>
-                                                        <p className="text-[11px] text-warm-gray font-medium mb-3">Added on {addDate}</p>
-
-                                                        <div className="flex items-center gap-1.5 mb-5 mt-auto">
-                                                            {inStock ? (
-                                                                <>
-                                                                    <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
-                                                                    <span className="text-[10px] font-bold text-green-600 tracking-widest uppercase">IN STOCK</span>
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                                                                    <span className="text-[10px] font-bold text-red-500 tracking-widest uppercase ml-1">OUT OF STOCK</span>
-                                                                </>
-                                                            )}
+                                                        <div className="flex items-center gap-1.5 mb-2 mt-auto">
+                                                            {/* Status labels removed as per request */}
                                                         </div>
 
                                                         {/* Action */}
@@ -2272,20 +2422,10 @@ export default function AccountPage() {
                                                                 toast.success('Moved to cart');
                                                             }}
                                                             disabled={!inStock}
-                                                            className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#36453A] py-3 text-sm font-bold text-white shadow-md hover:bg-[#2A362D] hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed mb-2"
+                                                            className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#36453A] py-3 text-sm font-bold text-white shadow-md hover:bg-[#2A362D] hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                                         >
-                                                            <ShoppingCart className="h-4 w-4" /> Add to Cart
+                                                            <ShoppingCart className="h-4 w-4" /> {inStock ? 'Add to Cart' : 'Out of Stock'}
                                                         </button>
-
-                                                        {inStock && (
-                                                            <div className="text-center">
-                                                                <span className="text-[10px] font-bold text-warm-gray flex items-center justify-center gap-1 uppercase tracking-widest cursor-pointer hover:text-[#36453A] transition-colors"
-                                                                    onClick={() => { addCartItem(product.product_id, null, 1); removeWishlistItem(product.product_id); toast.success('Moved to cart'); }}
-                                                                >
-                                                                    Move to Cart <ChevronRight className="h-3 w-3" />
-                                                                </span>
-                                                            </div>
-                                                        )}
                                                     </div>
                                                 </div>
                                             );
@@ -2303,6 +2443,44 @@ export default function AccountPage() {
                                                 className="rounded-xl border border-[#E8E1D5] px-6 py-2.5 text-xs font-bold text-[#36453A] group-hover:bg-white group-hover:shadow-sm transition-all bg-white"
                                             >
                                                 Browse Shop
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Wishlist Pagination Bottom */}
+                                {sortedWishlistItems.length > pageSize && (
+                                    <div className="flex items-center justify-between pt-6 border-t border-[#E8E1D5]">
+                                        <span className="text-sm font-medium text-warm-gray">
+                                            Showing <strong className="text-[#36453A]">
+                                                {Math.min((currentPage - 1) * pageSize + 1, sortedWishlistItems.length)}-{Math.min(currentPage * pageSize, sortedWishlistItems.length)}
+                                            </strong> of <strong className="text-[#36453A]">{sortedWishlistItems.length}</strong> items
+                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <button 
+                                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                                disabled={currentPage === 1}
+                                                className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === 1 ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-[#F8F5F0]'}`}
+                                            >
+                                                Previous
+                                            </button>
+                                            
+                                            {Array.from({ length: Math.ceil(sortedWishlistItems.length / pageSize) }).map((_, i) => (
+                                                <button 
+                                                    key={i}
+                                                    onClick={() => setCurrentPage(i + 1)}
+                                                    className={`h-9 w-9 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center transition-all ${currentPage === i + 1 ? 'bg-[#36453A] text-white' : 'bg-white text-[#36453A] border border-[#E8E1D5] hover:bg-[#F8F5F0]'}`}
+                                                >
+                                                    {i + 1}
+                                                </button>
+                                            ))}
+
+                                            <button 
+                                                onClick={() => setCurrentPage(p => Math.min(Math.ceil(sortedWishlistItems.length / pageSize), p + 1))}
+                                                disabled={currentPage === Math.ceil(sortedWishlistItems.length / pageSize)}
+                                                className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === Math.ceil(sortedWishlistItems.length / pageSize) ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-[#F8F5F0]'}`}
+                                            >
+                                                Next
                                             </button>
                                         </div>
                                     </div>
@@ -2648,6 +2826,11 @@ export default function AccountPage() {
                                                         alt="Profile"
                                                         className="h-full w-full object-cover cursor-pointer hover:scale-110 transition-transform duration-500"
                                                         onClick={() => setIsZoomModalOpen(true)}
+                                                        onError={() => {
+                                                            if (base64Fallback && profileImageUrl !== base64Fallback) {
+                                                                setProfileImageUrl(base64Fallback);
+                                                            }
+                                                        }}
                                                     />
                                                 ) : (
                                                     <span className="text-3xl font-bold text-[#36453A]">
@@ -2776,12 +2959,11 @@ export default function AccountPage() {
                                                 </div>
                                                 <div>
                                                     <label className="block flex items-center gap-1.5 text-[11px] font-bold text-warm-gray uppercase tracking-widest mb-2"><Calendar className="h-3 w-3" /> Date of Birth</label>
-                                                    <input type="date" value={profileData.date_of_birth}
-                                                        max={new Date().toISOString().split('T')[0]}
-                                                        onChange={e => setProfileData({ ...profileData, date_of_birth: e.target.value })}
-                                                        className="w-full bg-[#F8F5F0] border border-[#E8E1D5] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#36453A] focus:ring-1 focus:ring-[#36453A]/20 transition-all font-medium text-[#36453A]" />
+                                                    <input type="date" value={profileData.date_of_birth} onChange={e => setProfileData({ ...profileData, date_of_birth: e.target.value })}
+                                                        max={new Date().toISOString().split("T")[0]}
+                                                        className="w-full bg-[#F8F5F0] border border-[#E8E1D5] rounded-xl px-4 py-[9px] text-sm focus:outline-none focus:border-[#36453A] focus:ring-1 focus:ring-[#36453A]/20 transition-all font-medium text-[#36453A] min-h-[44px]" />
                                                 </div>
-                                                <div>
+                                                <div className="md:col-span-2">
                                                     <label className="block flex items-center gap-1.5 text-[11px] font-bold text-warm-gray uppercase tracking-widest mb-2"><MapPin className="h-3 w-3" /> Current Location</label>
                                                     <div className="relative">
                                                         <input
@@ -2865,8 +3047,8 @@ export default function AccountPage() {
                                             <p className="text-[10px] font-bold tracking-[0.2em] text-[#D4A847]/60 mb-2 uppercase">ACTIVE PLAN</p>
                                             <h3 className="text-2xl font-bold text-[#D4A847] mb-2">{activeTier} Ritualist</h3>
                                             <p className="text-sm text-white/70 leading-relaxed mb-6">
-                                                {loyaltyData?.tier?.benefits && Array.isArray(loyaltyData.tier.benefits) && loyaltyData.tier.benefits.length > 0
-                                                    ? loyaltyData.tier.benefits.join(', ')
+                                                {loyaltyData?.tier?.benefits && Array.isArray(loyaltyData?.tier?.benefits) && loyaltyData?.tier?.benefits.length > 0
+                                                    ? loyaltyData?.tier?.benefits.join(', ')
                                                     : "Enhance your aura with every ritual to unlock exotic benefits and golden boons."
                                                 }
                                             </p>
@@ -3047,7 +3229,7 @@ export default function AccountPage() {
                                                 <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
                                                     <div>
                                                         <h3 className="text-2xl font-bold text-[#D4A847] mb-2">Need to add more info?</h3>
-                                                        <p className="text-sm text-white/80 max-w-md">Our support team is here to help. You'll receive an email notification as soon as we reply.</p>
+                                                        <p className="text-sm text-white/80 max-w-md">Our support team is here to help. You&apos;ll receive an email notification as soon as we reply.</p>
                                                     </div>
                                                     <button
                                                         onClick={() => router.push(`/${country}/help-center/support`)}
@@ -3342,7 +3524,7 @@ export default function AccountPage() {
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
-                                        {notifications.map((n) => (
+                                        {notifications.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((n) => (
                                             <div
                                                 key={n.notification_id}
                                                 className={`group flex items-start gap-4 p-5 rounded-2xl border transition-all ${n.is_read
@@ -3398,6 +3580,44 @@ export default function AccountPage() {
                                                 </button>
                                             </div>
                                         ))}
+
+                                        {/* Notifications Pagination Bottom */}
+                                        {notifications.length > pageSize && (
+                                            <div className="flex items-center justify-between pt-6 border-t border-[#E8E1D5]">
+                                                <span className="text-sm font-medium text-warm-gray">
+                                                    Showing <strong className="text-[#36453A]">
+                                                        {Math.min((currentPage - 1) * pageSize + 1, notifications.length)}-{Math.min(currentPage * pageSize, notifications.length)}
+                                                    </strong> of <strong className="text-[#36453A]">{notifications.length}</strong> notifications
+                                                </span>
+                                                <div className="flex items-center gap-2">
+                                                    <button 
+                                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                                        disabled={currentPage === 1}
+                                                        className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === 1 ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-[#F8F5F0]'}`}
+                                                    >
+                                                        Previous
+                                                    </button>
+                                                    
+                                                    {Array.from({ length: Math.ceil(notifications.length / pageSize) }).map((_, i) => (
+                                                        <button 
+                                                            key={i}
+                                                            onClick={() => setCurrentPage(i + 1)}
+                                                            className={`h-9 w-9 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center transition-all ${currentPage === i + 1 ? 'bg-[#36453A] text-white' : 'bg-white text-[#36453A] border border-[#E8E1D5] hover:bg-[#F8F5F0]'}`}
+                                                        >
+                                                            {i + 1}
+                                                        </button>
+                                                    ))}
+
+                                                    <button 
+                                                        onClick={() => setCurrentPage(p => Math.min(Math.ceil(notifications.length / pageSize), p + 1))}
+                                                        disabled={currentPage === Math.ceil(notifications.length / pageSize)}
+                                                        className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === Math.ceil(notifications.length / pageSize) ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-[#F8F5F0]'}`}
+                                                    >
+                                                        Next
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -3663,7 +3883,7 @@ export default function AccountPage() {
                             </div>
 
                             <p className="text-sm text-warm-gray mb-6">
-                                We've sent a secure verification code to <strong className="text-charcoal font-semibold">{profileData.email}</strong>. Please enter the code below to confirm this change.
+                                We&apos;ve sent a secure verification code to <strong className="text-charcoal font-semibold">{profileData.email}</strong>. Please enter the code below to confirm this change.
                             </p>
 
                             <div className="space-y-5">
@@ -3721,7 +3941,7 @@ export default function AccountPage() {
                             </div>
 
                             <p className="text-sm text-warm-gray mb-6">
-                                We've sent a 6-digit verification code to your new mobile number ending in <strong className="text-charcoal font-semibold">{profileData.phone.slice(-4)}</strong>.
+                                We&apos;ve sent a 6-digit verification code to your new mobile number ending in <strong className="text-charcoal font-semibold">{profileData.phone.slice(-4)}</strong>.
                             </p>
 
                             <div className="space-y-5">

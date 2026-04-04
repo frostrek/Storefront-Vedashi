@@ -3,9 +3,11 @@
 import { useState, useEffect, use, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { getProduct, getProductDetails, getRelatedProducts, getBestSellers, trackProductView } from '@/lib/api';
+import { getProduct, getProductDetails, getBestSellers, trackProductView, requestRestockNotification } from '@/lib/api';
+import { trackEcommerce } from '@/lib/analytics/gtag';
+
 import { useCurrency } from '@/context/CurrencyContext';
-import { Product, ProductWithDetails } from '@/types';
+import { Product, ProductWithDetails, ProductVariant } from '@/types';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { useWishlist } from '@/context/WishlistContext';
@@ -31,66 +33,20 @@ const RecentlyViewedProducts = dynamic(
     { ssr: false }
 );
 
+const SimilarProducts = dynamic(
+    () => import('@/components/SimilarProducts'),
+    { ssr: false }
+);
+
+const ProductCarousel = dynamic(
+    () => import('@/components/ProductCarousel'),
+    { ssr: false }
+);
+
 interface Props {
     params: Promise<{ id: string }>;
 }
 
-/** Lazy-loaded related products section with deferred API call */
-function LazyRelatedProducts({ productId, type, title, icon }: {
-    productId: string;
-    type: string;
-    title: string;
-    icon?: React.ReactNode;
-}) {
-    const [products, setProducts] = useState<Product[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        let cancelled = false;
-        getRelatedProducts(productId, type, 4).then(data => {
-            if (!cancelled) {
-                setProducts(data);
-                setLoading(false);
-            }
-        }).catch(() => {
-            if (!cancelled) setLoading(false);
-        });
-        return () => { cancelled = true; };
-    }, [productId, type]);
-
-    if (!loading && products.length === 0) return null;
-
-    return (
-        <div className="mt-16 border-t border-gray-100 pt-16">
-            <div className="flex items-center justify-between mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                    {icon}
-                    {title}
-                </h2>
-            </div>
-            {loading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {Array.from({ length: 4 }).map((_, i) => (
-                        <div key={i} className="overflow-hidden rounded-xl border border-light-border bg-white">
-                            <div style={{ aspectRatio: '1/1' }} className="animate-shimmer" />
-                            <div className="space-y-3 p-4">
-                                <div className="h-4 w-3/4 rounded animate-shimmer" />
-                                <div className="h-3 w-1/2 rounded animate-shimmer" />
-                                <div className="h-5 w-1/3 rounded animate-shimmer" />
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {products.map(p => (
-                        <ProductCard key={p.product_id} product={p} />
-                    ))}
-                </div>
-            )}
-        </div>
-    );
-}
 
 
 /** Lazy-loaded best sellers section with deferred API call */
@@ -103,7 +59,7 @@ function LazyBestSellers({ title, icon }: {
 
     useEffect(() => {
         let cancelled = false;
-        getBestSellers({ limit: 4 }).then(res => {
+        getBestSellers({ limit: 12 }).then(res => {
             if (!cancelled) {
                 if (res && res.data) {
                     setProducts(res.data as Product[]);
@@ -118,37 +74,14 @@ function LazyBestSellers({ title, icon }: {
         return () => { cancelled = true; };
     }, []);
 
-    if (!loading && products.length === 0) return null;
-
     return (
-        <div className="mt-16 border-t border-gray-100 pt-16">
-            <div className="flex items-center justify-between mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                    {icon}
-                    {title}
-                </h2>
-            </div>
-            {loading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {Array.from({ length: 4 }).map((_, i) => (
-                        <div key={i} className="overflow-hidden rounded-xl border border-light-border bg-white">
-                            <div style={{ aspectRatio: '1/1' }} className="animate-shimmer" />
-                            <div className="space-y-3 p-4">
-                                <div className="h-4 w-3/4 rounded animate-shimmer" />
-                                <div className="h-3 w-1/2 rounded animate-shimmer" />
-                                <div className="h-5 w-1/3 rounded animate-shimmer" />
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {products.slice(0, 4).map(p => (
-                        <ProductCard key={p.product_id} product={p} />
-                    ))}
-                </div>
-            )}
-        </div>
+        <ProductCarousel
+            title={title}
+            icon={icon}
+            products={products}
+            loading={loading}
+            idPrefix="best-sellers"
+        />
     );
 }
 
@@ -161,8 +94,8 @@ function ProductDetailContent({ params }: Props) {
     const [pageQuantity, setPageQuantity] = useState(1);
 
     // ✅ Variant state
-    const [variants, setVariants] = useState<any[]>([]);
-    const [selectedVariant, setSelectedVariant] = useState<any>(null);
+    const [variants, setVariants] = useState<ProductVariant[]>([]);
+    const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
     const [selectedWeight, setSelectedWeight] = useState<number | null>(null);
     const [selectedStrength, setSelectedStrength] = useState<string | null>(null);
     const [selectedVolume, setSelectedVolume] = useState<number | null>(null);
@@ -178,6 +111,36 @@ function ProductDetailContent({ params }: Props) {
     const { addItem, items, updateQuantity, removeItem, loading: cartLoading } = useCart();
     const { isInWishlist, toggleItem } = useWishlist();
     const { addProduct: trackRecentlyViewed } = useRecentlyViewed();
+
+    // Restock Notification
+    const [restockEmail, setRestockEmail] = useState('');
+    const [isRestockNotifying, setIsRestockNotifying] = useState(false);
+
+    const handleRestockNotify = async () => {
+        if (!restockEmail || !/\S+@\S+\.\S+/.test(restockEmail)) {
+            toast.error('Please enter a valid email address');
+            return;
+        }
+        setIsRestockNotifying(true);
+        try {
+            const res = await requestRestockNotification(
+                product?.product_id as string, 
+                restockEmail, 
+                selectedVariant?.variant_id
+            );
+
+            if (res.success) {
+                toast.success('You will be notified when this is back in stock!');
+                setRestockEmail('');
+            } else {
+                toast.error(res.message || 'Failed to set notification.');
+            }
+        } catch {
+            toast.error('Failed to set notification. Please try again.');
+        } finally {
+            setIsRestockNotifying(false);
+        }
+    };
 
     // Only fetch product details and variants (above-fold data)
     // Related products and reviews are deferred to their lazy sections
@@ -200,11 +163,11 @@ function ProductDetailContent({ params }: Props) {
 
                 const requestedVariantId = searchParams.get('variant');
                 const matchedVariant = requestedVariantId 
-                    ? vs.find((v: any) => v.variant_id === requestedVariantId)
+                    ? vs.find((v: ProductVariant) => v.variant_id === requestedVariantId)
                     : null;
 
                 // Pick requested variant, or default (is_default=true), falling back to first
-                const targetV = matchedVariant || vs.find((v: any) => v.is_default === true) || vs[0];
+                const targetV = matchedVariant || vs.find((v: ProductVariant) => v.is_default === true) || vs[0];
                 
                 setSelectedWeight(targetV?.weight_g ?? null);
                 setSelectedStrength(targetV?.strength ? `${targetV.strength} ${targetV.strength_unit || ''}`.trim() : null);
@@ -232,6 +195,21 @@ function ProductDetailContent({ params }: Props) {
             if (data) {
                 trackRecentlyViewed(id);
                 trackProductView(data.product_id);
+
+                // GA4: view_item event
+                const viewPrice = Number(data.variants?.find((v: ProductVariant) => v.is_default)?.price ?? data.price ?? 0);
+                trackEcommerce('view_item', {
+                    currency: 'INR',
+                    value: viewPrice,
+                    items: [{
+                        item_id: data.product_id,
+                        item_name: data.product_name,
+                        price: viewPrice,
+                        quantity: 1,
+                        item_category: data.category || undefined,
+                        item_brand: data.brand || undefined,
+                    }],
+                });
             }
         };
 
@@ -255,7 +233,7 @@ function ProductDetailContent({ params }: Props) {
                     size_label: selectedVariant?.size_label || '',
                     quantity: 1, // Default to 1 on express redirect
                     unit_price: Number(selectedVariant?.price ?? product.price ?? 0),
-                    image_url: (product as any).thumbnail_url || '',
+                    image_url: product.thumbnail_url || '',
                 };
                 sessionStorage.setItem('ksp_buy_now_item', JSON.stringify(buyNowItem));
                 router.push('/checkout?buyNow=true');
@@ -356,9 +334,10 @@ function ProductDetailContent({ params }: Props) {
             size_label: selectedVariant?.size_label || '',
             quantity: pageQuantity,
             unit_price: Number(selectedVariant?.price ?? product.price ?? 0),
-            image_url: (product as any).thumbnail_url || '',
+            image_url: product.thumbnail_url || '',
         };
         sessionStorage.setItem('ksp_buy_now_item', JSON.stringify(buyNowItem));
+        sessionStorage.removeItem('vedashi_checkout_draft');
         router.push('/checkout?buyNow=true');
     };
 
@@ -367,7 +346,10 @@ function ProductDetailContent({ params }: Props) {
             {/* Structured Data */}
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(generateProductJsonLd(product as any)) }}
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(generateProductJsonLd({
+                    ...product,
+                    review_count: Number(product.review_count || 0)
+                } as any)) }}
             />
             <script
                 type="application/ld+json"
@@ -410,7 +392,7 @@ function ProductDetailContent({ params }: Props) {
                             assets={product.assets}
                             productName={product.product_name}
                             variantId={selectedVariant?.variant_id}
-                            defaultVariantId={product.variants?.find((v: any) => v.is_default)?.variant_id}
+                            defaultVariantId={product.variants?.find((v: ProductVariant) => v.is_default)?.variant_id || product.variants?.[0]?.variant_id}
                             fallbackImages={product.images}
                             brand={product.brand || undefined}
                             category={product.category || undefined}
@@ -433,26 +415,40 @@ function ProductDetailContent({ params }: Props) {
                             {product.product_name}
                         </h1>
 
-                        <div className="flex items-center gap-2 mt-2">
-                            <div className="flex text-[#C5A46D]">
-                                {[...Array(5)].map((_, i) => (
-                                    <svg key={i} className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                                    </svg>
-                                ))}
+                        {(product.review_count && Number(product.review_count) > 0) ? (
+                            <div className="flex items-center gap-2 mt-2">
+                                <div className="flex text-[#C5A46D]">
+                                    {[...Array(5)].map((_, i) => {
+                                        const rating = Number(product.avg_rating) || 0;
+                                        const fill = Math.min(1, Math.max(0, rating - i));
+                                        return (
+                                            <svg key={i} className="w-4 h-4" viewBox="0 0 24 24">
+                                                <defs>
+                                                    <linearGradient id={`star-fill-${i}`}>
+                                                        <stop offset={`${fill * 100}%`} stopColor="#C5A46D" />
+                                                        <stop offset={`${fill * 100}%`} stopColor="#E5E7EB" />
+                                                    </linearGradient>
+                                                </defs>
+                                                <path fill={`url(#star-fill-${i})`} d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                            </svg>
+                                        );
+                                    })}
+                                </div>
+                                <span className="text-sm text-gray-500">({product.review_count} Verified Review{Number(product.review_count) !== 1 ? 's' : ''})</span>
                             </div>
-                            <span className="text-sm text-gray-500">(32 Verified Reviews)</span>
-                        </div>
+                        ) : (
+                            <p className="text-sm text-gray-400 mt-2">No reviews yet</p>
+                        )}
 
                         {/* PRICE */}
                         <div className="flex items-end gap-3 mt-4">
                             <p className="text-2xl font-bold text-gray-900">
-                                {formatPrice(displayPrice)} <span className="text-sm font-normal text-gray-500">/ set</span>
+                                {formatPrice(displayPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)} <span className="text-sm font-normal text-gray-500">/ set</span>
                             </p>
                             {isOnSale && originalPrice && (
                                 <>
                                     <p className="text-base text-gray-400 line-through mb-0.5">
-                                        {formatPrice(originalPrice)}
+                                        {formatPrice(originalPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
                                     </p>
                                     <span className="bg-[#3d5c3a]/10 text-[#3d5c3a] text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wide mb-1">
                                         {discountPercent}% OFF
@@ -461,19 +457,21 @@ function ProductDetailContent({ params }: Props) {
                             )}
                         </div>
 
-                        <p className="text-[15px] leading-relaxed text-gray-600">
-                            A high-potency infusion of Ashwagandha and Saffron designed to restore vital energy (Ojas) and deeply nourish the dermal layers.
-                        </p>
+                        {product.short_description && (
+                            <p className="text-[15px] leading-relaxed text-gray-600">
+                                {product.short_description}
+                            </p>
+                        )}
 
                         {/* ✅ VARIANT SELECTORS: Weight, Strength, Volume, Count, Flavor, Pack */}
                         <div className="min-h-[120px]">
                         {variants.length > 0 && (() => {
-                            const uniqueWeights = [...new Set(variants.map((v: any) => v.weight_g as number))].filter(Boolean).sort((a, b) => a - b);
-                            const uniqueStrengths = [...new Set(variants.map((v: any) => v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : null))].filter(Boolean);
-                            const uniqueVolumes = [...new Set(variants.map((v: any) => v.volume_ml as number))].filter(Boolean).sort((a, b) => a - b);
-                            const uniqueCounts = [...new Set(variants.map((v: any) => v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : null))].filter(Boolean);
-                            const uniqueFlavors = [...new Set(variants.map((v: any) => v.flavor as string))].filter(Boolean);
-                            const uniquePacks = [...new Set(variants.map((v: any) => (v.pack_quantity ?? 1) as number))].filter(Boolean).sort((a, b) => a - b);
+                            const uniqueWeights = [...new Set(variants.map((v: ProductVariant) => v.weight_g as number))].filter(Boolean).sort((a, b) => a - b);
+                            const uniqueStrengths = [...new Set(variants.map((v: ProductVariant) => v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : null))].filter(Boolean);
+                            const uniqueVolumes = [...new Set(variants.map((v: ProductVariant) => v.volume_ml as number))].filter(Boolean).sort((a, b) => a - b);
+                            const uniqueCounts = [...new Set(variants.map((v: ProductVariant) => v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : null))].filter(Boolean);
+                            const uniqueFlavors = [...new Set(variants.map((v: ProductVariant) => v.flavor as string))].filter(Boolean);
+                            const uniquePacks = [...new Set(variants.map((v: ProductVariant) => (v.pack_quantity ?? 1) as number))].filter(Boolean).sort((a, b) => a - b);
 
                             const formatVolume = (ml: number) => {
                                 return ml >= 999 ? `${(ml / 1000).toFixed(ml % 1000 === 0 ? 0 : 1)} L` : `${ml} ml`;
@@ -826,31 +824,55 @@ function ProductDetailContent({ params }: Props) {
 
                         {/* QUANTITY + CART */}
                         <div className="space-y-4 pt-4 mt-2">
+                            {isOutOfStock ? (
+                                <div className="bg-red-50 p-4 rounded-xl border border-red-100 flex flex-col gap-3">
+                                    <div className="flex items-center gap-2 text-red-700 font-semibold mb-1">
+                                        <AlertTriangle size={16} />
+                                        <span>Notify me when back in stock</span>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="email"
+                                            placeholder="Enter your email address"
+                                            className="flex-1 px-4 py-2 border border-red-200 rounded-lg text-sm focus:outline-none focus:border-red-400 focus:ring-1 focus:ring-red-400 bg-white placeholder-red-300"
+                                            value={restockEmail}
+                                            onChange={(e) => setRestockEmail(e.target.value)}
+                                        />
+                                        <button
+                                            onClick={handleRestockNotify}
+                                            disabled={isRestockNotifying || !restockEmail}
+                                            className="px-6 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition disabled:opacity-50 text-sm whitespace-nowrap shadow-sm shadow-red-200"
+                                        >
+                                            {isRestockNotifying ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" /> : 'Notify Me'}
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        onClick={(e) => handleAddToCart(e)}
+                                        disabled={isUnavailable || cartLoading}
+                                        className={`w-full rounded-xl py-4 flex justify-center items-center gap-2 transition-all font-semibold ${isUnavailable
+                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
+                                            : 'bg-[#7a8f69] hover:bg-[#6b805a] text-white shadow-sm'
+                                            }`}
+                                    >
+                                        <ShoppingCart size={18} />
+                                        {isComingSoon ? 'Coming Soon' : isExpired ? 'Unavailable' : isVariantInactive ? 'Option Unavailable' : 'Add to Cart'}
+                                    </button>
 
-                            <div className="grid grid-cols-2 gap-3">
-                                <button
-                                    onClick={(e) => handleAddToCart(e)}
-                                    disabled={isUnavailable || cartLoading}
-                                    className={`w-full rounded-xl py-4 flex justify-center items-center gap-2 transition-all font-semibold ${isUnavailable
-                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
-                                        : 'bg-[#7a8f69] hover:bg-[#6b805a] text-white shadow-sm'
-                                        }`}
-                                >
-                                    <ShoppingCart size={18} />
-                                    {isComingSoon ? 'Coming Soon' : isExpired ? 'Unavailable' : isVariantInactive ? 'Option Unavailable' : isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
-                                </button>
-
-                                <button
-                                    onClick={handleBuyNow}
-                                    disabled={isUnavailable || cartLoading}
-                                    className={`w-full rounded-xl py-4 flex justify-center items-center font-semibold transition-all border ${isUnavailable
-                                        ? 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed'
-                                        : 'bg-white border-gray-300 text-gray-900 hover:border-gray-400 hover:bg-gray-50 shadow-sm'
-                                        }`}
-                                >
-                                    Buy It Now
-                                </button>
-                            </div>
+                                    <button
+                                        onClick={handleBuyNow}
+                                        disabled={isUnavailable || cartLoading}
+                                        className={`w-full rounded-xl py-4 flex justify-center items-center font-semibold transition-all border ${isUnavailable
+                                            ? 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed'
+                                            : 'bg-white border-gray-300 text-gray-900 hover:border-gray-400 hover:bg-gray-50 shadow-sm'
+                                            }`}
+                                    >
+                                        Buy It Now
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
                         {/* TRUST BADGES */}
@@ -958,10 +980,6 @@ function ProductDetailContent({ params }: Props) {
                                         <span className="text-sm font-semibold tracking-wide">Ethically Wild-Harvested Ingredients</span>
                                     </li>
                                 </ul>
-
-                                <button className="bg-white text-[#3d5c3a] px-6 py-3.5 rounded-xl font-bold text-sm w-max hover:bg-gray-50 transition-colors shadow-lg">
-                                    Download Certificate of Analysis (PDF)
-                                </button>
                             </div>
 
                             {/* Right Grid Collage */}
@@ -1211,18 +1229,13 @@ function ProductDetailContent({ params }: Props) {
                             />
                         </LazySection>
 
-                        {/* CUSTOMERS ALSO VIEWED — lazy loaded with deferred API call */}
+                        {/* SIMILAR PRODUCTS — horizontal scroll carousel */}
                         <LazySection
                             minHeight="400px"
                             rootMargin="400px"
-                            skeleton={<SkeletonProductRow title="Customers Also Viewed" />}
+                            skeleton={<SkeletonProductRow title="Similar Products" />}
                         >
-                            <LazyRelatedProducts
-                                productId={product.product_id}
-                                type="similar"
-                                title="Customers Also Viewed"
-                                icon={<LeafIcon className="h-6 w-6 text-[#3d5c3a]" />}
-                            />
+                            <SimilarProducts productId={product.product_id} />
                         </LazySection>
 
                         {/* BEST SELLERS — lazy loaded */}

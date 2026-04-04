@@ -210,8 +210,13 @@ function SearchPageContent() {
                 ) : products.length > 0 ? (
                     <>
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                            {products.map(product => (
-                                <ProductCard key={product.product_id} product={product} />
+                            {products.map((product, i) => (
+                                <ProductCard 
+                                    key={product.product_id} 
+                                    product={product} 
+                                    listName="Search Results Grid"
+                                    listIndex={i + 1}
+                                />
                             ))}
                         </div>
 
