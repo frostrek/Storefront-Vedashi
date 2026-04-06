@@ -62,7 +62,23 @@ export default function CartPage() {
 
     useEffect(() => {
         setIsMounted(true);
-    }, []);
+        if (items.length > 0) {
+            const inStock = items.filter(i => (i.stock_quantity ?? 0) > 0);
+            const total = inStock.reduce((sum, item) => sum + (item.price ?? 0) * item.quantity, 0);
+            import('@/lib/analytics/gtag').then(({ trackEcommerce }) => {
+                trackEcommerce('view_cart', {
+                    currency: 'INR',
+                    value: total,
+                    items: items.map(item => ({
+                        item_id: item.product_id || '',
+                        item_name: item.product_name || '',
+                        price: item.price || 0,
+                        quantity: item.quantity
+                    }))
+                });
+            });
+        }
+    }, [items.length]);
 
     if (loading && items.length === 0) {
         return (

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, X, Loader2 } from 'lucide-react';
 import { searchAutocomplete, type SearchSuggestion } from '@/lib/api';
+import { useCurrency } from '@/context/CurrencyContext';
 
 interface SearchAutocompleteProps {
     /** Called when the sea rch overlay should close (e.g. mobile) */
@@ -20,6 +21,7 @@ export default function SearchAutocomplete({
     className = '',
 }: SearchAutocompleteProps) {
     const router = useRouter();
+    const { formatPrice } = useCurrency();
     const [query, setQuery] = useState('');
     const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
     const [isOpen, setIsOpen] = useState(false);
@@ -42,6 +44,11 @@ export default function SearchAutocomplete({
         try {
             const results = await searchAutocomplete(term);
             setSuggestions(results);
+            if (results.length === 0) {
+                import('@/lib/analytics/gtag').then(({ trackEvent }) => {
+                    trackEvent('zero_results_search', { search_term: term });
+                });
+            }
         } catch {
             setSuggestions([]);
         } finally {
@@ -154,22 +161,13 @@ export default function SearchAutocomplete({
         }
     };
 
-    // ── Format price ───────────────────────────────────────────
-    const formatPrice = (price?: number) => {
-        if (price == null) return '';
-        return new Intl.NumberFormat('en-IN', {
-            style: 'currency',
-            currency: 'INR',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0,
-        }).format(price);
-    };
+
 
     return (
         <div ref={containerRef} className={`relative ${className}`}>
             {/* ─── Search Input ─── */}
             <div className="relative flex items-center">
-                <Search className="absolute left-3 h-4 w-4 text-gray-400 pointer-events-none" />
+                <Search className="absolute left-4 h-4 w-4 text-gray-400 pointer-events-none" />
                 <input
                     ref={inputRef}
                     type="text"
@@ -188,7 +186,7 @@ export default function SearchAutocomplete({
                     placeholder={placeholder}
                     autoComplete="off"
                     className="
-            w-full pl-9 pr-9 py-2 rounded-full
+            w-full pl-11 pr-9 py-2 rounded-full
             bg-gray-100 border border-gray-200
             text-sm text-gray-800 placeholder-gray-400
             focus:outline-none focus:ring-2 focus:ring-[#4b0f1a]/30 focus:border-[#4b0f1a]/40

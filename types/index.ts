@@ -15,6 +15,8 @@ export interface Product {
     country_of_origin?: string;
     form?: string;
     specialities?: string[];
+    thumbnail_url?: string;
+    short_description?: string;
 
     created_at?: string;
     updated_at?: string;
@@ -39,12 +41,17 @@ export interface Product {
     image_url?: string;
     base64_image?: string;
     added_at?: string;
+    stock_quantity?: number;
+    avg_rating?: number | string;
+    review_count?: number | string;
+    variant_count?: number;
+    variants?: any[];
+    default_variant_id?: string;
 
     /* Shared variant attributes */
     common_form?: string;
     common_strength?: string;
     common_flavor?: string;
-    variant_count?: number;
 }
 
 /** Shape returned by GET /api/products/filter */
@@ -55,6 +62,14 @@ export interface FilteredProduct extends Product {
     review_count?: number;
     total_stock?: number;
     thumbnail_url?: string;
+}
+
+export interface Category {
+    category_id: string;
+    parent_id: string | null;
+    name: string;
+    slug: string;
+    children?: Category[];
 }
 
 export interface FilterMeta {
@@ -138,6 +153,7 @@ export interface ProductVariant {
     units_count?: number;
     form_factor?: string;
     flavor?: string;
+    sku?: string;
 }
 
 export interface ProductCompliance {

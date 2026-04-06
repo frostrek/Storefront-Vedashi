@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -23,6 +23,7 @@ import { Product } from '@/types';
 import { getBestSellers, getNewArrivals, getCategories } from '@/lib/api';
 import ProductCard from '@/components/ProductCard';
 import ProductReel from '@/components/ProductReel';
+import { trackEcommerce, EcommerceItem } from '@/lib/analytics/gtag';
 import { SkeletonProductGrid } from '@/components/Skeleton';
 import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
 
@@ -52,6 +53,33 @@ export default function ShopPage() {
     }
     loadData();
   }, []);
+
+  const viewListHashRef = useRef<string>('');
+  useEffect(() => {
+    const allItems = [...bestSellers, ...newArrivals].slice(0, 15);
+    if (allItems.length === 0) return;
+
+    const currentHash = allItems.map(p => p.product_id).join(',');
+    if (viewListHashRef.current === currentHash) return;
+    
+    viewListHashRef.current = currentHash;
+    const gaItems: EcommerceItem[] = allItems.map((item, index) => ({
+      item_id: item.product_id,
+      item_name: item.product_name,
+      price: Number(item.price ?? 0),
+      quantity: 1,
+      index: index + 1,
+      item_list_name: 'Shop Discovery Highlights',
+      item_category: item.category,
+      item_brand: item.brand
+    }));
+    
+    trackEcommerce('view_item_list', {
+      currency: 'INR',
+      value: gaItems.reduce((acc, curr) => acc + curr.price, 0),
+      items: gaItems
+    });
+  }, [bestSellers, newArrivals]);
 
   // Map of category slugs to colors for consistent aesthetic
   const categoryColors: Record<string, string> = {

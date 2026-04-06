@@ -22,6 +22,7 @@ import {
     lookupPostalCode, getMySupportTickets, replySupportTicket,
     getMyReviews, trackOrder
 } from '@/lib/api';
+import { trackRefund, EcommerceItem } from '@/lib/analytics/gtag';
 import { Order, Address } from '@/types';
 import { COUNTRIES } from '@/lib/countries';
 import Select from 'react-select';
@@ -282,6 +283,25 @@ export default function AccountPage() {
         try {
             const res = await apiCancelOrder(orderId);
             if (res.success || res.order) {
+                // GA4: Frontend refund tracking
+                const canceledOrder = orders.find((o: any) => o.order_id === orderId) || selectedOrderDetails;
+                if (canceledOrder) {
+                    const refundItems: EcommerceItem[] = (canceledOrder.items || []).map((item: any, i: number) => ({
+                        item_id: item.product?.product_id || item.product_id || '',
+                        item_name: item.product?.product_name || item.product_name || 'Product',
+                        price: Number(item.unit_price ?? item.price ?? 0),
+                        quantity: Number(item.quantity || 1),
+                        index: i + 1
+                    }));
+
+                    trackRefund({
+                        currency: canceledOrder.currency || 'INR',
+                        value: Number(canceledOrder.final_total || canceledOrder.total_amount || 0),
+                        transaction_id: orderId,
+                        items: refundItems,
+                    });
+                }
+
                 toast.success('Order cancelled successfully.');
                 setCancellingOrderId(null);
                 setCancelReason('');
@@ -1149,8 +1169,21 @@ export default function AccountPage() {
         );
     }
 
-    if (!isAuthenticated) {
-        return null;
+    if (isLoading || !isAuthenticated) {
+        return (
+            <div className="min-h-screen bg-[#F8F5F0] flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="relative">
+                        <div className="absolute inset-0 rounded-full border-4 border-[#36453A]/10 animate-pulse" />
+                        <Loader2 className="h-12 w-12 animate-spin text-[#36453A] relative z-10" />
+                    </div>
+                    <div className="flex flex-col items-center">
+                        <h2 className="text-[#36453A] font-serif text-xl font-medium tracking-tight">Vedashi Sanctuary</h2>
+                        <p className="text-[#36453A]/60 text-sm italic mt-1">Preparing your sacred space...</p>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     const getStatusColor = (status: string) => {
@@ -1634,10 +1667,6 @@ export default function AccountPage() {
                                                 <h3 className="text-3xl font-bold mb-1">${(Number(user?.wallet_balance || 0)).toFixed(2)}</h3>
                                                 <p className="text-[10px] text-white/70 tracking-wide">Available balance for quick checkout</p>
                                             </div>
-
-                                            <button className="relative z-10 bg-white text-[#36453A] text-xs font-bold py-2 px-4 rounded-lg w-fit shadow-sm hover:shadow-md transition-shadow">
-                                                Add Credits
-                                            </button>
                                         </div>
 
                                     </div>

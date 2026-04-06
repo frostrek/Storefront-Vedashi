@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useMemo, useRef, useEffect, memo } from 'react';
+import Image from 'next/image';
 import type { ProductAsset, GalleryImage } from '@/types';
 import ImageThumbnailStrip from './ImageThumbnailStrip';
 import ImageZoom from './ImageZoom';
@@ -35,40 +36,48 @@ function resolveGalleryImages(
     category?: string
 ): GalleryImage[] {
     if (assets && Array.isArray(assets) && assets.length > 0) {
-        // Logic: Specific Variant -> Default Variant -> Product Level
-        const getFilteredAssets = (vid: string | undefined | null) => assets.filter((a) => {
-            // Important: treat undefined/null/empty string consistently for product-level
-            const targetVid = vid || null;
-            const assetVid = a.variant_id || null;
+        const getAssetsForVid = (vid: string | undefined | null) => assets.filter((a) => {
+            const targetVid = String(vid || '').toLowerCase() || null;
+            const assetVid = String(a.variant_id || '').toLowerCase() || null;
             return assetVid === targetVid;
         });
 
-        let filtered = getFilteredAssets(variantId); // 1. Specific
+        // 1. Collect assets from relevant levels
+        const variantAssets = getAssetsForVid(variantId);
+        const productLevelAssets = getAssetsForVid(null);
         
-        // 2. Fallback to Product Level (null variant_id) if specific is empty
-        if (filtered.length === 0) {
-            filtered = getFilteredAssets(null);
+        // Use a Map for de-duplication by asset_id or unique identifier
+        const assetsMap = new Map<string, typeof assets[0]>();
+        
+        // Add variant-specific assets first
+        variantAssets.forEach(a => assetsMap.set(a.asset_id || a.cdn_url || a.asset_url || a.base64_data || '', a));
+        
+        // Add product-level (shared) assets
+        productLevelAssets.forEach(a => {
+            const key = a.asset_id || a.cdn_url || a.asset_url || a.base64_data || '';
+            if (!assetsMap.has(key)) assetsMap.set(key, a);
+        });
+        
+        // 2. Special Fallback: If current set is strictly empty, pull in Default Variant assets
+        if (assetsMap.size === 0 && defaultVariantId && variantId !== defaultVariantId) {
+            getAssetsForVid(defaultVariantId).forEach(a => {
+                assetsMap.set(a.asset_id || a.cdn_url || a.asset_url || a.base64_data || '', a);
+            });
         }
 
-        // 3. Fallback to Default Variant if still empty or different
-        if (filtered.length === 0 && defaultVariantId && variantId !== defaultVariantId) {
-            filtered = getFilteredAssets(defaultVariantId);
+        // 3. Critical Video Fallback: If no videos in current pool, check Default Variant
+        const currentHasVideo = Array.from(assetsMap.values()).some(a => a.media_type === 'video');
+        if (!currentHasVideo && defaultVariantId && variantId !== defaultVariantId) {
+            getAssetsForVid(defaultVariantId).filter(a => a.media_type === 'video').forEach(a => {
+                assetsMap.set(a.asset_id || a.cdn_url || a.asset_url || a.base64_data || '', a);
+            });
         }
 
-        // Always sort within the chosen group so that is_primary is first, then by sort_order
-        const sorted = [...filtered].sort((a, b) => {
+        // Sort: Primary first, then by sort_order
+        const unique = Array.from(assetsMap.values()).sort((a, b) => {
             if (a.is_primary && !b.is_primary) return -1;
             if (!a.is_primary && b.is_primary) return 1;
             return (a.sort_order || 0) - (b.sort_order || 0);
-        });
-
-        // Remove duplicates
-        const seen = new Set();
-        const unique = sorted.filter(a => {
-            const id = a.asset_id || a.cdn_url || a.asset_url || a.base64_data;
-            if (!id || seen.has(id)) return false;
-            seen.add(id);
-            return true;
         });
 
         const gallery: GalleryImage[] = [];
@@ -104,7 +113,7 @@ function resolveGalleryImages(
         // Video assets
         unique.filter((a) => a.media_type === 'video').forEach((a, index) => {
             const videoUrl = a.cdn_url || a.asset_url || a.base64_data || '';
-            let enrichedAlt = a.alt_text || `${productName} Video ${index + 1}`;
+            const enrichedAlt = a.alt_text || `${productName} Video ${index + 1}`;
 
             gallery.push({
                 id: a.asset_id || `video-${index}`,
@@ -192,10 +201,11 @@ function ProductImageGalleryInner({
 
     // Hydration fix: Base64 dataURIs load so fast they often finish before React attaches onLoad
     useEffect(() => {
-        if (imageRef.current?.complete) {
+        if (imageRef.current?.complete && !imageLoaded) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setImageLoaded(true);
         }
-    }, [activeIndex, images]);
+    }, [activeIndex, images, imageLoaded]);
 
     const handleThumbnailSelect = useCallback((i: number) => setActiveIndex(i), []);
     const handleThumbnailHover = useCallback((i: number) => setActiveIndex(i), []);
@@ -250,17 +260,19 @@ function ProductImageGalleryInner({
                                 Your browser does not support the video tag.
                             </video>
                         ) : (
-                            <img
+                            <Image
                                 ref={imageRef}
                                 key={currentImage.id}
                                 src={displaySrc}
                                 alt={currentImage.alt}
+                                fill
                                 className={`${styles.mainImage} ${imageLoaded ? styles.loaded : styles.loading}`}
                                 onLoad={handleImageLoad}
                                 onError={handleImageError}
                                 draggable={false}
-                                loading="eager"
-                                decoding="async"
+                                priority
+                                sizes="(max-width: 1024px) 100vw, 50vw"
+                                style={{ objectFit: 'contain' }}
                             />
                         )}
 

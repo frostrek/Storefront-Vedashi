@@ -101,7 +101,7 @@ export default function HeroCarousel() {
             prevIndexRef.current = current;
             setCurrent(nextIndex);
         } else {
-            let nextIndex = (index + displaySlides.length) % displaySlides.length;
+            const nextIndex = (index + displaySlides.length) % displaySlides.length;
 
             // Determine logical direction for infinite loop
             if (current === displaySlides.length - 1 && nextIndex === 0) directionRef.current = 'next';

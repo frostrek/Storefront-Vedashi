@@ -1,0 +1,88 @@
+﻿Ôû▓ Next.js 16.2.1 (Turbopack)
+- Environments: .env.local
+
+node.exe : ÔÜá The "middleware" file 
+convention is deprecated. Please use "proxy" 
+instead. Learn more: https://nextjs.org/docs/me
+ssages/middleware-to-proxy
+At line:1 char:1
++ & "C:\Program Files/node.exe" "C:\Program 
+Files/node_modules/npm/bin/ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified    
+: (ÔÜá The "middle...leware-to-proxy:S    
+tring) [], RemoteException
+    + FullyQualifiedErrorId : NativeComman    
+dError
+ 
+  Creating an optimized production build ...
+Ô£ô Compiled successfully in 19.6s
+  Running TypeScript ...
+  Finished TypeScript in 31.7s ...
+  Collecting page data using 11 workers ...
+Ô£à Storefront env validated
+Ô£à Storefront env validated
+Ô£à Storefront env validated
+Ô£à Storefront env validated
+Ô£à Storefront env validated
+Ô£à Storefront env validated
+Ô£à Storefront env validated
+Ô£à Storefront env validated
+Ô£à Storefront env validated
+Ô£à Storefront env validated
+Ô£à Storefront env validated
+Ô£à Storefront env validated
+  Generating static pages using 11 workers (0/5) ...
+Ô£à Storefront env validated
+  Generating static pages using 11 workers (1/5) 
+  Generating static pages using 11 workers (2/5) 
+  Generating static pages using 11 workers (3/5) 
+Ô£à Storefront env validated
+Ô£ô Generating static pages using 11 workers (5/5) in 2.3s
+  Finalizing page optimization ...
+
+Route (app)                                       Revalidate  Expire
+Ôöî Ôùï /_not-found                                          10s      1y
+Ôö£ ãÆ /[country]
+Ôö£ ãÆ /[country]/about
+Ôö£ ãÆ /[country]/account/[[...tab]]
+Ôö£ ãÆ /[country]/blog
+Ôö£ ãÆ /[country]/blog/[slug]
+Ôö£ ãÆ /[country]/blog/category/[slug]
+Ôö£ ãÆ /[country]/cart
+Ôö£ ãÆ /[country]/checkout
+Ôö£ ãÆ /[country]/collections/[slug]
+Ôö£ ãÆ /[country]/contact
+Ôö£ ãÆ /[country]/forgot-password
+Ôö£ ãÆ /[country]/help-center
+Ôö£ ãÆ /[country]/help-center/customer-enquiry
+Ôö£ ãÆ /[country]/help-center/faq
+Ôö£ ãÆ /[country]/help-center/knowledge-base
+Ôö£ ãÆ /[country]/help-center/knowledge-base/[slug]
+Ôö£ ãÆ /[country]/help-center/support
+Ôö£ ãÆ /[country]/help-center/support/[ticketId]
+Ôö£ ãÆ /[country]/login
+Ôö£ ãÆ /[country]/login/sso-callback
+Ôö£ ãÆ /[country]/login/sso-complete
+Ôö£ ãÆ /[country]/login/verify-social-otp
+Ôö£ ãÆ /[country]/privacy
+Ôö£ ãÆ /[country]/privacy-policy
+Ôö£ ãÆ /[country]/products
+Ôö£ ãÆ /[country]/products/[id]
+Ôö£ ãÆ /[country]/reset-password
+Ôö£ ãÆ /[country]/search
+Ôö£ ãÆ /[country]/shipping
+Ôö£ ãÆ /[country]/shop
+Ôö£ ãÆ /[country]/terms
+Ôö£ ãÆ /[country]/verify-email
+Ôö£ ãÆ /[country]/verify-otp
+Ôö£ Ôùï /robots.txt
+Ôöö Ôùï /sitemap.xml                                          1h      1y
+
+
+ãÆ Proxy (Middleware)
+
+Ôùï  (Static)   prerendered as static content
+ãÆ  (Dynamic)  server-rendered on demand
+

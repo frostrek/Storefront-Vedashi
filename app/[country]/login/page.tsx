@@ -23,7 +23,7 @@ type AuthMethod = 'email' | 'phone';
 
 function LoginContent() {
     const router = useRouter();
-    const { login, register, isAuthenticated, user, logout, loginFromVerification } = useAuth();
+    const { login, register, isAuthenticated, user, logout, loginFromVerification, isLoading } = useAuth();
     const { signOut: clerkSignOut } = useClerk();
     const searchParams = useSearchParams();
 
@@ -156,7 +156,7 @@ function LoginContent() {
 
     const isAdminUser = user?.role === 'admin' || user?.role === 'Super Admin';
 
-    if ((isAuthenticated && !isAdminRedirecting.current && !isAdminUser) || isRedirecting) {
+    if (isLoading || (isAuthenticated && !isAdminRedirecting.current && !isAdminUser) || isRedirecting) {
         return (
             <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0d1f0d]/90 backdrop-blur-md">
                 <div className="relative flex h-24 w-24 items-center justify-center">
