@@ -93,6 +93,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         listenersRef.current.forEach(cb => cb(event, u));
     }, []);
 
+    // ── Automatically set user properties when user state changes ──
+    useEffect(() => {
+        if (user && typeof window !== 'undefined' && window.gtag) {
+            window.gtag('set', 'user_properties', {
+                loyalty_tier: user.loyalty_tier || 'Bronze',
+                is_returning_customer: 'true'
+            });
+        }
+    }, [user]);
+
     // ── Listen for session-expired event (from authFetch interceptor) ──
     useEffect(() => {
         if (typeof window === 'undefined') return;

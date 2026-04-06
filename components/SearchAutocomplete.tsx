@@ -42,6 +42,11 @@ export default function SearchAutocomplete({
         try {
             const results = await searchAutocomplete(term);
             setSuggestions(results);
+            if (results.length === 0) {
+                import('@/lib/analytics/gtag').then(({ trackEvent }) => {
+                    trackEvent('zero_results_search', { search_term: term });
+                });
+            }
         } catch {
             setSuggestions([]);
         } finally {

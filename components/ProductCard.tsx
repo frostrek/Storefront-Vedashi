@@ -187,6 +187,52 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
         }, 280);
     }, []);
 
+    // Intersection Observer for view_item_list tracking
+    useEffect(() => {
+        if (!cardRef.current) return;
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    trackEcommerce('view_item_list', {
+                        currency: 'INR',
+                        value: displayPrice,
+                        items: [{
+                            item_id: product.product_id,
+                            item_name: product.product_name,
+                            item_list_name: listName || 'category',
+                            index: listIndex || 0,
+                            price: displayPrice,
+                            quantity: 1,
+                            item_category: product.category,
+                            item_brand: product.brand
+                        }]
+                    });
+                    observer.disconnect();
+                }
+            });
+        }, { threshold: 0.5 });
+        observer.observe(cardRef.current);
+        return () => observer.disconnect();
+    }, [product.product_id, product.product_name, listName, listIndex, displayPrice, product.category, product.brand]);
+
+    // Track view_item when the quick-view modal opens
+    useEffect(() => {
+        if (showCartModal) {
+            trackEcommerce('view_item', {
+                currency: 'INR',
+                value: displayPrice,
+                items: [{
+                    item_id: product.product_id,
+                    item_name: product.product_name,
+                    price: displayPrice,
+                    quantity: 1,
+                    item_category: product.category,
+                    item_brand: product.brand
+                }]
+            });
+        }
+    }, [showCartModal, product.product_id, product.product_name, displayPrice, product.category, product.brand]);
+
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (showCartModal && cardRef.current && !cardRef.current.contains(event.target as Node)) {
@@ -295,6 +341,20 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
 
             const variantIdToUse = (hasVariants && selectedVariant) ? selectedVariant.variant_id : (product.default_variant_id || null);
             await addItem(product.product_id, variantIdToUse, quantity);
+
+            trackEcommerce('add_to_cart', {
+                currency: 'INR',
+                value: ((hasVariants && selectedVariant) ? (selectedVariant.price ?? 0) : displayPrice) * quantity,
+                items: [{
+                    item_id: product.product_id,
+                    item_name: product.product_name,
+                    price: (hasVariants && selectedVariant) ? (selectedVariant.price ?? 0) : displayPrice,
+                    quantity: quantity,
+                    item_category: product.category,
+                    item_brand: product.brand,
+                }]
+            });
+
             toast.success(`${product.product_name} added to cart!`);
             triggerAddedFeedback();
         } catch {

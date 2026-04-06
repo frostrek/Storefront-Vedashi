@@ -17,6 +17,7 @@ import CookieBanner from "@/components/CookieBanner";
 import LanguageSuggestionBanner from "@/components/LanguageSuggestionBanner";
 import DynamicScriptLoader from "@/components/DynamicScriptLoader";
 import RouteTracker from "@/components/RouteTracker";
+import GlobalErrorTracker from "@/components/GlobalErrorTracker";
 import MaintenancePage from "@/components/MaintenancePage";
 import { generateOrganizationJsonLd, generateWebSiteJsonLd } from "@/lib/seo";
 import ButterflyEffect from "@/components/animations/ButterflyEffect";
@@ -129,6 +130,7 @@ export default async function RootLayout({
             <Suspense fallback={null}>
               <RouteTracker />
             </Suspense>
+            <GlobalErrorTracker />
             <AuthProvider>
               <CartProvider>
                 <WishlistProvider>
