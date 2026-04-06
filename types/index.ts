@@ -1,6 +1,8 @@
 /* === Storefront Type Definitions === */
 /* Maps to existing backend inventory.products schema */
 
+import { CountryPriceOverride } from '@/lib/currency';
+
 export interface Product {
     product_id: string;
     sku: string;
@@ -45,13 +47,14 @@ export interface Product {
     avg_rating?: number | string;
     review_count?: number | string;
     variant_count?: number;
-    variants?: any[];
+    variants?: ProductVariant[];
     default_variant_id?: string;
 
     /* Shared variant attributes */
     common_form?: string;
     common_strength?: string;
     common_flavor?: string;
+    country_prices?: CountryPriceOverride[] | null;
 }
 
 /** Shape returned by GET /api/products/filter */
@@ -154,6 +157,7 @@ export interface ProductVariant {
     form_factor?: string;
     flavor?: string;
     sku?: string;
+    country_prices?: CountryPriceOverride[] | null;
 }
 
 export interface ProductCompliance {

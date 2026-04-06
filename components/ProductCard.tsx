@@ -296,7 +296,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
         }
 
         if (variants.length > 0) {
-            const defaultV = selectedVariant || variants.find((v: any) => v.is_default === true) || variants[0];
+            const defaultV = selectedVariant || variants.find((v: ProductVariant) => v.is_default === true) || variants[0];
             const existing = items.find(i => i.variant_id === defaultV.variant_id);
             setQuantity(existing ? existing.quantity : 1);
             return;
@@ -317,7 +317,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
         } finally {
             setLoadingVariants(false);
         }
-    }, [product.product_id, variants, selectedVariant, hasVariants, items]);
+    }, [product.product_id, product.default_variant_id, product.product_name, product.stock_quantity, variants, selectedVariant, hasVariants, items, isList, addItem, triggerAddedFeedback]);
 
     // Unified add to cart from modal
     const handleModalAddToCart = async (e: React.MouseEvent) => {
@@ -509,8 +509,8 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                         weightLabel, volLabel, 
                                         (product.common_form && countLabel === product.common_form) ? '' : countLabel,
                                         (product.common_strength && strengthLabel === product.common_strength) ? '' : strengthLabel,
-                                        (product.common_flavor && v.flavor === product.common_flavor) ? '' : v.flavor,
-                                        v.pack_quantity > 1 ? `Pack of ${v.pack_quantity}` : ''
+                                        (product.common_flavor && v.flavor === product.common_flavor) ? '' : (v.flavor ?? ''),
+                                        (v.pack_quantity ?? 0) > 1 ? `Pack of ${v.pack_quantity ?? 0}` : ''
                                     ].filter(Boolean);
                                     const label = labelParts.join(' · ') || v.sku || 'Standard';
 
@@ -577,11 +577,11 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                             : 'bg-gray-100 text-gray-700 group-hover:bg-[#3d5c3a]/10 group-hover:text-[#3d5c3a]'
                                                         }
                                                     `}>
-                                                        {formatPrice(v.price, (v as any).country_prices || (product as any).country_prices)}
+                                                        {formatPrice(v.price, v.country_prices || product.country_prices)}
                                                     </span>
                                                     {v.is_on_sale && v.original_price && (
                                                         <span className={`text-[10px] line-through ${isSelected ? 'text-white/50' : 'text-gray-400'}`}>
-                                                            {formatPrice(v.original_price, (v as any).country_prices || (product as any).country_prices)}
+                                                            {formatPrice(v.original_price, v.country_prices || product.country_prices)}
                                                         </span>
                                                     )}
                                                     {!isInactive && isOut && (
@@ -732,8 +732,8 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                             volLabel,
                                             (product.common_form && countLabel === product.common_form) ? '' : countLabel,
                                             (product.common_strength && strengthLabel === product.common_strength) ? '' : strengthLabel,
-                                            (product.common_flavor && v.flavor === product.common_flavor) ? '' : v.flavor,
-                                            v.pack_quantity > 1 ? `Pack of ${v.pack_quantity}` : ''
+                                            (product.common_flavor && v.flavor === product.common_flavor) ? '' : (v.flavor ?? ''),
+                                            (v.pack_quantity ?? 0) > 1 ? `Pack of ${v.pack_quantity ?? 0}` : ''
                                         ].filter(Boolean);
                                         const label = labelParts.join(' · ') || v.sku || 'Standard';
 
@@ -778,9 +778,9 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                     </div>
 
                                                     <div className="text-right flex-shrink-0">
-                                                        <p className={`text-sm font-bold transition-colors duration-300 ${isSelected ? 'text-[#3d5c3a]' : 'text-gray-900'}`}>{formatPrice(v.price, (v as any).country_prices || (product as any).country_prices)}</p>
+                                                        <p className={`text-sm font-bold transition-colors duration-300 ${isSelected ? 'text-[#3d5c3a]' : 'text-gray-900'}`}>{formatPrice(v.price, v.country_prices || product.country_prices)}</p>
                                                         {v.is_on_sale && v.original_price && (
-                                                            <p className="text-[10px] text-gray-400 line-through">{formatPrice(v.original_price, (v as any).country_prices || (product as any).country_prices)}</p>
+                                                            <p className="text-[10px] text-gray-400 line-through">{formatPrice(v.original_price, v.country_prices || product.country_prices)}</p>
                                                         )}
                                                     </div>
                                                 </div>
@@ -819,7 +819,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             ) : (
                                 <ShoppingCart className="h-4 w-4" />
                             )}
-                            {addingToCart ? 'Processing...' : justAdded ? 'Added to Bag' : `Add to Cart - ${formatPrice((hasVariants ? (selectedVariant?.price ?? 0) : displayPrice) * quantity, hasVariants ? ((selectedVariant as any)?.country_prices || (product as any).country_prices) : (product as any).country_prices)}`}
+                            {addingToCart ? 'Processing...' : justAdded ? 'Added to Bag' : `Add to Cart - ${formatPrice((hasVariants ? (selectedVariant?.price ?? 0) : displayPrice) * quantity, hasVariants ? (selectedVariant?.country_prices || product.country_prices) : product.country_prices)}`}
                         </button>
                     ) : (
                         <div className="flex items-center gap-2 bg-gray-50/50 p-1 rounded-xl border border-gray-100 shadow-sm">
@@ -1044,12 +1044,12 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             {/* Price */}
                             <div className="flex items-center gap-2 flex-wrap">
                                 <p className="text-xl font-black text-[#3d5c3a] font-ui tabular-nums tracking-tight">
-                                    {formatPrice(displayPrice, (product as any).country_prices)}
+                                    {formatPrice(displayPrice, product.country_prices)}
                                 </p>
                                 {isOnSale && originalPrice && (
                                     <>
                                         <p className="text-xs text-gray-400 line-through">
-                                            {formatPrice(originalPrice, (product as any).country_prices)}
+                                            {formatPrice(originalPrice, product.country_prices)}
                                         </p>
                                         <span className="bg-red-50 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded border border-red-100">
                                             {discountPercent}% OFF
@@ -1060,7 +1060,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             
                             {/* Shared Variant Attributes (Visible if common across all options) */}
                             {/* Shared attributes at the bottom */}
-                            {((product as any).variant_count > 1 || (product as any).variants?.length > 1) && (product.common_form || product.common_strength || product.common_flavor) && (
+                            {( (product.variant_count ?? 0) > 1 || (product.variants?.length ?? 0) > 1) && (product.common_form || product.common_strength || product.common_flavor) && (
                                 <div className="mt-2.5 flex flex-wrap gap-1.5">
                                     {[product.common_form, product.common_strength, product.common_flavor]
                                         .filter(Boolean)
