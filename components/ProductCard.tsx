@@ -869,23 +869,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
     return (
         <>
             <div className="relative group block h-full" ref={cardRef}>
-                {/* ═══════ FRONT OF CARD (Link) ═══════ */}
-                <Link href={productUrl} className="block h-full" onClick={() => {
-                    trackEcommerce('select_item', {
-                        currency: 'INR',
-                        value: Number(displayPrice),
-                        items: [{
-                            item_id: product.product_id,
-                            item_name: product.product_name,
-                            price: Number(displayPrice),
-                            quantity: 1,
-                            item_category: product.category,
-                            item_brand: product.brand,
-                            item_list_name: listName,
-                            index: listIndex,
-                        }]
-                    });
-                }}>
+                {/* ═══════ FRONT OF CARD ═══════ */}
                     <div className={`h-full overflow-hidden bg-white border border-gray-100 transition-all duration-300 ${isList ? 'flex flex-row p-3 hover:bg-gray-50/50 hover:border-[#3d5c3a]/30 rounded-2xl gap-4 sm:gap-6 items-center shadow-sm hover:shadow-md' : 'flex flex-col rounded-2xl hover:-translate-y-1 hover:shadow-xl'}`}>
                         <div className={`relative overflow-hidden bg-gradient-to-br from-[#f5f2ed] to-[#ece6dd] ${isList ? 'w-[100px] h-[100px] sm:w-[150px] sm:h-[150px] rounded-xl flex-shrink-0 border border-gray-100/50' : ''}`} style={isList ? {} : { aspectRatio: '1 / 1' }}>
                             <div className="absolute inset-0 flex items-center justify-center p-4">
@@ -929,7 +913,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             {!isList && (
                                 <button
                                     onClick={handleToggleWishlist}
-                                    className="absolute top-3 right-3 rounded-full bg-white/90 backdrop-blur-sm p-2 shadow-sm transition-all hover:scale-110 hover:shadow-md z-10 cursor-pointer"
+                                    className="absolute top-3 right-3 rounded-full bg-white/90 backdrop-blur-sm p-2 shadow-sm transition-all hover:scale-110 hover:shadow-md z-20 cursor-pointer"
                                 >
                                     <Heart
                                         className={`h-4 w-4 transition ${wishlisted
@@ -1003,13 +987,34 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                         {/* Content */}
                         <div className={`p-4 ${isList ? 'flex-1 flex flex-col justify-center min-w-0 p-0 sm:pr-4' : ''}`}>
                             <h3 className={`font-accent text-gray-900 leading-tight mb-1 sm:mb-1.5 ${isList ? 'text-lg sm:text-xl line-clamp-1 sm:line-clamp-2' : 'text-base line-clamp-2'}`}>
-                                {product.product_name}
+                                <Link 
+                                    href={productUrl} 
+                                    className="after:absolute after:inset-0 after:z-10"
+                                    onClick={() => {
+                                        trackEcommerce('select_item', {
+                                            currency: 'INR',
+                                            value: Number(displayPrice),
+                                            items: [{
+                                                item_id: product.product_id,
+                                                item_name: product.product_name,
+                                                price: Number(displayPrice),
+                                                quantity: 1,
+                                                item_category: product.category,
+                                                item_brand: product.brand,
+                                                item_list_name: listName,
+                                                index: listIndex,
+                                            }]
+                                        });
+                                    }}
+                                >
+                                    {product.product_name}
+                                </Link>
                             </h3>
 
                             {product.brand && (
                                 <Link 
                                     href={`/${params.country || 'in'}/products?brand=${encodeURIComponent(product.brand)}`}
-                                    className={`block uppercase tracking-[0.12em] text-gray-400 font-medium mb-1.5 sm:mb-2 hover:text-[#3d5c3a] transition-colors cursor-pointer ${isList ? 'text-[10px] sm:text-[11px]' : 'text-[10px]'}`}
+                                    className={`relative z-20 block uppercase tracking-[0.12em] text-gray-400 font-medium mb-1.5 sm:mb-2 hover:text-[#3d5c3a] transition-colors cursor-pointer ${isList ? 'text-[10px] sm:text-[11px]' : 'text-[10px]'}`}
                                 >
                                     {product.brand}
                                 </Link>
@@ -1078,7 +1083,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
 
                             {/* List view: inline action buttons */}
                             {isList && !isUnavailable && (
-                                <div className="mt-2.5 sm:mt-4 flex flex-wrap items-center gap-2 sm:gap-3">
+                                <div className="mt-2.5 sm:mt-4 flex flex-wrap items-center gap-2 sm:gap-3 relative z-30">
                                     {hasVariants ? (
                                         <button
                                             onClick={openCartModal}
@@ -1113,7 +1118,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                     )}
                                     <button
                                         onClick={handleToggleWishlist}
-                                        className={`inline-flex flex-shrink-0 items-center justify-center p-2.5 sm:p-2.5 rounded-lg border transition-all cursor-pointer ${wishlisted ? 'border-[#3d5c3a]/30 bg-[#3d5c3a]/5' : 'border-gray-200 bg-white hover:border-[#3d5c3a]/30 hover:bg-gray-50'}`}
+                                        className={`relative z-30 inline-flex flex-shrink-0 items-center justify-center p-2.5 sm:p-2.5 rounded-lg border transition-all cursor-pointer ${wishlisted ? 'border-[#3d5c3a]/30 bg-[#3d5c3a]/5' : 'border-gray-200 bg-white hover:border-[#3d5c3a]/30 hover:bg-gray-50'}`}
                                     >
                                         <Heart className={`h-4 w-4 sm:h-4 sm:w-4 ${wishlisted ? 'fill-[#3d5c3a] text-[#3d5c3a]' : 'text-gray-400'}`} />
                                     </button>
@@ -1122,10 +1127,12 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                         </div>
 
                         {/* Inline Options Panel (List View Only) */}
-                        {isList && renderInlineOptions()}
+                        {isList && (
+                            <div className="relative z-40">
+                                {renderInlineOptions()}
+                            </div>
+                        )}
                     </div>
-                </Link>
-
                 {/* ═══════ CART / VARIANT OVERLAY ═══════ */}
                 {renderCartModal()}
             </div>
