@@ -102,7 +102,7 @@ export default function SecondaryNavbar() {
 
             {/* Brands A-Z Dropdown */}
             <div className="group/nav-item h-full flex items-center shrink-0">
-              <span className="flex items-center gap-1 h-full px-1.5 text-[#3B5D3B] transition-colors cursor-pointer border-b-2 border-transparent group-hover/nav-item:border-[#3B5D3B]">
+              <span className="flex items-center gap-1 h-full px-1.5 hover:text-[#3B5D3B] transition-colors cursor-pointer border-b-2 border-transparent group-hover/nav-item:border-[#3B5D3B]">
                 Brands A-Z
               </span>
 

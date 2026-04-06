@@ -65,7 +65,7 @@ function ProductsContent() {
     const [mobileOpen, setMobileOpen] = useState(false);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [isMounted, setIsMounted] = useState(false);
-    
+
     // Newsletter State
     const [newsletterEmail, setNewsletterEmail] = useState('');
     const [isSubscribing, setIsSubscribing] = useState(false);
@@ -146,7 +146,7 @@ function ProductsContent() {
             setLoading(false);
         }
     }, [buildParams]);
-    
+
     const handleSubscribe = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newsletterEmail || !newsletterEmail.includes('@')) {
@@ -359,9 +359,9 @@ function ProductsContent() {
                 <FilterSection key={attr.attribute_id} title={attr.attribute_name} defaultOpen={false}>
                     <CheckboxGroup
                         options={attr.values.map((v: any) => v.value_name)}
-                        selected={filters.attributes[attr.attribute_slug] ? filters.attributes[attr.attribute_slug].map(slug => attr.values.find((v:any) => v.value_slug === slug)?.value_name || slug) : []}
+                        selected={filters.attributes[attr.attribute_slug] ? filters.attributes[attr.attribute_slug].map(slug => attr.values.find((v: any) => v.value_slug === slug)?.value_name || slug) : []}
                         onChange={(selectedNames) => {
-                            const selectedSlugs = selectedNames.map(name => attr.values.find((v:any) => v.value_name === name)?.value_slug || name);
+                            const selectedSlugs = selectedNames.map(name => attr.values.find((v: any) => v.value_name === name)?.value_slug || name);
                             // @ts-ignore - useFilters hook exports setAttribute
                             setAttribute(attr.attribute_slug, selectedSlugs);
                         }}
@@ -405,7 +405,7 @@ function ProductsContent() {
     return (
         <div className="min-h-screen bg-[#FDFCFB]" style={{ backgroundImage: "url('/botanical-page-bg.png')", backgroundAttachment: 'fixed', backgroundSize: '600px' }}>
             {/* ═══════ HERO SECTION ═══════ */}
-            <section 
+            <section
                 className="relative overflow-hidden py-12 md:py-16 px-6 bg-cover bg-center border-b border-[#3d5c3a]/10"
                 style={{ backgroundImage: "url('/ayurvedic-texture.png')" }}
             >
@@ -422,7 +422,7 @@ function ProductsContent() {
                         Ancient Remedies
                     </h1>
                     <p className="text-sm md:text-base text-white/80 mb-8 max-w-md mx-auto font-medium leading-relaxed">
-                        Explore our curated collection of authentic Ayurvedic wellness products, 
+                        Explore our curated collection of authentic Ayurvedic wellness products,
                         harvested from the heart of the Himalayas.
                     </p>
 
@@ -454,18 +454,14 @@ function ProductsContent() {
                     )}
                 </button>
 
-                <div className="lg:grid lg:grid-cols-[300px_1fr] lg:gap-12">
+                <div className="lg:grid lg:grid-cols-[340px_1fr] lg:gap-12">
                     {/* ─── Desktop Sidebar ─── */}
                     <aside className="hidden lg:block">
-                        <div className="sticky top-28 h-[calc(100vh-120px)] overflow-y-auto rounded-3xl border border-[#3d5c3a]/5 bg-white/90 backdrop-blur-md px-6 py-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] custom-scrollbar">
-                            <h2 className="text-base font-bold text-gray-900 mb-1">Filters</h2>
-                            <p className="text-xs text-gray-400 mb-4 flex items-center gap-2">
-                                <span className={`transition-opacity ${loading ? 'opacity-50' : 'opacity-100'}`}>
-                                    {totalCount} product{totalCount !== 1 ? 's' : ''} found
-                                </span>
-                                {loading && <Loader2 className="h-3 w-3 animate-spin text-[#3d5c3a]" />}
-                            </p>
-                            {sidebarContent}
+                        <div className="sticky top-28 h-[calc(100vh-120px)] rounded-2xl border border-[#3d5c3a]/5 bg-white/90 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
+                            <div className="h-full overflow-y-auto overscroll-contain px-6 py-6 custom-scrollbar">
+                                <h2 className="text-xl font-bold text-gray-900 mb-2">Filters</h2>
+                                {sidebarContent}
+                            </div>
                         </div>
                     </aside>
 
@@ -476,9 +472,9 @@ function ProductsContent() {
                                 className="absolute inset-0 bg-black/40 backdrop-blur-sm"
                                 onClick={() => setMobileOpen(false)}
                             />
-                            <div className="absolute left-0 top-0 bottom-0 w-[320px] max-w-[85vw] bg-white shadow-2xl overflow-y-auto">
-                                <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-                                    <h2 className="text-lg font-bold text-gray-900">Filters</h2>
+                            <div className="absolute left-0 top-0 bottom-0 w-[320px] max-w-[85vw] bg-white shadow-2xl flex flex-col overflow-hidden">
+                                <div className="flex items-center justify-between border-b border-gray-100 px-5 py-5">
+                                    <h2 className="text-xl font-bold text-gray-900">Filters</h2>
                                     <button
                                         onClick={() => setMobileOpen(false)}
                                         className="rounded-full p-1.5 hover:bg-gray-100 transition-colors cursor-pointer"
@@ -486,7 +482,7 @@ function ProductsContent() {
                                         <X className="h-5 w-5 text-gray-400" />
                                     </button>
                                 </div>
-                                <div className="px-5 py-4">
+                                <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 custom-scrollbar">
                                     {sidebarContent}
                                 </div>
                             </div>
@@ -501,7 +497,7 @@ function ProductsContent() {
                                 <span className={`transition-opacity ${loading ? 'opacity-50' : 'opacity-100'}`}>
                                     {totalCount === 0 ? 'No products' : (
                                         <>Showing <span className="font-semibold text-gray-900">{startItem}–{endItem}</span> of{' '}
-                                        <span className="font-semibold text-gray-900">{totalCount}</span> products</>
+                                            <span className="font-semibold text-gray-900">{totalCount}</span> products</>
                                     )}
                                 </span>
                                 {loading && <Loader2 className="h-4 w-4 animate-spin text-[#3d5c3a]" />}
@@ -583,11 +579,10 @@ function ProductsContent() {
                                                     <button
                                                         key={page}
                                                         onClick={() => handlePageChange(page as number)}
-                                                        className={`flex h-9 w-9 items-center justify-center rounded-xl border text-sm font-semibold transition-all cursor-pointer shadow-sm ${
-                                                            currentPage === page
-                                                                ? 'bg-[#3d5c3a] border-[#3d5c3a] text-white shadow-md'
-                                                                : 'border-gray-200 bg-white text-gray-600 hover:border-[#3d5c3a] hover:text-[#3d5c3a]'
-                                                        }`}
+                                                        className={`flex h-9 w-9 items-center justify-center rounded-xl border text-sm font-semibold transition-all cursor-pointer shadow-sm ${currentPage === page
+                                                            ? 'bg-[#3d5c3a] border-[#3d5c3a] text-white shadow-md'
+                                                            : 'border-gray-200 bg-white text-gray-600 hover:border-[#3d5c3a] hover:text-[#3d5c3a]'
+                                                            }`}
                                                         aria-label={`Page ${page}`}
                                                         aria-current={currentPage === page ? 'page' : undefined}
                                                     >
@@ -673,36 +668,6 @@ function ProductsContent() {
                 </div>
             </section>
 
-            {/* ═══════ NEWSLETTER ═══════ */}
-            <section className="py-16 px-6 bg-[#FAF7F2]">
-                <div className="max-w-xl mx-auto text-center">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-3">
-                        Join the Vedashi Circle
-                    </h2>
-                    <p className="text-sm text-gray-500 mb-6">
-                        Receive weekly Ayurvedic rituals, seasonal detox guides, and exclusive early access to limited harvest remedies.
-                    </p>
-                    <form className="flex gap-2 max-w-sm mx-auto" onSubmit={handleSubscribe}>
-                        <input
-                            type="email"
-                            placeholder="Enter your email address"
-                            value={newsletterEmail}
-                            onChange={(e) => setNewsletterEmail(e.target.value)}
-                            disabled={isSubscribing}
-                            required
-                            className="flex-1 px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#3d5c3a]/20 focus:border-[#3d5c3a] disabled:opacity-50"
-                        />
-                        <button
-                            type="submit"
-                            disabled={isSubscribing}
-                            className="px-6 py-3 rounded-xl bg-[#3d5c3a] text-white text-sm font-bold hover:bg-[#2d4a2a] transition-colors cursor-pointer disabled:opacity-70 flex items-center justify-center min-w-[120px]"
-                        >
-                            {isSubscribing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Subscribe'}
-                        </button>
-                    </form>
-                    <p className="text-[10px] text-gray-400 mt-3">VEDASHI © 2026. PRIVACY POLICY. TERMS & CONDITIONS.</p>
-                </div>
-            </section>
         </div>
     );
 }

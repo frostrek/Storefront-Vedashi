@@ -61,7 +61,7 @@ export default function RangeSlider({
                 <div className="absolute inset-0 rounded-full bg-cream-dark" />
                 {/* Active track */}
                 <div
-                    className="absolute top-0 bottom-0 rounded-full bg-gradient-to-r from-burgundy to-burgundy-light"
+                    className="absolute top-0 bottom-0 rounded-full bg-gradient-to-r from-herbal-green to-herbal-green-light"
                     style={{ left: `${minPercent}%`, right: `${100 - maxPercent}%` }}
                 />
                 {/* Min slider */}

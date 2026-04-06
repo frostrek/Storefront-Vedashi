@@ -123,8 +123,8 @@ function ProductDetailContent({ params }: Props) {
         setIsRestockNotifying(true);
         try {
             const res = await requestRestockNotification(
-                product?.product_id as string, 
-                restockEmail, 
+                product?.product_id as string,
+                restockEmail,
                 selectedVariant?.variant_id
             );
 
@@ -161,13 +161,13 @@ function ProductDetailContent({ params }: Props) {
                 setVariants(vs);
 
                 const requestedVariantId = searchParams.get('variant');
-                const matchedVariant = requestedVariantId 
+                const matchedVariant = requestedVariantId
                     ? vs.find((v: any) => v.variant_id === requestedVariantId)
                     : null;
 
                 // Pick requested variant, or default (is_default=true), falling back to first
                 const targetV = matchedVariant || vs.find((v: any) => v.is_default === true) || vs[0];
-                
+
                 setSelectedWeight(targetV?.weight_g ?? null);
                 setSelectedStrength(targetV?.strength ? `${targetV.strength} ${targetV.strength_unit || ''}`.trim() : null);
                 setSelectedVolume(targetV?.volume_ml ?? null);
@@ -286,7 +286,7 @@ function ProductDetailContent({ params }: Props) {
         const rect = e.currentTarget.getBoundingClientRect();
         const startX = rect.left + rect.width / 2;
         const startY = rect.top + rect.height / 2;
-        
+
         window.dispatchEvent(new CustomEvent('add-to-cart-butterfly', {
             detail: { startX, startY }
         }));
@@ -383,14 +383,7 @@ function ProductDetailContent({ params }: Props) {
                     {/* DETAILS */}
                     <div className="space-y-5 pt-0 pr-4 lg:min-h-[700px]">
                         {/* Vedashi Badges */}
-                        <div className="flex flex-wrap gap-2">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#3d5c3a]/10 text-[#3d5c3a]">
-                                Tridoshic
-                            </span>
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border border-gray-200 text-gray-600">
-                                CERTIFIED ORGANIC
-                            </span>
-                        </div>
+
 
                         <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 italic tracking-tight leading-[1.1]">
                             {product.product_name}
@@ -446,311 +439,339 @@ function ProductDetailContent({ params }: Props) {
 
                         {/* ✅ VARIANT SELECTORS: Weight, Strength, Volume, Count, Flavor, Pack */}
                         <div className="min-h-[120px]">
-                        {variants.length > 0 && (() => {
-                            const uniqueWeights = [...new Set(variants.map((v: any) => v.weight_g as number))].filter(Boolean).sort((a, b) => a - b);
-                            const uniqueStrengths = [...new Set(variants.map((v: any) => v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : null))].filter(Boolean);
-                            const uniqueVolumes = [...new Set(variants.map((v: any) => v.volume_ml as number))].filter(Boolean).sort((a, b) => a - b);
-                            const uniqueCounts = [...new Set(variants.map((v: any) => v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : null))].filter(Boolean);
-                            const uniqueFlavors = [...new Set(variants.map((v: any) => v.flavor as string))].filter(Boolean);
-                            const uniquePacks = [...new Set(variants.map((v: any) => (v.pack_quantity ?? 1) as number))].filter(Boolean).sort((a, b) => a - b);
+                            {variants.length > 0 && (() => {
+                                const uniqueWeights = [...new Set(variants.map((v: any) => v.weight_g as number))].filter(Boolean).sort((a, b) => a - b);
+                                const uniqueStrengths = [...new Set(variants.map((v: any) => v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : null))].filter(Boolean);
+                                const uniqueVolumes = [...new Set(variants.map((v: any) => v.volume_ml as number))].filter(Boolean).sort((a, b) => a - b);
+                                const uniqueCounts = [...new Set(variants.map((v: any) => v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : null))].filter(Boolean);
+                                const uniqueFlavors = [...new Set(variants.map((v: any) => v.flavor as string))].filter(Boolean);
+                                const uniquePacks = [...new Set(variants.map((v: any) => (v.pack_quantity ?? 1) as number))].filter(Boolean).sort((a, b) => a - b);
 
-                            const formatVolume = (ml: number) => {
-                                return ml >= 999 ? `${(ml / 1000).toFixed(ml % 1000 === 0 ? 0 : 1)} L` : `${ml} ml`;
-                            };
+                                const formatVolume = (ml: number) => {
+                                    return ml >= 999 ? `${(ml / 1000).toFixed(ml % 1000 === 0 ? 0 : 1)} L` : `${ml} ml`;
+                                };
 
-                            const formatWeight = (g: number) => {
-                                return g >= 1000 ? `${(g / 1000).toFixed(g % 1000 === 0 ? 0 : g % 100 === 0 ? 1 : 2)} kg` : `${Math.round(g)} g`;
-                            };
+                                const formatWeight = (g: number) => {
+                                    return g >= 1000 ? `${(g / 1000).toFixed(g % 1000 === 0 ? 0 : g % 100 === 0 ? 1 : 2)} kg` : `${Math.round(g)} g`;
+                                };
 
-                            const updateSelection = (updates: any) => {
-                                const newW = updates.weight !== undefined ? updates.weight : selectedWeight;
-                                const newS = updates.strength !== undefined ? updates.strength : selectedStrength;
-                                const newV = updates.volume !== undefined ? updates.volume : selectedVolume;
-                                const newC = updates.count !== undefined ? updates.count : selectedCount;
-                                const newF = updates.flavor !== undefined ? updates.flavor : selectedFlavor;
-                                const newP = updates.pack !== undefined ? updates.pack : selectedPack;
+                                const updateSelection = (updates: any) => {
+                                    const newW = updates.weight !== undefined ? updates.weight : selectedWeight;
+                                    const newS = updates.strength !== undefined ? updates.strength : selectedStrength;
+                                    const newV = updates.volume !== undefined ? updates.volume : selectedVolume;
+                                    const newC = updates.count !== undefined ? updates.count : selectedCount;
+                                    const newF = updates.flavor !== undefined ? updates.flavor : selectedFlavor;
+                                    const newP = updates.pack !== undefined ? updates.pack : selectedPack;
 
-                                // Try to find an exact match first
-                                let match = variants.find((v: any) => 
-                                    (v.weight_g || null) === newW &&
-                                    (v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : null) === newS &&
-                                    (v.volume_ml || null) === newV &&
-                                    (v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : null) === newC &&
-                                    (v.flavor || null) === newF &&
-                                    (v.pack_quantity ?? 1) === newP
+                                    // Try to find an exact match first
+                                    let match = variants.find((v: any) =>
+                                        (v.weight_g || null) === newW &&
+                                        (v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : null) === newS &&
+                                        (v.volume_ml || null) === newV &&
+                                        (v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : null) === newC &&
+                                        (v.flavor || null) === newF &&
+                                        (v.pack_quantity ?? 1) === newP
+                                    );
+
+                                    // If no exact match, fallback to finding the first variant that matches the MOST RECENTLY updated dimension
+                                    if (!match) {
+                                        if (updates.weight !== undefined) match = variants.find((v: any) => v.weight_g === newW);
+                                        else if (updates.strength !== undefined) match = variants.find((v: any) => (v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : null) === newS);
+                                        else if (updates.volume !== undefined) match = variants.find((v: any) => v.volume_ml === newV);
+                                        else if (updates.count !== undefined) match = variants.find((v: any) => (v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : null) === newC);
+                                        else if (updates.flavor !== undefined) match = variants.find((v: any) => v.flavor === newF);
+                                        else if (updates.pack !== undefined) match = variants.find((v: any) => (v.pack_quantity ?? 1) === newP);
+                                    }
+
+                                    if (match) {
+                                        setSelectedWeight(match.weight_g || null);
+                                        setSelectedStrength(match.strength ? `${match.strength} ${match.strength_unit || ''}`.trim() : null);
+                                        setSelectedVolume(match.volume_ml || null);
+                                        setSelectedCount(match.units_count ? `${match.units_count} ${match.form_factor || 'Units'}` : null);
+                                        setSelectedFlavor(match.flavor || null);
+                                        setSelectedPack(match.pack_quantity ?? 1);
+                                        setSelectedVariant(match);
+                                    } else {
+                                        // Update state anyway to show what user clicked, but wait... variant must exist. 
+                                        // With the above fallback, we always find at least some variant.
+                                    }
+                                };
+
+                                const checkAvailable = (dimension: string, value: any) => {
+                                    return variants.some((v: any) => {
+                                        // A variant is "available" for a dimension/value if it matches everything ELSE currently selected
+                                        const matchesWeight = dimension === 'weight' || !selectedWeight || v.weight_g === selectedWeight;
+                                        const matchesStrength = dimension === 'strength' || !selectedStrength || (v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : null) === selectedStrength;
+                                        const matchesVolume = dimension === 'volume' || !selectedVolume || v.volume_ml === selectedVolume;
+                                        const matchesCount = dimension === 'count' || !selectedCount || (v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : null) === selectedCount;
+                                        const matchesFlavor = dimension === 'flavor' || !selectedFlavor || v.flavor === selectedFlavor;
+                                        const matchesPack = dimension === 'pack' || !selectedPack || (v.pack_quantity ?? 1) === selectedPack;
+
+                                        let matchVal = false;
+                                        if (dimension === 'weight') matchVal = v.weight_g === value;
+                                        else if (dimension === 'strength') matchVal = (v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : null) === value;
+                                        else if (dimension === 'volume') matchVal = v.volume_ml === value;
+                                        else if (dimension === 'count') matchVal = (v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : null) === value;
+                                        else if (dimension === 'flavor') matchVal = v.flavor === value;
+                                        else if (dimension === 'pack') matchVal = (v.pack_quantity ?? 1) === value;
+
+                                        return matchVal && matchesWeight && matchesStrength && matchesVolume && matchesCount && matchesFlavor && matchesPack && v.status !== 'Inactive' && v.is_active !== false;
+                                    });
+                                };
+
+                                const isOptionActive = (dimension: string, value: any) => {
+                                    return variants.some((v: any) => {
+                                        let match = false;
+                                        if (dimension === 'weight') match = v.weight_g === value;
+                                        if (dimension === 'strength') match = (v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : null) === value;
+                                        if (dimension === 'volume') match = v.volume_ml === value;
+                                        if (dimension === 'count') match = (v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : null) === value;
+                                        if (dimension === 'flavor') match = v.flavor === value;
+                                        if (dimension === 'pack') match = (v.pack_quantity ?? 1) === value;
+
+                                        return match && v.status !== 'Inactive' && v.is_active !== false;
+                                    });
+                                };
+
+                                const hasSingleWeight = uniqueWeights.length === 1;
+                                const hasSingleStrength = uniqueStrengths.length === 1;
+                                const hasSingleVolume = uniqueVolumes.length === 1;
+                                const hasSingleCount = uniqueCounts.length === 1;
+                                const hasSingleFlavor = uniqueFlavors.length === 1;
+                                const hasSinglePack = uniquePacks.length === 1 && uniquePacks[0] > 1; // Only show single pack if it's not a generic size of 1
+
+                                return (
+                                    <div className="space-y-4">
+                                        {/* ✅ SINGLE-ATTRIBUTES AS KEY-VALUE PAIRS */}
+                                        {(hasSingleWeight || hasSingleStrength || hasSingleVolume || hasSingleCount || hasSingleFlavor || hasSinglePack) && (
+                                            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-6 pb-4 border-b border-gray-100">
+                                                {hasSingleWeight && (
+                                                    <div className="flex items-baseline">
+                                                        <span className="text-sm text-gray-500 mr-2">Weight:</span>
+                                                        <span className="text-sm font-medium text-gray-900">{formatWeight(uniqueWeights[0])}</span>
+                                                    </div>
+                                                )}
+                                                {hasSingleStrength && (
+                                                    <div className="flex items-baseline">
+                                                        <span className="text-sm text-gray-500 mr-2">Strength:</span>
+                                                        <span className="text-sm font-medium text-gray-900">{uniqueStrengths[0]}</span>
+                                                    </div>
+                                                )}
+                                                {hasSingleVolume && (
+                                                    <div className="flex items-baseline">
+                                                        <span className="text-sm text-gray-500 mr-2">Volume:</span>
+                                                        <span className="text-sm font-medium text-gray-900">{formatVolume(uniqueVolumes[0])}</span>
+                                                    </div>
+                                                )}
+                                                {hasSingleCount && (
+                                                    <div className="flex items-baseline">
+                                                        <span className="text-sm text-gray-500 mr-2">Count:</span>
+                                                        <span className="text-sm font-medium text-gray-900">{uniqueCounts[0]}</span>
+                                                    </div>
+                                                )}
+                                                {hasSingleFlavor && (
+                                                    <div className="flex items-baseline">
+                                                        <span className="text-sm text-gray-500 mr-2">Flavour:</span>
+                                                        <span className="text-sm font-medium text-gray-900 capitalize">{uniqueFlavors[0]}</span>
+                                                    </div>
+                                                )}
+                                                {hasSinglePack && (
+                                                    <div className="flex items-baseline">
+                                                        <span className="text-sm text-gray-500 mr-2">Pack:</span>
+                                                        <span className="text-sm font-medium text-gray-900">Pack of {uniquePacks[0]}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* Choose Weight */}
+                                        {uniqueWeights.length > 1 && (
+                                            <div>
+                                                <p className="text-sm font-semibold mb-2">Choose Weight:</p>
+                                                <div className="flex gap-2 flex-wrap">
+                                                        {uniqueWeights.map((w) => {
+                                                            const isSelected = selectedWeight === w;
+                                                            const available = checkAvailable('weight', w);
+                                                            const active = isOptionActive('weight', w);
+                                                            
+                                                            return (
+                                                                <button
+                                                                    key={w}
+                                                                    onClick={() => active && updateSelection({ weight: w })}
+                                                                    disabled={!active}
+                                                                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200 shadow-sm
+                                                                    ${isSelected
+                                                                            ? 'bg-[#3d5c3a] text-white border-[#3d5c3a] shadow-lg scale-[1.02]'
+                                                                            : !available
+                                                                                ? 'border-gray-300 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
+                                                                                : 'bg-white border-gray-200 text-gray-700 hover:bg-[#edf5ed] hover:border-[#3d5c3a]/40 hover:text-[#3d5c3a] hover:shadow-md'
+                                                                        }`}
+                                                                >
+                                                                    {formatWeight(w)}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* By Strength */}
+                                        {uniqueStrengths.length > 1 && (
+                                            <div>
+                                                <p className="text-sm font-semibold mb-2">By Strength:</p>
+                                                <div className="flex gap-2 flex-wrap">
+                                                        {uniqueStrengths.map((str) => {
+                                                            const isSelected = selectedStrength === str;
+                                                            const available = checkAvailable('strength', str);
+                                                            const active = isOptionActive('strength', str);
+
+                                                            return (
+                                                                <button
+                                                                    key={str}
+                                                                    onClick={() => active && updateSelection({ strength: str })}
+                                                                    disabled={!active}
+                                                                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200 shadow-sm
+                                                                    ${isSelected
+                                                                            ? 'bg-[#3d5c3a] text-white border-[#3d5c3a] shadow-lg scale-[1.02]'
+                                                                            : !available
+                                                                                ? 'border-gray-300 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
+                                                                                : 'bg-white border-gray-200 text-gray-700 hover:bg-[#edf5ed] hover:border-[#3d5c3a]/40 hover:text-[#3d5c3a] hover:shadow-md'
+                                                                        }`}
+                                                                >
+                                                                    {str}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Choose Volume */}
+                                        {uniqueVolumes.length > 1 && (
+                                            <div>
+                                                <p className="text-sm font-semibold mb-2">Choose Volume:</p>
+                                                <div className="flex gap-2 flex-wrap">
+                                                        {uniqueVolumes.map((vol) => {
+                                                            const isSelected = selectedVolume === vol;
+                                                            const available = checkAvailable('volume', vol);
+                                                            const active = isOptionActive('volume', vol);
+
+                                                            return (
+                                                                <button
+                                                                    key={vol}
+                                                                    onClick={() => active && updateSelection({ volume: vol })}
+                                                                    disabled={!active}
+                                                                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200 shadow-sm
+                                                                    ${isSelected
+                                                                            ? 'bg-[#3d5c3a] text-white border-[#3d5c3a] shadow-lg scale-[1.02]'
+                                                                            : !available
+                                                                                ? 'border-gray-300 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
+                                                                                : 'bg-white border-gray-200 text-gray-700 hover:bg-[#edf5ed] hover:border-[#3d5c3a]/40 hover:text-[#3d5c3a] hover:shadow-md'
+                                                                        }`}
+                                                                >
+                                                                    {formatVolume(vol)}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* By Count */}
+                                        {uniqueCounts.length > 1 && (
+                                            <div>
+                                                <p className="text-sm font-semibold mb-2">By Count:</p>
+                                                <div className="flex gap-2 flex-wrap">
+                                                        {uniqueCounts.map((countStr) => {
+                                                            const isSelected = selectedCount === countStr;
+                                                            const available = checkAvailable('count', countStr);
+                                                            const active = isOptionActive('count', countStr);
+
+                                                            return (
+                                                                <button
+                                                                    key={countStr}
+                                                                    onClick={() => active && updateSelection({ count: countStr })}
+                                                                    disabled={!active}
+                                                                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200 shadow-sm
+                                                                    ${isSelected
+                                                                            ? 'bg-[#3d5c3a] text-white border-[#3d5c3a] shadow-lg scale-[1.02]'
+                                                                            : !available
+                                                                                ? 'border-gray-300 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
+                                                                                : 'bg-white border-gray-200 text-gray-700 hover:bg-[#edf5ed] hover:border-[#3d5c3a]/40 hover:text-[#3d5c3a] hover:shadow-md'
+                                                                        }`}
+                                                                >
+                                                                    {countStr}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* By Flavor */}
+                                        {uniqueFlavors.length > 1 && (
+                                            <div>
+                                                <p className="text-sm font-semibold mb-2">By Flavour:</p>
+                                                <div className="flex gap-2 flex-wrap">
+                                                        {uniqueFlavors.map((flav) => {
+                                                            const isSelected = selectedFlavor === flav;
+                                                            const available = checkAvailable('flavor', flav);
+                                                            const active = isOptionActive('flavor', flav);
+
+                                                            return (
+                                                                <button
+                                                                    key={flav}
+                                                                    onClick={() => active && updateSelection({ flavor: flav })}
+                                                                    disabled={!active}
+                                                                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200 shadow-sm
+                                                                    ${isSelected
+                                                                            ? 'bg-[#3d5c3a] text-white border-[#3d5c3a] shadow-lg scale-[1.02]'
+                                                                            : !available
+                                                                                ? 'border-gray-300 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
+                                                                                : 'bg-white border-gray-200 text-gray-700 hover:bg-[#edf5ed] hover:border-[#3d5c3a]/40 hover:text-[#3d5c3a] hover:shadow-md'
+                                                                        }`}
+                                                                >
+                                                                    {flav}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Choose Pack */}
+                                        {uniquePacks.length > 1 && (
+                                            <div>
+                                                <p className="text-sm font-semibold mb-2">Choose Pack:</p>
+                                                <div className="flex gap-2 flex-wrap">
+                                                        {uniquePacks.map((pack) => {
+                                                            const isSelected = selectedPack === pack;
+                                                            const available = checkAvailable('pack', pack);
+                                                            const active = isOptionActive('pack', pack);
+
+                                                            return (
+                                                                <button
+                                                                    key={pack}
+                                                                    onClick={() => active && updateSelection({ pack })}
+                                                                    disabled={!active}
+                                                                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200 shadow-sm
+                                                                    ${isSelected
+                                                                            ? 'bg-[#3d5c3a] text-white border-[#3d5c3a] shadow-lg scale-[1.02]'
+                                                                            : !available
+                                                                                ? 'border-gray-300 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
+                                                                                : 'bg-white border-gray-200 text-gray-700 hover:bg-[#edf5ed] hover:border-[#3d5c3a]/40 hover:text-[#3d5c3a] hover:shadow-md'
+                                                                        }`}
+                                                                >
+                                                                    Pack of {pack}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
                                 );
-
-                                // If no exact match, fallback to finding the first variant that matches the MOST RECENTLY updated dimension
-                                if (!match) {
-                                    if (updates.weight !== undefined) match = variants.find((v: any) => v.weight_g === newW);
-                                    else if (updates.strength !== undefined) match = variants.find((v: any) => (v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : null) === newS);
-                                    else if (updates.volume !== undefined) match = variants.find((v: any) => v.volume_ml === newV);
-                                    else if (updates.count !== undefined) match = variants.find((v: any) => (v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : null) === newC);
-                                    else if (updates.flavor !== undefined) match = variants.find((v: any) => v.flavor === newF);
-                                    else if (updates.pack !== undefined) match = variants.find((v: any) => (v.pack_quantity ?? 1) === newP);
-                                }
-
-                                if (match) {
-                                    setSelectedWeight(match.weight_g || null);
-                                    setSelectedStrength(match.strength ? `${match.strength} ${match.strength_unit || ''}`.trim() : null);
-                                    setSelectedVolume(match.volume_ml || null);
-                                    setSelectedCount(match.units_count ? `${match.units_count} ${match.form_factor || 'Units'}` : null);
-                                    setSelectedFlavor(match.flavor || null);
-                                    setSelectedPack(match.pack_quantity ?? 1);
-                                    setSelectedVariant(match);
-                                } else {
-                                    // Update state anyway to show what user clicked, but wait... variant must exist. 
-                                    // With the above fallback, we always find at least some variant.
-                                }
-                            };
-
-                            const checkAvailable = (dimension: string, value: any) => {
-                                return variants.some((v: any) => {
-                                    if (dimension === 'weight') return v.weight_g === value && (v.pack_quantity ?? 1) === (selectedPack ?? 1);
-                                    if (dimension === 'strength') return (v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : null) === value && (v.pack_quantity ?? 1) === (selectedPack ?? 1);
-                                    if (dimension === 'volume') return v.volume_ml === value && (v.pack_quantity ?? 1) === (selectedPack ?? 1);
-                                    if (dimension === 'count') return (v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : null) === value && (v.pack_quantity ?? 1) === (selectedPack ?? 1);
-                                    if (dimension === 'flavor') return v.flavor === value && (v.pack_quantity ?? 1) === (selectedPack ?? 1);
-                                    if (dimension === 'pack') return (v.pack_quantity ?? 1) === value; // For pack, we typically don't restrict based on other dimensions, but we could check against all. Let's just return true if it exists.
-                                    return true;
-                                });
-                            };
-
-                            const isOptionActive = (dimension: string, value: any) => {
-                                return variants.some((v: any) => {
-                                    let match = false;
-                                    if (dimension === 'weight') match = v.weight_g === value;
-                                    if (dimension === 'strength') match = (v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : null) === value;
-                                    if (dimension === 'volume') match = v.volume_ml === value;
-                                    if (dimension === 'count') match = (v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : null) === value;
-                                    if (dimension === 'flavor') match = v.flavor === value;
-                                    if (dimension === 'pack') match = (v.pack_quantity ?? 1) === value;
-
-                                    return match && v.status !== 'Inactive' && v.is_active !== false;
-                                });
-                            };
-
-                            const hasSingleWeight = uniqueWeights.length === 1;
-                            const hasSingleStrength = uniqueStrengths.length === 1;
-                            const hasSingleVolume = uniqueVolumes.length === 1;
-                            const hasSingleCount = uniqueCounts.length === 1;
-                            const hasSingleFlavor = uniqueFlavors.length === 1;
-                            const hasSinglePack = uniquePacks.length === 1 && uniquePacks[0] > 1; // Only show single pack if it's not a generic size of 1
-
-                            return (
-                                <div className="space-y-4">
-                                    {/* ✅ SINGLE-ATTRIBUTES AS KEY-VALUE PAIRS */}
-                                    {(hasSingleWeight || hasSingleStrength || hasSingleVolume || hasSingleCount || hasSingleFlavor || hasSinglePack) && (
-                                        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-6 pb-4 border-b border-gray-100">
-                                            {hasSingleWeight && (
-                                                <div className="flex items-baseline">
-                                                    <span className="text-sm text-gray-500 mr-2">Weight:</span>
-                                                    <span className="text-sm font-medium text-gray-900">{formatWeight(uniqueWeights[0])}</span>
-                                                </div>
-                                            )}
-                                            {hasSingleStrength && (
-                                                <div className="flex items-baseline">
-                                                    <span className="text-sm text-gray-500 mr-2">Strength:</span>
-                                                    <span className="text-sm font-medium text-gray-900">{uniqueStrengths[0]}</span>
-                                                </div>
-                                            )}
-                                            {hasSingleVolume && (
-                                                <div className="flex items-baseline">
-                                                    <span className="text-sm text-gray-500 mr-2">Volume:</span>
-                                                    <span className="text-sm font-medium text-gray-900">{formatVolume(uniqueVolumes[0])}</span>
-                                                </div>
-                                            )}
-                                            {hasSingleCount && (
-                                                <div className="flex items-baseline">
-                                                    <span className="text-sm text-gray-500 mr-2">Count:</span>
-                                                    <span className="text-sm font-medium text-gray-900">{uniqueCounts[0]}</span>
-                                                </div>
-                                            )}
-                                            {hasSingleFlavor && (
-                                                <div className="flex items-baseline">
-                                                    <span className="text-sm text-gray-500 mr-2">Flavour:</span>
-                                                    <span className="text-sm font-medium text-gray-900 capitalize">{uniqueFlavors[0]}</span>
-                                                </div>
-                                            )}
-                                            {hasSinglePack && (
-                                                <div className="flex items-baseline">
-                                                    <span className="text-sm text-gray-500 mr-2">Pack:</span>
-                                                    <span className="text-sm font-medium text-gray-900">Pack of {uniquePacks[0]}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    {/* Choose Weight */}
-                                    {uniqueWeights.length > 1 && (
-                                        <div>
-                                            <p className="text-sm font-semibold mb-2">Choose Weight:</p>
-                                            <div className="flex gap-2 flex-wrap">
-                                                {uniqueWeights.map((w) => {
-                                                    const active = isOptionActive('weight', w);
-                                                    return (
-                                                        <button
-                                                            key={w}
-                                                            onClick={() => active && updateSelection({ weight: w })}
-                                                            disabled={!active}
-                                                            className={`px-4 py-2 rounded-lg border text-sm font-medium transition
-                                                                ${selectedWeight === w
-                                                                    ? 'bg-[#3d5c3a] text-white border-[#3d5c3a]'
-                                                                    : !active
-                                                                        ? 'border-gray-200 text-gray-400 bg-gray-50 opacity-60 cursor-not-allowed'
-                                                                    : 'border-gray-200 text-gray-700 hover:border-[#3d5c3a]'
-                                                                }`}
-                                                        >
-                                                            {formatWeight(w)}
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* By Strength */}
-                                    {uniqueStrengths.length > 1 && (
-                                        <div>
-                                            <p className="text-sm font-semibold mb-2">By Strength:</p>
-                                            <div className="flex gap-2 flex-wrap">
-                                                {uniqueStrengths.map((str) => {
-                                                    const active = isOptionActive('strength', str);
-                                                    return (
-                                                        <button
-                                                            key={str}
-                                                            onClick={() => active && updateSelection({ strength: str })}
-                                                            disabled={!active}
-                                                            className={`px-4 py-2 rounded-lg border text-sm font-medium transition
-                                                                ${selectedStrength === str
-                                                                    ? 'bg-[#3d5c3a] text-white border-[#3d5c3a]'
-                                                                    : !active
-                                                                        ? 'border-gray-200 text-gray-400 bg-gray-50 opacity-60 cursor-not-allowed'
-                                                                    : 'border-gray-200 text-gray-700 hover:border-[#3d5c3a]'
-                                                                }`}
-                                                        >
-                                                            {str}
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Choose Volume */}
-                                    {uniqueVolumes.length > 1 && (
-                                        <div>
-                                            <p className="text-sm font-semibold mb-2">Choose Volume:</p>
-                                            <div className="flex gap-2 flex-wrap">
-                                                {uniqueVolumes.map((vol) => {
-                                                    const active = isOptionActive('volume', vol);
-                                                    return (
-                                                        <button
-                                                            key={vol}
-                                                            onClick={() => active && updateSelection({ volume: vol })}
-                                                            disabled={!active}
-                                                            className={`px-4 py-2 rounded-lg border text-sm font-medium transition
-                                                                ${selectedVolume === vol
-                                                                    ? 'bg-[#3d5c3a] text-white border-[#3d5c3a]'
-                                                                    : !active
-                                                                        ? 'border-gray-200 text-gray-400 bg-gray-50 opacity-60 cursor-not-allowed'
-                                                                    : 'border-gray-200 text-gray-700 hover:border-[#3d5c3a]'
-                                                                }`}
-                                                        >
-                                                            {formatVolume(vol)}
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* By Count */}
-                                    {uniqueCounts.length > 1 && (
-                                        <div>
-                                            <p className="text-sm font-semibold mb-2">By Count:</p>
-                                            <div className="flex gap-2 flex-wrap">
-                                                {uniqueCounts.map((countStr) => {
-                                                    const active = isOptionActive('count', countStr);
-                                                    return (
-                                                        <button
-                                                            key={countStr}
-                                                            onClick={() => active && updateSelection({ count: countStr })}
-                                                            disabled={!active}
-                                                            className={`px-4 py-2 rounded-lg border text-sm font-medium transition
-                                                                ${selectedCount === countStr
-                                                                    ? 'bg-[#3d5c3a] text-white border-[#3d5c3a]'
-                                                                    : !active
-                                                                        ? 'border-gray-200 text-gray-400 bg-gray-50 opacity-60 cursor-not-allowed'
-                                                                    : 'border-gray-200 text-gray-700 hover:border-[#3d5c3a]'
-                                                                }`}
-                                                        >
-                                                            {countStr}
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* By Flavor */}
-                                    {uniqueFlavors.length > 1 && (
-                                        <div>
-                                            <p className="text-sm font-semibold mb-2">By Flavour:</p>
-                                            <div className="flex gap-2 flex-wrap">
-                                                {uniqueFlavors.map((flav) => {
-                                                    const active = isOptionActive('flavor', flav);
-                                                    return (
-                                                        <button
-                                                            key={flav}
-                                                            onClick={() => active && updateSelection({ flavor: flav })}
-                                                            disabled={!active}
-                                                            className={`px-4 py-2 rounded-lg border text-sm font-medium transition
-                                                                ${selectedFlavor === flav
-                                                                    ? 'bg-[#3d5c3a] text-white border-[#3d5c3a]'
-                                                                    : !active
-                                                                        ? 'border-gray-200 text-gray-400 bg-gray-50 opacity-60 cursor-not-allowed'
-                                                                    : 'border-gray-200 text-gray-700 hover:border-[#3d5c3a]'
-                                                                }`}
-                                                        >
-                                                            {flav}
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Choose Pack */}
-                                    {uniquePacks.length > 1 && (
-                                        <div>
-                                            <p className="text-sm font-semibold mb-2">Choose Pack:</p>
-                                            <div className="flex gap-2 flex-wrap">
-                                                {uniquePacks.map((pack) => {
-                                                    const active = isOptionActive('pack', pack);
-                                                    return (
-                                                        <button
-                                                            key={pack}
-                                                            onClick={() => active && updateSelection({ pack })}
-                                                            disabled={!active}
-                                                            className={`px-4 py-2 rounded-lg border text-sm font-medium transition
-                                                                ${selectedPack === pack
-                                                                    ? 'bg-[#3d5c3a] text-white border-[#3d5c3a]'
-                                                                    : !active
-                                                                        ? 'border-gray-200 text-gray-400 bg-gray-50 opacity-60 cursor-not-allowed'
-                                                                    : 'border-gray-200 text-gray-700 hover:border-[#3d5c3a]'
-                                                                }`}
-                                                        >
-                                                            Pack of {pack}
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })()}
+                            })()}
                         </div>
 
                         {/* STOCK AVAILABILITY BADGE & QUANTITY COUNTER */}
@@ -921,69 +942,6 @@ function ProductDetailContent({ params }: Props) {
 
                 {/* ═══ BELOW THE FOLD — lazy loaded ═══ */}
 
-                {/* NEW: ANCIENT ROOTS SECTION */}
-                <LazySection
-                    minHeight="500px"
-                    rootMargin="200px"
-                    skeleton={<div className="h-[500px] w-full rounded-2xl bg-gray-100 animate-pulse mt-6" />}
-                >
-                    <section className="mt-6 bg-[#3d5c3a] rounded-3xl overflow-hidden text-[#FAF7F2]">
-                        <div className="grid lg:grid-cols-2">
-                            {/* Left Content */}
-                            <div className="p-8 lg:p-16 flex flex-col justify-center">
-                                <span className="inline-block px-3 py-1 rounded-full bg-white/10 text-xs font-bold tracking-wider mb-8 w-max">
-                                    Clinical Transparency
-                                </span>
-                                <h2 className="text-4xl lg:text-5xl font-bold mb-6">
-                                    Ancient Roots.<br />Proven Science.
-                                </h2>
-                                <p className="text-white/80 text-[15px] leading-relaxed mb-8 max-w-md">
-                                    We utilize chromatographic fingerprinting to ensure every drop of our Rejuvenating Elixir contains the precise concentration of bioactive alkaloids described in the Charaka Samhita.
-                                </p>
-                                
-                                <ul className="space-y-4 mb-10">
-                                    <li className="flex items-center gap-3">
-                                        <div className="h-5 w-5 rounded-full border border-white/30 flex items-center justify-center flex-shrink-0">
-                                            <CheckCircle2 strokeWidth={3} className="h-3 w-3 text-white" />
-                                        </div>
-                                        <span className="text-sm font-semibold tracking-wide">Heavy Metal Tested & Free</span>
-                                    </li>
-                                    <li className="flex items-center gap-3">
-                                        <div className="h-5 w-5 rounded-full border border-white/30 flex items-center justify-center flex-shrink-0">
-                                            <CheckCircle2 strokeWidth={3} className="h-3 w-3 text-white" />
-                                        </div>
-                                        <span className="text-sm font-semibold tracking-wide">Standardized 5% WithanolIDES</span>
-                                    </li>
-                                    <li className="flex items-center gap-3">
-                                        <div className="h-5 w-5 rounded-full border border-white/30 flex items-center justify-center flex-shrink-0">
-                                            <CheckCircle2 strokeWidth={3} className="h-3 w-3 text-white" />
-                                        </div>
-                                        <span className="text-sm font-semibold tracking-wide">Ethically Wild-Harvested Ingredients</span>
-                                    </li>
-                                </ul>
-
-                                <button className="bg-white text-[#3d5c3a] px-6 py-3.5 rounded-xl font-bold text-sm w-max hover:bg-gray-50 transition-colors shadow-lg">
-                                    Download Certificate of Analysis (PDF)
-                                </button>
-                            </div>
-
-                            {/* Right Grid Collage */}
-                            <div className="p-8 lg:p-12 lg:pl-0 grid grid-cols-2 gap-4 h-[500px] lg:h-auto">
-                                <div className="space-y-4 h-full flex flex-col">
-                                    <div className="bg-black/20 rounded-2xl h-[55%] bg-cover bg-center" style={{backgroundImage: "url('https://images.unsplash.com/photo-1611078519632-132d7515dbbf?q=80&w=800&auto=format&fit=crop')"}} />
-                                    <div className="bg-black/20 rounded-2xl h-[45%] bg-cover bg-center" style={{backgroundImage: "url('https://images.unsplash.com/photo-1532094349884-543bc11b234d?q=80&w=800&auto=format&fit=crop')"}} />
-                                </div>
-                                <div className="space-y-4 flex flex-col pt-12">
-                                    <div className="bg-black/20 rounded-2xl h-[45%] bg-cover bg-center" style={{backgroundImage: "url('https://images.unsplash.com/photo-1563241527-310ca0fa8f12?q=80&w=800&auto=format&fit=crop')"}} />
-                                    <div className="bg-[#8b997c] rounded-2xl h-[40%] flex flex-col justify-center p-6 text-[#1a2e18]">
-                                        <div className="text-5xl font-bold mb-2">24+</div>
-                                        <div className="text-xs font-bold uppercase tracking-wider leading-relaxed">CLINICAL TRIALS<br />COMPLETED IN 2022</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                </LazySection>
 
                 {/* ════ TABBED PRODUCT DESCRIPTION — Nykaa-style ════ */}
                 {(product.description || product.intended_use || product.specifications) && (
@@ -1009,11 +967,10 @@ function ProductDetailContent({ params }: Props) {
                                     {product.description && (
                                         <button
                                             onClick={() => setActiveInfoTab('description')}
-                                            className={`relative px-6 py-3 text-sm font-semibold transition-colors ${
-                                                activeInfoTab === 'description'
+                                            className={`relative px-6 py-3 text-sm font-semibold transition-colors ${activeInfoTab === 'description'
                                                     ? 'text-[#1d351d]'
                                                     : 'text-gray-500 hover:text-gray-800'
-                                            }`}
+                                                }`}
                                         >
                                             Description
                                             {activeInfoTab === 'description' && (
@@ -1024,11 +981,10 @@ function ProductDetailContent({ params }: Props) {
                                     {product.intended_use && (
                                         <button
                                             onClick={() => setActiveInfoTab('howToUse')}
-                                            className={`relative px-6 py-3 text-sm font-semibold transition-colors ${
-                                                activeInfoTab === 'howToUse'
+                                            className={`relative px-6 py-3 text-sm font-semibold transition-colors ${activeInfoTab === 'howToUse'
                                                     ? 'text-[#1d351d]'
                                                     : 'text-gray-500 hover:text-gray-800'
-                                            }`}
+                                                }`}
                                         >
                                             How To Use
                                             {activeInfoTab === 'howToUse' && (
@@ -1039,11 +995,10 @@ function ProductDetailContent({ params }: Props) {
                                     {(product.specifications || product.country_of_origin || product.form || product.brand) && (
                                         <button
                                             onClick={() => setActiveInfoTab('specifications')}
-                                            className={`relative px-6 py-3 text-sm font-semibold transition-colors ${
-                                                activeInfoTab === 'specifications'
+                                            className={`relative px-6 py-3 text-sm font-semibold transition-colors ${activeInfoTab === 'specifications'
                                                     ? 'text-[#1d351d]'
                                                     : 'text-gray-500 hover:text-gray-800'
-                                            }`}
+                                                }`}
                                         >
                                             Specifications
                                             {activeInfoTab === 'specifications' && (
@@ -1065,7 +1020,7 @@ function ProductDetailContent({ params }: Props) {
                                                 : product.description.split(/\s+/).slice(0, 150).join(' ') + '...'}
                                         </div>
                                         {product.description.split(/\s+/).length > 150 && (
-                                            <button 
+                                            <button
                                                 onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
                                                 className="mt-6 text-[#1d351d] font-bold text-sm tracking-wide hover:underline flex items-center gap-1"
                                             >
@@ -1189,13 +1144,13 @@ function ProductDetailContent({ params }: Props) {
                 )}
 
                 {/* REVIEWS SECTION — lazy loaded + dynamic import */}
-               <div className="relative isolate w-full mt-6 pt-6 pb-6 overflow-hidden">
+                <div className="relative isolate w-full mt-6 pt-6 pb-6 overflow-hidden">
                     {/* Shadow Background Illustration (Absolute positioned) */}
                     <div className="absolute inset-0 -z-10 pointer-events-none opacity-[0.03] flex justify-center items-center">
                         {/* A massive placeholder SVG for the "shadow leaves" effect */}
                         <svg viewBox="0 0 1000 1000" className="w-[150%] max-w-none transform min-w-[1200px]" preserveAspectRatio="xMidYMid slice">
-                             <path fill="currentColor" d="M374.4,-331.1C470.9,-201.5,524.8,-42.9,493.4,87.9C462.1,218.7,345.5,321.7,211.5,410.6C77.4,499.5,-74.2,574.4,-190.2,525C-306.2,475.6,-386.5,301.9,-438.4,124.7C-490.3,-52.5,-513.7,-233.1,-437.4,-352C-361," />
-                             <path fill="currentColor" transform="translate(400, 200) scale(0.8) rotate(45)" d="M434.3,-463.8C545,-387.8,604,-221.9,642.3,-45.8C680.7,130.3,698.3,316.5,614.9,451.3C531.5,586.2,347,669.7,157.9,681C-31.1,692.3,-224.8,631.3,-375.3,533C-525.8,434.8,-633.2,299.3,-667,144C-700.8,-11.3,-661.1,-186.4,-575.4,-322.6C-489.6,-458.8,-357.7,-556,-212.8,-575.3C-67.9,-594.7,89,-536.2,234.3,-480.1" />
+                            <path fill="currentColor" d="M374.4,-331.1C470.9,-201.5,524.8,-42.9,493.4,87.9C462.1,218.7,345.5,321.7,211.5,410.6C77.4,499.5,-74.2,574.4,-190.2,525C-306.2,475.6,-386.5,301.9,-438.4,124.7C-490.3,-52.5,-513.7,-233.1,-437.4,-352C-361," />
+                            <path fill="currentColor" transform="translate(400, 200) scale(0.8) rotate(45)" d="M434.3,-463.8C545,-387.8,604,-221.9,642.3,-45.8C680.7,130.3,698.3,316.5,614.9,451.3C531.5,586.2,347,669.7,157.9,681C-31.1,692.3,-224.8,631.3,-375.3,533C-525.8,434.8,-633.2,299.3,-667,144C-700.8,-11.3,-661.1,-186.4,-575.4,-322.6C-489.6,-458.8,-357.7,-556,-212.8,-575.3C-67.9,-594.7,89,-536.2,234.3,-480.1" />
                         </svg>
                     </div>
 
@@ -1206,8 +1161,8 @@ function ProductDetailContent({ params }: Props) {
                             rootMargin="300px"
                             skeleton={<SkeletonReviewSection />}
                         >
-                            <ReviewSection 
-                                productId={product.product_id} 
+                            <ReviewSection
+                                productId={product.product_id}
                                 product={product}
                                 selectedVariant={selectedVariant}
                                 onAddToCart={handleAddToCart}
@@ -1234,7 +1189,7 @@ function ProductDetailContent({ params }: Props) {
                                 icon={<Sparkles className="h-6 w-6 text-[#3d5c3a]" />}
                             />
                         </LazySection>
-                        
+
                         {/* RECENTLY VIEWED — lazy loaded + dynamic import */}
                         <LazySection
                             minHeight="200px"

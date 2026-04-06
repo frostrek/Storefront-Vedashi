@@ -12,6 +12,7 @@ import { useCurrency } from '@/context/CurrencyContext';
 import StarRating from '@/components/reviews/StarRating';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 
@@ -26,6 +27,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, onMoveToCart, priority = false, layout = 'grid' }: ProductCardProps) {
+    const params = useParams();
     const { formatPrice } = useCurrency();
     const { isInWishlist, toggleItem } = useWishlist();
     const { addItem, updateQuantity, removeItem, items, loading: cartLoading } = useCart();
@@ -441,8 +443,10 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                     const countLabel = v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : '';
                                     const strengthLabel = v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : '';
                                     const labelParts = [
-                                        v.size_label, weightLabel, volLabel, countLabel,
-                                        strengthLabel, v.flavor,
+                                        weightLabel, volLabel, 
+                                        (product.common_form && countLabel === product.common_form) ? '' : countLabel,
+                                        (product.common_strength && strengthLabel === product.common_strength) ? '' : strengthLabel,
+                                        (product.common_flavor && v.flavor === product.common_flavor) ? '' : v.flavor,
                                         v.pack_quantity > 1 ? `Pack of ${v.pack_quantity}` : ''
                                     ].filter(Boolean);
                                     const label = labelParts.join(' · ') || v.sku || 'Standard';
@@ -661,12 +665,11 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                         const strengthLabel = v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : '';
 
                                         const labelParts = [
-                                            v.size_label,
                                             weightLabel,
                                             volLabel,
-                                            countLabel,
-                                            strengthLabel,
-                                            v.flavor,
+                                            (product.common_form && countLabel === product.common_form) ? '' : countLabel,
+                                            (product.common_strength && strengthLabel === product.common_strength) ? '' : strengthLabel,
+                                            (product.common_flavor && v.flavor === product.common_flavor) ? '' : v.flavor,
                                             v.pack_quantity > 1 ? `Pack of ${v.pack_quantity}` : ''
                                         ].filter(Boolean);
                                         const label = labelParts.join(' · ') || v.sku || 'Standard';
@@ -859,32 +862,30 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                 </button>
                             )}
 
-                            {/* Category Badge */}
-                            {!isList && product.category && (
-                                <span className="absolute left-3 top-3 rounded-full bg-[#3d5c3a] px-2.5 py-1 text-[9px] tracking-[0.15em] text-white uppercase font-black font-ui z-10 shadow-sm">
-                                    {product.category}
-                                </span>
-                            )}
-
-                            {/* Product Badges */}
-                            <div className={`absolute ${isList ? 'left-2 top-2 flex-row flex-wrap' : 'left-3 bottom-3 flex-col'} flex gap-1 z-10`}>
+                            {/* Product Badges (Top Left Stack) */}
+                            <div className={`absolute ${isList ? 'left-2 top-2' : 'left-3 top-3'} flex flex-col gap-1 z-10`}>
+                                {product.category && (
+                                    <span className="rounded-full bg-[#3d5c3a] px-2.5 py-1 text-[9px] tracking-[0.15em] text-white uppercase font-black font-ui shadow-sm w-fit mb-0.5">
+                                        {product.category}
+                                    </span>
+                                )}
                                 {isExpired && !isComingSoon && (
-                                    <span className="rounded-full bg-red-600 px-2.5 py-0.5 text-[9px] font-black tracking-[0.1em] text-white uppercase font-ui">
+                                    <span className="rounded-full bg-red-600 px-2.5 py-0.5 text-[9px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
                                         Expired
                                     </span>
                                 )}
                                 {isComingSoon && (
-                                    <span className="rounded-full bg-purple-600 px-2.5 py-0.5 text-[9px] font-black tracking-[0.1em] text-white uppercase font-ui">
+                                    <span className="rounded-full bg-purple-600 px-2.5 py-0.5 text-[9px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
                                         Coming Soon
                                     </span>
                                 )}
                                 {product.is_best_seller && !isComingSoon && (
-                                    <span className="rounded-full bg-amber-600 px-2.5 py-0.5 text-[9px] font-black tracking-[0.1em] text-white uppercase font-ui">
+                                    <span className="rounded-full bg-amber-600 px-2.5 py-0.5 text-[9px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
                                         Best Seller
                                     </span>
                                 )}
                                 {product.is_new_arrival && !isComingSoon && (
-                                    <span className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-[9px] font-black tracking-[0.1em] text-white uppercase font-ui">
+                                    <span className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-[9px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
                                         New
                                     </span>
                                 )}
@@ -923,30 +924,26 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
 
                         {/* Content */}
                         <div className={`p-4 ${isList ? 'flex-1 flex flex-col justify-center min-w-0 p-0 sm:pr-4' : ''}`}>
-                            {isList && (
-                                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1 sm:mb-2">
-                                    {product.category && (
-                                        <span className="rounded leading-none bg-[#3d5c3a]/10 px-1.5 sm:px-2 py-0.5 sm:py-1 text-[8px] sm:text-[9px] tracking-widest text-[#3d5c3a] uppercase font-bold">
-                                            {product.category}
-                                        </span>
-                                    )}
-                                    {product.brand && (
-                                        <span className="text-[9px] sm:text-[10px] uppercase tracking-widest text-gray-400 font-semibold">
-                                            {product.brand}
-                                        </span>
-                                    )}
-                                </div>
-                            )}
-
-                            {!isList && product.brand && (
-                                <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-1">
-                                    {product.brand}
-                                </p>
-                            )}
-
-                            <h3 className={`font-accent text-gray-900 leading-tight mb-1.5 sm:mb-2 ${isList ? 'text-lg sm:text-xl line-clamp-1 sm:line-clamp-2' : 'text-base line-clamp-2'}`}>
+                            <h3 className={`font-accent text-gray-900 leading-tight mb-1 sm:mb-1.5 ${isList ? 'text-lg sm:text-xl line-clamp-1 sm:line-clamp-2' : 'text-base line-clamp-2'}`}>
                                 {product.product_name}
                             </h3>
+
+                            {product.brand && (
+                                <Link 
+                                    href={`/${params.country || 'in'}/products?brand=${encodeURIComponent(product.brand)}`}
+                                    className={`block uppercase tracking-[0.12em] text-gray-400 font-medium mb-1.5 sm:mb-2 hover:text-[#3d5c3a] transition-colors cursor-pointer ${isList ? 'text-[10px] sm:text-[11px]' : 'text-[10px]'}`}
+                                >
+                                    {product.brand}
+                                </Link>
+                            )}
+
+                            {isList && product.category && (
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className="rounded leading-none bg-[#3d5c3a]/10 px-1.5 sm:px-2 py-0.5 sm:py-1 text-[8px] sm:text-[9px] tracking-widest text-[#3d5c3a] uppercase font-bold border border-[#3d5c3a]/10">
+                                        {product.category}
+                                    </span>
+                                </div>
+                            )}
 
                             {/* Rating */}
                             {avgRating > 0 && (
@@ -982,6 +979,24 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                     </>
                                 )}
                             </div>
+                            
+                            {/* Shared Variant Attributes (Visible if common across all options) */}
+                            {/* Shared attributes at the bottom */}
+                            {((product as any).variant_count > 1 || (product as any).variants?.length > 1) && (product.common_form || product.common_strength || product.common_flavor) && (
+                                <div className="mt-2.5 flex flex-wrap gap-1.5">
+                                    {[product.common_form, product.common_strength, product.common_flavor]
+                                        .filter(Boolean)
+                                        .map((attr, idx) => (
+                                            <span 
+                                                key={idx} 
+                                                className="text-[10px] font-bold tracking-wide text-[#3d5c3a] uppercase bg-[#6B8F5E]/10 border border-[#6B8F5E]/20 px-2.5 py-0.5 rounded-full"
+                                            >
+                                                {attr}
+                                            </span>
+                                        ))
+                                    }
+                                </div>
+                            )}
 
                             {/* List view: inline action buttons */}
                             {isList && !isUnavailable && (

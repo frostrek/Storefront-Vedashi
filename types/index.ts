@@ -39,6 +39,12 @@ export interface Product {
     image_url?: string;
     base64_image?: string;
     added_at?: string;
+
+    /* Shared variant attributes */
+    common_form?: string;
+    common_strength?: string;
+    common_flavor?: string;
+    variant_count?: number;
 }
 
 /** Shape returned by GET /api/products/filter */

@@ -22,13 +22,13 @@ export default function ActiveFilterChips({ chips, onRemove, onClearAll }: Activ
             {chips.map((chip, i) => (
                 <span
                     key={`${chip.key}-${chip.value}-${i}`}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-burgundy/8 border border-burgundy/15 px-3 py-1.5 text-xs font-medium text-burgundy animate-fade-in"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-herbal-green/8 border border-herbal-green/15 px-3 py-1.5 text-xs font-medium text-herbal-green animate-fade-in"
                 >
-                    <span className="text-burgundy/50">{chip.label}:</span>
+                    <span className="text-herbal-green/50">{chip.label}:</span>
                     {chip.value}
                     <button
                         onClick={() => onRemove(chip.key, chip.value)}
-                        className="ml-0.5 rounded-full p-0.5 hover:bg-burgundy/15 transition-colors"
+                        className="ml-0.5 rounded-full p-0.5 hover:bg-herbal-green/15 transition-colors"
                     >
                         <X className="h-3 w-3" />
                     </button>
@@ -36,7 +36,7 @@ export default function ActiveFilterChips({ chips, onRemove, onClearAll }: Activ
             ))}
             <button
                 onClick={onClearAll}
-                className="text-xs font-semibold text-warm-gray hover:text-burgundy transition-colors ml-1"
+                className="text-xs font-semibold text-warm-gray hover:text-herbal-green transition-colors ml-1"
             >
                 Clear all
             </button>
