@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, useEffect, ReactNode, useRef } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useMemo, ReactNode, useRef } from 'react';
 import { BackendCartItem, BackendCart } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { trackEcommerce } from '@/lib/analytics/gtag';
@@ -66,8 +66,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const [items, setItems] = useState<BackendCartItem[]>([]);
     const [savedItems, setSavedItems] = useState<BackendCartItem[]>([]);
     const [cartId, setCartId] = useState<string | null>(null);
-    const [totalItems, setTotalItems] = useState(0);
-    const [totalPrice, setTotalPrice] = useState(0);
+
+    // DERIVED VALUES — single source of truth, can never desync from items
+    const totalItems = useMemo(() => new Set(items.map(i => String(i.product_id))).size, [items]);
+    const totalPrice = useMemo(() => items.reduce((s, i) => s + (i.price || 0) * i.quantity, 0), [items]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [couponCode, setCouponCode] = useState<string | null>(null);
@@ -98,8 +100,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 const cart = res.data as BackendCart;
                 const flatItems = (cart.items || []).map(flattenCartItem);
                 setItems(flatItems);
-                setTotalItems(cart.summary?.item_count ?? cart.total_items ?? flatItems.reduce((s: number, i: BackendCartItem) => s + i.quantity, 0));
-                setTotalPrice(cart.summary?.grand_total || cart.total_amount || flatItems.reduce((s: number, i: BackendCartItem) => s + (i.price || 0) * i.quantity, 0));
+                // totalItems and totalPrice are derived via useMemo — no manual set needed
                 await fetchSavedItems(cId);
                 return cart;
             }
@@ -130,8 +131,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 setCartId(cart.cart_id);
                 const flatItems = (cart.items || []).map(flattenCartItem);
                 setItems(flatItems);
-                setTotalItems(cart.summary?.item_count ?? cart.total_items ?? flatItems.reduce((s: number, i: BackendCartItem) => s + i.quantity, 0));
-                setTotalPrice(cart.summary?.grand_total ?? cart.total_amount ?? flatItems.reduce((s: number, i: BackendCartItem) => s + (i.price || 0) * i.quantity, 0));
                 await fetchSavedItems(cart.cart_id);
             } else {
                 const createRes = await apiCreateCart(customerId);
@@ -139,8 +138,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
                     setCartId(createRes.data.cart_id);
                     setItems([]);
                     setSavedItems([]);
-                    setTotalItems(0);
-                    setTotalPrice(0);
                 }
             }
         } catch (err) {
@@ -165,8 +162,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 setCartId(cart.cart_id);
                 const flatItems = (cart.items || []).map(flattenCartItem);
                 setItems(flatItems);
-                setTotalItems(cart.summary?.item_count ?? cart.total_items ?? flatItems.reduce((s: number, i: BackendCartItem) => s + i.quantity, 0));
-                setTotalPrice(cart.summary?.grand_total ?? cart.total_amount ?? flatItems.reduce((s: number, i: BackendCartItem) => s + (i.price || 0) * i.quantity, 0));
                 await fetchSavedItems(cart.cart_id);
             } else {
                 // Guest cart expired or deleted — clean up
@@ -200,8 +195,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setCartId(null);
         setItems([]);
         setSavedItems([]);
-        setTotalItems(0);
-        setTotalPrice(0);
         setError(null);
         setCouponCode(null);
         setCouponDiscount(0);
@@ -484,6 +477,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setError(null);
         try {
             await apiMoveToCart(cartItemId);
+            // fetchCart sets items via setItems → totalItems auto-recalculates via useMemo
             if (cartId) await fetchCart(cartId);
         } catch (err) {
             console.error('[CartContext] moveToCart error:', err);
@@ -503,8 +497,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 }
             }
             setItems([]);
-            setTotalItems(0);
-            setTotalPrice(0);
+            // totalItems and totalPrice auto-reset to 0 via useMemo when items is []
         } catch (err) {
             console.error('[CartContext] clearCart error:', err);
         } finally {

@@ -40,6 +40,8 @@ interface BuyNowItem {
 
 type PaymentMethod = 'razorpay' | 'cod';
 
+const isCodEnabled = process.env.NEXT_PUBLIC_ENABLE_COD === 'true';
+
 /* ─── Component ─────────────────────────────────────────────── */
 
 const STEPS = ['BAG', 'SHIPPING', 'PAYMENT', 'REVIEW'] as const;
@@ -727,6 +729,14 @@ function CheckoutContent() {
 
         setPlacing(true);
         setPaymentFailed(false);
+
+        // Guard: reject COD if feature flag is disabled
+        if (paymentMethod === 'cod' && !isCodEnabled) {
+            toast.error('Cash on Delivery is currently unavailable. Please use online payment.');
+            setPaymentMethod('razorpay');
+            setPlacing(false);
+            return;
+        }
 
         try {
             // Determine the shipping country to use as default for phone validation
@@ -1475,7 +1485,8 @@ function CheckoutContent() {
                                             </div>
                                         </label>
 
-                                        {/* Cash on Delivery */}
+                                        {/* Cash on Delivery — only shown if feature flag is enabled */}
+                                        {isCodEnabled && (
                                         <label className={`flex items-start sm:items-center gap-4 rounded-xl border-2 p-5 cursor-pointer transition-all ${paymentMethod === 'cod' ? 'border-[#6B8F5E] bg-[#DFE5D9]/50 shadow-sm' : 'border-[#D4CFC0] bg-white hover:border-[#CEDBCE]'}`}>
                                             <input type="radio" name="payment-method" value="cod" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} className="w-5 h-5 accent-[#6B8F5E] mt-0.5 sm:mt-0" />
                                             <div className="flex-1">
@@ -1486,6 +1497,7 @@ function CheckoutContent() {
                                                 <p className="text-xs text-[#6B6B60]">Settle the amount upon receiving your package.</p>
                                             </div>
                                         </label>
+                                        )}
                                     </div>
 
                                     {/* Billing Address Toggle */}
