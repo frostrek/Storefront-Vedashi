@@ -62,7 +62,7 @@ export interface CategorySeoInput {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const SITE_NAME = 'Vedashi';
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.onrender.com';
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-default.jpg`;
 
 // ─── Sanitization ─────────────────────────────────────────────────────────────
@@ -123,7 +123,8 @@ export function buildHreflang(pathStrategy: string): Record<string, string> {
 /** Build Next.js Metadata for a product page */
 export function buildProductMeta(product: ProductSeoInput, currentCountry: string = 'in'): Metadata {
     const seo = product.seo;
-    const title = seo?.meta_title || productFallbackTitle(product);
+    const regionName = SUPPORTED_COUNTRIES[currentCountry as keyof typeof SUPPORTED_COUNTRIES]?.name || 'India';
+    const title = `${seo?.meta_title || productFallbackTitle(product)} | ${regionName}`;
     const description = seo?.meta_description || productFallbackDescription(product);
     
     const pathStrategy = `products/${product.slug || product.product_id}`;
@@ -133,7 +134,7 @@ export function buildProductMeta(product: ProductSeoInput, currentCountry: strin
     const keywords = seo?.meta_keywords || [product.product_name, product.brand, product.category, SITE_NAME].filter(Boolean).join(', ');
 
     const robotsValue = seo?.robots || 'index, follow';
-    const [indexDirective, followDirective] = robotsValue.split(',').map(s => s.trim());
+    const [indexDirective, followDirective] = robotsValue.split(',').map((s: string) => s.trim());
 
     return {
         title,
@@ -167,7 +168,8 @@ export function buildProductMeta(product: ProductSeoInput, currentCountry: strin
 /** Build Next.js Metadata for a category page */
 export function buildCategoryMeta(category: CategorySeoInput, currentCountry: string = 'in'): Metadata {
     const seo = category.seo;
-    const title = seo?.meta_title || categoryFallbackTitle(category);
+    const regionName = SUPPORTED_COUNTRIES[currentCountry as keyof typeof SUPPORTED_COUNTRIES]?.name || 'India';
+    const title = `${seo?.meta_title || categoryFallbackTitle(category)} | ${regionName}`;
     const description = seo?.meta_description || categoryFallbackDescription(category);
     
     const pathStrategy = `categories/${category.slug || category.category_id}`;
@@ -176,7 +178,7 @@ export function buildCategoryMeta(category: CategorySeoInput, currentCountry: st
     const ogImage = seo?.og_image || category.image_url || DEFAULT_OG_IMAGE;
 
     const robotsValue = seo?.robots || 'index, follow';
-    const [indexDirective, followDirective] = robotsValue.split(',').map(s => s.trim());
+    const [indexDirective, followDirective] = robotsValue.split(',').map((s: string) => s.trim());
 
     return {
         title,
@@ -249,8 +251,13 @@ export function generateProductJsonLd(product: ProductSeoInput): Record<string, 
         name: product.product_name,
         description: product.description || productFallbackDescription(product),
         sku,
+        mpn: sku,
         image: Array.from(imageSet),
         url: `${SITE_URL}/products/${product.slug || product.product_id}`,
+        brand: {
+            '@type': 'Brand',
+            name: product.brand || SITE_NAME
+        },
         offers: {
             '@type': 'Offer',
             price: price,
@@ -259,12 +266,14 @@ export function generateProductJsonLd(product: ProductSeoInput): Record<string, 
                 ? 'https://schema.org/InStock'
                 : 'https://schema.org/OutOfStock',
             url: `${SITE_URL}/products/${product.slug || product.product_id}`,
+            priceValidUntil: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
+            itemCondition: 'https://schema.org/NewCondition',
+            seller: {
+                '@type': 'Organization',
+                name: SITE_NAME
+            }
         },
     };
-
-    if (product.brand) {
-        schema.brand = { '@type': 'Brand', name: product.brand };
-    }
 
     if (product.rating_average && product.review_count) {
         schema.aggregateRating = {
@@ -277,6 +286,40 @@ export function generateProductJsonLd(product: ProductSeoInput): Record<string, 
     }
 
     return schema;
+}
+
+/** LocalBusiness schema (JSON-LD) */
+export function generateLocalBusinessJsonLd(): Record<string, unknown> {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'Store',
+        name: SITE_NAME,
+        url: SITE_URL,
+        logo: `${SITE_URL}/logo.png`,
+        image: `${SITE_URL}/og-default.jpg`,
+        description: 'Premium Ayurvedic Wellness and Natural Herbal Remedies.',
+        address: {
+            '@type': 'PostalAddress',
+            addressLocality: 'Gurgaon',
+            addressRegion: 'Haryana',
+            postalCode: '122001',
+            addressCountry: 'IN'
+        },
+        geo: {
+            '@type': 'GeoCoordinates',
+            latitude: '28.4595',
+            longitude: '77.0266'
+        },
+        openingHoursSpecification: [
+            {
+                '@type': 'OpeningHoursSpecification',
+                dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+                opens: '09:00',
+                closes: '21:00'
+            }
+        ],
+        sameAs: []
+    };
 }
 
 /** FAQPage schema (JSON-LD) */

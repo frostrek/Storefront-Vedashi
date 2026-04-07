@@ -19,7 +19,7 @@ import DynamicScriptLoader from "@/components/DynamicScriptLoader";
 import RouteTracker from "@/components/RouteTracker";
 import GlobalErrorTracker from "@/components/GlobalErrorTracker";
 import MaintenancePage from "@/components/MaintenancePage";
-import { generateOrganizationJsonLd, generateWebSiteJsonLd } from "@/lib/seo";
+import { generateLocalBusinessJsonLd, generateOrganizationJsonLd, generateWebSiteJsonLd } from "@/lib/seo";
 import ButterflyEffect from "@/components/animations/ButterflyEffect";
 import { API_URL } from "@/lib/api";
 
@@ -118,6 +118,11 @@ export default async function RootLayout({
           id="structured-data-organization"
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(generateOrganizationJsonLd()) }}
+        />
+        <Script
+          id="structured-data-business"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(generateLocalBusinessJsonLd()) }}
         />
         <Script
           id="structured-data-website"

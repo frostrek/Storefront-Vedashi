@@ -9,7 +9,7 @@ import { buildProductMeta, generateProductJsonLd, generateBreadcrumbJsonLd } fro
 import { API_URL } from '@/lib/api';
 
 // API_URL imported from @/lib/api
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.onrender.com';
 
 /** Server-side fetch of product data for metadata (no auth needed) */
 async function fetchProductForMeta(id: string) {
