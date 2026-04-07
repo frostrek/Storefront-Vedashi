@@ -1031,10 +1031,9 @@ export default function AccountPage() {
         // Postal Code format validation
         const config = getAddressConfig(addressForm.country_code || 'IN');
         const cleanPin = addressForm.pincode.toString().trim();
-        if (config.validation.postalCode) {
-            const regex = new RegExp(config.validation.postalCode.pattern);
-            if (!regex.test(cleanPin)) {
-                toast.error(config.validation.postalCode.errorMessage);
+        if (config.postalCode) {
+            if (!config.postalCode.regex.test(cleanPin)) {
+                toast.error(config.postalCode.error);
                 return;
             }
         }
