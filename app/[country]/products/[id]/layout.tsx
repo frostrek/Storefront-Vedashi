@@ -28,9 +28,9 @@ async function fetchProductForMeta(id: string) {
 export async function generateMetadata({
     params,
 }: {
-    params: Promise<{ id: string }>;
+    params: Promise<{ id: string; country: string }>;
 }): Promise<Metadata> {
-    const { id } = await params;
+    const { id, country } = await params;
     const product = await fetchProductForMeta(id);
 
     if (!product) {
@@ -55,7 +55,7 @@ export async function generateMetadata({
         sku: product.sku,
         variants: product.variants,
         seo: product.seo,
-    });
+    }, country);
 }
 
 export default function ProductLayout({

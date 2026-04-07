@@ -69,18 +69,28 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Check global maintenance status
+  // Check global maintenance status with a tight timeout to prevent site hangs
   let isMaintenance = false;
   let maintenanceMessage = "";
+  
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 2500); // 2.5s ceiling for health check
+  
   try {
-    const res = await fetch(`${API_URL}/health`, { next: { revalidate: 10 } });
+    const res = await fetch(`${API_URL}/health`, { 
+      signal: controller.signal,
+      next: { revalidate: 10 } 
+    });
     const data = await res.json();
     if (data?.maintenance?.enabled) {
       isMaintenance = true;
       maintenanceMessage = data.maintenance.message || "The Vedashi experience is currently undergoing routine maintenance.";
     }
   } catch (error) {
-    // Ignore network errors her
+    // If the health check times out or fails, we assume the site is NOT in maintenance
+    // This prioritizes speed and prevents the "TimeoutError" crash in dev
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   if (isMaintenance) {

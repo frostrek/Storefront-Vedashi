@@ -5,6 +5,7 @@
  */
 
 import type { Metadata } from 'next';
+import { SUPPORTED_COUNTRIES } from './currency';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -108,12 +109,26 @@ function categoryFallbackDescription(c: CategorySeoInput): string {
 
 // ─── Metadata Builders ───────────────────────────────────────────────────────
 
+/** Generates alternate languages maps based on our supported regions. */
+export function buildHreflang(pathStrategy: string): Record<string, string> {
+    const languages: Record<string, string> = {
+        'x-default': `${SITE_URL}/in/${pathStrategy}`
+    };
+    Object.values(SUPPORTED_COUNTRIES).forEach((c) => {
+        languages[c.locale] = `${SITE_URL}/${c.code}/${pathStrategy}`;
+    });
+    return languages;
+}
+
 /** Build Next.js Metadata for a product page */
-export function buildProductMeta(product: ProductSeoInput): Metadata {
+export function buildProductMeta(product: ProductSeoInput, currentCountry: string = 'in'): Metadata {
     const seo = product.seo;
     const title = seo?.meta_title || productFallbackTitle(product);
     const description = seo?.meta_description || productFallbackDescription(product);
-    const canonical = seo?.canonical_url || `${SITE_URL}/products/${product.slug || product.product_id}`;
+    
+    const pathStrategy = `products/${product.slug || product.product_id}`;
+    const canonical = seo?.canonical_url || `${SITE_URL}/${currentCountry}/${pathStrategy}`;
+    
     const ogImage = seo?.og_image || product.thumbnail_url || DEFAULT_OG_IMAGE;
     const keywords = seo?.meta_keywords || [product.product_name, product.brand, product.category, SITE_NAME].filter(Boolean).join(', ');
 
@@ -124,7 +139,10 @@ export function buildProductMeta(product: ProductSeoInput): Metadata {
         title,
         description,
         keywords,
-        alternates: { canonical },
+        alternates: { 
+            canonical,
+            languages: buildHreflang(pathStrategy)
+        },
         robots: {
             index: indexDirective !== 'noindex',
             follow: followDirective !== 'nofollow',
@@ -147,11 +165,14 @@ export function buildProductMeta(product: ProductSeoInput): Metadata {
 }
 
 /** Build Next.js Metadata for a category page */
-export function buildCategoryMeta(category: CategorySeoInput): Metadata {
+export function buildCategoryMeta(category: CategorySeoInput, currentCountry: string = 'in'): Metadata {
     const seo = category.seo;
     const title = seo?.meta_title || categoryFallbackTitle(category);
     const description = seo?.meta_description || categoryFallbackDescription(category);
-    const canonical = seo?.canonical_url || `${SITE_URL}/categories/${category.slug || category.category_id}`;
+    
+    const pathStrategy = `categories/${category.slug || category.category_id}`;
+    const canonical = seo?.canonical_url || `${SITE_URL}/${currentCountry}/${pathStrategy}`;
+    
     const ogImage = seo?.og_image || category.image_url || DEFAULT_OG_IMAGE;
 
     const robotsValue = seo?.robots || 'index, follow';
@@ -160,7 +181,10 @@ export function buildCategoryMeta(category: CategorySeoInput): Metadata {
     return {
         title,
         description,
-        alternates: { canonical },
+        alternates: { 
+            canonical,
+            languages: buildHreflang(pathStrategy)
+        },
         robots: {
             index: indexDirective !== 'noindex',
             follow: followDirective !== 'nofollow',
@@ -183,16 +207,22 @@ export function buildCategoryMeta(category: CategorySeoInput): Metadata {
 }
 
 /** Build Next.js Metadata for the product listing page */
-export function buildPLPMeta(hasFilters = false): Metadata {
+export function buildPLPMeta(hasFilters = false, currentCountry: string = 'in'): Metadata {
+    const pathStrategy = 'products';
     return {
         title: 'Shop Premium Ayurvedic Wellness | Vedashi',
         description: 'Browse our curated collection of premium Ayurvedic remedies and wellness formulations. Filter by category, benefit, and more. Fast delivery across India.',
+        alternates: {
+            canonical: `${SITE_URL}/${currentCountry}/${pathStrategy}`,
+            languages: buildHreflang(pathStrategy)
+        },
         robots: hasFilters
             ? { index: false, follow: true }   // noindex filtered pages
             : { index: true, follow: true },
         openGraph: {
             title: 'Shop Premium Ayurvedic Wellness | Vedashi',
             description: 'Browse our curated collection of premium Ayurvedic remedies and wellness formulations.',
+            url: `${SITE_URL}/${currentCountry}/${pathStrategy}`,
             siteName: SITE_NAME,
             type: 'website',
         },

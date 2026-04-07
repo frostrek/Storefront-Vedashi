@@ -83,13 +83,40 @@ export default function ShopPage() {
 
   // Map of category slugs to colors for consistent aesthetic
   const categoryColors: Record<string, string> = {
-    'herbal-supplement': 'bg-[#EBF3EB]',
-    'Ayurvedic-Herbs': 'bg-[#EBF3EB]', // DB slug for Ayurvedic Herbs
-    'health-condition': 'bg-[#EBF3EB]',
-    'skin-care': 'bg-[#EBF3EB]',
-    'hair-care': 'bg-[#EBF3EB]',
-    'Natural-Foods': 'bg-[#EBF3EB]',
-    'Personal-Care': 'bg-[#EBF3EB]',
+    'herbal-supplement': 'bg-[#F5F2E8]',
+    'Ayurvedic-Herbs': 'bg-[#F5F2E8]',
+    'dry-fruits--snacks': 'bg-[#F5F2E8]',
+    'health-condition': 'bg-[#F5F2E8]',
+    'skin-care': 'bg-[#F5F2E8]',
+    'hair-care': 'bg-[#F5F2E8]',
+    'Natural-Foods': 'bg-[#F5F2E8]',
+    'Personal-Care': 'bg-[#F5F2E8]',
+    'spices-and-masala': 'bg-[#F5F2E8]',
+    'teas-and-superfoods': 'bg-[#F5F2E8]',
+    'natural-beauty': 'bg-[#F5F2E8]',
+    'gifts--combos': 'bg-[#F5F2E8]',
+    'herbal-wellness': 'bg-[#F5F2E8]',
+    'indian-fruits': 'bg-[#F5F2E8]'
+  };
+
+  // Map of category slugs to specific image paths to avoid full sprite sheets
+  const categoryImages: Record<string, string> = {
+    'herbal-supplement': '/icons/shop/herbal-supplement.png',
+    'ayurvedic-herbs': '/icons/shop/ayurvedic-herbs.png',
+    'health-condition': '/icons/shop/health-condition.png',
+    'skin-care': '/icons/shop/skin-care.png',
+    'hair-care': '/icons/shop/hair-care.png',
+    'natural-foods': '/icons/shop/natural-foods.png',
+    'personal-care': '/icons/shop/personal-care.png',
+    
+    // Exact matching for DB slugs
+    'dry-fruits--snacks': '/icons/shop/dry-fruits-snacks.png',
+    'gifts--combos': '/icons/shop/gifts-and-combos.png', 
+    'herbal-wellness': '/icons/shop/ayurvedic-herbs.png', 
+    'spices-and-masala': '/icons/shop/spices-masalas.png',
+    'indian-fruits': '/icons/shop/indian-foods.png', 
+    'teas-and-superfoods': '/icons/shop/teas-and-superfoods.png',
+    'natural-beauty': '/icons/shop/natural-beauty.png'
   };
 
   return (
@@ -143,35 +170,43 @@ export default function ShopPage() {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-6 lg:gap-8">
-              {dbCategories.slice(0, 7).map((cat, i) => (
-                <Link
-                  key={cat.category_id}
-                  href={`/products?category=${cat.slug}`}
-                  className="group flex flex-col items-center gap-6 transition-all duration-500 hover:-translate-y-2"
-                >
-                  <div className={`relative w-full aspect-square rounded-full ${categoryColors[cat.slug] || 'bg-[#F2F4F2]'} flex items-center justify-center shadow-sm group-hover:shadow-[0_20px_50px_rgba(59,93,59,0.12)] group-hover:bg-[#E2F0E2] transition-all duration-700 overflow-hidden isolate`}>
-                    {/* Icon Render - Dynamic mapping to local icons */}
-                    <img
-                      src={`/icons/shop/${cat.slug}.png`}
-                      alt={cat.name}
-                      onError={(e) => {
-                        // Fallback if icon for new category doesn't exist
-                        (e.target as HTMLImageElement).src = '/icons/shop/category-sprite.png';
-                      }}
-                      className="w-[85%] h-[85%] object-contain relative z-10 mix-blend-multiply opacity-95 group-hover:opacity-100 transition-all duration-[800ms] cubic-bezier(0.34,1.56,0.64,1) group-hover:scale-110 pointer-events-none"
-                    />
+              {dbCategories.slice(0, 7).map((cat, i) => {
+                const slugLower = cat.slug?.toLowerCase() || '';
+                const fallbackIcon = '/icons/shop/ayurvedic-herbs.png';
+                const imgSrc = categoryImages[slugLower] || `/icons/shop/${cat.slug}.png`;
 
-                    {/* Hover Pulse Effect */}
-                    <div className="absolute inset-0 rounded-full border border-[#3B5D3B]/20 scale-100 opacity-0 group-hover:scale-105 group-hover:opacity-100 transition-all duration-700 pointer-events-none" />
-                  </div>
+                return (
+                  <Link
+                    key={cat.category_id}
+                    href={`/products?category=${cat.slug}`}
+                    className="group flex flex-col items-center gap-6 transition-all duration-500 hover:-translate-y-2"
+                  >
+                    <div className={`relative w-full aspect-square rounded-full ${categoryColors[cat.slug] || categoryColors[cat.name] || 'bg-[#F5F2E8]'} flex items-center justify-center shadow-sm group-hover:shadow-[0_20px_50px_rgba(59,93,59,0.12)] group-hover:bg-[#E2F0E2] transition-all duration-700 overflow-hidden isolate`}>
+                      {/* Icon Render - Dynamic mapping to local icons */}
+                      <img
+                        src={imgSrc}
+                        alt={cat.name}
+                        onError={(e) => {
+                          // Clean fallback to a single icon to avoid the giant sprite sheet rendering incorrectly
+                          if ((e.target as HTMLImageElement).src !== fallbackIcon) {
+                            (e.target as HTMLImageElement).src = fallbackIcon;
+                          }
+                        }}
+                        className="w-[75%] h-[75%] max-w-[140px] max-h-[140px] md:w-[85%] md:h-[85%] object-contain relative z-10 mix-blend-multiply opacity-95 group-hover:opacity-100 transition-all duration-[800ms] cubic-bezier(0.34,1.56,0.64,1) group-hover:scale-110 pointer-events-none"
+                      />
 
-                  <div className="text-center">
-                    <span className="text-base font-bold text-gray-800 group-hover:text-[#3B5D3B] transition-colors leading-tight">
-                      {cat.name}
-                    </span>
-                  </div>
-                </Link>
-              ))}
+                      {/* Hover Pulse Effect */}
+                      <div className="absolute inset-0 rounded-full border border-[#3B5D3B]/20 scale-100 opacity-0 group-hover:scale-105 group-hover:opacity-100 transition-all duration-700 pointer-events-none" />
+                    </div>
+
+                    <div className="text-center pb-2">
+                      <span className="text-sm md:text-base font-bold text-gray-800 group-hover:text-[#3B5D3B] transition-colors leading-tight">
+                        {cat.name}
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </section>
