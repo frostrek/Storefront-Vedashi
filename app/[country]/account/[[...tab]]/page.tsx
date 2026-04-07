@@ -42,6 +42,7 @@ import ExportOrdersModal from '@/components/account/ExportOrdersModal';
 import MyWallet from '@/components/account/MyWallet';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { COUNTRY_CODES } from '@/lib/country-codes';
+import { getAddressConfig, getDefaultCountry } from '@/lib/addressConfig';
 import { useCurrency } from '@/context/CurrencyContext';
 
 type Tab = 'overview' | 'orders' | 'wishlist' | 'addresses' | 'profile' | 'privacy' | 'support' | 'wallet' | 'notifications';
@@ -140,14 +141,24 @@ export default function AccountPage() {
     const [orderSort, setOrderSort] = useState('newest');
 
     // Addresses state
+    const defaultCountryCode = getDefaultCountry();
+    const defaultCountryName = COUNTRIES.find(c => c.code === defaultCountryCode)?.name || 'India';
+
     const [addresses, setAddresses] = useState<Address[]>([]);
     const [addressesLoading, setAddressesLoading] = useState(false);
     const [showAddressForm, setShowAddressForm] = useState(false);
     const [editingAddress, setEditingAddress] = useState<Address | null>(null);
     const [addressForm, setAddressForm] = useState({
         address_line1: '', address_line2: '', city: '', state: '', pincode: '',
-        country: 'India', country_code: 'IN', phone: '', label: '', is_default: false,
+        country: defaultCountryName, country_code: defaultCountryCode, phone: '', label: '', is_default: false,
     });
+    
+    const addressConfig = getAddressConfig(addressForm.country_code || 'IN');
+    const addressDialCode = useMemo(() => {
+        const match = Array.isArray(COUNTRY_CODES) ? COUNTRY_CODES.find(c => c.code === addressForm.country_code) : null;
+        return match ? match.dial_code : '+91';
+    }, [addressForm.country_code]);
+
     const [isLookupLoading, setIsLookupLoading] = useState(false);
     const [manualEdits, setManualEdits] = useState({
         city: false,
@@ -1017,31 +1028,31 @@ export default function AccountPage() {
             return;
         }
 
-        // Pincode format validation
+        // Postal Code format validation
+        const config = getAddressConfig(addressForm.country_code || 'IN');
         const cleanPin = addressForm.pincode.toString().trim();
-        const isIndia = !addressForm.country || addressForm.country.toLowerCase() === 'india';
-        if (isIndia) {
-            if (!/^\d{6}$/.test(cleanPin)) {
-                toast.error('Pincode must be exactly 6 digits');
-                return;
-            }
-        } else {
-            if (!/^[a-zA-Z0-9\s\-]{3,10}$/.test(cleanPin)) {
-                toast.error('Postal code must be 3-10 alphanumeric characters');
+        if (config.postalCode) {
+            if (!config.postalCode.regex.test(cleanPin)) {
+                toast.error(config.postalCode.error);
                 return;
             }
         }
 
+        const payload = {
+            ...addressForm,
+            phone: addressForm.phone ? `${addressDialCode}${addressForm.phone.replace(/\D/g, '')}` : ''
+        };
+
         try {
             if (editingAddress) {
-                const res = await apiUpdateAddress(user.id, editingAddress.address_id, addressForm as unknown as Record<string, string>);
+                const res = await apiUpdateAddress(user.id, editingAddress.address_id, payload as unknown as Record<string, string>);
                 if (res.success) {
                     toast.success('Address updated');
                 } else {
                     toast.error(res.message || 'Failed to update address');
                 }
             } else {
-                const res = await apiAddAddress(user.id, addressForm as unknown as Record<string, string>);
+                const res = await apiAddAddress(user.id, payload as unknown as Record<string, string>);
                 if (res.success) {
                     toast.success('Address added');
                 } else {
@@ -1088,6 +1099,14 @@ export default function AccountPage() {
     };
 
     const startEditAddress = (addr: Address) => {
+        const cCode = (addr as any).country_code || 'IN';
+        const match = Array.isArray(COUNTRY_CODES) ? COUNTRY_CODES.find(c => c.code === cCode) : null;
+        const dCode = match ? match.dial_code : '+91';
+        let phoneVal = addr.phone || '';
+        if (phoneVal.startsWith(dCode)) {
+            phoneVal = phoneVal.substring(dCode.length).trim();
+        }
+
         setEditingAddress(addr);
         setAddressForm({
             address_line1: addr.address_line1 || '',
@@ -1096,8 +1115,8 @@ export default function AccountPage() {
             state: addr.state || '',
             pincode: addr.pincode || '',
             country: addr.country || 'India',
-            country_code: (addr as any).country_code || 'IN',
-            phone: addr.phone || '',
+            country_code: cCode,
+            phone: phoneVal,
             label: addr.label || '',
             is_default: addr.is_default || false,
         });
@@ -2619,7 +2638,7 @@ export default function AccountPage() {
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Postal Code (Pincode)</label>
+                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">{addressConfig.labels.postalCode}</label>
                                                         <div className="relative">
                                                             <input
                                                                 type="text"
@@ -2641,7 +2660,7 @@ export default function AccountPage() {
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">City</label>
+                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">{addressConfig.labels.city}</label>
                                                         <input
                                                             type="text"
                                                             required
@@ -2654,7 +2673,7 @@ export default function AccountPage() {
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Province (State)</label>
+                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">{addressConfig.labels.state}</label>
                                                         <input
                                                             type="text"
                                                             required
@@ -2673,7 +2692,7 @@ export default function AccountPage() {
                                                                 <input
                                                                     type="text"
                                                                     disabled
-                                                                    value={selectedCountryCode}
+                                                                    value={addressDialCode}
                                                                     className="w-full bg-cream rounded-xl px-3 py-3 text-sm border-transparent text-charcoal/50"
                                                                 />
                                                             </div>

@@ -25,9 +25,17 @@
   --foreground: #2C2C2C;
 }
 
-.font-base { font-family: var(--font-sans); }
-.font-ui { font-family: var(--font-sans); }
-.font-accent { font-family: var(--font-serif); }
+.font-base {
+  font-family: var(--font-sans);
+}
+
+.font-ui {
+  font-family: var(--font-sans);
+}
+
+.font-accent {
+  font-family: var(--font-serif);
+}
 
 html {
   scroll-behavior: smooth;
@@ -44,7 +52,8 @@ body {
   top: 0px !important;
 }
 
-h1, .font-display {
+h1,
+.font-display {
   font-family: var(--font-serif);
   font-weight: 600;
 }
@@ -54,7 +63,10 @@ h2 {
   font-weight: 600;
 }
 
-h3, h4, h5, h6 {
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-sans);
   font-weight: 600;
 }
@@ -91,8 +103,8 @@ div.skiptranslate,
   margin: 0 !important;
 }
 
-.goog-te-gadget > span,
-.goog-te-gadget > a,
+.goog-te-gadget>span,
+.goog-te-gadget>a,
 .goog-logo-link,
 .goog-te-gadget img {
   display: none !important;
@@ -446,9 +458,9 @@ div.skiptranslate,
   color: #4A4A4A;
 }
 
-.legal-rich-text h1, 
-.legal-rich-text h2, 
-.legal-rich-text h3, 
+.legal-rich-text h1,
+.legal-rich-text h2,
+.legal-rich-text h3,
 .legal-rich-text h4 {
   color: #1A1A1A;
   font-family: var(--font-serif);
@@ -459,32 +471,50 @@ div.skiptranslate,
   display: block;
 }
 
-.legal-rich-text h1 { font-size: 2.5rem; }
-.legal-rich-text h2 { font-size: 2rem; border-bottom: 1px solid #E8E4DC; padding-bottom: 0.75rem; }
-.legal-rich-text h3 { font-size: 1.75rem; }
-.legal-rich-text h4 { font-size: 1.5rem; }
+.legal-rich-text h1 {
+  font-size: 2.5rem;
+}
+
+.legal-rich-text h2 {
+  font-size: 2rem;
+  border-bottom: 1px solid #E8E4DC;
+  padding-bottom: 0.75rem;
+}
+
+.legal-rich-text h3 {
+  font-size: 1.75rem;
+}
+
+.legal-rich-text h4 {
+  font-size: 1.5rem;
+}
 
 .legal-rich-text p {
   margin-bottom: 1.5rem;
   display: block;
 }
 
-.legal-rich-text ul, 
+.legal-rich-text ul,
 .legal-rich-text ol {
   margin-bottom: 2rem;
   padding-left: 2rem;
   display: block;
 }
 
-.legal-rich-text ul { list-style-type: disc; }
-.legal-rich-text ol { list-style-type: decimal; }
+.legal-rich-text ul {
+  list-style-type: disc;
+}
+
+.legal-rich-text ol {
+  list-style-type: decimal;
+}
 
 .legal-rich-text li {
   margin-bottom: 0.75rem;
   display: list-item;
 }
 
-.legal-rich-text strong, 
+.legal-rich-text strong,
 .legal-rich-text b {
   font-weight: 700;
   color: #1A1A1A;
@@ -615,6 +645,7 @@ div.skiptranslate,
   0% {
     transform: translateX(0);
   }
+
   100% {
     transform: translateX(-50%);
   }
@@ -624,38 +655,84 @@ div.skiptranslate,
   0% {
     transform: translateX(-50%);
   }
+
   100% {
     transform: translateX(0);
   }
 }
 
 @keyframes promoBlinkText {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
 }
 
 @keyframes promoFade {
-  0%, 100% { opacity: 1; }
-  40% { opacity: 0.2; }
-  60% { opacity: 0.2; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  40% {
+    opacity: 0.2;
+  }
+
+  60% {
+    opacity: 0.2;
+  }
 }
 
 @keyframes promoTypewriter {
-  0% { clip-path: inset(0 100% 0 0); }
-  80% { clip-path: inset(0 0 0 0); }
-  100% { clip-path: inset(0 0 0 0); }
+  0% {
+    clip-path: inset(0 100% 0 0);
+  }
+
+  80% {
+    clip-path: inset(0 0 0 0);
+  }
+
+  100% {
+    clip-path: inset(0 0 0 0);
+  }
 }
 
 @keyframes promoBounce {
-  0%, 100% { transform: translateY(0); }
-  25% { transform: translateY(-4px); }
-  50% { transform: translateY(0); }
-  75% { transform: translateY(-2px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  25% {
+    transform: translateY(-4px);
+  }
+
+  50% {
+    transform: translateY(0);
+  }
+
+  75% {
+    transform: translateY(-2px);
+  }
 }
 
 @keyframes promoGlow {
-  0%, 100% { text-shadow: 0 0 4px currentColor, 0 0 8px currentColor; }
-  50% { text-shadow: 0 0 12px currentColor, 0 0 24px currentColor, 0 0 36px currentColor; }
+
+  0%,
+  100% {
+    text-shadow: 0 0 4px currentColor, 0 0 8px currentColor;
+  }
+
+  50% {
+    text-shadow: 0 0 12px currentColor, 0 0 24px currentColor, 0 0 36px currentColor;
+  }
 }
 
 .animate-promo-marquee-left {
@@ -720,13 +797,14 @@ div.skiptranslate,
   z-index: 0;
 }
 
-.cart-leaf-bg > * {
+.cart-leaf-bg>* {
   position: relative;
   z-index: 1;
 }
 
 /* Ambient glow orbs for depth (disabled for light theme) */
-.cart-leaf-accent-left, .cart-leaf-accent-right {
+.cart-leaf-accent-left,
+.cart-leaf-accent-right {
   display: none;
 }
 
@@ -818,6 +896,7 @@ div.skiptranslate,
     margin: 0 8px;
     margin-bottom: 20px;
   }
+
   .cart-step-circle {
     width: 28px;
     height: 28px;
@@ -944,7 +1023,10 @@ div.skiptranslate,
 .ritual-summary::before {
   content: '';
   position: absolute;
-  top: 0; right: 0; bottom: 0; left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 0l.83.83v58.34h-58.34l-.83-.83L54.627 0zM27 0l27 27v33H21L-6 33V0h33zM0 0l27 27v33H0V0z' fill='%233B4A3B' fill-opacity='0.2' fill-rule='evenodd'/%3E%3C/svg%3E");
   opacity: 0.5;
   pointer-events: none;
@@ -1092,6 +1174,7 @@ div.skiptranslate,
 .cart-checkout-btn-secondary {
   background: #2D3B2D;
 }
+
 .cart-checkout-btn-secondary:hover {
   background: #1F291F;
 }
@@ -1242,28 +1325,43 @@ div.skiptranslate,
 .cart-advisor-card .action:hover {
   text-decoration: underline;
 }
+
 /* --- Custom Scrollbar --- */
 .custom-scrollbar::-webkit-scrollbar {
   width: 5px;
 }
 
+/* Remove up/down arrows */
+.custom-scrollbar::-webkit-scrollbar-button {
+  display: none;
+}
+
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: #FAF8F0;
+  background: transparent;
   border-radius: 10px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #3B5D3B;
+  background: transparent;
   border-radius: 10px;
 }
 
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+}
+
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #2D4A2D;
+  background: #9CA3AF;
 }
 
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #3B5D3B #FAF8F0;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.3s ease;
+}
+
+.custom-scrollbar:hover {
+  scrollbar-color: #D1D5DB transparent;
 }
 
 /* ============================================

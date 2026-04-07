@@ -316,60 +316,6 @@ export default function ShopPage() {
           </div>
         </section>
 
-        {/* 6. VEDIC COMMUNITY BANNER - SOFTWARE INSPIRED */}
-        <section className="relative overflow-hidden bg-[#1D2B1D] rounded-[40px] p-10 sm:p-20 shadow-2xl group">
-          {/* subtle monogram texture */}
-          <div
-            className="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay"
-            style={{
-              backgroundImage: 'url(/ayurvedic-texture.png)',
-              backgroundSize: '600px',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'repeat'
-            }}
-          />
-          {/* Decorative accents */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[#3B5D3B] rounded-full blur-[100px] opacity-50" />
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#8B7A3D] rounded-full blur-[120px] opacity-20" />
-
-          <div className="relative z-10 flex flex-col xl:flex-row items-center gap-12 text-center xl:text-left">
-            <div className="flex flex-col items-center xl:items-start gap-8">
-              <div className="flex -space-x-4">
-                {[1, 2, 3, 4, 5].map(i => (
-                  <div key={i} className="w-16 h-16 rounded-full border-4 border-[#1D2B1D] bg-[#3B5D3B]/20 overflow-hidden ring-1 ring-white/10">
-                    <img src={`https://ui-avatars.com/api/?name=User+${i}&background=3B5D3B&color=fff`} alt="Vedic Devotee" />
-                  </div>
-                ))}
-                <div className="w-16 h-16 rounded-full border-4 border-[#1D2B1D] bg-[#8B7A3D] flex items-center justify-center text-white text-xs font-bold ring-1 ring-white/10">
-                  +250k
-                </div>
-              </div>
-
-              <div>
-                <h4 className="text-3xl sm:text-4xl font-bold text-white mb-4 leading-tight">Empower Your Wellness Odyssey.</h4>
-                <p className="text-white/60 text-lg max-w-2xl font-medium">
-                  Join a global community dedicated to conscious living and Ayurvedic wisdom.
-                  Synchronize your health with nature's rhythm.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-center gap-4 w-full xl:w-auto">
-              <Link
-                href="/login"
-                className="w-full sm:w-auto px-10 py-5 bg-[#C9B87A] text-black font-black uppercase tracking-[0.2em] rounded-2xl text-[11px] hover:bg-white transition-all shadow-xl hover:scale-105 active:scale-95"
-              >
-                Join Creative Force
-              </Link>
-              <Link
-                href="/about"
-                className="w-full sm:w-auto px-10 py-5 bg-transparent border-2 border-white/10 text-white font-black uppercase tracking-[0.2em] rounded-2xl text-[11px] hover:bg-white/5 transition-all"
-              >
-                Our Philosophy
-              </Link>
-            </div>
-          </div>
-        </section>
 
       </div>
     </div>

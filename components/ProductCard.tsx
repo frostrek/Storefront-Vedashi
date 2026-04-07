@@ -12,6 +12,7 @@ import { useCurrency } from '@/context/CurrencyContext';
 import StarRating from '@/components/reviews/StarRating';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { trackEcommerce } from '@/lib/analytics/gtag';
 
@@ -29,6 +30,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, onMoveToCart, priority = false, layout = 'grid', listName, listIndex }: ProductCardProps) {
+    const params = useParams();
     const { formatPrice } = useCurrency();
     const { isInWishlist, toggleItem } = useWishlist();
     const { addItem, updateQuantity, removeItem, items, loading: cartLoading } = useCart();
@@ -294,7 +296,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
         }
 
         if (variants.length > 0) {
-            const defaultV = selectedVariant || variants.find((v: any) => v.is_default === true) || variants[0];
+            const defaultV = selectedVariant || variants.find((v: ProductVariant) => v.is_default === true) || variants[0];
             const existing = items.find(i => i.variant_id === defaultV.variant_id);
             setQuantity(existing ? existing.quantity : 1);
             return;
@@ -315,7 +317,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
         } finally {
             setLoadingVariants(false);
         }
-    }, [product.product_id, variants, selectedVariant, hasVariants, items]);
+    }, [product.product_id, product.default_variant_id, product.product_name, product.stock_quantity, variants, selectedVariant, hasVariants, items, isList, addItem, triggerAddedFeedback]);
 
     // Unified add to cart from modal
     const handleModalAddToCart = async (e: React.MouseEvent) => {
@@ -504,9 +506,11 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                     const countLabel = v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : '';
                                     const strengthLabel = v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : '';
                                     const labelParts = [
-                                        v.size_label, weightLabel, volLabel, countLabel,
-                                        strengthLabel, v.flavor,
-                                        (v.pack_quantity ?? 0) > 1 ? `Pack of ${v.pack_quantity}` : ''
+                                        weightLabel, volLabel, 
+                                        (product.common_form && countLabel === product.common_form) ? '' : countLabel,
+                                        (product.common_strength && strengthLabel === product.common_strength) ? '' : strengthLabel,
+                                        (product.common_flavor && v.flavor === product.common_flavor) ? '' : (v.flavor ?? ''),
+                                        (v.pack_quantity ?? 0) > 1 ? `Pack of ${v.pack_quantity ?? 0}` : ''
                                     ].filter(Boolean);
                                     const label = labelParts.join(' · ') || v.sku || 'Standard';
 
@@ -573,11 +577,11 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                             : 'bg-gray-100 text-gray-700 group-hover:bg-[#3d5c3a]/10 group-hover:text-[#3d5c3a]'
                                                         }
                                                     `}>
-                                                        {formatPrice(v.price, (v as any).country_prices || (product as any).country_prices)}
+                                                        {formatPrice(v.price, v.country_prices || product.country_prices)}
                                                     </span>
                                                     {v.is_on_sale && v.original_price && (
                                                         <span className={`text-[10px] line-through ${isSelected ? 'text-white/50' : 'text-gray-400'}`}>
-                                                            {formatPrice(v.original_price, (v as any).country_prices || (product as any).country_prices)}
+                                                            {formatPrice(v.original_price, v.country_prices || product.country_prices)}
                                                         </span>
                                                     )}
                                                     {!isInactive && isOut && (
@@ -724,13 +728,12 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                         const strengthLabel = v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : '';
 
                                         const labelParts = [
-                                            v.size_label,
                                             weightLabel,
                                             volLabel,
-                                            countLabel,
-                                            strengthLabel,
-                                            v.flavor,
-                                            (v.pack_quantity ?? 0) > 1 ? `Pack of ${v.pack_quantity}` : ''
+                                            (product.common_form && countLabel === product.common_form) ? '' : countLabel,
+                                            (product.common_strength && strengthLabel === product.common_strength) ? '' : strengthLabel,
+                                            (product.common_flavor && v.flavor === product.common_flavor) ? '' : (v.flavor ?? ''),
+                                            (v.pack_quantity ?? 0) > 1 ? `Pack of ${v.pack_quantity ?? 0}` : ''
                                         ].filter(Boolean);
                                         const label = labelParts.join(' · ') || v.sku || 'Standard';
 
@@ -775,9 +778,9 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                     </div>
 
                                                     <div className="text-right flex-shrink-0">
-                                                        <p className={`text-sm font-bold transition-colors duration-300 ${isSelected ? 'text-[#3d5c3a]' : 'text-gray-900'}`}>{formatPrice(v.price, (v as any).country_prices || (product as any).country_prices)}</p>
+                                                        <p className={`text-sm font-bold transition-colors duration-300 ${isSelected ? 'text-[#3d5c3a]' : 'text-gray-900'}`}>{formatPrice(v.price, v.country_prices || product.country_prices)}</p>
                                                         {v.is_on_sale && v.original_price && (
-                                                            <p className="text-[10px] text-gray-400 line-through">{formatPrice(v.original_price, (v as any).country_prices || (product as any).country_prices)}</p>
+                                                            <p className="text-[10px] text-gray-400 line-through">{formatPrice(v.original_price, v.country_prices || product.country_prices)}</p>
                                                         )}
                                                     </div>
                                                 </div>
@@ -816,7 +819,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             ) : (
                                 <ShoppingCart className="h-4 w-4" />
                             )}
-                            {addingToCart ? 'Processing...' : justAdded ? 'Added to Bag' : `Add to Cart - ${formatPrice((hasVariants ? (selectedVariant?.price ?? 0) : displayPrice) * quantity, hasVariants ? ((selectedVariant as any)?.country_prices || (product as any).country_prices) : (product as any).country_prices)}`}
+                            {addingToCart ? 'Processing...' : justAdded ? 'Added to Bag' : `Add to Cart - ${formatPrice((hasVariants ? (selectedVariant?.price ?? 0) : displayPrice) * quantity, hasVariants ? (selectedVariant?.country_prices || product.country_prices) : product.country_prices)}`}
                         </button>
                     ) : (
                         <div className="flex items-center gap-2 bg-gray-50/50 p-1 rounded-xl border border-gray-100 shadow-sm">
@@ -866,23 +869,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
     return (
         <>
             <div className="relative group block h-full" ref={cardRef}>
-                {/* ═══════ FRONT OF CARD (Link) ═══════ */}
-                <Link href={productUrl} className="block h-full" onClick={() => {
-                    trackEcommerce('select_item', {
-                        currency: 'INR',
-                        value: Number(displayPrice),
-                        items: [{
-                            item_id: product.product_id,
-                            item_name: product.product_name,
-                            price: Number(displayPrice),
-                            quantity: 1,
-                            item_category: product.category,
-                            item_brand: product.brand,
-                            item_list_name: listName,
-                            index: listIndex,
-                        }]
-                    });
-                }}>
+                {/* ═══════ FRONT OF CARD ═══════ */}
                     <div className={`h-full overflow-hidden bg-white border border-gray-100 transition-all duration-300 ${isList ? 'flex flex-row p-3 hover:bg-gray-50/50 hover:border-[#3d5c3a]/30 rounded-2xl gap-4 sm:gap-6 items-center shadow-sm hover:shadow-md' : 'flex flex-col rounded-2xl hover:-translate-y-1 hover:shadow-xl'}`}>
                         <div className={`relative overflow-hidden bg-gradient-to-br from-[#f5f2ed] to-[#ece6dd] ${isList ? 'w-[100px] h-[100px] sm:w-[150px] sm:h-[150px] rounded-xl flex-shrink-0 border border-gray-100/50' : ''}`} style={isList ? {} : { aspectRatio: '1 / 1' }}>
                             <div className="absolute inset-0 flex items-center justify-center p-4">
@@ -926,7 +913,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             {!isList && (
                                 <button
                                     onClick={handleToggleWishlist}
-                                    className="absolute top-3 right-3 rounded-full bg-white/90 backdrop-blur-sm p-2 shadow-sm transition-all hover:scale-110 hover:shadow-md z-10 cursor-pointer"
+                                    className="absolute top-3 right-3 rounded-full bg-white/90 backdrop-blur-sm p-2 shadow-sm transition-all hover:scale-110 hover:shadow-md z-20 cursor-pointer"
                                 >
                                     <Heart
                                         className={`h-4 w-4 transition ${wishlisted
@@ -937,32 +924,30 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                 </button>
                             )}
 
-                            {/* Category Badge */}
-                            {!isList && product.category && (
-                                <span className="absolute left-3 top-3 rounded-full bg-[#3d5c3a] px-2.5 py-1 text-[9px] tracking-[0.15em] text-white uppercase font-black font-ui z-10 shadow-sm">
-                                    {product.category}
-                                </span>
-                            )}
-
-                            {/* Product Badges */}
-                            <div className={`absolute ${isList ? 'left-2 top-2 flex-row flex-wrap' : 'left-3 bottom-3 flex-col'} flex gap-1 z-10`}>
+                            {/* Product Badges (Top Left Stack) */}
+                            <div className={`absolute ${isList ? 'left-2 top-2' : 'left-3 top-3'} flex flex-col gap-1 z-10`}>
+                                {product.category && (
+                                    <span className="rounded-full bg-[#3d5c3a] px-2.5 py-1 text-[9px] tracking-[0.15em] text-white uppercase font-black font-ui shadow-sm w-fit mb-0.5">
+                                        {product.category}
+                                    </span>
+                                )}
                                 {isExpired && !isComingSoon && (
-                                    <span className="rounded-full bg-red-600 px-2.5 py-0.5 text-[9px] font-black tracking-[0.1em] text-white uppercase font-ui">
+                                    <span className="rounded-full bg-red-600 px-2.5 py-0.5 text-[9px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
                                         Expired
                                     </span>
                                 )}
                                 {isComingSoon && (
-                                    <span className="rounded-full bg-purple-600 px-2.5 py-0.5 text-[9px] font-black tracking-[0.1em] text-white uppercase font-ui">
+                                    <span className="rounded-full bg-purple-600 px-2.5 py-0.5 text-[9px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
                                         Coming Soon
                                     </span>
                                 )}
                                 {product.is_best_seller && !isComingSoon && (
-                                    <span className="rounded-full bg-amber-600 px-2.5 py-0.5 text-[9px] font-black tracking-[0.1em] text-white uppercase font-ui">
+                                    <span className="rounded-full bg-amber-600 px-2.5 py-0.5 text-[9px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
                                         Best Seller
                                     </span>
                                 )}
                                 {product.is_new_arrival && !isComingSoon && (
-                                    <span className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-[9px] font-black tracking-[0.1em] text-white uppercase font-ui">
+                                    <span className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-[9px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
                                         New
                                     </span>
                                 )}
@@ -1001,30 +986,47 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
 
                         {/* Content */}
                         <div className={`p-4 ${isList ? 'flex-1 flex flex-col justify-center min-w-0 p-0 sm:pr-4' : ''}`}>
-                            {isList && (
-                                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1 sm:mb-2">
-                                    {product.category && (
-                                        <span className="rounded leading-none bg-[#3d5c3a]/10 px-1.5 sm:px-2 py-0.5 sm:py-1 text-[8px] sm:text-[9px] tracking-widest text-[#3d5c3a] uppercase font-bold">
-                                            {product.category}
-                                        </span>
-                                    )}
-                                    {product.brand && (
-                                        <span className="text-[9px] sm:text-[10px] uppercase tracking-widest text-gray-400 font-semibold">
-                                            {product.brand}
-                                        </span>
-                                    )}
+                            <h3 className={`font-accent text-gray-900 leading-tight mb-1 sm:mb-1.5 ${isList ? 'text-lg sm:text-xl line-clamp-1 sm:line-clamp-2' : 'text-base line-clamp-2'}`}>
+                                <Link 
+                                    href={productUrl} 
+                                    className="after:absolute after:inset-0 after:z-10"
+                                    onClick={() => {
+                                        trackEcommerce('select_item', {
+                                            currency: 'INR',
+                                            value: Number(displayPrice),
+                                            items: [{
+                                                item_id: product.product_id,
+                                                item_name: product.product_name,
+                                                price: Number(displayPrice),
+                                                quantity: 1,
+                                                item_category: product.category,
+                                                item_brand: product.brand,
+                                                item_list_name: listName,
+                                                index: listIndex,
+                                            }]
+                                        });
+                                    }}
+                                >
+                                    {product.product_name}
+                                </Link>
+                            </h3>
+
+                            {product.brand && (
+                                <Link 
+                                    href={`/${params.country || 'in'}/products?brand=${encodeURIComponent(product.brand)}`}
+                                    className={`relative z-20 block uppercase tracking-[0.12em] text-gray-400 font-medium mb-1.5 sm:mb-2 hover:text-[#3d5c3a] transition-colors cursor-pointer ${isList ? 'text-[10px] sm:text-[11px]' : 'text-[10px]'}`}
+                                >
+                                    {product.brand}
+                                </Link>
+                            )}
+
+                            {isList && product.category && (
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className="rounded leading-none bg-[#3d5c3a]/10 px-1.5 sm:px-2 py-0.5 sm:py-1 text-[8px] sm:text-[9px] tracking-widest text-[#3d5c3a] uppercase font-bold border border-[#3d5c3a]/10">
+                                        {product.category}
+                                    </span>
                                 </div>
                             )}
-
-                            {!isList && product.brand && (
-                                <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-1">
-                                    {product.brand}
-                                </p>
-                            )}
-
-                            <h3 className={`font-accent text-gray-900 leading-tight mb-1.5 sm:mb-2 ${isList ? 'text-lg sm:text-xl line-clamp-1 sm:line-clamp-2' : 'text-base line-clamp-2'}`}>
-                                {product.product_name}
-                            </h3>
 
                             {/* Rating */}
                             {avgRating > 0 && (
@@ -1047,12 +1049,12 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             {/* Price */}
                             <div className="flex items-center gap-2 flex-wrap">
                                 <p className="text-xl font-black text-[#3d5c3a] font-ui tabular-nums tracking-tight">
-                                    {formatPrice(displayPrice, (product as any).country_prices)}
+                                    {formatPrice(displayPrice, product.country_prices)}
                                 </p>
                                 {isOnSale && originalPrice && (
                                     <>
                                         <p className="text-xs text-gray-400 line-through">
-                                            {formatPrice(originalPrice, (product as any).country_prices)}
+                                            {formatPrice(originalPrice, product.country_prices)}
                                         </p>
                                         <span className="bg-red-50 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded border border-red-100">
                                             {discountPercent}% OFF
@@ -1060,10 +1062,28 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                     </>
                                 )}
                             </div>
+                            
+                            {/* Shared Variant Attributes (Visible if common across all options) */}
+                            {/* Shared attributes at the bottom */}
+                            {( (product.variant_count ?? 0) > 1 || (product.variants?.length ?? 0) > 1) && (product.common_form || product.common_strength || product.common_flavor) && (
+                                <div className="mt-2.5 flex flex-wrap gap-1.5">
+                                    {[product.common_form, product.common_strength, product.common_flavor]
+                                        .filter(Boolean)
+                                        .map((attr, idx) => (
+                                            <span 
+                                                key={idx} 
+                                                className="text-[10px] font-bold tracking-wide text-[#3d5c3a] uppercase bg-[#6B8F5E]/10 border border-[#6B8F5E]/20 px-2.5 py-0.5 rounded-full"
+                                            >
+                                                {attr}
+                                            </span>
+                                        ))
+                                    }
+                                </div>
+                            )}
 
                             {/* List view: inline action buttons */}
                             {isList && !isUnavailable && (
-                                <div className="mt-2.5 sm:mt-4 flex flex-wrap items-center gap-2 sm:gap-3">
+                                <div className="mt-2.5 sm:mt-4 flex flex-wrap items-center gap-2 sm:gap-3 relative z-30">
                                     {hasVariants ? (
                                         <button
                                             onClick={openCartModal}
@@ -1098,7 +1118,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                     )}
                                     <button
                                         onClick={handleToggleWishlist}
-                                        className={`inline-flex flex-shrink-0 items-center justify-center p-2.5 sm:p-2.5 rounded-lg border transition-all cursor-pointer ${wishlisted ? 'border-[#3d5c3a]/30 bg-[#3d5c3a]/5' : 'border-gray-200 bg-white hover:border-[#3d5c3a]/30 hover:bg-gray-50'}`}
+                                        className={`relative z-30 inline-flex flex-shrink-0 items-center justify-center p-2.5 sm:p-2.5 rounded-lg border transition-all cursor-pointer ${wishlisted ? 'border-[#3d5c3a]/30 bg-[#3d5c3a]/5' : 'border-gray-200 bg-white hover:border-[#3d5c3a]/30 hover:bg-gray-50'}`}
                                     >
                                         <Heart className={`h-4 w-4 sm:h-4 sm:w-4 ${wishlisted ? 'fill-[#3d5c3a] text-[#3d5c3a]' : 'text-gray-400'}`} />
                                     </button>
@@ -1107,10 +1127,12 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                         </div>
 
                         {/* Inline Options Panel (List View Only) */}
-                        {isList && renderInlineOptions()}
+                        {isList && (
+                            <div className="relative z-40">
+                                {renderInlineOptions()}
+                            </div>
+                        )}
                     </div>
-                </Link>
-
                 {/* ═══════ CART / VARIANT OVERLAY ═══════ */}
                 {renderCartModal()}
             </div>
