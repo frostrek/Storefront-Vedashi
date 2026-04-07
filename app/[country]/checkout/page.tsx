@@ -10,6 +10,7 @@ import { getCart, clearCart as clearCartApi, checkoutOrder, getAddresses, update
 import { useCurrency } from '@/context/CurrencyContext';
 import { Address } from '@/types';
 import { COUNTRIES } from '@/lib/countries';
+import { getAddressConfig, getDefaultCountry } from '@/lib/addressConfig';
 import Select from 'react-select';
 import { CheckCircle, Loader2, MapPin, CreditCard, Banknote, ShieldCheck, AlertTriangle, ArrowLeft, Leaf, ChevronRight, Lock, Ticket, Globe, Info, Pencil, Trash } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -128,6 +129,7 @@ function CheckoutContent() {
     const [addressesLoading, setAddressesLoading] = useState(false);
     const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
     const [editAddressData, setEditAddressData] = useState<any>(null);
+    const editConfig = getAddressConfig(editAddressData?.country_code || 'IN');
     const [addressActionLoading, setAddressActionLoading] = useState<string | null>(null); // Stores the address_id being deleted/updated
     const [addressToDelete, setAddressToDelete] = useState<string | null>(null);
     const [mounted, setMounted] = useState(false);
@@ -137,16 +139,23 @@ function CheckoutContent() {
     }, []);
 
     // New address form fields
+    const defaultCountryCode = getDefaultCountry();
+    const defaultCountryName = COUNTRIES.find(c => c.code === defaultCountryCode)?.name || 'India';
+
     const [newAddress, setNewAddress] = useState({
-        address_line1: '', address_line2: '', city: '', state: '', pincode: '', phone: '', country: 'India', country_code: 'IN'
+        address_line1: '', address_line2: '', city: '', state: '', pincode: '', phone: '', country: defaultCountryName, country_code: defaultCountryCode
     });
+
+    const shippingConfig = getAddressConfig(newAddress.country_code || 'IN');
 
     // Billing address fields
     const [selectedBillingAddressId, setSelectedBillingAddressId] = useState<string | null>(null);
     const [useNewBillingAddress, setUseNewBillingAddress] = useState(false);
     const [newBillingAddress, setNewBillingAddress] = useState({
-        address_line1: '', address_line2: '', city: '', state: '', pincode: '', country: 'India', country_code: 'IN'
+        address_line1: '', address_line2: '', city: '', state: '', pincode: '', country: defaultCountryName, country_code: defaultCountryCode
     });
+
+    const billingConfig = getAddressConfig(newBillingAddress.country_code || 'IN');
 
     // Validation state
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -941,24 +950,18 @@ function CheckoutContent() {
 
     const validateAddress = (addr: any, prefix: string = '') => {
         const errors: Record<string, string> = {};
+        const addrConfig = getAddressConfig(addr.country_code || 'IN');
         if (!addr.address_line1 || addr.address_line1.length < 5) {
             errors[`${prefix}address_line1`] = 'Address Line 1 is required (min 5 characters)';
         }
-        if (!addr.city) errors[`${prefix}city`] = 'City is required';
-        if (!addr.state) errors[`${prefix}state`] = 'State/Region is required';
+        if (!addr.city) errors[`${prefix}city`] = `${addrConfig.labels.city} is required`;
+        if (!addr.state) errors[`${prefix}state`] = `${addrConfig.labels.state} is required`;
         if (!addr.pincode) {
-            errors[`${prefix}pincode`] = 'Postal Code is required';
+            errors[`${prefix}pincode`] = `${addrConfig.labels.postalCode} is required`;
         } else {
             const cleanPin = addr.pincode.toString().trim();
-            const isIndia = !addr.country || addr.country.toLowerCase() === 'india';
-            if (isIndia) {
-                if (!/^\d{6}$/.test(cleanPin)) {
-                    errors[`${prefix}pincode`] = 'Pincode must be exactly 6 digits';
-                }
-            } else {
-                if (!/^[a-zA-Z0-9\s\-]{3,10}$/.test(cleanPin)) {
-                    errors[`${prefix}pincode`] = 'Postal code must be 3-10 alphanumeric characters';
-                }
+            if (!addrConfig.postalCode.regex.test(cleanPin)) {
+                errors[`${prefix}pincode`] = addrConfig.postalCode.error;
             }
         }
         
@@ -1274,18 +1277,18 @@ function CheckoutContent() {
                                                                     <input type="text" value={editAddressData.address_line2} onChange={e => setEditAddressData({ ...editAddressData, address_line2: e.target.value })} className="w-full rounded-lg border border-[#D4CFC0] px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white" placeholder="Apartment, suite, etc." />
                                                                 </div>
                                                                 <div>
-                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Pincode *</label>
-                                                                    <input type="text" value={editAddressData.pincode} onChange={e => setEditAddressData({ ...editAddressData, pincode: e.target.value })} className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.pincode ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Pincode" />
+                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">{editConfig.labels.postalCode} *</label>
+                                                                    <input type="text" value={editAddressData.pincode} onChange={e => setEditAddressData({ ...editAddressData, pincode: e.target.value })} className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.pincode ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={editConfig.labels.postalCode} />
                                                                     {formErrors.pincode && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.pincode}</p>}
                                                                 </div>
                                                                 <div>
-                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">City *</label>
-                                                                    <input type="text" value={editAddressData.city} onChange={e => setEditAddressData({ ...editAddressData, city: e.target.value })} className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.city ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="City" />
+                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">{editConfig.labels.city} *</label>
+                                                                    <input type="text" value={editAddressData.city} onChange={e => setEditAddressData({ ...editAddressData, city: e.target.value })} className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.city ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={editConfig.labels.city} />
                                                                     {formErrors.city && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.city}</p>}
                                                                 </div>
                                                                 <div>
-                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">State *</label>
-                                                                    <input type="text" value={editAddressData.state} onChange={e => setEditAddressData({ ...editAddressData, state: e.target.value })} className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.state ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="State" />
+                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">{editConfig.labels.state} *</label>
+                                                                    <input type="text" value={editAddressData.state} onChange={e => setEditAddressData({ ...editAddressData, state: e.target.value })} className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.state ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={editConfig.labels.state} />
                                                                     {formErrors.state && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.state}</p>}
                                                                 </div>
                                                                 <div>
@@ -1359,21 +1362,21 @@ function CheckoutContent() {
                                                 <input type="text" value={newAddress.address_line2} onChange={e => setNewAddress({ ...newAddress, address_line2: e.target.value })} className="w-full rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white" placeholder="Apartment, suite, etc." />
                                             </div>
                                             <div>
-                                                <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Pincode *</label>
+                                                <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">{shippingConfig.labels.postalCode} *</label>
                                                 <div className="relative">
-                                                    <input type="text" value={newAddress.pincode} onChange={e => setNewAddress({ ...newAddress, pincode: e.target.value })} className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.pincode ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Pincode" />
+                                                    <input type="text" value={newAddress.pincode} onChange={e => setNewAddress({ ...newAddress, pincode: e.target.value })} className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.pincode ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={shippingConfig.labels.postalCode} />
                                                     {isLookupLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-[#6B8F5E]" />}
                                                 </div>
                                                 {formErrors.pincode && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.pincode}</p>}
                                             </div>
                                             <div>
-                                                <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">City *</label>
-                                                <input type="text" value={newAddress.city} onChange={e => { setNewAddress({ ...newAddress, city: e.target.value }); setManualEdits(prev => ({ ...prev, shipping_city: true })); }} className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.city ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="City" />
+                                                <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">{shippingConfig.labels.city} *</label>
+                                                <input type="text" value={newAddress.city} onChange={e => { setNewAddress({ ...newAddress, city: e.target.value }); setManualEdits(prev => ({ ...prev, shipping_city: true })); }} className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.city ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={shippingConfig.labels.city} />
                                                 {formErrors.city && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.city}</p>}
                                             </div>
                                             <div>
-                                                <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">State *</label>
-                                                <input type="text" value={newAddress.state} onChange={e => { setNewAddress({ ...newAddress, state: e.target.value }); setManualEdits(prev => ({ ...prev, shipping_state: true })); }} className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.state ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="State" />
+                                                <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">{shippingConfig.labels.state} *</label>
+                                                <input type="text" value={newAddress.state} onChange={e => { setNewAddress({ ...newAddress, state: e.target.value }); setManualEdits(prev => ({ ...prev, shipping_state: true })); }} className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.state ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={shippingConfig.labels.state} />
                                                 {formErrors.state && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.state}</p>}
                                             </div>
                                             <div>
@@ -1570,21 +1573,21 @@ function CheckoutContent() {
                                                             {formErrors.billing_address_line1 && <p className="text-[9px] text-red-500 mt-0.5 font-bold">{formErrors.billing_address_line1}</p>}
                                                         </div>
                                                         <div>
-                                                            <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Pincode *</label>
+                                                            <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">{billingConfig.labels.postalCode} *</label>
                                                             <div className="relative">
-                                                                <input type="text" value={newBillingAddress.pincode} onChange={e => setNewBillingAddress({ ...newBillingAddress, pincode: e.target.value })} className={`w-full rounded-lg border px-4 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.billing_pincode ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Pincode" />
+                                                                <input type="text" value={newBillingAddress.pincode} onChange={e => setNewBillingAddress({ ...newBillingAddress, pincode: e.target.value })} className={`w-full rounded-lg border px-4 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.billing_pincode ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={billingConfig.labels.postalCode} />
                                                                 {isLookupLoading && <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 animate-spin text-[#6B8F5E]" />}
                                                             </div>
                                                             {formErrors.billing_pincode && <p className="text-[9px] text-red-500 mt-0.5 font-bold">{formErrors.billing_pincode}</p>}
                                                         </div>
                                                         <div>
-                                                            <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">City *</label>
-                                                            <input type="text" value={newBillingAddress.city} onChange={e => { setNewBillingAddress({ ...newBillingAddress, city: e.target.value }); setManualEdits(prev => ({ ...prev, billing_city: true })); }} className={`w-full rounded-lg border px-4 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.billing_city ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="City" />
+                                                            <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">{billingConfig.labels.city} *</label>
+                                                            <input type="text" value={newBillingAddress.city} onChange={e => { setNewBillingAddress({ ...newBillingAddress, city: e.target.value }); setManualEdits(prev => ({ ...prev, billing_city: true })); }} className={`w-full rounded-lg border px-4 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.billing_city ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={billingConfig.labels.city} />
                                                             {formErrors.billing_city && <p className="text-[9px] text-red-500 mt-0.5 font-bold">{formErrors.billing_city}</p>}
                                                         </div>
                                                         <div>
-                                                            <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">State *</label>
-                                                            <input type="text" value={newBillingAddress.state} onChange={e => { setNewBillingAddress({ ...newBillingAddress, state: e.target.value }); setManualEdits(prev => ({ ...prev, billing_state: true })); }} className={`w-full rounded-lg border px-4 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.billing_state ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="State" />
+                                                            <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">{billingConfig.labels.state} *</label>
+                                                            <input type="text" value={newBillingAddress.state} onChange={e => { setNewBillingAddress({ ...newBillingAddress, state: e.target.value }); setManualEdits(prev => ({ ...prev, billing_state: true })); }} className={`w-full rounded-lg border px-4 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.billing_state ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={billingConfig.labels.state} />
                                                             {formErrors.billing_state && <p className="text-[9px] text-red-500 mt-0.5 font-bold">{formErrors.billing_state}</p>}
                                                         </div>
                                                     </div>
