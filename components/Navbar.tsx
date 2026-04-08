@@ -235,7 +235,6 @@ export default function Navbar() {
   const currentCountry = (params?.country as string) || 'in';
 
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
   const { totalItems, loading: cartLoading } = useCart();
   const { totalItems: wishlistCount } = useWishlist();
   const { isAuthenticated, user, logout } = useAuth();
@@ -341,7 +340,7 @@ export default function Navbar() {
             </div>
 
             {/* Center Nav Links */}
-            <nav className={`hidden md:flex items-center gap-4 lg:gap-6 absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 z-10 w-max transition-all duration-300 ${searchOpen ? 'opacity-0 pointer-events-none translate-y-[-60%]' : 'opacity-100 translate-y-[-50%]'}`}>
+            <nav className="hidden md:flex items-center gap-4 lg:gap-6 absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 z-10 w-max transition-all duration-300 opacity-100 translate-y-[-50%]">
               {visibleLinks.map(link => {
                 const prefixedUrl = link.url.startsWith('/') ? `/${currentCountry}${link.url === '/' ? '' : link.url}` : link.url;
                 const isActive = link.url === '/'
@@ -363,19 +362,8 @@ export default function Navbar() {
 
             {/* Right Icons */}
             <div className="flex items-center justify-end gap-3 sm:gap-4 md:gap-2 lg:gap-3 relative">
-              <div className="hidden md:block relative">
-                {searchOpen ? (
-                  <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2 duration-200">
-                    <SearchAutocomplete className="w-[240px]" onClose={() => setSearchOpen(false)} />
-                    <button onClick={() => setSearchOpen(false)} className="p-2 text-gray-500 hover:text-gray-700 transition-colors">
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <button onClick={() => setSearchOpen(true)} className="p-2 group">
-                    <Search className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
-                  </button>
-                )}
+              <div className="hidden md:block relative mr-2">
+                <SearchAutocomplete className="w-[150px] lg:w-[200px] xl:w-[250px]" />
               </div>
 
               <NotificationCenter colors={colors} />
