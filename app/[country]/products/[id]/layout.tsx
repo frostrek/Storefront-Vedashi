@@ -76,7 +76,7 @@ export default function ProductLayout({
     params,
 }: {
     children: React.ReactNode;
-    params: Promise<{ id: string }>;
+    params: Promise<{ id: string; country: string }>;
 }) {
     // We render JSON-LD here on the server si  de
     // The actual product data fetch hap  pens async via generateMetadata
@@ -90,8 +90,9 @@ export default function ProductLayout({
 }
 
 /** Server component that injects JSON-LD structured data */
-async function ProductJsonLd({ paramsPromise }: { paramsPromise: Promise<{ id: string }> }) {
-    const { id } = await paramsPromise;
+async function ProductJsonLd({ paramsPromise }: { paramsPromise: Promise<{ id: string; country: string }> }) {
+    const { id, country } = await paramsPromise;
+    const currentCountry = country || 'in';
     const product = await fetchProductForMeta(id);
 
     if (!product) return null;
@@ -114,13 +115,19 @@ async function ProductJsonLd({ paramsPromise }: { paramsPromise: Promise<{ id: s
     }, siteConfigs?.merchant_shipping, siteConfigs?.merchant_returns);
 
     const breadcrumbItems = [
-        { name: 'Home', url: SITE_URL },
-        { name: 'Shop', url: `${SITE_URL}/products` },
+        { name: 'Home', url: `${SITE_URL}/${currentCountry}` },
+        { name: 'Shop', url: `${SITE_URL}/${currentCountry}/products` },
     ];
     if (product.category) {
-        breadcrumbItems.push({ name: product.category, url: `${SITE_URL}/products?category=${encodeURIComponent(product.category)}` });
+        breadcrumbItems.push({ 
+            name: product.category, 
+            url: `${SITE_URL}/${currentCountry}/products?category=${encodeURIComponent(product.category)}` 
+        });
     }
-    breadcrumbItems.push({ name: product.product_name, url: `${SITE_URL}/products/${product.slug || product.product_id}` });
+    breadcrumbItems.push({ 
+        name: product.product_name, 
+        url: `${SITE_URL}/${currentCountry}/products/${product.slug || product.product_id}` 
+    });
 
     const breadcrumbJsonLd = generateBreadcrumbJsonLd(breadcrumbItems);
 

@@ -314,18 +314,18 @@ export function generateProductJsonLd(
         }
     }
 
-    // Add Return Policy if config is provided
-    if (returnConfig) {
+    // Add Return Policy ONLY if real data is provided
+    if (returnConfig && returnConfig.policy_days) {
         schema.hasMerchantReturnPolicy = {
             '@type': 'MerchantReturnPolicy',
             applicableCountry: 'IN',
             returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnPeriod',
-            merchantReturnDays: returnConfig.policy_days || 30,
+            merchantReturnDays: returnConfig.policy_days,
             returnMethod: 'https://schema.org/ReturnByMail',
             returnFees: returnConfig.return_fees === 'free' 
                 ? 'https://schema.org/FreeReturn' 
                 : 'https://schema.org/ReturnShippingFeesCustomerPays',
-            url: returnConfig.policy_url || `${SITE_URL}/returns`
+            url: returnConfig.policy_url
         };
 
         if (returnConfig.description) {
@@ -437,7 +437,10 @@ export function generateBreadcrumbJsonLd(
             '@type': 'ListItem',
             position: i + 1,
             name: item.name,
-            item: item.url
+            item: {
+                '@id': item.url,
+                name: item.name
+            }
         })),
     };
 }
