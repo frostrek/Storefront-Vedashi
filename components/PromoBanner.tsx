@@ -74,7 +74,7 @@ export default function PromoBanner() {
         return (
             <div
                 style={{ backgroundColor: banner.background_color || '#EAE4D3', color: banner.text_color || '#4F1A24' }}
-                className="text-[12px] overflow-hidden py-2 border-b border-[#D5CAA4]"
+                className="text-[12px] overflow-hidden py-1.5 border-b border-[#D5CAA4]"
             >
                 <div className={`flex w-max ${direction}`}>
                     {/* First copy */}
@@ -98,7 +98,7 @@ export default function PromoBanner() {
     return (
         <div
             style={{ backgroundColor: banner.background_color || '#EAE4D3', color: banner.text_color || '#4F1A24' }}
-            className="text-[12px] overflow-hidden py-2 border-b border-[#D5CAA4]"
+            className="text-[12px] overflow-hidden py-1.5 border-b border-[#D5CAA4]"
         >
             <div className="relative w-full px-4 mx-auto max-w-[1600px]">
                 <div className={`flex whitespace-nowrap font-bold tracking-[0.2em] font-accent text-sm ${count > 1 ? 'justify-between' : 'justify-center'} w-full ${getEffectClass()}`}>

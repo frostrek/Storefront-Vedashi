@@ -41,7 +41,7 @@ interface HeroSettings {
 
 export default function HeroCarousel() {
     const [slides, setSlides] = useState<HeroSlide[]>([]);
-    const [settings, setSettings] = useState<HeroSettings>({ slider_speed: 5000, arrow_visibility: 'hover', loop: true, slideshow_type: 'fade' });
+    const [settings, setSettings] = useState<HeroSettings>({ slider_speed: 3000, arrow_visibility: 'hover', loop: true, slideshow_type: 'fade' });
     const [loading, setLoading] = useState(true);
     const [current, setCurrent] = useState(0);
     const [paused, setPaused] = useState(false);
@@ -129,8 +129,8 @@ export default function HeroCarousel() {
 
     if (loading) {
         return (
-            <section className="relative overflow-hidden bg-neutral-200/50 animate-pulse h-[350px] sm:h-[450px] lg:h-[500px]">
-                <div className="relative z-20 mx-auto max-w-7xl px-4 h-full"></div>
+            <section className="relative overflow-hidden bg-neutral-200/50 animate-pulse h-[350px] sm:h-[450px] lg:h-auto lg:aspect-[3/1] max-h-[640px]">
+                <div className="relative z-20 mx-auto max-w-7xl px-4 h-full flex items-center justify-center"></div>
             </section>
         );
     }
@@ -169,7 +169,7 @@ export default function HeroCarousel() {
 
     return (
         <section
-            className="relative overflow-hidden group h-[350px] sm:h-[450px] lg:h-[500px] flex items-center justify-center"
+            className="relative overflow-hidden group h-[350px] sm:h-[450px] lg:h-auto lg:aspect-[3/1] max-h-[640px] w-full flex items-center justify-center"
             onMouseEnter={() => { setPaused(true); setHovering(true); }}
             onMouseLeave={() => { setPaused(false); setHovering(false); }}
         >
@@ -193,7 +193,7 @@ export default function HeroCarousel() {
             ))}
 
             {/* ── Content ── */}
-            <div className="relative z-20 mx-auto max-w-7xl px-6 py-12 sm:py-16 md:py-20 text-center w-full">
+            <div className="relative z-20 mx-auto max-w-7xl px-6 py-8 sm:py-12 md:py-14 lg:py-16 text-center w-full">
                 {/* Dynamic Headings */}
                 <div className="animate-fade-in-up space-y-2 mb-6 shadow-black/20 drop-shadow-2xl">
                     {slide.headings?.map(h => {
