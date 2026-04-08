@@ -257,6 +257,7 @@ export default function CartPage() {
                                     const unitPrice = item.original_price ?? price;
                                     const isOutOfStock = (item.stock_quantity ?? 0) === 0;
                                     const hasInsufficientStock = !isOutOfStock && item.quantity > (item.stock_quantity ?? 0);
+                                    const isAtStockLimit = !isOutOfStock && item.quantity >= (item.stock_quantity ?? Infinity);
                                     
                                     return (
                                         <div key={item.cart_item_id} className="cart-item-card flex flex-col sm:flex-row gap-6">
@@ -300,7 +301,7 @@ export default function CartPage() {
                                                             <Minus className="h-3 w-3" />
                                                         </button>
                                                         <span className="cart-qty-value">{item.quantity}</span>
-                                                        <button onClick={() => updateQuantity(item.cart_item_id, item.quantity + 1)} disabled={loading || isOutOfStock || hasInsufficientStock} className="cart-qty-btn disabled:opacity-50">
+                                                        <button onClick={() => { if (isAtStockLimit) { toast('Maximum stock reached', { icon: '⚠️' }); return; } updateQuantity(item.cart_item_id, item.quantity + 1); }} disabled={loading || isOutOfStock || isAtStockLimit} className="cart-qty-btn disabled:opacity-50">
                                                             <Plus className="h-3 w-3" />
                                                         </button>
                                                     </div>

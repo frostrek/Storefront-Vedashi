@@ -59,7 +59,7 @@ export default function AccountPage() {
     const { user, isAuthenticated, isLoading, logout, updateUser } = useAuth();
     const { signOut: clerkSignOut } = useClerk();
     const { items: wishlistItems, removeItem: removeWishlistItem, loading: wishlistLoading } = useWishlist();
-    const { addItem: addCartItem } = useCart();
+    const { addItem: addCartItem, items: cartItems, getItemInCart, loading: cartLoading } = useCart();
 
     // Wishlist extra state
     const [selectedWishlistItems, setSelectedWishlistItems] = useState<Set<string>>(new Set());
@@ -134,6 +134,8 @@ export default function AccountPage() {
     const [isTrackingLoading, setIsTrackingLoading] = useState(false);
     const [trackOrderStatus, setTrackOrderStatus] = useState<string | null>(null);
     const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
+    const [buyAgainLoading, setBuyAgainLoading] = useState(false);
+    const [reorderingOrderId, setReorderingOrderId] = useState<string | null>(null);
 
     // Orders Filtering State
     const [orderSearch, setOrderSearch] = useState('');
@@ -635,6 +637,90 @@ export default function AccountPage() {
             toast.error('Network error', { id: loadingToast });
         } finally {
             setIsSendingEnquiryReply(false);
+        }
+    };
+
+    /** Unified handler for reordering an entire order or specific items */
+    const handleReorder = async (orderId: string, itemsToAdd?: any[]) => {
+        setReorderingOrderId(orderId);
+        setBuyAgainLoading(true);
+        let items = itemsToAdd;
+        
+        try {
+            if (!items) {
+                // Fetch the order full details if we don't have items
+                const response = await getOrderById(orderId);
+                if (response?.data?.items) {
+                    items = response.data.items;
+                } else {
+                    toast.error('Could not fetch order details for reordering.');
+                    return;
+                }
+            }
+            
+            if (items?.length === 0) {
+                toast.error('No items found in this order.');
+                return;
+            }
+
+            const toastId = toast.loading('Checking cart and stock...');
+            let addedCount = 0;
+            let limitCount = 0;
+            let alreadyInCartCount = 0;
+
+            for (const item of items!) {
+                const productId = item.product_id || item.product?.product_id;
+                const variantId = item.variant_id || item.variant?.variant_id || null;
+                if (!productId) continue;
+
+                const existingItem = getItemInCart(productId, variantId);
+                const currentQtyInCart = existingItem?.quantity || 0;
+                
+                // Get stock quantity (fallback to product stock if variant stock is null)
+                const stockQty = item.variant?.stock_quantity ?? item.product?.stock_quantity ?? null;
+                const requestedQty = item.quantity || 1;
+                
+                const availableSpace = stockQty !== null ? Math.max(0, stockQty - currentQtyInCart) : Infinity;
+
+                if (availableSpace === 0) {
+                    if (stockQty !== null && currentQtyInCart >= stockQty) {
+                        alreadyInCartCount++;
+                    } else {
+                        limitCount++;
+                    }
+                    continue;
+                }
+
+                const qtyToAdd = Math.min(requestedQty, availableSpace);
+                if (qtyToAdd < requestedQty) {
+                    limitCount++;
+                }
+
+                try {
+                    await addCartItem(productId, variantId, qtyToAdd);
+                    addedCount++;
+                } catch (err) {
+                    console.error("Failed adding item to cart", err);
+                }
+            }
+
+            if (addedCount === 0 && alreadyInCartCount > 0) {
+                toast.error('All items are already in your cart at maximum limit.', { id: toastId });
+            } else if (addedCount === 0 && limitCount > 0) {
+                toast.error('All items are out of stock.', { id: toastId });
+            } else if (addedCount > 0 && limitCount > 0) {
+                toast.success(`Added ${addedCount} items. Some were limited/skipped due to stock.`, { id: toastId });
+            } else if (addedCount > 0) {
+                toast.success('Items successfully added to your cart!', { id: toastId });
+            } else {
+                toast.error('Could not add any items.', { id: toastId });
+            }
+        } catch (error) {
+            console.error("Reorder failed", error);
+            toast.error('An unexpected error occurred while reordering.');
+        } finally {
+            setReorderingOrderId(null);
+            setBuyAgainLoading(false);
         }
     };
 
@@ -1877,11 +1963,13 @@ export default function AccountPage() {
                                                                 <button
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
-                                                                        toast.success("Items added to cart.");
+                                                                        handleReorder(order.order_id);
                                                                     }}
-                                                                    className="rounded-xl px-5 py-2 text-xs font-bold bg-white text-[#36453A] border border-[#E8E1D5] hover:border-[#36453A]/40 hover:bg-[#F8F5F0] transition-all whitespace-nowrap"
+                                                                    disabled={reorderingOrderId === order.order_id}
+                                                                    className="rounded-xl px-5 py-2 text-xs font-bold bg-white text-[#36453A] border border-[#E8E1D5] hover:border-[#36453A]/40 hover:bg-[#F8F5F0] transition-all whitespace-nowrap disabled:opacity-50 flex items-center justify-center gap-1.5"
                                                                 >
-                                                                    Reorder
+                                                                    {reorderingOrderId === order.order_id ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+                                                                    {reorderingOrderId === order.order_id ? 'Reordering...' : 'Reorder'}
                                                                 </button>
                                                                 {order.order_status === 'PENDING' && (
                                                                     <button
@@ -2148,29 +2236,12 @@ export default function AccountPage() {
                                                     })()}
 
                                                     <button
-                                                        className="w-full bg-[#36453A] text-white rounded-xl py-3 text-sm font-bold flex items-center justify-center gap-2 hover:bg-[#2A362D] transition-colors shadow-sm"
-                                                        onClick={async () => {
-                                                            const items = selectedOrderDetails.items || [];
-                                                            if (items.length === 0) {
-                                                                toast.error('No items found in this order.');
-                                                                return;
-                                                            }
-                                                            const toastId = toast.loading('Adding items to cart...');
-                                                            try {
-                                                                for (const item of items) {
-                                                                    const productId = item.product_id || item.product?.product_id;
-                                                                    const variantId = item.variant_id || item.variant?.variant_id || null;
-                                                                    if (productId) {
-                                                                        await addCartItem(productId, variantId, item.quantity || 1);
-                                                                    }
-                                                                }
-                                                                toast.success('All items added to cart!', { id: toastId });
-                                                            } catch {
-                                                                toast.error('Failed to add some items to cart.', { id: toastId });
-                                                            }
-                                                        }}
+                                                        className="w-full bg-[#36453A] text-white rounded-xl py-3 text-sm font-bold flex items-center justify-center gap-2 hover:bg-[#2A362D] transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        onClick={() => handleReorder(selectedOrderDetails.order_id, selectedOrderDetails.items)}
+                                                        disabled={buyAgainLoading || reorderingOrderId === selectedOrderDetails.order_id}
                                                     >
-                                                        <ShoppingCart className="h-4 w-4" /> Buy These Items Again
+                                                        {reorderingOrderId === selectedOrderDetails.order_id ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingCart className="h-4 w-4" />}
+                                                        {reorderingOrderId === selectedOrderDetails.order_id ? 'Adding to Cart...' : 'Buy These Items Again'}
                                                     </button>
                                                 </div>
                                             </div>

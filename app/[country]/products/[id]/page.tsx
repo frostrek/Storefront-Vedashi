@@ -13,7 +13,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useWishlist } from '@/context/WishlistContext';
 import ProductCard from '@/components/ProductCard';
 import { SkeletonLine, SkeletonReviewSection, SkeletonProductRow } from '@/components/Skeleton';
-import { Heart, ShoppingCart, Minus, Plus, Star, Truck, RotateCcw, ChevronRight, AlertTriangle, Sparkles, Info, Package, Award, BadgeCheck, Clock, Globe } from 'lucide-react';
+import { Heart, ShoppingCart, Minus, Plus, Star, Truck, RotateCcw, ChevronRight, AlertTriangle, Sparkles, Info, Package, Award, BadgeCheck, Clock, Globe, Trash2 } from 'lucide-react';
 import ProductImageGallery from '@/components/gallery/ProductImageGallery';
 import LazySection from '@/components/lazy/LazySection';
 import toast from 'react-hot-toast';
@@ -44,7 +44,7 @@ const ProductCarousel = dynamic(
 );
 
 interface Props {
-    params: Promise<{ id: string }>;
+    params: Promise<{ id: string, country: string }>;
 }
 
 
@@ -87,7 +87,7 @@ function LazyBestSellers({ title, icon }: {
 
 
 function ProductDetailContent({ params }: Props) {
-    const { id } = use(params);
+    const { id, country } = use(params);
     const { formatPrice } = useCurrency();
     const [product, setProduct] = useState<ProductWithDetails | null>(null);
     const [loading, setLoading] = useState(true);
@@ -279,6 +279,15 @@ function ProductDetailContent({ params }: Props) {
     // Stock availability
     const stockQty = selectedVariant?.stock_quantity ?? product.stock_quantity ?? null;
     const isOutOfStock = stockQty !== null && stockQty <= 0;
+
+    // Account for items already in cart for this product/variant
+    const existingCartItem = items.find(i =>
+        selectedVariant
+            ? String(i.variant_id) === String(selectedVariant.variant_id)
+            : String(i.product_id) === String(product.product_id)
+    );
+    const existingCartQty = existingCartItem?.quantity ?? 0;
+    const effectiveMaxQty = stockQty !== null && stockQty > 0 ? Math.max(1, stockQty - existingCartQty) : 99;
     const maxQty = stockQty !== null && stockQty > 0 ? stockQty : 99;
 
     // Scheduled availability
@@ -291,11 +300,29 @@ function ProductDetailContent({ params }: Props) {
     };
 
     const handlePlus = () => {
-        setPageQuantity(prev => Math.min(maxQty, prev + 1));
+        if (pageQuantity >= effectiveMaxQty) {
+            toast('Maximum stock reached', { icon: '⚠️' });
+            return;
+        }
+        setPageQuantity(prev => Math.min(effectiveMaxQty, prev + 1));
     };
 
     const handleAddToCart = async (e: React.MouseEvent<HTMLButtonElement>) => {
         if (!product || isOutOfStock) return;
+
+        // Validate total qty (existing in cart + requested) vs stock
+        const totalAfterAdd = existingCartQty + pageQuantity;
+        if (stockQty !== null && totalAfterAdd > stockQty) {
+            const canAdd = stockQty - existingCartQty;
+            if (canAdd <= 0) {
+                toast('No more stock available — item is already at maximum in your cart', { icon: '⚠️' });
+                return;
+            }
+            toast(`Only ${canAdd} more can be added (${existingCartQty} already in cart)`, { icon: '⚠️' });
+            // Cap to what's available
+            setPageQuantity(canAdd);
+            return;
+        }
 
         // Trigger Butterfly Animation
         const rect = e.currentTarget.getBoundingClientRect();
@@ -819,7 +846,7 @@ function ProductDetailContent({ params }: Props) {
                                 </div>
                             )}
 
-                            {!isUnavailable && (
+                            {!isUnavailable && !existingCartItem && (
                                 <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-0.5 shadow-sm">
                                     <button
                                         onClick={handleMinus}
@@ -833,7 +860,7 @@ function ProductDetailContent({ params }: Props) {
                                     </span>
                                     <button
                                         onClick={handlePlus}
-                                        disabled={pageQuantity >= maxQty}
+                                        disabled={pageQuantity >= effectiveMaxQty}
                                         className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-gray-100 transition-colors disabled:opacity-30 text-gray-600"
                                     >
                                         <Plus className="h-3.5 w-3.5" />
@@ -867,12 +894,56 @@ function ProductDetailContent({ params }: Props) {
                                         </button>
                                     </div>
                                 </div>
+                            ) : existingCartItem ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div className="flex items-center justify-between border border-[#3d5c3a] shadow-[0px_0px_0px_2px_rgba(61,92,58,0.1)] rounded-xl py-1 px-2 bg-white h-[56px] animate-in fade-in">
+                                        <button 
+                                            onClick={async () => {
+                                                const newQty = existingCartQty - 1;
+                                                if (newQty <= 0) {
+                                                    await removeItem(existingCartItem.cart_item_id);
+                                                    toast.success('Removed from cart');
+                                                } else {
+                                                    await updateQuantity(existingCartItem.cart_item_id, newQty);
+                                                }
+                                            }}
+                                            disabled={cartLoading}
+                                            className="w-10 h-10 flex items-center justify-center text-[#3d5c3a] hover:bg-[#3d5c3a]/10 rounded-lg transition"
+                                        >
+                                            {existingCartQty <= 1 ? <Trash2 size={18} /> : <Minus size={18} />}
+                                        </button>
+                                        <div className="flex flex-col items-center justify-center">
+                                            <span className="text-base font-black text-[#3d5c3a] leading-none mb-0.5">{existingCartQty}</span>
+                                            <span className="text-[9px] font-bold uppercase tracking-widest text-warm-gray leading-none">In Cart</span>
+                                        </div>
+                                        <button 
+                                            onClick={async () => {
+                                                const maxStock = stockQty ?? 99;
+                                                if (existingCartQty >= maxStock) {
+                                                    toast('Maximum stock reached', { icon: '⚠️' });
+                                                    return;
+                                                }
+                                                await updateQuantity(existingCartItem.cart_item_id, existingCartQty + 1);
+                                            }}
+                                            disabled={cartLoading || existingCartQty >= (stockQty ?? 99)}
+                                            className="w-10 h-10 flex items-center justify-center text-[#3d5c3a] bg-[#3d5c3a]/5 hover:bg-[#3d5c3a]/15 hover:text-black rounded-lg transition disabled:opacity-30 disabled:cursor-not-allowed"
+                                        >
+                                            <Plus size={18} />
+                                        </button>
+                                    </div>
+                                    <button 
+                                        onClick={() => router.push(`/${country || 'in'}/cart`)}
+                                        className="w-full bg-[#f8f5f0] border border-[#e8e1d5] hover:bg-white hover:border-[#3d5c3a] hover:text-[#3d5c3a] text-[#36453A] font-bold rounded-xl h-[56px] transition-colors flex items-center justify-center gap-2 group shadow-sm"
+                                    >
+                                        <ShoppingCart size={18} className="group-hover:-translate-y-0.5 group-hover:scale-105 transition-transform" /> View Cart
+                                    </button>
+                                </div>
                             ) : (
                                 <div className="grid grid-cols-2 gap-3">
                                     <button
                                         onClick={(e) => handleAddToCart(e)}
                                         disabled={isUnavailable || cartLoading}
-                                        className={`w-full rounded-xl py-4 flex justify-center items-center gap-2 transition-all font-semibold ${isUnavailable
+                                        className={`w-full rounded-xl py-4 flex justify-center items-center gap-2 transition-all font-semibold h-[56px] ${isUnavailable
                                             ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
                                             : 'bg-[#7a8f69] hover:bg-[#6b805a] text-white shadow-sm'
                                             }`}

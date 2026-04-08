@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { gsap } from 'gsap';
 import Image from 'next/image';
-import { Heart, ShoppingCart, Eye, X, Check, AlertTriangle, Loader2, Plus, Minus } from 'lucide-react';
+import { Heart, ShoppingCart, Eye, X, Check, AlertTriangle, Loader2, Plus, Minus, Trash2 } from 'lucide-react';
 import { Product, ProductVariant } from '@/types';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCart } from '@/context/CartContext';
@@ -266,6 +266,13 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                 return;
             }
 
+            // Check if item already in cart at max stock
+            const existingInCart = items.find(i => i.product_id === product.product_id);
+            if (existingInCart && existingInCart.quantity >= maxStock) {
+                toast('No more stock available', { icon: '⚠️' });
+                return;
+            }
+
             setAddingToCart(true);
             try {
                 const rect = e.currentTarget.getBoundingClientRect();
@@ -379,7 +386,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
         try {
             const maxStock = hasVariants && selectedVariant
                 ? (selectedVariant.stock_quantity ?? 99)
-                : (product.stock_quantity ?? 99);
+                : (currentItemInCart.stock_quantity ?? product.stock_quantity ?? 99);
 
             if (currentItemInCart.quantity < maxStock) {
                 const newQty = currentItemInCart.quantity + 1;
@@ -659,9 +666,19 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                 </div>
 
                                 <button
-                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleIncrement(); }}
-                                    disabled={addingToCart}
-                                    className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-xl bg-[#3d5c3a] text-white hover:bg-[#2d4a2a] transition-all cursor-pointer shadow-sm shadow-[#3d5c3a]/30"
+                                    onClick={(e) => {
+                                        e.preventDefault(); e.stopPropagation();
+                                        const maxStock = hasVariants && selectedVariant
+                                            ? (selectedVariant.stock_quantity ?? 99)
+                                            : (product.stock_quantity ?? 99);
+                                        if (currentItemInCart.quantity >= maxStock) {
+                                            toast('Maximum stock reached', { icon: '⚠️' });
+                                            return;
+                                        }
+                                        handleIncrement();
+                                    }}
+                                    disabled={addingToCart || (() => { const ms = hasVariants && selectedVariant ? (selectedVariant.stock_quantity ?? 99) : (product.stock_quantity ?? 99); return currentItemInCart.quantity >= ms; })()}
+                                    className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-xl bg-[#3d5c3a] text-white hover:bg-[#2d4a2a] transition-all cursor-pointer shadow-sm shadow-[#3d5c3a]/30 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <Plus className="h-3.5 w-3.5" />
                                 </button>
@@ -835,9 +852,19 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                 <p className="text-lg font-black text-[#3d5c3a] leading-none">{currentItemInCart.quantity}</p>
                             </div>
                             <button
-                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleIncrement(); }}
-                                disabled={addingToCart}
-                                className="w-10 h-10 flex items-center justify-center rounded-lg bg-[#3d5c3a] text-white hover:bg-[#2d4a2a] transition-all cursor-pointer disabled:opacity-50 shadow-sm"
+                                onClick={(e) => {
+                                    e.preventDefault(); e.stopPropagation();
+                                    const maxStock = hasVariants && selectedVariant
+                                        ? (selectedVariant.stock_quantity ?? 99)
+                                        : (product.stock_quantity ?? 99);
+                                    if (currentItemInCart.quantity >= maxStock) {
+                                        toast('Maximum stock reached', { icon: '⚠️' });
+                                        return;
+                                    }
+                                    handleIncrement();
+                                }}
+                                disabled={addingToCart || (() => { const ms = hasVariants && selectedVariant ? (selectedVariant.stock_quantity ?? 99) : (product.stock_quantity ?? 99); return currentItemInCart.quantity >= ms; })()}
+                                className="w-10 h-10 flex items-center justify-center rounded-lg bg-[#3d5c3a] text-white hover:bg-[#2d4a2a] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                             >
                                 <Plus className="h-4 w-4" />
                             </button>
@@ -964,6 +991,35 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                             <Eye className="h-4 w-4" />
                                             Preview Options
                                         </button>
+                                    ) : currentItemInCart ? (
+                                        <div className="w-full flex items-center justify-between bg-[#3d5c3a]/95 backdrop-blur-sm py-1.5 px-2 text-white h-11">
+                                            <button 
+                                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDecrement(); }}
+                                                disabled={addingToCart}
+                                                className="w-8 h-8 flex items-center justify-center hover:bg-white/20 rounded-md transition-colors disabled:opacity-50"
+                                            >
+                                                {currentItemInCart.quantity > 1 ? <Minus className="h-4 w-4" /> : <Trash2 className="h-4 w-4 text-red-300" />}
+                                            </button>
+                                            <div className="flex flex-col items-center leading-none">
+                                                <span className="text-sm font-black font-ui translate-y-[1px]">{currentItemInCart.quantity}</span>
+                                                <span className="text-[8px] font-bold tracking-widest uppercase opacity-80">In Bag</span>
+                                            </div>
+                                            <button 
+                                                onClick={(e) => {
+                                                    e.preventDefault(); e.stopPropagation();
+                                                    const maxStock = currentItemInCart.stock_quantity ?? product.stock_quantity ?? 99;
+                                                    if (currentItemInCart.quantity >= maxStock) {
+                                                        toast('Maximum stock reached', { icon: '⚠️' });
+                                                        return;
+                                                    }
+                                                    handleIncrement();
+                                                }}
+                                                disabled={addingToCart || (() => { const ms = currentItemInCart.stock_quantity ?? product.stock_quantity ?? 99; return currentItemInCart.quantity >= ms; })()}
+                                                className="w-8 h-8 flex items-center justify-center hover:bg-white/20 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                <Plus className="h-4 w-4" />
+                                            </button>
+                                        </div>
                                     ) : (
                                         <button
                                             onClick={(e) => onMoveToCart ? onMoveToCart(e) : openCartModal(e)}
@@ -1100,6 +1156,34 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                             <Eye className={`h-3.5 w-3.5 transition-transform duration-300 ${showInlineOptions ? 'scale-110' : ''}`} />
                                             {showInlineOptions ? 'Choosing…' : 'Options'}
                                         </button>
+                                    ) : currentItemInCart ? (
+                                        <div className="flex-1 sm:flex-none flex items-center justify-between border border-[#3d5c3a]/20 bg-[#3d5c3a]/5 rounded-lg py-1 px-1 h-9 sm:h-10 min-w-[120px]">
+                                            <button 
+                                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDecrement(); }}
+                                                disabled={addingToCart}
+                                                className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-[#3d5c3a] hover:bg-[#3d5c3a]/10 rounded-md transition-colors disabled:opacity-50"
+                                            >
+                                                {currentItemInCart.quantity > 1 ? <Minus className="h-3.5 w-3.5" /> : <Trash2 className="h-3.5 w-3.5" />}
+                                            </button>
+                                            <div className="flex flex-col items-center justify-center leading-none px-2">
+                                                <span className="text-xs sm:text-sm font-black text-[#3d5c3a] font-ui translate-y-[1px]">{currentItemInCart.quantity}</span>
+                                            </div>
+                                            <button 
+                                                onClick={(e) => {
+                                                    e.preventDefault(); e.stopPropagation();
+                                                    const maxStock = product.stock_quantity ?? 99;
+                                                    if (currentItemInCart.quantity >= maxStock) {
+                                                        toast('Maximum stock reached', { icon: '⚠️' });
+                                                        return;
+                                                    }
+                                                    handleIncrement();
+                                                }}
+                                                disabled={addingToCart || (() => { const ms = product.stock_quantity ?? 99; return currentItemInCart.quantity >= ms; })()}
+                                                className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-[#3d5c3a] hover:bg-[#3d5c3a]/10 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                <Plus className="h-3.5 w-3.5" />
+                                            </button>
+                                        </div>
                                     ) : (
                                         <button
                                             onClick={(e) => onMoveToCart ? onMoveToCart(e) : openCartModal(e)}

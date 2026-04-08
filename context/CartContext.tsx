@@ -42,6 +42,8 @@ interface CartContextType {
     removeCoupon: () => void;
     orderNotes: string;
     setOrderNotes: (notes: string) => void;
+    /** Find a cart item by productId + optional variantId. Returns the item or undefined. */
+    getItemInCart: (productId: string, variantId?: string | null) => BackendCartItem | undefined;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -66,6 +68,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const [items, setItems] = useState<BackendCartItem[]>([]);
     const [savedItems, setSavedItems] = useState<BackendCartItem[]>([]);
     const [cartId, setCartId] = useState<string | null>(null);
+    const pendingQtyUpdates = useRef(0);
 
     // DERIVED VALUES — single source of truth, can never desync from items
     const totalItems = useMemo(() => new Set(items.map(i => String(i.product_id))).size, [items]);
@@ -409,29 +412,51 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }, [cartId, fetchCart, isAuthenticated, user, ensureGuestCart]);
 
     const updateQuantity = useCallback(async (cartItemId: string, quantity: number) => {
-        if (quantity <= 0) {
-            await apiRemoveCartItem(cartItemId);
-            if (cartId) await fetchCart(cartId);
-            return;
-        }
-        setLoading(true);
+        let snapshot: BackendCartItem[] = [];
+        
+        // Optimistic UI Update Phase
+        setItems(prev => {
+            snapshot = prev;
+            if (quantity <= 0) {
+                return prev.filter(i => i.cart_item_id !== cartItemId);
+            }
+            return prev.map(item => item.cart_item_id === cartItemId ? { ...item, quantity } : item);
+        });
+
         setError(null);
+        pendingQtyUpdates.current += 1;
+
         try {
-            await apiUpdateCartItem(cartItemId, quantity);
-            if (cartId) await fetchCart(cartId);
+            if (quantity <= 0) {
+                await apiRemoveCartItem(cartItemId);
+            } else {
+                await apiUpdateCartItem(cartItemId, quantity);
+            }
         } catch (err) {
             console.error('[CartContext] updateQuantity error:', err);
+            setItems(snapshot); // Revert on failure
             setError('Failed to update quantity');
+            throw err;
         } finally {
-            setLoading(false);
+            pendingQtyUpdates.current -= 1;
+            // Only perform a full backend sync when all rapid clicks have resolved to avoid screen flickering
+            if (pendingQtyUpdates.current === 0 && cartId) {
+                fetchCart(cartId); // Background sync, does not block the UI
+            }
         }
     }, [cartId, fetchCart]);
 
     const removeItem = useCallback(async (cartItemId: string) => {
         // Capture item data BEFORE removal for the GA4 event
         const removedItem = items.find(i => i.cart_item_id === cartItemId);
+        let snapshot: BackendCartItem[] = [];
 
-        setLoading(true);
+        // Optimistic UI Removal
+        setItems(prev => {
+            snapshot = prev;
+            return prev.filter(i => i.cart_item_id !== cartItemId);
+        });
+
         setError(null);
         try {
             await apiRemoveCartItem(cartItemId);
@@ -452,9 +477,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
             }
         } catch (err) {
             console.error('[CartContext] removeItem error:', err);
+            setItems(snapshot); // Revert on failure
             setError('Failed to remove item');
-        } finally {
-            setLoading(false);
+            throw err;
         }
     }, [cartId, fetchCart, items]);
 
@@ -528,6 +553,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return () => clearInterval(pollInterval);
     }, [cartId, items, fetchCart, updateQuantity]);
 
+    /** Find a cart item by productId + optional variantId */
+    const getItemInCart = useCallback((productId: string, variantId?: string | null): BackendCartItem | undefined => {
+        return items.find(i =>
+            String(i.product_id) === String(productId) &&
+            (variantId ? String(i.variant_id) === String(variantId) : true)
+        );
+    }, [items]);
+
     return (
         <CartContext.Provider value={{
             items, savedItems, cartId, loading, error,
@@ -536,6 +569,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             couponCode, couponDiscount, couponType, couponError,
             applyCoupon, removeCoupon,
             orderNotes, setOrderNotes,
+            getItemInCart,
         }}>
             {children}
         </CartContext.Provider>
