@@ -9,7 +9,7 @@ import { buildProductMeta, generateProductJsonLd, generateBreadcrumbJsonLd } fro
 import { API_URL } from '@/lib/api';
 
 // API_URL imported from @/lib/api
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.onrender.com';
 
 /** Server-side fetch of product data for metadata (no auth needed) */
 async function fetchProductForMeta(id: string) {
@@ -28,9 +28,9 @@ async function fetchProductForMeta(id: string) {
 export async function generateMetadata({
     params,
 }: {
-    params: Promise<{ id: string }>;
+    params: Promise<{ id: string; country: string }>;
 }): Promise<Metadata> {
-    const { id } = await params;
+    const { id, country } = await params;
     const product = await fetchProductForMeta(id);
 
     if (!product) {
@@ -55,7 +55,7 @@ export async function generateMetadata({
         sku: product.sku,
         variants: product.variants,
         seo: product.seo,
-    });
+    }, country);
 }
 
 export default function ProductLayout({
