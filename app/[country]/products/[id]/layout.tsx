@@ -25,6 +25,19 @@ async function fetchProductForMeta(id: string) {
     }
 }
 
+async function fetchSiteConfig(keys: string[]) {
+    try {
+        const res = await fetch(`${API_URL}/api/site-config/batch?keys=${keys.join(',')}`, {
+            next: { revalidate: 3600 }, // cache for 1 hour
+        });
+        if (!res.ok) return null;
+        const json = await res.json();
+        return json.success ? json.data : null;
+    } catch {
+        return null;
+    }
+}
+
 export async function generateMetadata({
     params,
 }: {
@@ -83,6 +96,8 @@ async function ProductJsonLd({ paramsPromise }: { paramsPromise: Promise<{ id: s
 
     if (!product) return null;
 
+    const siteConfigs = await fetchSiteConfig(['merchant_shipping', 'merchant_returns']);
+
     const productJsonLd = generateProductJsonLd({
         product_id: product.product_id,
         product_name: product.product_name,
@@ -96,7 +111,7 @@ async function ProductJsonLd({ paramsPromise }: { paramsPromise: Promise<{ id: s
         rating_average: product.rating_average,
         review_count: product.review_count,
         variants: product.variants,
-    });
+    }, siteConfigs?.merchant_shipping, siteConfigs?.merchant_returns);
 
     const breadcrumbItems = [
         { name: 'Home', url: SITE_URL },

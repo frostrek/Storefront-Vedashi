@@ -234,7 +234,11 @@ export function buildPLPMeta(hasFilters = false, currentCountry: string = 'in'):
 // ─── JSON-LD Structured Data ─────────────────────────────────────────────────
 
 /** Product schema (JSON-LD) */
-export function generateProductJsonLd(product: ProductSeoInput): Record<string, unknown> {
+export function generateProductJsonLd(
+    product: ProductSeoInput,
+    shippingConfig?: any,
+    returnConfig?: any
+): Record<string, unknown> {
     const defaultVariant = product.variants?.find((v: any) => v.is_default) || product.variants?.[0];
     const price = defaultVariant?.price || product.price || 0;
     const sku = defaultVariant?.variant_sku || product.sku || '';
@@ -274,6 +278,60 @@ export function generateProductJsonLd(product: ProductSeoInput): Record<string, 
             }
         },
     };
+
+    // Add Shipping Details if config is provided
+    if (shippingConfig && schema.offers) {
+        (schema.offers as any).shippingDetails = {
+            '@type': 'OfferShippingDetails',
+            shippingRate: {
+                '@type': 'MonetaryAmount',
+                value: shippingConfig.is_free ? 0 : (shippingConfig.flat_rate || 0),
+                currency: shippingConfig.currency || 'INR'
+            },
+            deliveryTime: {
+                '@type': 'ShippingDeliveryTime',
+                handlingTime: {
+                    '@type': 'QuantitativeValue',
+                    minValue: shippingConfig.handling_time_days_min || 1,
+                    maxValue: shippingConfig.handling_time_days_max || 2,
+                    unitCode: 'd'
+                },
+                transitTime: {
+                    '@type': 'QuantitativeValue',
+                    minValue: shippingConfig.transit_time_days_min || 3,
+                    maxValue: shippingConfig.transit_time_days_max || 5,
+                    unitCode: 'd'
+                }
+            },
+            shippingDestination: {
+                '@type': 'DefinedRegion',
+                addressCountry: 'IN'
+            }
+        };
+
+        if (shippingConfig.description) {
+            (schema.offers as any).description = shippingConfig.description;
+        }
+    }
+
+    // Add Return Policy if config is provided
+    if (returnConfig) {
+        schema.hasMerchantReturnPolicy = {
+            '@type': 'MerchantReturnPolicy',
+            applicableCountry: 'IN',
+            returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnPeriod',
+            merchantReturnDays: returnConfig.policy_days || 30,
+            returnMethod: 'https://schema.org/ReturnByMail',
+            returnFees: returnConfig.return_fees === 'free' 
+                ? 'https://schema.org/FreeReturn' 
+                : 'https://schema.org/ReturnShippingFeesCustomerPays',
+            url: returnConfig.policy_url || `${SITE_URL}/returns`
+        };
+
+        if (returnConfig.description) {
+            (schema.hasMerchantReturnPolicy as any).description = returnConfig.description;
+        }
+    }
 
     if (product.rating_average && product.review_count) {
         schema.aggregateRating = {
@@ -379,7 +437,7 @@ export function generateBreadcrumbJsonLd(
             '@type': 'ListItem',
             position: i + 1,
             name: item.name,
-            item: item.url,
+            item: item.url
         })),
     };
 }
