@@ -174,8 +174,8 @@ export default async function RootLayout({
                       }
                     }}
                   />
-                  <Navbar />
                   <PromoBanner />
+                  <Navbar />
                   <main className="flex-1">{children}</main>
                   <Footer />
                   <ButterflyEffect />
