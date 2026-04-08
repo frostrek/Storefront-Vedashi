@@ -168,9 +168,11 @@ export function useFilters() {
         filters.form.forEach(f => chips.push({ key: 'form', label: 'Form', value: f }));
         filters.specialities.forEach(s => chips.push({ key: 'specialities', label: 'Speciality', value: s }));
         filters.ratings.forEach(r => chips.push({ key: 'rating', label: 'Rating', value: r }));
-        const pMax = filters.priceRange[1] === Infinity ? 'Max' : `$${filters.priceRange[1]}`;
+        
         if (filters.priceRange[0] !== 0 || filters.priceRange[1] !== Infinity) {
-            chips.push({ key: 'price', label: 'Price', value: `$${filters.priceRange[0]} – ${pMax}` });
+            const min = `₹${filters.priceRange[0].toLocaleString()}`;
+            const max = filters.priceRange[1] === Infinity ? 'Max' : `₹${filters.priceRange[1].toLocaleString()}`;
+            chips.push({ key: 'price', label: 'Price', value: `${min} – ${max}` });
         }
         if (filters.inStock) chips.push({ key: 'inStock', label: 'Status', value: 'In Stock' });
         if (filters.bestSellers) chips.push({ key: 'bestSellers', label: 'Collection', value: 'Best Sellers' });
