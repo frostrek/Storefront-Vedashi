@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter, usePathname, useParams } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
-import { ShoppingCart, User, Menu, X, Heart, ChevronDown, Search, ArrowRight, Leaf, Sparkles, LogOut, Settings, Package, UserPlus, LogIn, Phone } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, Heart, ChevronDown, Search, ArrowRight, Leaf, Sparkles, LogOut, Settings, Package, UserPlus, LogIn, Phone, Plus } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWishlist } from '@/context/WishlistContext';
@@ -21,6 +21,7 @@ interface Category {
   parent_id: string | null;
   name: string;
   slug: string;
+  children?: Category[];
 }
 
 interface HeaderConfig {
@@ -74,7 +75,158 @@ const DEFAULT_CONFIG: HeaderConfig = {
   },
 };
 
-// API_URL imported from @/lib/api
+/* ─── Recursive Desktop Mega Menu ─── */
+/* ─── Recursive Desktop Mega Menu Link Component ─── */
+const MegaMenuLinks = ({ item, country, topLevelSlug, secondLevelSlug, level = 0 }: { item: Category, country: string, topLevelSlug: string, secondLevelSlug?: string, level?: number }) => {
+  const hasChildren = item.children && item.children.length > 0;
+  
+  let href = `/${country}/products?category=${topLevelSlug}`;
+  if (level === 0) {
+    href += `&sub_category=${item.slug}`;
+  } else if (level === 1) {
+    href += `&sub_category=${secondLevelSlug}&sub_sub_category=${item.slug}`;
+  } else {
+    href += `&sub_category=${secondLevelSlug}&sub_sub_category=${item.slug}`;
+  }
+
+  return (
+    <div className={`flex flex-col ${level === 0 ? 'gap-3' : 'gap-1.5'}`}>
+      <Link
+        href={href}
+        className={`transition-colors duration-200 ${
+          level === 0 
+            ? 'text-[13px] font-bold text-gray-900 uppercase tracking-wider hover:text-[#3B5D3B]' 
+            : level === 1
+              ? 'text-xs font-semibold text-gray-800 hover:text-[#3B5D3B] mt-1'
+              : 'text-[11px] text-gray-500 hover:text-[#3B5D3B] pl-2 border-l border-gray-100/50'
+        }`}
+      >
+        {item.name}
+      </Link>
+      
+      {hasChildren && (
+        <div className={`flex flex-col gap-1.5 ${level === 0 ? 'border-l border-gray-100 pl-4 ml-1 mt-1' : 'pl-3'}`}>
+          {item.children!.map(child => (
+            <MegaMenuLinks 
+              key={child.category_id} 
+              item={child} 
+              country={country} 
+              topLevelSlug={topLevelSlug} 
+              secondLevelSlug={level === 0 ? item.slug : secondLevelSlug} 
+              level={level + 1} 
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ─── Desktop Mega Menu Container ─── */
+const MegaMenuContent = ({ parent, country, colors }: { parent: Category, country: string, colors: any }) => {
+  if (!parent.children || parent.children.length === 0) return null;
+
+  // Group Level 1 children into columns (max 4 columns)
+  const columns = 4;
+  const itemsPerColumn = Math.ceil(parent.children.length / (columns - 1));
+  const columnData = [];
+  for (let i = 0; i < parent.children.length; i += itemsPerColumn) {
+    columnData.push(parent.children.slice(i, i + itemsPerColumn));
+  }
+
+  return (
+    <div 
+      className="absolute top-full left-1/2 -translate-x-1/2 min-w-[900px] w-max max-w-[1200px] bg-white text-gray-800 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-b-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[200] border-t-[3px] p-10 grid grid-cols-4 gap-12" 
+      style={{ borderColor: colors.navbar_hover || '#3B5D3B' }}
+    >
+      {/* Dynamic Columns */}
+      {columnData.slice(0, 3).map((colItems, idx) => (
+        <div key={idx} className="flex flex-col gap-10">
+          {colItems.map(child => (
+            <MegaMenuLinks key={child.category_id} item={child} country={country} topLevelSlug={parent.slug} />
+          ))}
+        </div>
+      ))}
+      
+      {/* Featured Promo / Stats Column (Rightmost) */}
+      <div className="flex flex-col gap-6">
+        <div className="bg-[#FBF9F2] rounded-2xl p-6 flex flex-col justify-between border border-[#3B5D3B]/10 h-full relative overflow-hidden group/promo">
+          {/* Decorative background leaf/element */}
+          <Leaf className="absolute -bottom-4 -right-4 h-24 w-24 text-[#3B5D3B]/5 rotate-12 transition-transform duration-500 group-hover/promo:scale-110" />
+          
+          <div className="relative z-10">
+            <span className="inline-block bg-[#3B5D3B]/10 text-[#3B5D3B] text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded mb-3">Featured Collection</span>
+            <h5 className="text-xl font-serif font-bold text-gray-900 mb-2 leading-tight">Explore {parent.name}</h5>
+            <p className="text-xs text-gray-600 leading-relaxed italic">
+              Discover our ethically sourced, premium Ayurvedic essentials crafted with traditional wisdom.
+            </p>
+          </div>
+          
+          <div className="mt-8 space-y-3 relative z-10">
+            <Link 
+              href={`/${country}/products?category=${parent.slug}`}
+              className="flex items-center justify-between w-full group/btn text-sm font-bold text-[#3B5D3B] hover:text-[#2D452D] transition-colors"
+            >
+              Shop All {parent.name}
+              <div className="h-8 w-8 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center transition-all group-hover/btn:bg-[#3B5D3B] group-hover/btn:text-white">
+                <ArrowRight className="h-4 w-4" />
+              </div>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ─── Recursive Mobile Sidebar Item ─── */
+const MobileNavItem = ({ item, country, onClose, level = 0 }: { item: Category, country: string, onClose: () => void, level?: number }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const hasChildren = item.children && item.children.length > 0;
+
+  return (
+    <div className="flex flex-col">
+      <div className="flex items-center justify-between">
+        <Link
+          href={`/${country}/products?category=${item.slug}`}
+          onClick={onClose}
+          className={`py-3 px-4 font-bold text-sm text-gray-800 hover:text-[#3B5D3B] transition-colors flex-1 ${level > 0 ? 'pl-8 border-l-2 border-gray-100 ml-4' : ''}`}
+        >
+          {item.name}
+        </Link>
+        {hasChildren && (
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className={`p-3 text-gray-400 hover:text-[#3B5D3B] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+          >
+            <ChevronDown className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+      
+      <AnimatePresence>
+        {isOpen && hasChildren && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            {item.children!.map((child: Category) => (
+              <MobileNavItem 
+                key={child.category_id} 
+                item={child} 
+                country={country} 
+                onClose={onClose} 
+                level={level + 1} 
+              />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
 export default function Navbar() {
   const router = useRouter();
@@ -116,10 +268,8 @@ export default function Navbar() {
       .then(data => {
         if (data.success && data.data) {
           if (data.data.settings?.use_backend_navbar === false) {
-            // Revert/Keep default hardcoded config
             setConfig(DEFAULT_CONFIG);
           } else {
-            // Overlay backend config on defaults
             setConfig(prev => ({ ...DEFAULT_CONFIG, ...data.data }));
           }
         }
@@ -128,7 +278,6 @@ export default function Navbar() {
       .finally(() => setLoading(false));
   }, []);
 
-  // 2. Trigger ONLY when customer explicitly just signed in (within last 15 seconds)
   useEffect(() => {
     if (isAuthenticated && !cartLoading) {
       const justSignedIn = sessionStorage.getItem('justSignedIn');
@@ -155,16 +304,16 @@ export default function Navbar() {
   }, [mobileOpen]);
 
   useEffect(() => {
-    getCategories().then(cats => {
+    getCategories(true).then(cats => {
       if (Array.isArray(cats)) setCategories(cats);
     });
   }, []);
 
-  const parentCategories = categories.filter(c => !c.parent_id);
   const { colors, nav_links, strip, branding } = config;
   const visibleLinks = nav_links.filter(l => l.enabled);
+  // Ensure we only treat true roots as the primary navbar categories
+  const parentCategories = categories.filter(cat => !cat.parent_id);
 
-  // Hide navbar on login page (handling localized routes like /[country]/login)
   if (pathname?.endsWith('/login') || pathname?.endsWith('/signup')) return null;
 
   return (
@@ -184,7 +333,6 @@ export default function Navbar() {
             <div className="flex items-center justify-start flex-shrink-0">
               <Link href={`/${currentCountry}`} className="flex items-center gap-2">
                 {branding.logo_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
                   <img src={branding.logo_url} alt={branding.logo_alt} className="h-10 sm:h-12 md:h-16 lg:h-20 w-auto object-contain transition-all" />
                 ) : (
                   <img src="/vedashi-logo.png" alt="Vedashi" className="h-10 sm:h-12 md:h-16 lg:h-20 w-auto object-contain transition-all" />
@@ -192,7 +340,7 @@ export default function Navbar() {
               </Link>
             </div>
 
-            {/* Center Nav Links (Mathematically Centered) */}
+            {/* Center Nav Links */}
             <nav className={`hidden md:flex items-center gap-4 lg:gap-6 absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 z-10 w-max transition-all duration-300 ${searchOpen ? 'opacity-0 pointer-events-none translate-y-[-60%]' : 'opacity-100 translate-y-[-50%]'}`}>
               {visibleLinks.map(link => {
                 const prefixedUrl = link.url.startsWith('/') ? `/${currentCountry}${link.url === '/' ? '' : link.url}` : link.url;
@@ -206,8 +354,6 @@ export default function Navbar() {
                     href={prefixedUrl}
                     className={`text-[11px] lg:text-[13px] font-bold font-base uppercase tracking-[0.12em] lg:tracking-[0.14em] transition-colors duration-200 relative before:content-[''] before:absolute before:-bottom-1 before:left-0 before:w-full before:h-0.5 before:bg-current before:transition-transform before:duration-300 ${isActive ? 'before:scale-x-100' : 'before:scale-x-0'}`}
                     style={{ color: isActive ? colors.navbar_hover : colors.navbar_text }}
-                    onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.color = colors.navbar_hover)}
-                    onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.color = isActive ? colors.navbar_hover : colors.navbar_text)}
                   >
                     {link.label}
                   </Link>
@@ -215,9 +361,8 @@ export default function Navbar() {
               })}
             </nav>
 
-            {/* Right Icons + Search */}
+            {/* Right Icons */}
             <div className="flex items-center justify-end gap-3 sm:gap-4 md:gap-2 lg:gap-3 relative">
-              {/* Desktop Search */}
               <div className="hidden md:block relative">
                 {searchOpen ? (
                   <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2 duration-200">
@@ -227,171 +372,70 @@ export default function Navbar() {
                     </button>
                   </div>
                 ) : (
-                  <button suppressHydrationWarning onClick={() => setSearchOpen(true)} className="p-2 group" aria-label="Open search">
+                  <button onClick={() => setSearchOpen(true)} className="p-2 group">
                     <Search className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
                   </button>
                 )}
               </div>
 
-              {/* Notification Center */}
               <NotificationCenter colors={colors} />
 
-              {/* Wishlist Icon */}
-              <button suppressHydrationWarning onClick={handleWishlistClick} className="relative p-2 group">
+              <button onClick={handleWishlistClick} className="relative p-2 group">
                 <Heart className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
                 {wishlistCount > 0 && (
-                  <span
-                    className="absolute -top-0.5 -right-0.5 text-white text-[9px] font-black font-ui h-4 w-4 flex items-center justify-center rounded-full tabular-nums"
-                    style={{ backgroundColor: colors.cart_badge_bg }}
-                  >
+                  <span className="absolute -top-0.5 -right-0.5 text-white text-[9px] font-black h-4 w-4 flex items-center justify-center rounded-full" style={{ backgroundColor: colors.cart_badge_bg }}>
                     {wishlistCount}
                   </span>
                 )}
               </button>
 
-              <div className="flex items-center">
-                <Link id="navbar-cart-icon" href={`/${currentCountry}/cart`} className="relative p-2 group">
-                  <ShoppingCart className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
-                  {totalItems > 0 && (
-                    <span
-                      className="absolute -top-0.5 -right-0.5 text-white text-[9px] font-black font-ui h-4 w-4 flex items-center justify-center rounded-full tabular-nums"
-                      style={{ backgroundColor: colors.cart_badge_bg }}
-                    >
-                      {totalItems}
-                    </span>
-                  )}
-                </Link>
-
-                {/* Cart Reminder Popup */}
-                {showCartReminder && (
-                  <div className="absolute top-full right-0 mt-3 w-80 bg-white rounded-[30px] shadow-2xl border border-[#4A5D23]/10 overflow-hidden z-[120] animate-in slide-in-from-top-4 fade-in duration-300">
-                    {/* Background Texture */}
-                    <div
-                      className="absolute inset-0 z-0 opacity-[0.08] pointer-events-none"
-                      style={{
-                        backgroundImage: "url('/ayurvedic-texture.png')",
-                        backgroundSize: '200px'
-                      }}
-                    ></div>
-
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowCartReminder(false);
-                        sessionStorage.removeItem('justSignedIn');
-                      }}
-                      className="absolute top-3 right-3 p-2 text-[#5B4A31]/40 hover:text-[#4A5D23] transition-all hover:bg-[#4A5D23]/5 rounded-full z-50"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                    <div className="relative z-10 p-6">
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-[#4A5D23]/10 flex items-center justify-center flex-shrink-0 animate-pulse text-[#4A5D23]">
-                          <Leaf className="h-6 w-6" />
-                        </div>
-                        <div className="pr-2">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="text-base font-display font-bold text-[#1a2408]">Items left in cart</h4>
-                            <Sparkles className="h-3 w-3 text-[#c8a84e]" />
-                          </div>
-                          <p className="text-xs text-[#5B4A31] leading-relaxed mb-4 font-medium italic font-sans">
-                            You previously left {totalItems} {totalItems === 1 ? 'item' : 'items'} in your cart. Checkout fast before they go out of stock!
-                          </p>
-                          <Link
-                            href="/cart"
-                            onClick={() => {
-                              setShowCartReminder(false);
-                              sessionStorage.removeItem('justSignedIn');
-                            }}
-                            className="inline-flex items-center gap-2 text-[10px] font-black font-ui uppercase tracking-widest text-white px-5 py-2.5 rounded-xl transition-all shadow-xl hover:-translate-y-0.5 active:translate-y-0"
-                            style={{ backgroundColor: '#4A5D23' }}
-                          >
-                            Go to Cart <ArrowRight className="h-3.5 w-3.5" />
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+              <Link href={`/${currentCountry}/cart`} className="relative p-2 group">
+                <ShoppingCart className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
+                {totalItems > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 text-white text-[9px] font-black h-4 w-4 flex items-center justify-center rounded-full" style={{ backgroundColor: colors.cart_badge_bg }}>
+                    {totalItems}
+                  </span>
                 )}
-              </div>
+              </Link>
 
-              {/* Profile / Account Dropdown */}
-              <div className="relative group flex items-center" suppressHydrationWarning>
-                <Link href={isAuthenticated ? `/${currentCountry}/account` : `/${currentCountry}/login`} className="relative p-2 block group-hover:text-[#3B5D3B] transition-colors">
+              <div className="relative group">
+                <Link href={isAuthenticated ? `/${currentCountry}/account` : `/${currentCountry}/login`} className="p-2 block">
                   {isAuthenticated && user?.avatar_url ? (
-                     
-                    <div className="h-[22px] w-[22px] rounded-full overflow-hidden ring-1 ring-[#D4A847]/30 group-hover:ring-[#D4A847] transition-all">
+                    <div className="h-[22px] w-[22px] rounded-full overflow-hidden ring-1 ring-[#D4A847]/30">
                       <img src={user.avatar_url} alt="Profile" className="h-full w-full object-cover" />
                     </div>
                   ) : (
-                    <User className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
+                    <User className="h-[20px] w-[20px]" style={{ color: colors.navbar_text }} />
                   )}
                 </Link>
-
-                {/* Account Dropdown Desktop */}
-                <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[120] transform origin-top-right scale-95 group-hover:scale-100 overflow-hidden">
-                  <div className="py-2">
-                    {isAuthenticated ? (
-                      <>
-                        <div className="px-5 py-4 border-b border-gray-50 bg-[#3B5D3B]/5">
-                          <p className="text-sm font-bold text-gray-800 truncate">{user?.name || 'My Account'}</p>
-                          <p className="text-xs text-gray-500 truncate mt-0.5">{user?.email}</p>
-                        </div>
-                        <div className="p-2 space-y-1">
-                          <Link href="/account" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:text-[#3B5D3B] hover:bg-[#3B5D3B]/5 transition-all">
-                            <Settings className="h-4 w-4" /> Account Settings
-                          </Link>
-                          <Link href="/account/orders" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:text-[#3B5D3B] hover:bg-[#3B5D3B]/5 transition-all">
-                            <Package className="h-4 w-4" /> My Orders
-                          </Link>
-                          <Link href="/account/wishlist" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:text-[#3B5D3B] hover:bg-[#3B5D3B]/5 transition-all">
-                            <Heart className="h-4 w-4" /> My Wishlist
-                          </Link>
-                        </div>
-                        <div className="border-t border-gray-100 my-1"></div>
-                        <div className="p-2">
-                          <button
-                            onClick={() => {
-                              logout();
-                              toast.success('Logged out successfully');
-                              router.push(`/${currentCountry}/login`);
-                            }}
-                            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-all font-semibold"
-                          >
-                            <LogOut className="h-4 w-4" /> Sign Out
-                          </button>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="px-5 py-4 border-b border-gray-50 bg-[#3B5D3B]/5">
-                          <p className="text-sm font-bold text-gray-800">Welcome to Vedashi</p>
-                          <p className="text-xs text-gray-500 mt-0.5">Sign in to easily track orders, save items, and more.</p>
-                        </div>
-                        <div className="p-2 space-y-1">
-                          <Link href={`/${currentCountry}/login`} className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-white bg-[#3B5D3B] hover:bg-[#4A724A] transition-all shadow-md shadow-[#3B5D3B]/20">
-                            <LogIn className="h-4 w-4" /> Sign In
-                          </Link>
-                          <Link href={`/${currentCountry}/login?mode=register`} className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-all">
-                            <UserPlus className="h-4 w-4" /> Create Account
-                          </Link>
-                        </div>
-                      </>
-                    )}
-                  </div>
+                <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[120] p-2">
+                  {isAuthenticated ? (
+                    <>
+                      <div className="px-4 py-3 border-b border-gray-50 mb-2">
+                        <p className="text-sm font-bold text-gray-800 truncate">{user?.name}</p>
+                        <p className="text-[10px] text-gray-500 truncate">{user?.email}</p>
+                      </div>
+                      <Link href="/account" className="flex items-center gap-3 px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50"><Settings className="h-4 w-4" /> Settings</Link>
+                      <Link href="/account/orders" className="flex items-center gap-3 px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50"><Package className="h-4 w-4" /> Orders</Link>
+                      <button onClick={() => logout()} className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm text-red-600 hover:bg-red-50 mt-2"><LogOut className="h-4 w-4" /> Logout</button>
+                    </>
+                  ) : (
+                    <div className="p-2 space-y-2">
+                      <Link href={`/${currentCountry}/login`} className="block w-full text-center py-2 bg-[#3B5D3B] text-white rounded-lg text-sm font-bold">Sign In</Link>
+                      <Link href={`/${currentCountry}/login?mode=register`} className="block w-full text-center py-2 bg-gray-50 text-gray-700 rounded-lg text-sm border">Register</Link>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Mobile toggle */}
-              <button suppressHydrationWarning onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2" style={{ color: colors.navbar_text }}>
-                {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2">
+                <Menu className="h-5 w-5" />
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ═══════════════ SECONDARY NAVBAR ═══════════════ */}
       <SecondaryNavbar />
 
       {/* ═══════════════ STRIP BAR ═══════════════ */}
@@ -399,268 +443,57 @@ export default function Navbar() {
         <div className="hidden md:block" style={{ backgroundColor: colors.strip_bg }}>
           <div className="mx-auto max-w-[1800px] w-full px-4 lg:px-6">
             <div className="flex items-center justify-between h-9 text-[12px] tracking-wide">
-
-              {/* LEFT */}
               <div className="flex items-center gap-5">
-                {strip.show_track_orders && !loading && (
-                  <Link
-                    href={`/${currentCountry}/account`}
-                    className="font-medium transition-colors duration-200"
-                    style={{ color: colors.strip_text }}
-                    onMouseEnter={e => (e.currentTarget.style.color = colors.strip_accent)}
-                    onMouseLeave={e => (e.currentTarget.style.color = colors.strip_text)}
-                  >
-                    Track Orders
-                  </Link>
+                {strip.show_track_orders && (
+                  <Link href={`/${currentCountry}/account`} className="font-medium" style={{ color: colors.strip_text }}>Track Orders</Link>
                 )}
-
-                {strip.show_track_orders && strip.show_categories && (
-                  <span style={{ color: colors.strip_text, opacity: 0.3 }}>|</span>
-                )}
-
-                {/* Categories with Mega Dropdown */}
-                {strip.show_categories && !loading && (
-                  <div className="relative group flex items-center h-9">
-                    <button
-                      className="flex items-center gap-1 font-medium cursor-pointer transition-colors duration-200"
-                      style={{ color: colors.strip_text }}
-                    >
-                      Categories
-                      <ChevronDown className="h-3 w-3 transition-transform duration-200 group-hover:rotate-180" />
-                    </button>
-                    <div className="absolute top-9 left-0 min-w-[280px] bg-white text-gray-800 shadow-2xl rounded-b-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[200] border-t-[3px]" style={{ borderColor: colors.strip_text }}>
-                      <div className="py-2">
-                        {parentCategories.map(parent => {
-                          const subs = categories.filter(c => c.parent_id === parent.category_id);
-                          return (
-                            <div key={parent.category_id} className="relative group/cat">
-                              <Link
-                                href={`/${currentCountry}/products?category=${parent.slug}`}
-                                className="flex items-center justify-between px-5 py-2.5 text-sm font-medium transition-colors duration-150"
-                                style={{ color: colors.navbar_text }}
-                                onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.color = colors.navbar_hover)}
-                                onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.color = colors.navbar_text)}
-                              >
-                                {parent.name}
-                                {subs.length > 0 && <ChevronDown className="h-3.5 w-3.5 -rotate-90 text-gray-400" />}
-                              </Link>
-                              {subs.length > 0 && (
-                                <div className="absolute left-full top-0 min-w-[220px] bg-white shadow-xl rounded-r-lg opacity-0 invisible group-hover/cat:opacity-100 group-hover/cat:visible transition-all duration-200 z-[210] border-l border-gray-100">
-                                  <div className="py-2">
-                                    {subs.map(sub => (
-                                      <Link
-                                        key={sub.category_id}
-                                        href={`/${currentCountry}/products?category=${parent.slug}&sub_category=${sub.slug}`}
-                                        className="block px-5 py-2 text-sm text-gray-600 transition-colors duration-150"
-                                        style={{ color: colors.navbar_text }}
-                                        onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => {
-                                          (e.currentTarget as HTMLElement).style.backgroundColor = colors.navbar_hover;
-                                          (e.currentTarget as HTMLElement).style.color = '#ffffff';
-                                        }}
-                                        onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => {
-                                          (e.currentTarget as HTMLElement).style.backgroundColor = '';
-                                          (e.currentTarget as HTMLElement).style.color = colors.navbar_text;
-                                        }}
-                                      >
-                                        {sub.name}
-                                      </Link>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
+                {strip.show_categories && (
+                  <div className="flex items-center gap-6">
+                    {parentCategories.slice(0, 5).map(parent => (
+                      <div key={parent.category_id} className="relative group flex items-center h-9">
+                        <Link href={`/${currentCountry}/products?category=${parent.slug}`} className="flex items-center gap-1 font-medium" style={{ color: colors.strip_text }}>
+                          {parent.name}
+                          {parent.children && parent.children.length > 0 && <ChevronDown className="h-3 w-3 transition-transform group-hover:rotate-180" />}
+                        </Link>
+                        <MegaMenuContent parent={parent} country={currentCountry} colors={colors} />
                       </div>
-                    </div>
+                    ))}
                   </div>
                 )}
               </div>
-
-              {/* CENTER */}
-              <span className="font-medium tracking-wider text-[11px]" style={{ color: colors.strip_text }}>
-                {strip.center_message}
-              </span>
-
-              {/* RIGHT */}
+              <span className="font-medium" style={{ color: colors.strip_text }}>{strip.center_message}</span>
               <div className="flex items-center gap-1.5 font-medium" style={{ color: colors.strip_text }}>
-                <span className="text-sm">✆</span>
-                <span>
-                  Hotline:{' '}
-                  <span className="font-semibold" style={{ color: colors.strip_accent }}>{strip.hotline}</span>
-                </span>
+                <span>Hotline: <span style={{ color: colors.strip_accent }}>{strip.hotline}</span></span>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* ═══════════════ MOBILE MENU (Right Drawer) ═══════════════ */}
+      {/* ═══════════════ MOBILE MENU ═══════════════ */}
       <AnimatePresence>
         {mobileOpen && (
           <>
-            {/* Backdrop Overlay */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setMobileOpen(false)}
-              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000] md:hidden"
-            />
-
-            {/* Right Side Drawer */}
-            <motion.div
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed right-0 top-0 h-full w-[320px] max-w-[85vw] bg-white shadow-2xl z-[2001] md:hidden flex flex-col overflow-hidden"
-            >
-              {/* Drawer Header */}
-              <div className="flex items-center justify-between p-4 border-b">
-                <img src="/vedashi-logo.png" alt="Vedashi" className="h-10 w-auto object-contain" />
-                <button
-                  onClick={() => setMobileOpen(false)}
-                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
-                >
-                  <X className="h-6 w-6" />
-                </button>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setMobileOpen(false)} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000]" />
+            <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} className="fixed right-0 top-0 h-full w-[320px] bg-white z-[2001] flex flex-col">
+              <div className="p-4 border-b flex justify-between items-center">
+                <img src="/vedashi-logo.png" alt="Vedashi" className="h-8 w-auto" />
+                <button onClick={() => setMobileOpen(false)}><X className="h-6 w-6" /></button>
               </div>
-
-              {/* Drawer Content */}
-              <div className="flex-1 overflow-y-auto custom-scrollbar">
-                <nav className="flex flex-col p-5 gap-1">
-                  {/* Mobile Search */}
-                  <div className="mb-4">
-                    <SearchAutocomplete className="w-full" onClose={() => setMobileOpen(false)} placeholder="Search remedies…" />
-                  </div>
-
-                  {/* Main links */}
-                  <p className="px-3 text-[10px] uppercase tracking-widest text-[#3B5D3B] font-bold mb-2">Main Menu</p>
-                  <div className="space-y-1 mb-6">
-                    {visibleLinks.map(link => {
-                      const prefixedUrl = link.url.startsWith('/') ? `/${currentCountry}${link.url === '/' ? '' : link.url}` : link.url;
-                      const isActive = link.url === '/'
-                        ? pathname === `/${currentCountry}` || pathname === `/${currentCountry}/`
-                        : pathname?.includes(link.url);
-
-                      return (
-                        <Link
-                          key={link.label}
-                          href={prefixedUrl}
-                          onClick={() => setMobileOpen(false)}
-                          className={`flex items-center gap-3 py-3 px-4 rounded-xl text-sm font-bold uppercase tracking-wide transition-all ${isActive ? 'bg-[#3B5D3B]/10 text-[#3B5D3B]' : 'text-gray-600 hover:bg-gray-50'
-                            }`}
-                        >
-                          <div className={`h-1.5 w-1.5 rounded-full transition-all ${isActive ? 'bg-[#3B5D3B] scale-100' : 'bg-transparent scale-0'}`} />
-                          {link.label}
-                        </Link>
-                      );
-                    })}
-                  </div>
-
-                  {/* Categories */}
-                  <div className="border-t border-gray-100 pt-6 mb-6">
-                    <p className="px-3 text-[10px] uppercase tracking-widest text-[#3B5D3B] font-bold mb-3">Categories</p>
-                    <div className="space-y-4">
-                      {parentCategories.map(parent => (
-                        <div key={parent.category_id} className="flex flex-col">
-                          <Link
-                            href={`/${currentCountry}/products?category=${parent.slug}`}
-                            onClick={() => setMobileOpen(false)}
-                            className="py-2 px-3 font-bold text-sm text-gray-800 hover:text-[#3B5D3B] transition-colors"
-                          >
-                            {parent.name}
-                          </Link>
-                          <div className="ml-3 mt-1 space-y-1 border-l-2 border-gray-100">
-                            {categories.filter(c => c.parent_id === parent.category_id).map(sub => (
-                              <Link
-                                key={sub.category_id}
-                                href={`/${currentCountry}/products?category=${parent.slug}&sub_category=${sub.slug}`}
-                                onClick={() => setMobileOpen(false)}
-                                className="block py-1.5 pl-6 pr-3 text-sm text-gray-500 hover:text-[#3B5D3B] transition-colors"
-                              >
-                                {sub.name}
-                              </Link>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Account Section */}
-                  <div className="border-t border-gray-100 pt-6">
-                    <p className="px-3 text-[10px] uppercase tracking-widest text-[#3B5D3B] font-bold mb-4">My Account</p>
-                    {isAuthenticated ? (
-                      <div className="flex flex-col gap-1 p-2 bg-gray-50 rounded-2xl mb-4">
-                        <div className="px-3 py-3 flex items-center gap-3 border-b border-gray-200/50 mb-2">
-                          <div className="h-10 w-10 rounded-full bg-[#3B5D3B]/10 flex items-center justify-center flex-shrink-0 overflow-hidden ring-2 ring-white">
-                            {user?.avatar_url ? (
-                              <img src={user.avatar_url} alt="Profile" className="h-full w-full object-cover" />
-                            ) : (
-                              <User className="h-5 w-5 text-[#3B5D3B]" />
-                            )}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-bold text-gray-800 truncate">{user?.name}</p>
-                            <p className="text-[10px] text-gray-500 truncate">{user?.email}</p>
-                          </div>
-                        </div>
-                        <div className="space-y-0.5">
-                          <Link href={`/${currentCountry}/account`} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 py-2.5 px-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-[#3B5D3B]/5 transition-colors">
-                            <Settings className="h-4 w-4" /> Account Settings
-                          </Link>
-                          <Link href={`/${currentCountry}/account/orders`} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 py-2.5 px-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-[#3B5D3B]/5 transition-colors">
-                            <Package className="h-4 w-4" /> My Orders
-                          </Link>
-                          <Link href={`/${currentCountry}/account/wishlist`} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 py-2.5 px-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-[#3B5D3B]/5 transition-colors">
-                            <Heart className="h-4 w-4" /> My Wishlist
-                          </Link>
-                        </div>
-                        <button
-                          onClick={() => {
-                            setMobileOpen(false);
-                            logout();
-                            toast.success('Logged out successfully');
-                            router.push(`/${currentCountry}/login`);
-                          }}
-                          className="flex items-center gap-3 py-3 px-3 rounded-lg text-sm font-bold text-red-600 hover:bg-red-50 transition-colors mt-2"
-                        >
-                          <LogOut className="h-4 w-4" /> Sign Out
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col gap-3 px-1 mb-6">
-                        <Link
-                          href={`/${currentCountry}/login`}
-                          onClick={() => setMobileOpen(false)}
-                          className="flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl text-sm font-bold text-white bg-[#3B5D3B] shadow-lg shadow-[#3B5D3B]/20"
-                        >
-                          <LogIn className="h-4 w-4" /> Sign In
-                        </Link>
-                        <Link
-                          href={`/${currentCountry}/login?mode=register`}
-                          onClick={() => setMobileOpen(false)}
-                          className="flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl text-sm font-bold text-gray-700 bg-gray-50 border border-gray-200"
-                        >
-                          <UserPlus className="h-4 w-4" /> Create Account
-                        </Link>
-                      </div>
-                    )}
-                  </div>
-                </nav>
-              </div>
-
-              {/* Drawer Footer */}
-              <div className="p-6 bg-gray-50/50 border-t border-gray-100 flex flex-col gap-4">
-                <div className="flex items-center justify-between">
-                  <RegionSwitcher upward={true} />
-                  <GoogleTranslateWidget upward={true} />
+              <div className="flex-1 overflow-y-auto p-5">
+                <div className="mb-6"><SearchAutocomplete className="w-full" onClose={() => setMobileOpen(false)} /></div>
+                <div className="space-y-1 mb-8">
+                  {visibleLinks.map(link => (
+                    <Link key={link.label} href={link.url} onClick={() => setMobileOpen(false)} className="block py-3 px-4 font-bold text-sm uppercase text-gray-600 hover:bg-gray-50 rounded-xl">{link.label}</Link>
+                  ))}
                 </div>
-                <div className="flex items-center gap-2 text-xs font-bold text-[#3B5D3B]">
-                  <Phone className="h-3.5 w-3.5" />
-                  Hotline: {strip.hotline}
+                <div className="border-t pt-6">
+                  <p className="text-[10px] uppercase font-bold text-[#3B5D3B] mb-3 px-4">Categories</p>
+                  <div className="space-y-1">
+                    {parentCategories.map(parent => (
+                      <MobileNavItem key={parent.category_id} item={parent} country={currentCountry} onClose={() => setMobileOpen(false)} />
+                    ))}
+                  </div>
                 </div>
               </div>
             </motion.div>

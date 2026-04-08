@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense, useCallback, useRef } from 'react';
+import { useState, useEffect, Suspense, useCallback, useRef, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { getCategories, getFilterOptions, getBestSellers, getNewArrivals, getFilteredProducts, subscribeNewsletter } from '@/lib/api';
 import { useCurrency } from '@/context/CurrencyContext';
@@ -63,6 +63,7 @@ function ProductsContent() {
     } = useFilters();
 
     const searchParams = useSearchParams();
+
     const gridRef = useRef<HTMLDivElement>(null);
 
     // Pagination state
@@ -94,6 +95,24 @@ function ProductsContent() {
     const [priceMax, setPriceMax] = useState<number>(5000);
     const [categories, setCategories] = useState<Category[]>([]);
     const [filterAttributes, setFilterAttributes] = useState<FilterAttribute[]>([]);
+
+    // Resolve slug values → real display names for category/sub_category chips
+    const resolvedChips = useMemo(() =>
+        activeChips.map(chip => {
+            if (chip.key === 'category') {
+                const cat = categories.find(c => c.slug === chip.value);
+                return cat ? { ...chip, value: cat.name } : chip;
+            }
+            if (chip.key === 'sub_category') {
+                const subCat = categories
+                    .flatMap(c => (c as any).children || [])
+                    .find((s: any) => s.slug === chip.value);
+                return subCat ? { ...chip, value: subCat.name } : chip;
+            }
+            return chip;
+        }),
+        [activeChips, categories]
+    );
 
     const displayCountryOptions = Array.from(
         new Set([...COUNTRIES.map(c => c.name), ...countryOptions])
@@ -566,7 +585,7 @@ function ProductsContent() {
                         </div>
 
                         <ActiveFilterChips
-                            chips={activeChips}
+                            chips={resolvedChips}
                             onRemove={removeFilter}
                             onClearAll={clearAll}
                         />
