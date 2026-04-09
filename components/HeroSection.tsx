@@ -86,17 +86,19 @@ export default function HeroSection() {
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                                 {/* Watch Our Story pill */}
                                 <div className="absolute bottom-6 left-6 right-6">
-                                    <div className="flex items-center gap-3 rounded-xl bg-white/90 backdrop-blur-md px-4 py-3 shadow-lg">
-                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#3B5D3B]/10">
-                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="#3B5D3B">
-                                                <polygon points="5,3 13,8 5,13" />
-                                            </svg>
+                                    <a href="/about">
+                                        <div className="flex items-center gap-3 rounded-xl bg-white/90 backdrop-blur-md px-4 py-3 shadow-lg">
+                                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#3B5D3B]/10">
+                                                <svg width="16" height="16" viewBox="0 0 16 16" fill="#3B5D3B">
+                                                    <polygon points="5,3 13,8 5,13" />
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-[#6B6B60]">The Vedashi Method</p>
+                                                <p className="text-sm font-semibold text-[#2C2C2C]">KNOW OUR STORY</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="text-xs text-[#6B6B60]">The Vedashi Method</p>
-                                            <p className="text-sm font-semibold text-[#2C2C2C]">WATCH OUR STORY</p>
-                                        </div>
-                                    </div>
+                                    </a>
                                 </div>
                             </div>
 

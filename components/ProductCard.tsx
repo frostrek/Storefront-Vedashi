@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { gsap } from 'gsap';
 import Image from 'next/image';
-import { Heart, ShoppingCart, Eye, X, Check, AlertTriangle, Loader2, Plus, Minus } from 'lucide-react';
-import { Product } from '@/types';
+import { Heart, ShoppingCart, Eye, X, Check, AlertTriangle, Loader2, Plus, Minus, Trash2 } from 'lucide-react';
+import { Product, ProductVariant } from '@/types';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCart } from '@/context/CartContext';
 import { getRatingSummary, getProductDetails } from '@/lib/api';
@@ -12,7 +12,9 @@ import { useCurrency } from '@/context/CurrencyContext';
 import StarRating from '@/components/reviews/StarRating';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { trackEcommerce } from '@/lib/analytics/gtag';
 
 
 const BLUR_DATA_URL =
@@ -23,9 +25,12 @@ interface ProductCardProps {
     onMoveToCart?: (e: React.MouseEvent) => void;
     priority?: boolean;
     layout?: 'grid' | 'list';
+    listName?: string;
+    listIndex?: number;
 }
 
-export default function ProductCard({ product, onMoveToCart, priority = false, layout = 'grid' }: ProductCardProps) {
+export default function ProductCard({ product, onMoveToCart, priority = false, layout = 'grid', listName, listIndex }: ProductCardProps) {
+    const params = useParams();
     const { formatPrice } = useCurrency();
     const { isInWishlist, toggleItem } = useWishlist();
     const { addItem, updateQuantity, removeItem, items, loading: cartLoading } = useCart();
@@ -37,8 +42,8 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
 
     // Variant preview / Cart modal state
     const [showCartModal, setShowCartModal] = useState(false);
-    const [variants, setVariants] = useState<any[]>([]);
-    const [selectedVariant, setSelectedVariant] = useState<any>(null);
+    const [variants, setVariants] = useState<ProductVariant[]>([]);
+    const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
     const [loadingVariants, setLoadingVariants] = useState(false);
     const [addingToCart, setAddingToCart] = useState(false);
     const [isClosing, setIsClosing] = useState(false);
@@ -139,13 +144,18 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
 
 
     useEffect(() => {
+        if (product.avg_rating !== undefined && product.review_count !== undefined) {
+            setAvgRating(Number(product.avg_rating) || 0);
+            setTotalReviews(Number(product.review_count) || 0);
+            return;
+        }
         getRatingSummary(product.product_id).then(res => {
             if (res.success && res.data) {
                 setAvgRating(res.data.average_rating ?? 0);
                 setTotalReviews(res.data.total_reviews ?? 0);
             }
         }).catch(() => { });
-    }, [product.product_id]);
+    }, [product.product_id, product.avg_rating, product.review_count]);
 
     const handleToggleWishlist = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -154,7 +164,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
     };
 
     // Determine if product has variants from the product data
-    const hasVariants = (product as any).variant_count > 1 || (product as any).variants?.length > 1;
+    const hasVariants = (product.variant_count ?? 0) > 1 || (product.variants?.length ?? 0) > 1;
 
     // Display values (default variant or product level)
     const displayPrice = product.price ?? 0;
@@ -162,7 +172,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
     const originalPrice = product.original_price ?? displayPrice;
     const discountPercent = product.discount_percentage ?? 0;
 
-    const imageSrc = (product as any).thumbnail_url || product.images?.[0] || '/herbal_placeholder.png';
+    const imageSrc = product.thumbnail_url || product.images?.[0] || '/herbal_placeholder.png';
     const isExternal = imageSrc.startsWith('http');
     const isBase64 = imageSrc.startsWith('data:');
     const productUrl = `/products/${product.slug || product.product_id}`;
@@ -178,6 +188,52 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
             setIsClosing(false);
         }, 280);
     }, []);
+
+    // Intersection Observer for view_item_list tracking
+    useEffect(() => {
+        if (!cardRef.current) return;
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    trackEcommerce('view_item_list', {
+                        currency: 'INR',
+                        value: displayPrice,
+                        items: [{
+                            item_id: product.product_id,
+                            item_name: product.product_name,
+                            item_list_name: listName || 'category',
+                            index: listIndex || 0,
+                            price: displayPrice,
+                            quantity: 1,
+                            item_category: product.category,
+                            item_brand: product.brand
+                        }]
+                    });
+                    observer.disconnect();
+                }
+            });
+        }, { threshold: 0.5 });
+        observer.observe(cardRef.current);
+        return () => observer.disconnect();
+    }, [product.product_id, product.product_name, listName, listIndex, displayPrice, product.category, product.brand]);
+
+    // Track view_item when the quick-view modal opens
+    useEffect(() => {
+        if (showCartModal) {
+            trackEcommerce('view_item', {
+                currency: 'INR',
+                value: displayPrice,
+                items: [{
+                    item_id: product.product_id,
+                    item_name: product.product_name,
+                    price: displayPrice,
+                    quantity: 1,
+                    item_category: product.category,
+                    item_brand: product.brand
+                }]
+            });
+        }
+    }, [showCartModal, product.product_id, product.product_name, displayPrice, product.category, product.brand]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -204,9 +260,16 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
         e.stopPropagation();
 
         if (!hasVariants) {
-            const maxStock = (product as any).stock_quantity ?? 99;
+            const maxStock = product.stock_quantity ?? 99;
             if (maxStock <= 0) {
                 toast.error('This item is out of stock');
+                return;
+            }
+
+            // Check if item already in cart at max stock
+            const existingInCart = items.find(i => i.product_id === product.product_id);
+            if (existingInCart && existingInCart.quantity >= maxStock) {
+                toast('No more stock available', { icon: '⚠️' });
                 return;
             }
 
@@ -219,7 +282,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                     detail: { startX, startY }
                 }));
 
-                const variantIdToUse = (product as any).default_variant_id || null;
+                const variantIdToUse = product.default_variant_id || null;
                 await addItem(product.product_id, variantIdToUse, 1);
                 toast.success(`${product.product_name} added to cart!`);
                 setQuantity(1);
@@ -240,7 +303,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
         }
 
         if (variants.length > 0) {
-            const defaultV = selectedVariant || variants.find((v: any) => v.is_default === true) || variants[0];
+            const defaultV = selectedVariant || variants.find((v: ProductVariant) => v.is_default === true) || variants[0];
             const existing = items.find(i => i.variant_id === defaultV.variant_id);
             setQuantity(existing ? existing.quantity : 1);
             return;
@@ -251,7 +314,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
             const details = await getProductDetails(product.product_id);
             if (details?.variants?.length) {
                 setVariants(details.variants);
-                const defaultV = details.variants.find((v: any) => v.is_default === true) || details.variants[0];
+                const defaultV = details.variants.find((v: ProductVariant) => v.is_default === true) || details.variants[0];
                 setSelectedVariant(defaultV);
                 const existing = items.find(i => i.variant_id === defaultV.variant_id);
                 setQuantity(existing ? existing.quantity : 1);
@@ -261,15 +324,15 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
         } finally {
             setLoadingVariants(false);
         }
-    }, [product.product_id, variants, selectedVariant, hasVariants, items]);
+    }, [product.product_id, product.default_variant_id, product.product_name, product.stock_quantity, variants, selectedVariant, hasVariants, items, isList, addItem, triggerAddedFeedback]);
 
     // Unified add to cart from modal
     const handleModalAddToCart = async (e: React.MouseEvent) => {
         if (hasVariants && !selectedVariant) return;
 
-        const maxStock = hasVariants
+        const maxStock = hasVariants && selectedVariant
             ? (selectedVariant.stock_quantity ?? 99)
-            : ((product as any).stock_quantity ?? 99);
+            : (product.stock_quantity ?? 99);
 
         if (maxStock <= 0) {
             toast.error('This item is out of stock');
@@ -285,8 +348,22 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                 detail: { startX, startY }
             }));
 
-            const variantIdToUse = hasVariants ? selectedVariant.variant_id : ((product as any).default_variant_id || null);
+            const variantIdToUse = (hasVariants && selectedVariant) ? selectedVariant.variant_id : (product.default_variant_id || null);
             await addItem(product.product_id, variantIdToUse, quantity);
+
+            trackEcommerce('add_to_cart', {
+                currency: 'INR',
+                value: ((hasVariants && selectedVariant) ? (selectedVariant.price ?? 0) : displayPrice) * quantity,
+                items: [{
+                    item_id: product.product_id,
+                    item_name: product.product_name,
+                    price: (hasVariants && selectedVariant) ? (selectedVariant.price ?? 0) : displayPrice,
+                    quantity: quantity,
+                    item_category: product.category,
+                    item_brand: product.brand,
+                }]
+            });
+
             toast.success(`${product.product_name} added to cart!`);
             triggerAddedFeedback();
         } catch {
@@ -307,9 +384,9 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
         if (!currentItemInCart) return;
         setAddingToCart(true);
         try {
-            const maxStock = hasVariants
+            const maxStock = hasVariants && selectedVariant
                 ? (selectedVariant.stock_quantity ?? 99)
-                : ((product as any).stock_quantity ?? 99);
+                : (currentItemInCart.stock_quantity ?? product.stock_quantity ?? 99);
 
             if (currentItemInCart.quantity < maxStock) {
                 const newQty = currentItemInCart.quantity + 1;
@@ -417,7 +494,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             </div>
                         ) : variants.length > 0 ? (
                             <div ref={variantButtonsRef} className="flex flex-col gap-1">
-                                {variants.map((v: any) => {
+                                {variants.map((v: ProductVariant) => {
                                     const isSelected = selectedVariant?.variant_id === v.variant_id;
                                     const isInactive = v.status === 'Inactive' || v.is_active === false;
                                     const isOut = v.stock_quantity !== null && v.stock_quantity !== undefined && v.stock_quantity <= 0;
@@ -431,14 +508,16 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                         if (!g) return '';
                                         return g >= 1000 ? `${(g / 1000).toFixed(g % 1000 === 0 ? 0 : g % 100 === 0 ? 1 : 2)} kg` : `${Math.round(g)} g`;
                                     };
-                                    const volLabel = formatVolume(v.volume_ml);
-                                    const weightLabel = formatWeight(v.weight_g);
+                                    const volLabel = formatVolume(v.volume_ml ?? 0);
+                                    const weightLabel = formatWeight(v.weight_g ?? 0);
                                     const countLabel = v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : '';
                                     const strengthLabel = v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : '';
                                     const labelParts = [
-                                        v.size_label, weightLabel, volLabel, countLabel,
-                                        strengthLabel, v.flavor,
-                                        v.pack_quantity > 1 ? `Pack of ${v.pack_quantity}` : ''
+                                        weightLabel, volLabel, 
+                                        (product.common_form && countLabel === product.common_form) ? '' : countLabel,
+                                        (product.common_strength && strengthLabel === product.common_strength) ? '' : strengthLabel,
+                                        (product.common_flavor && v.flavor === product.common_flavor) ? '' : (v.flavor ?? ''),
+                                        (v.pack_quantity ?? 0) > 1 ? `Pack of ${v.pack_quantity ?? 0}` : ''
                                     ].filter(Boolean);
                                     const label = labelParts.join(' · ') || v.sku || 'Standard';
 
@@ -505,11 +584,11 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                             : 'bg-gray-100 text-gray-700 group-hover:bg-[#3d5c3a]/10 group-hover:text-[#3d5c3a]'
                                                         }
                                                     `}>
-                                                        {formatPrice(v.price)}
+                                                        {formatPrice(v.price, v.country_prices || product.country_prices)}
                                                     </span>
                                                     {v.is_on_sale && v.original_price && (
                                                         <span className={`text-[10px] line-through ${isSelected ? 'text-white/50' : 'text-gray-400'}`}>
-                                                            {formatPrice(v.original_price)}
+                                                            {formatPrice(v.original_price, v.country_prices || product.country_prices)}
                                                         </span>
                                                     )}
                                                     {!isInactive && isOut && (
@@ -538,11 +617,11 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                         {!isInCart ? (
                             <button
                                 onClick={(e) => handleModalAddToCart(e)}
-                                disabled={
-                                    (hasVariants && !selectedVariant) ||
-                                    addingToCart || cartLoading || justAdded ||
-                                    (hasVariants && selectedVariant?.stock_quantity <= 0)
-                                }
+                                    disabled={!!(
+                                        (hasVariants && !selectedVariant) ||
+                                        addingToCart || cartLoading || justAdded ||
+                                        (hasVariants && selectedVariant && (selectedVariant.stock_quantity ?? 0) <= 0)
+                                    )}
                                 className={`
                                     w-full py-2.5 rounded-xl text-white text-[11px] font-bold
                                     flex items-center justify-center gap-2 transition-all duration-200
@@ -561,11 +640,11 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                 }
                                 <span>
                                     {addingToCart
-                                        ? 'Adding to cart…'
+                                        ? 'Adding to cart...'
                                         : justAdded
                                             ? 'Added to bag!'
                                             : selectedVariant
-                                                ? `Add to Cart · ${formatPrice(selectedVariant.price * quantity)}`
+                                                ? `Add to Cart · ${formatPrice((selectedVariant?.price ?? 0) * quantity, (selectedVariant as any)?.country_prices || (product as any).country_prices)}`
                                                 : 'Select an option'
                                     }
                                 </span>
@@ -587,9 +666,19 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                 </div>
 
                                 <button
-                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleIncrement(); }}
-                                    disabled={addingToCart}
-                                    className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-xl bg-[#3d5c3a] text-white hover:bg-[#2d4a2a] transition-all cursor-pointer shadow-sm shadow-[#3d5c3a]/30"
+                                    onClick={(e) => {
+                                        e.preventDefault(); e.stopPropagation();
+                                        const maxStock = hasVariants && selectedVariant
+                                            ? (selectedVariant.stock_quantity ?? 99)
+                                            : (product.stock_quantity ?? 99);
+                                        if (currentItemInCart.quantity >= maxStock) {
+                                            toast('Maximum stock reached', { icon: '⚠️' });
+                                            return;
+                                        }
+                                        handleIncrement();
+                                    }}
+                                    disabled={addingToCart || (() => { const ms = hasVariants && selectedVariant ? (selectedVariant.stock_quantity ?? 99) : (product.stock_quantity ?? 99); return currentItemInCart.quantity >= ms; })()}
+                                    className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-xl bg-[#3d5c3a] text-white hover:bg-[#2d4a2a] transition-all cursor-pointer shadow-sm shadow-[#3d5c3a]/30 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <Plus className="h-3.5 w-3.5" />
                                 </button>
@@ -637,10 +726,10 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                     </p>
                                 </div>
                                 <div className="grid grid-cols-1 gap-1.5">
-                                    {variants.map((v: any) => {
+                                    {variants.map((v: ProductVariant) => {
                                         const isSelected = selectedVariant?.variant_id === v.variant_id;
                                         const isInactive = v.status === 'Inactive' || v.is_active === false;
-                                        const isOut = v.stock_quantity !== null && v.stock_quantity !== undefined && v.stock_quantity <= 0;
+                                        const isOut = v.stock_quantity !== null && v.stock_quantity !== undefined && (v.stock_quantity ?? 0) <= 0;
                                         const isDisabled = isOut || isInactive;
                                         const formatVolume = (ml: number) => {
                                             if (!ml) return '';
@@ -650,19 +739,18 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                             if (!g) return '';
                                             return g >= 1000 ? `${(g / 1000).toFixed(g % 1000 === 0 ? 0 : g % 100 === 0 ? 1 : 2)} kg` : `${Math.round(g)} g`;
                                         };
-                                        const volLabel = formatVolume(v.volume_ml);
-                                        const weightLabel = formatWeight(v.weight_g);
+                                        const volLabel = formatVolume(v.volume_ml ?? 0);
+                                        const weightLabel = formatWeight(v.weight_g ?? 0);
                                         const countLabel = v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : '';
                                         const strengthLabel = v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : '';
 
                                         const labelParts = [
-                                            v.size_label,
                                             weightLabel,
                                             volLabel,
-                                            countLabel,
-                                            strengthLabel,
-                                            v.flavor,
-                                            v.pack_quantity > 1 ? `Pack of ${v.pack_quantity}` : ''
+                                            (product.common_form && countLabel === product.common_form) ? '' : countLabel,
+                                            (product.common_strength && strengthLabel === product.common_strength) ? '' : strengthLabel,
+                                            (product.common_flavor && v.flavor === product.common_flavor) ? '' : (v.flavor ?? ''),
+                                            (v.pack_quantity ?? 0) > 1 ? `Pack of ${v.pack_quantity ?? 0}` : ''
                                         ].filter(Boolean);
                                         const label = labelParts.join(' · ') || v.sku || 'Standard';
 
@@ -707,9 +795,9 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                     </div>
 
                                                     <div className="text-right flex-shrink-0">
-                                                        <p className={`text-sm font-bold transition-colors duration-300 ${isSelected ? 'text-[#3d5c3a]' : 'text-gray-900'}`}>{formatPrice(v.price)}</p>
+                                                        <p className={`text-sm font-bold transition-colors duration-300 ${isSelected ? 'text-[#3d5c3a]' : 'text-gray-900'}`}>{formatPrice(v.price, v.country_prices || product.country_prices)}</p>
                                                         {v.is_on_sale && v.original_price && (
-                                                            <p className="text-[10px] text-gray-400 line-through">{formatPrice(v.original_price)}</p>
+                                                            <p className="text-[10px] text-gray-400 line-through">{formatPrice(v.original_price, v.country_prices || product.country_prices)}</p>
                                                         )}
                                                     </div>
                                                 </div>
@@ -738,7 +826,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                     {!isInCart ? (
                         <button
                             onClick={(e) => handleModalAddToCart(e)}
-                            disabled={(hasVariants && !selectedVariant) || addingToCart || cartLoading || justAdded || (hasVariants && selectedVariant?.stock_quantity <= 0) || (!hasVariants && (product as any).stock_quantity <= 0)}
+                            disabled={!!((hasVariants && !selectedVariant) || addingToCart || cartLoading || justAdded || (hasVariants && selectedVariant && (selectedVariant.stock_quantity ?? 0) <= 0) || (!hasVariants && (product.stock_quantity ?? 0) <= 0))}
                             className={`w-full py-3.5 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2 transition-all duration-300 disabled:opacity-50 cursor-pointer shadow-lg font-ui ${justAdded ? 'bg-[#2a4d2e] shadow-[#2a4d2e]/20' : 'bg-[#3d5c3a] hover:bg-[#2d4a2a] shadow-[#3d5c3a]/20 hover:shadow-[#3d5c3a]/40'}`}
                         >
                             {addingToCart ? (
@@ -748,7 +836,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             ) : (
                                 <ShoppingCart className="h-4 w-4" />
                             )}
-                            {addingToCart ? 'Processing...' : justAdded ? 'Added to Bag' : `Add to Cart - ${formatPrice((hasVariants ? (selectedVariant?.price ?? 0) : displayPrice) * quantity)}`}
+                            {addingToCart ? 'Processing...' : justAdded ? 'Added to Bag' : `Add to Cart - ${formatPrice((hasVariants ? (selectedVariant?.price ?? 0) : displayPrice) * quantity, hasVariants ? (selectedVariant?.country_prices || product.country_prices) : product.country_prices)}`}
                         </button>
                     ) : (
                         <div className="flex items-center gap-2 bg-gray-50/50 p-1 rounded-xl border border-gray-100 shadow-sm">
@@ -764,9 +852,19 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                 <p className="text-lg font-black text-[#3d5c3a] leading-none">{currentItemInCart.quantity}</p>
                             </div>
                             <button
-                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleIncrement(); }}
-                                disabled={addingToCart}
-                                className="w-10 h-10 flex items-center justify-center rounded-lg bg-[#3d5c3a] text-white hover:bg-[#2d4a2a] transition-all cursor-pointer disabled:opacity-50 shadow-sm"
+                                onClick={(e) => {
+                                    e.preventDefault(); e.stopPropagation();
+                                    const maxStock = hasVariants && selectedVariant
+                                        ? (selectedVariant.stock_quantity ?? 99)
+                                        : (product.stock_quantity ?? 99);
+                                    if (currentItemInCart.quantity >= maxStock) {
+                                        toast('Maximum stock reached', { icon: '⚠️' });
+                                        return;
+                                    }
+                                    handleIncrement();
+                                }}
+                                disabled={addingToCart || (() => { const ms = hasVariants && selectedVariant ? (selectedVariant.stock_quantity ?? 99) : (product.stock_quantity ?? 99); return currentItemInCart.quantity >= ms; })()}
+                                className="w-10 h-10 flex items-center justify-center rounded-lg bg-[#3d5c3a] text-white hover:bg-[#2d4a2a] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                             >
                                 <Plus className="h-4 w-4" />
                             </button>
@@ -798,8 +896,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
     return (
         <>
             <div className="relative group block h-full" ref={cardRef}>
-                {/* ═══════ FRONT OF CARD (Link) ═══════ */}
-                <Link href={productUrl} className="block h-full">
+                {/* ═══════ FRONT OF CARD ═══════ */}
                     <div className={`h-full overflow-hidden bg-white border border-gray-100 transition-all duration-300 ${isList ? 'flex flex-row p-3 hover:bg-gray-50/50 hover:border-[#3d5c3a]/30 rounded-2xl gap-4 sm:gap-6 items-center shadow-sm hover:shadow-md' : 'flex flex-col rounded-2xl hover:-translate-y-1 hover:shadow-xl'}`}>
                         <div className={`relative overflow-hidden bg-gradient-to-br from-[#f5f2ed] to-[#ece6dd] ${isList ? 'w-[100px] h-[100px] sm:w-[150px] sm:h-[150px] rounded-xl flex-shrink-0 border border-gray-100/50' : ''}`} style={isList ? {} : { aspectRatio: '1 / 1' }}>
                             <div className="absolute inset-0 flex items-center justify-center p-4">
@@ -843,7 +940,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             {!isList && (
                                 <button
                                     onClick={handleToggleWishlist}
-                                    className="absolute top-3 right-3 rounded-full bg-white/90 backdrop-blur-sm p-2 shadow-sm transition-all hover:scale-110 hover:shadow-md z-10 cursor-pointer"
+                                    className="absolute top-3 right-3 rounded-full bg-white/90 backdrop-blur-sm p-2 shadow-sm transition-all hover:scale-110 hover:shadow-md z-20 cursor-pointer"
                                 >
                                     <Heart
                                         className={`h-4 w-4 transition ${wishlisted
@@ -854,32 +951,30 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                 </button>
                             )}
 
-                            {/* Category Badge */}
-                            {!isList && product.category && (
-                                <span className="absolute left-3 top-3 rounded-full bg-[#3d5c3a] px-2.5 py-1 text-[9px] tracking-[0.15em] text-white uppercase font-black font-ui z-10 shadow-sm">
-                                    {product.category}
-                                </span>
-                            )}
-
-                            {/* Product Badges */}
-                            <div className={`absolute ${isList ? 'left-2 top-2 flex-row flex-wrap' : 'left-3 bottom-3 flex-col'} flex gap-1 z-10`}>
+                            {/* Product Badges (Top Left Stack) */}
+                            <div className={`absolute ${isList ? 'left-2 top-2' : 'left-3 top-3'} flex flex-col gap-1 z-10`}>
+                                {product.category && (
+                                    <span className="rounded-full bg-[#3d5c3a] px-2.5 py-1 text-[9px] tracking-[0.15em] text-white uppercase font-black font-ui shadow-sm w-fit mb-0.5">
+                                        {product.category}
+                                    </span>
+                                )}
                                 {isExpired && !isComingSoon && (
-                                    <span className="rounded-full bg-red-600 px-2.5 py-0.5 text-[9px] font-black tracking-[0.1em] text-white uppercase font-ui">
+                                    <span className="rounded-full bg-red-600 px-2.5 py-0.5 text-[9px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
                                         Expired
                                     </span>
                                 )}
                                 {isComingSoon && (
-                                    <span className="rounded-full bg-purple-600 px-2.5 py-0.5 text-[9px] font-black tracking-[0.1em] text-white uppercase font-ui">
+                                    <span className="rounded-full bg-purple-600 px-2.5 py-0.5 text-[9px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
                                         Coming Soon
                                     </span>
                                 )}
                                 {product.is_best_seller && !isComingSoon && (
-                                    <span className="rounded-full bg-amber-600 px-2.5 py-0.5 text-[9px] font-black tracking-[0.1em] text-white uppercase font-ui">
+                                    <span className="rounded-full bg-amber-600 px-2.5 py-0.5 text-[9px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
                                         Best Seller
                                     </span>
                                 )}
                                 {product.is_new_arrival && !isComingSoon && (
-                                    <span className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-[9px] font-black tracking-[0.1em] text-white uppercase font-ui">
+                                    <span className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-[9px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
                                         New
                                     </span>
                                 )}
@@ -896,6 +991,35 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                             <Eye className="h-4 w-4" />
                                             Preview Options
                                         </button>
+                                    ) : currentItemInCart ? (
+                                        <div className="w-full flex items-center justify-between bg-[#3d5c3a]/95 backdrop-blur-sm py-1.5 px-2 text-white h-11">
+                                            <button 
+                                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDecrement(); }}
+                                                disabled={addingToCart}
+                                                className="w-8 h-8 flex items-center justify-center hover:bg-white/20 rounded-md transition-colors disabled:opacity-50"
+                                            >
+                                                {currentItemInCart.quantity > 1 ? <Minus className="h-4 w-4" /> : <Trash2 className="h-4 w-4 text-red-300" />}
+                                            </button>
+                                            <div className="flex flex-col items-center leading-none">
+                                                <span className="text-sm font-black font-ui translate-y-[1px]">{currentItemInCart.quantity}</span>
+                                                <span className="text-[8px] font-bold tracking-widest uppercase opacity-80">In Bag</span>
+                                            </div>
+                                            <button 
+                                                onClick={(e) => {
+                                                    e.preventDefault(); e.stopPropagation();
+                                                    const maxStock = currentItemInCart.stock_quantity ?? product.stock_quantity ?? 99;
+                                                    if (currentItemInCart.quantity >= maxStock) {
+                                                        toast('Maximum stock reached', { icon: '⚠️' });
+                                                        return;
+                                                    }
+                                                    handleIncrement();
+                                                }}
+                                                disabled={addingToCart || (() => { const ms = currentItemInCart.stock_quantity ?? product.stock_quantity ?? 99; return currentItemInCart.quantity >= ms; })()}
+                                                className="w-8 h-8 flex items-center justify-center hover:bg-white/20 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                <Plus className="h-4 w-4" />
+                                            </button>
+                                        </div>
                                     ) : (
                                         <button
                                             onClick={(e) => onMoveToCart ? onMoveToCart(e) : openCartModal(e)}
@@ -918,30 +1042,47 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
 
                         {/* Content */}
                         <div className={`p-4 ${isList ? 'flex-1 flex flex-col justify-center min-w-0 p-0 sm:pr-4' : ''}`}>
-                            {isList && (
-                                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1 sm:mb-2">
-                                    {product.category && (
-                                        <span className="rounded leading-none bg-[#3d5c3a]/10 px-1.5 sm:px-2 py-0.5 sm:py-1 text-[8px] sm:text-[9px] tracking-widest text-[#3d5c3a] uppercase font-bold">
-                                            {product.category}
-                                        </span>
-                                    )}
-                                    {product.brand && (
-                                        <span className="text-[9px] sm:text-[10px] uppercase tracking-widest text-gray-400 font-semibold">
-                                            {product.brand}
-                                        </span>
-                                    )}
+                            <h3 className={`font-accent text-gray-900 leading-tight mb-1 sm:mb-1.5 ${isList ? 'text-lg sm:text-xl line-clamp-1 sm:line-clamp-2' : 'text-base line-clamp-2'}`}>
+                                <Link 
+                                    href={productUrl} 
+                                    className="after:absolute after:inset-0 after:z-10"
+                                    onClick={() => {
+                                        trackEcommerce('select_item', {
+                                            currency: 'INR',
+                                            value: Number(displayPrice),
+                                            items: [{
+                                                item_id: product.product_id,
+                                                item_name: product.product_name,
+                                                price: Number(displayPrice),
+                                                quantity: 1,
+                                                item_category: product.category,
+                                                item_brand: product.brand,
+                                                item_list_name: listName,
+                                                index: listIndex,
+                                            }]
+                                        });
+                                    }}
+                                >
+                                    {product.product_name}
+                                </Link>
+                            </h3>
+
+                            {product.brand && (
+                                <Link 
+                                    href={`/${params.country || 'in'}/products?brand=${encodeURIComponent(product.brand)}`}
+                                    className={`relative z-20 block uppercase tracking-[0.12em] text-gray-400 font-medium mb-1.5 sm:mb-2 hover:text-[#3d5c3a] transition-colors cursor-pointer ${isList ? 'text-[10px] sm:text-[11px]' : 'text-[10px]'}`}
+                                >
+                                    {product.brand}
+                                </Link>
+                            )}
+
+                            {isList && product.category && (
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className="rounded leading-none bg-[#3d5c3a]/10 px-1.5 sm:px-2 py-0.5 sm:py-1 text-[8px] sm:text-[9px] tracking-widest text-[#3d5c3a] uppercase font-bold border border-[#3d5c3a]/10">
+                                        {product.category}
+                                    </span>
                                 </div>
                             )}
-
-                            {!isList && product.brand && (
-                                <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-1">
-                                    {product.brand}
-                                </p>
-                            )}
-
-                            <h3 className={`font-accent text-gray-900 leading-tight mb-1.5 sm:mb-2 ${isList ? 'text-lg sm:text-xl line-clamp-1 sm:line-clamp-2' : 'text-base line-clamp-2'}`}>
-                                {product.product_name}
-                            </h3>
 
                             {/* Rating */}
                             {avgRating > 0 && (
@@ -954,15 +1095,22 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                 </div>
                             )}
 
+                            {/* Short Description */}
+                            {product.short_description && (
+                                <p className={`text-[11px] sm:text-xs text-gray-500 mb-2 leading-relaxed ${isList ? 'line-clamp-2' : 'line-clamp-1'}`}>
+                                    {product.short_description}
+                                </p>
+                            )}
+
                             {/* Price */}
                             <div className="flex items-center gap-2 flex-wrap">
                                 <p className="text-xl font-black text-[#3d5c3a] font-ui tabular-nums tracking-tight">
-                                    {formatPrice(displayPrice)}
+                                    {formatPrice(displayPrice, product.country_prices)}
                                 </p>
                                 {isOnSale && originalPrice && (
                                     <>
                                         <p className="text-xs text-gray-400 line-through">
-                                            {formatPrice(originalPrice)}
+                                            {formatPrice(originalPrice, product.country_prices)}
                                         </p>
                                         <span className="bg-red-50 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded border border-red-100">
                                             {discountPercent}% OFF
@@ -970,10 +1118,28 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                     </>
                                 )}
                             </div>
+                            
+                            {/* Shared Variant Attributes (Visible if common across all options) */}
+                            {/* Shared attributes at the bottom */}
+                            {( (product.variant_count ?? 0) > 1 || (product.variants?.length ?? 0) > 1) && (product.common_form || product.common_strength || product.common_flavor) && (
+                                <div className="mt-2.5 flex flex-wrap gap-1.5">
+                                    {[product.common_form, product.common_strength, product.common_flavor]
+                                        .filter(Boolean)
+                                        .map((attr, idx) => (
+                                            <span 
+                                                key={idx} 
+                                                className="text-[10px] font-bold tracking-wide text-[#3d5c3a] uppercase bg-[#6B8F5E]/10 border border-[#6B8F5E]/20 px-2.5 py-0.5 rounded-full"
+                                            >
+                                                {attr}
+                                            </span>
+                                        ))
+                                    }
+                                </div>
+                            )}
 
                             {/* List view: inline action buttons */}
                             {isList && !isUnavailable && (
-                                <div className="mt-2.5 sm:mt-4 flex flex-wrap items-center gap-2 sm:gap-3">
+                                <div className="mt-2.5 sm:mt-4 flex flex-wrap items-center gap-2 sm:gap-3 relative z-30">
                                     {hasVariants ? (
                                         <button
                                             onClick={openCartModal}
@@ -990,6 +1156,34 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                             <Eye className={`h-3.5 w-3.5 transition-transform duration-300 ${showInlineOptions ? 'scale-110' : ''}`} />
                                             {showInlineOptions ? 'Choosing…' : 'Options'}
                                         </button>
+                                    ) : currentItemInCart ? (
+                                        <div className="flex-1 sm:flex-none flex items-center justify-between border border-[#3d5c3a]/20 bg-[#3d5c3a]/5 rounded-lg py-1 px-1 h-9 sm:h-10 min-w-[120px]">
+                                            <button 
+                                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDecrement(); }}
+                                                disabled={addingToCart}
+                                                className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-[#3d5c3a] hover:bg-[#3d5c3a]/10 rounded-md transition-colors disabled:opacity-50"
+                                            >
+                                                {currentItemInCart.quantity > 1 ? <Minus className="h-3.5 w-3.5" /> : <Trash2 className="h-3.5 w-3.5" />}
+                                            </button>
+                                            <div className="flex flex-col items-center justify-center leading-none px-2">
+                                                <span className="text-xs sm:text-sm font-black text-[#3d5c3a] font-ui translate-y-[1px]">{currentItemInCart.quantity}</span>
+                                            </div>
+                                            <button 
+                                                onClick={(e) => {
+                                                    e.preventDefault(); e.stopPropagation();
+                                                    const maxStock = product.stock_quantity ?? 99;
+                                                    if (currentItemInCart.quantity >= maxStock) {
+                                                        toast('Maximum stock reached', { icon: '⚠️' });
+                                                        return;
+                                                    }
+                                                    handleIncrement();
+                                                }}
+                                                disabled={addingToCart || (() => { const ms = product.stock_quantity ?? 99; return currentItemInCart.quantity >= ms; })()}
+                                                className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-[#3d5c3a] hover:bg-[#3d5c3a]/10 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                <Plus className="h-3.5 w-3.5" />
+                                            </button>
+                                        </div>
                                     ) : (
                                         <button
                                             onClick={(e) => onMoveToCart ? onMoveToCart(e) : openCartModal(e)}
@@ -1008,7 +1202,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                     )}
                                     <button
                                         onClick={handleToggleWishlist}
-                                        className={`inline-flex flex-shrink-0 items-center justify-center p-2.5 sm:p-2.5 rounded-lg border transition-all cursor-pointer ${wishlisted ? 'border-[#3d5c3a]/30 bg-[#3d5c3a]/5' : 'border-gray-200 bg-white hover:border-[#3d5c3a]/30 hover:bg-gray-50'}`}
+                                        className={`relative z-30 inline-flex flex-shrink-0 items-center justify-center p-2.5 sm:p-2.5 rounded-lg border transition-all cursor-pointer ${wishlisted ? 'border-[#3d5c3a]/30 bg-[#3d5c3a]/5' : 'border-gray-200 bg-white hover:border-[#3d5c3a]/30 hover:bg-gray-50'}`}
                                     >
                                         <Heart className={`h-4 w-4 sm:h-4 sm:w-4 ${wishlisted ? 'fill-[#3d5c3a] text-[#3d5c3a]' : 'text-gray-400'}`} />
                                     </button>
@@ -1017,10 +1211,12 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                         </div>
 
                         {/* Inline Options Panel (List View Only) */}
-                        {isList && renderInlineOptions()}
+                        {isList && (
+                            <div className="relative z-40">
+                                {renderInlineOptions()}
+                            </div>
+                        )}
                     </div>
-                </Link>
-
                 {/* ═══════ CART / VARIANT OVERLAY ═══════ */}
                 {renderCartModal()}
             </div>

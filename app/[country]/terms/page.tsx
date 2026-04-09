@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { getLegalDocument } from '@/lib/api';
+import LegalContentRenderer from '@/components/ui/LegalContentRenderer';
 
 export const metadata = {
     title: 'Terms of Service | Vedashi',
@@ -25,10 +26,7 @@ export default async function TermsPage() {
                     )}
                 </div>
 
-                <div 
-                    className="legal-rich-text max-w-none text-gray-600"
-                    dangerouslySetInnerHTML={{ __html: doc?.content || '<p>Terms of Service are currently being updated. Please check back later.</p>' }}
-                />
+                <LegalContentRenderer content={doc?.content || ''} />
             </div>
         </div>
     );

@@ -21,6 +21,51 @@ export const SUPPORTED_COUNTRIES: Record<SupportedCountryCode, CountryConfig> = 
 };
 
 /**
+ * Represents a per-country INR price override from the backend.
+ */
+export interface CountryPriceOverride {
+  country_code: string;   // uppercase: 'US', 'GB', etc.
+  price_inr: number;
+  country_name?: string;
+  currency_code?: string;
+  currency_symbol?: string;
+  exchange_rate?: number;
+}
+
+/**
+ * Currency configuration from the database (currency_config table).
+ */
+export interface CurrencyConfigEntry {
+  country_code: string;       // uppercase: 'US', 'IN', etc.
+  country_name: string;
+  currency_code: string;      // 'USD', 'INR', etc.
+  currency_symbol: string;    // '$', '₹', etc.
+  exchange_rate: number;      // 1 INR = X target currency
+}
+
+/**
+ * Resolve the base INR price given a country and optional per-product overrides.
+ *
+ * Priority:
+ * 1. Country-specific override (if > 0)
+ * 2. Default price (amountInr)
+ */
+export function resolveInrPrice(
+  amountInr: number,
+  countryCode: string,
+  countryPrices?: CountryPriceOverride[] | null
+): number {
+  if (countryPrices && countryPrices.length > 0) {
+    const upper = countryCode.toUpperCase();
+    const override = countryPrices.find(cp => cp.country_code.toUpperCase() === upper);
+    if (override && Number(override.price_inr) > 0) {
+      return Number(override.price_inr);
+    }
+  }
+  return Number(amountInr) || 0;
+}
+
+/**
  * Format a price safely based on locale and currency.
  * Automatically converts the standard base price (in INR) to target currency using the provided rate.
  * @param amountInr Base amount in INR
@@ -42,7 +87,7 @@ export function formatPrice(
   }
 
   // Convert
-  let converted = n * rate;
+  const converted = n * rate;
 
   // Formatting rules specific to currency
   let formattedCurrency = '';

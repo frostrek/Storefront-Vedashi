@@ -455,11 +455,9 @@ export default function ExportOrdersModal({
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const subtotalAmt = (order as any).subtotal ?? order.total_amount ?? 0;
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const taxAmt = (order as any).tax_amount ?? (order as any).total_tax ?? 0;
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const grandTotal = (order as any).final_total ?? order.total_amount ?? 0;
 
-                const boxH = lineH * 2 + 12; // subtotal + tax rows + grand total row
+                const boxH = lineH + 12; // subtotal row + grand total row
 
                 // Background fill
                 doc.setFillColor(...CREAM_DARK);
@@ -475,14 +473,8 @@ export default function ExportOrdersModal({
                 doc.setTextColor(...DARK_GRAY);
                 doc.text(fmtPrice(subtotalAmt), rValX, currentY + lineH, { align: 'right' });
 
-                // Tax row
-                doc.setTextColor(...MID_GRAY);
-                doc.text('Tax', rLabelX, currentY + lineH * 2);
-                doc.setTextColor(...DARK_GRAY);
-                doc.text(fmtPrice(taxAmt), rValX, currentY + lineH * 2, { align: 'right' });
-
                 // Divider before grand total
-                const divY = currentY + lineH * 2 + 2.5;
+                const divY = currentY + lineH + 2.5;
                 doc.setDrawColor(200, 192, 185);
                 doc.setLineWidth(0.4);
                 doc.line(boxX + 3, divY, PW - MR - 3, divY);

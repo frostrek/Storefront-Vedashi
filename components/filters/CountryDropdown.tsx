@@ -48,12 +48,12 @@ export default function CountryDropdown({ options, selected, onChange }: Country
                 className="flex w-full items-center justify-between group"
                 aria-expanded={open}
             >
-                <span className="text-xs font-semibold uppercase tracking-[0.15em] text-charcoal/70 group-hover:text-burgundy transition-colors">
+                <span className="text-xs font-semibold uppercase tracking-[0.15em] text-charcoal/70 group-hover:text-herbal-green transition-colors">
                     Country
                 </span>
                 {open
-                    ? <ChevronUp className="h-4 w-4 text-warm-gray/60 group-hover:text-burgundy transition-colors" />
-                    : <ChevronDown className="h-4 w-4 text-warm-gray/60 group-hover:text-burgundy transition-colors" />
+                    ? <ChevronUp className="h-4 w-4 text-warm-gray/60 group-hover:text-herbal-green transition-colors" />
+                    : <ChevronDown className="h-4 w-4 text-warm-gray/60 group-hover:text-herbal-green transition-colors" />
                 }
             </button>
 
@@ -65,13 +65,13 @@ export default function CountryDropdown({ options, selected, onChange }: Country
                             relative flex items-center w-full rounded-lg border px-3.5 py-2.5 text-sm cursor-pointer
                             bg-white transition-all duration-200 ease-in-out
                             ${selected
-                                ? 'border-burgundy/50 ring-1 ring-burgundy/10'
+                                ? 'border-herbal-green/50 ring-1 ring-herbal-green/10'
                                 : 'border-light-border'
                             }
-                            hover:border-burgundy/30
-                            focus-within:border-burgundy focus-within:ring-2 focus-within:ring-burgundy/10
+                            hover:border-herbal-green/30
+                            focus-within:border-herbal-green focus-within:ring-2 focus-within:ring-herbal-green/10
                         `}
-                        onClick={() => { setListOpen(true); setSearch(''); }}
+                        onClick={() => { setListOpen(!listOpen); setSearch(''); }}
                     >
                         {listOpen ? (
                             <>
@@ -94,7 +94,7 @@ export default function CountryDropdown({ options, selected, onChange }: Country
                                         {selected}
                                     </span>
                                 ) : (
-                                    <span className="text-warm-gray/70 flex-1">🌍 All Countries</span>
+                                    <span className="text-warm-gray/70 flex-1">All Countries</span>
                                 )}
                             </>
                         )}
@@ -105,7 +105,7 @@ export default function CountryDropdown({ options, selected, onChange }: Country
                                     onClick={(e) => { e.stopPropagation(); onChange(''); }}
                                     className="p-0.5 rounded hover:bg-cream transition-colors"
                                 >
-                                    <X className="h-3.5 w-3.5 text-warm-gray/60 hover:text-burgundy" />
+                                    <X className="h-3.5 w-3.5 text-warm-gray/60 hover:text-herbal-green" />
                                 </button>
                             )}
                             <ChevronDown className={`h-4 w-4 text-warm-gray/60 transition-transform duration-200 ${listOpen ? 'rotate-180' : ''}`} />
@@ -118,15 +118,14 @@ export default function CountryDropdown({ options, selected, onChange }: Country
                             className="absolute z-50 mt-1 w-full rounded-xl border border-light-border bg-white shadow-xl overflow-hidden"
                             style={{ maxHeight: '260px' }}
                         >
-                            <div className="overflow-y-auto" style={{ maxHeight: '260px' }}>
+                            <div className="overflow-y-auto custom-scrollbar" style={{ maxHeight: '260px' }}>
                                 {/* "All Countries" option */}
                                 <button
                                     type="button"
                                     onClick={() => { onChange(''); setListOpen(false); setSearch(''); }}
-                                    className={`flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm transition-colors hover:bg-burgundy/5 ${!selected ? 'bg-burgundy/[0.06] text-burgundy font-medium' : 'text-charcoal'
+                                    className={`flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm transition-colors hover:bg-herbal-green/5 ${!selected ? 'bg-herbal-green/[0.06] text-herbal-green font-medium' : 'text-charcoal'
                                         }`}
                                 >
-                                    <span className="text-base leading-none">🌍</span>
                                     All Countries
                                 </button>
                                 {filtered.length === 0 ? (
@@ -139,8 +138,8 @@ export default function CountryDropdown({ options, selected, onChange }: Country
                                             key={country}
                                             type="button"
                                             onClick={() => { onChange(country); setListOpen(false); setSearch(''); }}
-                                            className={`flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm transition-colors hover:bg-burgundy/5 ${selected === country
-                                                    ? 'bg-burgundy/[0.06] text-burgundy font-medium'
+                                            className={`flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm transition-colors hover:bg-herbal-green/5 ${selected === country
+                                                    ? 'bg-herbal-green/[0.06] text-herbal-green font-medium'
                                                     : 'text-charcoal'
                                                 }`}
                                         >
@@ -157,11 +156,11 @@ export default function CountryDropdown({ options, selected, onChange }: Country
                     {selected && !listOpen && (
                         <div className="mt-2 flex items-center gap-1.5">
                             <span className="text-base leading-none">{getFlagByName(selected)}</span>
-                            <span className="text-xs font-medium text-burgundy">{selected}</span>
+                            <span className="text-xs font-medium text-herbal-green">{selected}</span>
                             <button
                                 type="button"
                                 onClick={() => onChange('')}
-                                className="ml-auto text-[11px] text-warm-gray/60 hover:text-burgundy transition-colors"
+                                className="ml-auto text-[11px] text-warm-gray/60 hover:text-herbal-green transition-colors"
                             >
                                 Clear
                             </button>

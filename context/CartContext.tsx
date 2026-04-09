@@ -1,8 +1,9 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, useEffect, ReactNode, useRef } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useMemo, ReactNode, useRef } from 'react';
 import { BackendCartItem, BackendCart } from '@/types';
 import { useAuth } from '@/context/AuthContext';
+import { trackEcommerce } from '@/lib/analytics/gtag';
 import {
     createCart as apiCreateCart,
     getCart as apiGetCart,
@@ -41,6 +42,8 @@ interface CartContextType {
     removeCoupon: () => void;
     orderNotes: string;
     setOrderNotes: (notes: string) => void;
+    /** Find a cart item by productId + optional variantId. Returns the item or undefined. */
+    getItemInCart: (productId: string, variantId?: string | null) => BackendCartItem | undefined;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -52,12 +55,12 @@ function flattenCartItem(item: BackendCartItem): BackendCartItem {
         product_id: item.product?.product_id || item.product_id || '',
         product_name: item.product?.product_name || item.product_name || 'Product',
         slug: item.product?.slug || item.slug || '',
-        sku: item.variant?.variant_sku || item.product?.product_sku || item.sku || (item as any).product_sku || '',
+        sku: item.variant?.variant_sku || item.product?.product_sku || item.sku || (item as unknown as Record<string, unknown>).product_sku as string || '',
         price: item.pricing?.effective_price ?? item.pricing?.unit_price ?? item.price ?? 0,
         original_price: item.pricing?.unit_price ?? item.price ?? 0,
         size_label: item.variant?.size_label || item.size_label || '',
         image_url: item.product?.thumbnail_url || item.image_url || '',
-        stock_quantity: item.variant?.stock_quantity ?? (item as any).stock_quantity ?? 0,
+        stock_quantity: item.variant?.stock_quantity ?? (item as unknown as Record<string, unknown>).stock_quantity as number ?? 0,
     };
 }
 
@@ -65,8 +68,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const [items, setItems] = useState<BackendCartItem[]>([]);
     const [savedItems, setSavedItems] = useState<BackendCartItem[]>([]);
     const [cartId, setCartId] = useState<string | null>(null);
-    const [totalItems, setTotalItems] = useState(0);
-    const [totalPrice, setTotalPrice] = useState(0);
+    const pendingQtyUpdates = useRef(0);
+
+    // DERIVED VALUES — single source of truth, can never desync from items
+    const totalItems = useMemo(() => new Set(items.map(i => String(i.product_id))).size, [items]);
+    const totalPrice = useMemo(() => items.reduce((s, i) => s + (i.price || 0) * i.quantity, 0), [items]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [couponCode, setCouponCode] = useState<string | null>(null);
@@ -90,17 +96,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }, []);
 
     /** Fetch full cart state from backend */
-    const fetchCart = useCallback(async (cId: string) => {
+    const fetchCart = useCallback(async (cId: string): Promise<BackendCart | undefined> => {
         try {
             const res = await apiGetCart({ cart_id: cId });
             if (res.success && res.data) {
                 const cart = res.data as BackendCart;
                 const flatItems = (cart.items || []).map(flattenCartItem);
                 setItems(flatItems);
-                setTotalItems(cart.summary?.item_count ?? cart.total_items ?? flatItems.reduce((s: number, i: BackendCartItem) => s + i.quantity, 0));
-                setTotalPrice(cart.summary?.grand_total ?? cart.total_amount ?? flatItems.reduce((s: number, i: BackendCartItem) => s + (i.price || 0) * i.quantity, 0));
+                // totalItems and totalPrice are derived via useMemo — no manual set needed
+                await fetchSavedItems(cId);
+                return cart;
             }
-            await fetchSavedItems(cId);
         } catch (err) {
             console.error('[CartContext] fetchCart error:', err);
         }
@@ -128,8 +134,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 setCartId(cart.cart_id);
                 const flatItems = (cart.items || []).map(flattenCartItem);
                 setItems(flatItems);
-                setTotalItems(cart.summary?.item_count ?? cart.total_items ?? flatItems.reduce((s: number, i: BackendCartItem) => s + i.quantity, 0));
-                setTotalPrice(cart.summary?.grand_total ?? cart.total_amount ?? flatItems.reduce((s: number, i: BackendCartItem) => s + (i.price || 0) * i.quantity, 0));
                 await fetchSavedItems(cart.cart_id);
             } else {
                 const createRes = await apiCreateCart(customerId);
@@ -137,8 +141,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
                     setCartId(createRes.data.cart_id);
                     setItems([]);
                     setSavedItems([]);
-                    setTotalItems(0);
-                    setTotalPrice(0);
                 }
             }
         } catch (err) {
@@ -163,8 +165,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 setCartId(cart.cart_id);
                 const flatItems = (cart.items || []).map(flattenCartItem);
                 setItems(flatItems);
-                setTotalItems(cart.summary?.item_count ?? cart.total_items ?? flatItems.reduce((s: number, i: BackendCartItem) => s + i.quantity, 0));
-                setTotalPrice(cart.summary?.grand_total ?? cart.total_amount ?? flatItems.reduce((s: number, i: BackendCartItem) => s + (i.price || 0) * i.quantity, 0));
                 await fetchSavedItems(cart.cart_id);
             } else {
                 // Guest cart expired or deleted — clean up
@@ -198,8 +198,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setCartId(null);
         setItems([]);
         setSavedItems([]);
-        setTotalItems(0);
-        setTotalPrice(0);
         setError(null);
         setCouponCode(null);
         setCouponDiscount(0);
@@ -215,11 +213,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const applyCoupon = useCallback(async (code: string): Promise<boolean> => {
         setCouponError(null);
         try {
-            // The items here are captured correctly because they are in the dependency array (below).
-            const res = await apiValidateCoupon(code, totalPrice);
+            // Compute cart_total from items directly to avoid stale totalPrice state
+            const computedCartTotal = items.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
+            const cartTotalToSend = computedCartTotal > 0 ? computedCartTotal : totalPrice;
+
+            if (!cartTotalToSend || cartTotalToSend <= 0) {
+                setCouponError('Please add items to your cart before applying a coupon');
+                return false;
+            }
+
+            const res = await apiValidateCoupon(code, cartTotalToSend);
             if (res.success) {
                 setCouponCode(res.data.coupon.code);
                 setCouponType(res.data.coupon.discount_type || null);
+
+                let computedDiscount = 0;
 
                 if (res.data.coupon.discount_type === 'bogo') {
                     const buyQty = res.data.coupon.bogo_buy_qty || 1;
@@ -245,11 +253,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
                     if (res.data.coupon.max_discount_cap !== null) {
                         bogoDiscount = Math.min(bogoDiscount, parseFloat(res.data.coupon.max_discount_cap));
                     }
-                    setCouponDiscount(bogoDiscount);
+                    computedDiscount = bogoDiscount;
                 } else {
-                    setCouponDiscount(res.data.discount);
+                    computedDiscount = res.data.discount;
                 }
 
+                // Enforce minimum payable of ₹1 — cap discount so total never drops below ₹MINIMUM_PAYABLE
+                const minPayable = Number(process.env.NEXT_PUBLIC_MINIMUM_PAYABLE_AMOUNT) || 1;
+                const maxAllowedDiscount = Math.max(0, cartTotalToSend - minPayable);
+                computedDiscount = Math.min(computedDiscount, maxAllowedDiscount);
+
+                setCouponDiscount(computedDiscount);
                 return true;
             } else {
                 setCouponError(res.message || 'Invalid coupon');
@@ -356,7 +370,37 @@ export function CartProvider({ children }: { children: ReactNode }) {
             } else {
                 await apiAddCartItem(activeCartId, productId, quantity, false);
             }
-            await fetchCart(activeCartId);
+            const freshCart = await fetchCart(activeCartId);
+            const freshItems = freshCart ? (freshCart.items || []).map(flattenCartItem) : [];
+            const addedItem = freshItems.find(i => 
+                String(i.product_id) === String(productId) && 
+                (variantId ? String(i.variant_id) === String(variantId) : true)
+            );
+
+            if (addedItem) {
+                trackEcommerce('add_to_cart', {
+                    currency: 'INR',
+                    value: (addedItem.price || 0) * quantity,
+                    items: [{
+                        item_id: String(addedItem.product_id || productId),
+                        item_name: addedItem.product_name || productId,
+                        price: addedItem.price || 0,
+                        quantity,
+                    }],
+                });
+            } else {
+                // Fallback: Fire the event with the data we already know
+                trackEcommerce('add_to_cart', {
+                    currency: 'INR',
+                    value: 0, // Fallback value
+                    items: [{
+                        item_id: String(productId),
+                        item_name: productId,
+                        price: 0, // Fallback price
+                        quantity,
+                    }],
+                });
+            }
         } catch (err) {
             console.error('[CartContext] addItem error:', err);
             const msg = 'Failed to add item to cart';
@@ -368,37 +412,76 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }, [cartId, fetchCart, isAuthenticated, user, ensureGuestCart]);
 
     const updateQuantity = useCallback(async (cartItemId: string, quantity: number) => {
-        if (quantity <= 0) {
-            await apiRemoveCartItem(cartItemId);
-            if (cartId) await fetchCart(cartId);
-            return;
-        }
-        setLoading(true);
+        let snapshot: BackendCartItem[] = [];
+        
+        // Optimistic UI Update Phase
+        setItems(prev => {
+            snapshot = prev;
+            if (quantity <= 0) {
+                return prev.filter(i => i.cart_item_id !== cartItemId);
+            }
+            return prev.map(item => item.cart_item_id === cartItemId ? { ...item, quantity } : item);
+        });
+
         setError(null);
+        pendingQtyUpdates.current += 1;
+
         try {
-            await apiUpdateCartItem(cartItemId, quantity);
-            if (cartId) await fetchCart(cartId);
+            if (quantity <= 0) {
+                await apiRemoveCartItem(cartItemId);
+            } else {
+                await apiUpdateCartItem(cartItemId, quantity);
+            }
         } catch (err) {
             console.error('[CartContext] updateQuantity error:', err);
+            setItems(snapshot); // Revert on failure
             setError('Failed to update quantity');
+            throw err;
         } finally {
-            setLoading(false);
+            pendingQtyUpdates.current -= 1;
+            // Only perform a full backend sync when all rapid clicks have resolved to avoid screen flickering
+            if (pendingQtyUpdates.current === 0 && cartId) {
+                fetchCart(cartId); // Background sync, does not block the UI
+            }
         }
     }, [cartId, fetchCart]);
 
     const removeItem = useCallback(async (cartItemId: string) => {
-        setLoading(true);
+        // Capture item data BEFORE removal for the GA4 event
+        const removedItem = items.find(i => i.cart_item_id === cartItemId);
+        let snapshot: BackendCartItem[] = [];
+
+        // Optimistic UI Removal
+        setItems(prev => {
+            snapshot = prev;
+            return prev.filter(i => i.cart_item_id !== cartItemId);
+        });
+
         setError(null);
         try {
             await apiRemoveCartItem(cartItemId);
             if (cartId) await fetchCart(cartId);
+
+            // GA4: remove_from_cart
+            if (removedItem) {
+                trackEcommerce('remove_from_cart', {
+                    currency: 'INR',
+                    value: (removedItem.price || 0) * removedItem.quantity,
+                    items: [{
+                        item_id: removedItem.product_id || '',
+                        item_name: removedItem.product_name || 'Product',
+                        price: removedItem.price || 0,
+                        quantity: removedItem.quantity,
+                    }],
+                });
+            }
         } catch (err) {
             console.error('[CartContext] removeItem error:', err);
+            setItems(snapshot); // Revert on failure
             setError('Failed to remove item');
-        } finally {
-            setLoading(false);
+            throw err;
         }
-    }, [cartId, fetchCart]);
+    }, [cartId, fetchCart, items]);
 
     const saveForLater = useCallback(async (cartItemId: string) => {
         setLoading(true);
@@ -419,6 +502,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setError(null);
         try {
             await apiMoveToCart(cartItemId);
+            // fetchCart sets items via setItems → totalItems auto-recalculates via useMemo
             if (cartId) await fetchCart(cartId);
         } catch (err) {
             console.error('[CartContext] moveToCart error:', err);
@@ -438,8 +522,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 }
             }
             setItems([]);
-            setTotalItems(0);
-            setTotalPrice(0);
+            // totalItems and totalPrice auto-reset to 0 via useMemo when items is []
         } catch (err) {
             console.error('[CartContext] clearCart error:', err);
         } finally {
@@ -470,6 +553,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return () => clearInterval(pollInterval);
     }, [cartId, items, fetchCart, updateQuantity]);
 
+    /** Find a cart item by productId + optional variantId */
+    const getItemInCart = useCallback((productId: string, variantId?: string | null): BackendCartItem | undefined => {
+        return items.find(i =>
+            String(i.product_id) === String(productId) &&
+            (variantId ? String(i.variant_id) === String(variantId) : true)
+        );
+    }, [items]);
+
     return (
         <CartContext.Provider value={{
             items, savedItems, cartId, loading, error,
@@ -478,6 +569,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             couponCode, couponDiscount, couponType, couponError,
             applyCoupon, removeCoupon,
             orderNotes, setOrderNotes,
+            getItemInCart,
         }}>
             {children}
         </CartContext.Provider>

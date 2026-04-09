@@ -1,13 +1,31 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
-import { CountryConfig, SUPPORTED_COUNTRIES, SupportedCountryCode, formatPrice } from '@/lib/currency';
+import {
+  CountryConfig,
+  SUPPORTED_COUNTRIES,
+  SupportedCountryCode,
+  CurrencyConfigEntry,
+  CountryPriceOverride,
+  resolveInrPrice,
+  formatPrice,
+} from '@/lib/currency';
 import { API_URL } from '@/lib/api';
 
 interface CurrencyContextType {
+  countryCode: SupportedCountryCode;
   countryConfig: CountryConfig;
-  rates: Record<string, number>; // Currency -> Rate (e.g. { USD: 0.012, INR: 1 })
-  formatPrice: (amountInr: number | string | null | undefined) => string;
+  currencyConfigs: CurrencyConfigEntry[];
+  /**
+   * Format a price for display. Handles country-based conversion automatically.
+   *
+   * @param amountInr - Default price in INR
+   * @param countryPrices - Optional per-product country price overrides from the backend
+   */
+  formatPrice: (
+    amountInr: number | string | null | undefined,
+    countryPrices?: CountryPriceOverride[] | null
+  ) => string;
   isLoadingRates: boolean;
 }
 
@@ -20,28 +38,26 @@ export function CurrencyProvider({
   children: React.ReactNode;
   countryCode: SupportedCountryCode;
 }) {
-  const [rates, setRates] = useState<Record<string, number>>({ INR: 1 }); // Default base
+  const [currencyConfigs, setCurrencyConfigs] = useState<CurrencyConfigEntry[]>([]);
   const [isLoadingRates, setIsLoadingRates] = useState(true);
 
   const countryConfig = SUPPORTED_COUNTRIES[countryCode] || SUPPORTED_COUNTRIES['us'];
 
   useEffect(() => {
-    async function fetchRates() {
+    async function fetchCurrencyConfig() {
       try {
-        const res = await fetch(`${API_URL}/api/currency/rates`, { next: { revalidate: 3600 } });
+        const res = await fetch(`${API_URL}/api/currency-config`, { next: { revalidate: 3600 } } as any);
         if (res.ok) {
           const data = await res.json();
-          if (data.success && data.data) {
-            // Convert array of { target_currency, rate } into object
-            const ratesObj: Record<string, number> = { INR: 1 };
-            data.data.forEach((r: any) => {
-              ratesObj[r.target_currency] = Number(r.rate);
-            });
-            setRates(ratesObj);
+          if (data.success && Array.isArray(data.data)) {
+            setCurrencyConfigs(data.data.map((entry: any) => ({
+              ...entry,
+              exchange_rate: Number(entry.exchange_rate),
+            })));
           }
         }
       } catch (error) {
-        console.error('Failed to fetch currency rates:', error);
+        console.error('Failed to fetch currency config:', error);
       } finally {
         setIsLoadingRates(false);
       }
@@ -49,25 +65,62 @@ export function CurrencyProvider({
 
     // Only fetch if we are not in India, to save API calls
     if (countryConfig.currency !== 'INR') {
-      fetchRates();
+      fetchCurrencyConfig();
     } else {
       setIsLoadingRates(false);
     }
   }, [countryConfig.currency]);
 
-  // Create a bound version of formatPrice for convenience
+  // Build the bound formatPrice function
   const boundFormatPrice = useMemo(() => {
-    // Fallback to 1 if rate not loaded yet
-    const currentRate = rates[countryConfig.currency] || 1;
-    return (amountInr: number | string | null | undefined) => 
-      formatPrice(amountInr, countryConfig.currency, currentRate, countryConfig.locale);
-  }, [rates, countryConfig]);
+    // Lookup the currency config for the current country (uppercase match)
+    const upperCode = countryCode.toUpperCase();
+    const currentConfig = currencyConfigs.find(c => c.country_code === upperCode);
+    // USD fallback config
+    const usdConfig = currencyConfigs.find(c => c.country_code === 'US');
 
-  const value = {
+    return (
+      amountInr: number | string | null | undefined,
+      countryPrices?: CountryPriceOverride[] | null
+    ): string => {
+      const baseAmount = Number(amountInr) || 0;
+
+      // For India — always show INR
+      if (countryCode === 'in') {
+        // Still check for a country-specific override (unlikely for IN but technically possible)
+        const resolved = resolveInrPrice(baseAmount, 'IN', countryPrices);
+        return formatPrice(resolved, 'INR', 1, 'en-IN');
+      }
+
+      // Resolve the INR price (country override or default)
+      const resolvedInr = resolveInrPrice(baseAmount, upperCode, countryPrices);
+
+      // 1. Use the country's currency config if available
+      if (currentConfig) {
+        return formatPrice(
+          resolvedInr,
+          currentConfig.currency_code,
+          currentConfig.exchange_rate,
+          countryConfig.locale
+        );
+      }
+
+      // 2. Fallback: use USD if currency config not found for this country
+      if (usdConfig) {
+        return formatPrice(resolvedInr, 'USD', usdConfig.exchange_rate, 'en-US');
+      }
+
+      // 3. Last resort: show raw INR
+      return formatPrice(resolvedInr, 'INR', 1, 'en-IN');
+    };
+  }, [countryCode, countryConfig.locale, currencyConfigs]);
+
+  const value: CurrencyContextType = {
+    countryCode,
     countryConfig,
-    rates,
+    currencyConfigs,
     formatPrice: boundFormatPrice,
-    isLoadingRates
+    isLoadingRates,
   };
 
   return (
@@ -82,10 +135,11 @@ export function useCurrency() {
   if (!context) {
     // If used outside provider (e.g. in root layout or admin), fallback to INR/India
     return {
+      countryCode: 'in' as SupportedCountryCode,
       countryConfig: SUPPORTED_COUNTRIES['in'],
-      rates: { INR: 1 },
-      formatPrice: (amount: any) => formatPrice(amount, 'INR', 1, 'en-IN'),
-      isLoadingRates: false
+      currencyConfigs: [],
+      formatPrice: (amount: number | string | null | undefined, countryPrices?: CountryPriceOverride[] | null) => formatPrice(amount, 'INR', 1, 'en-IN'),
+      isLoadingRates: false,
     };
   }
   return context;

@@ -25,12 +25,25 @@ async function fetchProductForMeta(id: string) {
     }
 }
 
+async function fetchSiteConfig(keys: string[]) {
+    try {
+        const res = await fetch(`${API_URL}/api/site-config/batch?keys=${keys.join(',')}`, {
+            next: { revalidate: 3600 }, // cache for 1 hour
+        });
+        if (!res.ok) return null;
+        const json = await res.json();
+        return json.success ? json.data : null;
+    } catch {
+        return null;
+    }
+}
+
 export async function generateMetadata({
     params,
 }: {
-    params: Promise<{ id: string }>;
+    params: Promise<{ id: string; country: string }>;
 }): Promise<Metadata> {
-    const { id } = await params;
+    const { id, country } = await params;
     const product = await fetchProductForMeta(id);
 
     if (!product) {
@@ -53,11 +66,9 @@ export async function generateMetadata({
         thumbnail_url: product.thumbnail_url,
         slug: product.slug,
         sku: product.sku,
-        alcohol_percentage: product.alcohol_percentage,
-        vintage_year: product.vintage_year,
         variants: product.variants,
         seo: product.seo,
-    });
+    }, country);
 }
 
 export default function ProductLayout({
@@ -65,10 +76,10 @@ export default function ProductLayout({
     params,
 }: {
     children: React.ReactNode;
-    params: Promise<{ id: string }>;
+    params: Promise<{ id: string; country: string }>;
 }) {
-    // We render JSON-LD here on the server side
-    // The actual product data fetch happens async via generateMetadata
+    // We render JSON-LD here on the server si  de
+    // The actual product data fetch hap  pens async via generateMetadata
     // For JSON-LD, we use a parallel server-side fetch
     return (
         <>
@@ -79,11 +90,14 @@ export default function ProductLayout({
 }
 
 /** Server component that injects JSON-LD structured data */
-async function ProductJsonLd({ paramsPromise }: { paramsPromise: Promise<{ id: string }> }) {
-    const { id } = await paramsPromise;
+async function ProductJsonLd({ paramsPromise }: { paramsPromise: Promise<{ id: string; country: string }> }) {
+    const { id, country } = await paramsPromise;
+    const currentCountry = country || 'in';
     const product = await fetchProductForMeta(id);
 
     if (!product) return null;
+
+    const siteConfigs = await fetchSiteConfig(['merchant_shipping', 'merchant_returns']);
 
     const productJsonLd = generateProductJsonLd({
         product_id: product.product_id,
@@ -98,16 +112,22 @@ async function ProductJsonLd({ paramsPromise }: { paramsPromise: Promise<{ id: s
         rating_average: product.rating_average,
         review_count: product.review_count,
         variants: product.variants,
-    });
+    }, siteConfigs?.merchant_shipping, siteConfigs?.merchant_returns);
 
     const breadcrumbItems = [
-        { name: 'Home', url: SITE_URL },
-        { name: 'Shop', url: `${SITE_URL}/products` },
+        { name: 'Home', url: `${SITE_URL}/${currentCountry}` },
+        { name: 'Shop', url: `${SITE_URL}/${currentCountry}/products` },
     ];
     if (product.category) {
-        breadcrumbItems.push({ name: product.category, url: `${SITE_URL}/products?category=${encodeURIComponent(product.category)}` });
+        breadcrumbItems.push({ 
+            name: product.category, 
+            url: `${SITE_URL}/${currentCountry}/products?category=${encodeURIComponent(product.category)}` 
+        });
     }
-    breadcrumbItems.push({ name: product.product_name, url: `${SITE_URL}/products/${product.slug || product.product_id}` });
+    breadcrumbItems.push({ 
+        name: product.product_name, 
+        url: `${SITE_URL}/${currentCountry}/products/${product.slug || product.product_id}` 
+    });
 
     const breadcrumbJsonLd = generateBreadcrumbJsonLd(breadcrumbItems);
 

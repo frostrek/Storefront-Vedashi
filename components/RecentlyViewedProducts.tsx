@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { getProductDetails, getProduct } from '@/lib/api';
 import { Product } from '@/types';
-import ProductCard from '@/components/ProductCard';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { Clock } from 'lucide-react';
+import ProductCarousel from '@/components/ProductCarousel';
 
 interface RecentlyViewedProductsProps {
     /** Current product ID to exclude from the list */
@@ -15,7 +15,7 @@ interface RecentlyViewedProductsProps {
 /**
  * Displays a grid of recently viewed products (stored in localStorage).
  * Fetches full product data from the API for each stored ID.
- * Excludes the current product and shows up to 8 items.
+ * Excludes the current product and shows up to 12 items.
  */
 export default function RecentlyViewedProducts({ currentProductId }: RecentlyViewedProductsProps) {
     const { getProductIds } = useRecentlyViewed();
@@ -26,7 +26,7 @@ export default function RecentlyViewedProducts({ currentProductId }: RecentlyVie
         let cancelled = false;
 
         async function fetchRecent() {
-            const ids = getProductIds(currentProductId).slice(0, 8);
+            const ids = getProductIds(currentProductId).slice(0, 12);
             if (ids.length === 0) {
                 setProducts([]);
                 setLoading(false);
@@ -60,23 +60,13 @@ export default function RecentlyViewedProducts({ currentProductId }: RecentlyVie
         return () => { cancelled = true; };
     }, [currentProductId, getProductIds]);
 
-    // Don't render anything if no recently viewed products or still loading with nothing
-    if (!loading && products.length === 0) return null;
-    if (loading) return null; // Avoid layout shift — only show when data is ready
-
     return (
-        <div className="mt-16 border-t border-light-border pt-16">
-            <div className="flex items-center justify-between mb-8">
-                <h2 className="text-3xl font-bold text-charcoal flex items-center gap-3">
-                    <Clock className="h-6 w-6 text-burgundy" />
-                    Recently Viewed
-                </h2>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {products.map((p) => (
-                    <ProductCard key={p.product_id} product={p} />
-                ))}
-            </div>
-        </div>
+        <ProductCarousel
+            title="Recently Viewed"
+            icon={<Clock className="h-6 w-6 text-burgundy" />}
+            products={products}
+            loading={loading}
+            idPrefix="recently-viewed"
+        />
     );
 }

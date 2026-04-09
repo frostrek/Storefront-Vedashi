@@ -29,7 +29,12 @@ export default function PromoBanner() {
 
         const fetchBanner = async () => {
             try {
-                const res = await fetch(`${API_URL}/api/promo-banners/active`, { credentials: 'include' });
+                // Extract country slug from pathname (e.g., /ru/shop -> ru)
+                const segments = pathname?.split('/').filter(Boolean) || [];
+                const country = segments[0] || '';
+                const countryParam = country ? `?country=${country}` : '';
+
+                const res = await fetch(`${API_URL}/api/promo-banners/active${countryParam}`, { credentials: 'include' });
                 if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                 const data = await res.json();
                 if (data.success && data.data) {

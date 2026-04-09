@@ -36,7 +36,7 @@ export default function CheckboxGroup({ options, selected, onChange, maxVisible 
                             onChange={() => toggle(option)}
                             className="peer sr-only"
                         />
-                        <div className="h-[18px] w-[18px] rounded border-[1.5px] border-warm-gray/40 bg-white transition-all duration-200 peer-checked:border-burgundy peer-checked:bg-burgundy group-hover:border-warm-gray/70" />
+                        <div className="h-[18px] w-[18px] rounded border-[1.5px] border-warm-gray/40 bg-white transition-all duration-200 peer-checked:border-herbal-green peer-checked:bg-herbal-green group-hover:border-warm-gray/70" />
                         <svg
                             className="absolute top-[3px] left-[3px] h-3 w-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity duration-150 pointer-events-none"
                             viewBox="0 0 12 12"
@@ -57,7 +57,7 @@ export default function CheckboxGroup({ options, selected, onChange, maxVisible 
             {hasMore && (
                 <button
                     onClick={() => setShowAll(!showAll)}
-                    className="mt-1 text-xs font-medium text-burgundy hover:text-burgundy-dark transition-colors"
+                    className="mt-1 text-xs font-medium text-herbal-green hover:text-herbal-green-dark transition-colors"
                 >
                     {showAll ? 'Show less' : `+ ${options.length - maxVisible} more`}
                 </button>

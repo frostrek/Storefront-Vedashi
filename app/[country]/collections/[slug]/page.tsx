@@ -122,8 +122,13 @@ export default function CollectionPage() {
                 {collection.products.length > 0 ? (
                     <>
                         <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
-                            {collection.products.map(product => (
-                                <ProductCard key={product.product_id} product={product} />
+                            {collection.products.map((product, i) => (
+                                <ProductCard 
+                                    key={product.product_id} 
+                                    product={product} 
+                                    listName={`Collection - ${collection.name}`}
+                                    listIndex={i + 1}
+                                />
                             ))}
                         </div>
 

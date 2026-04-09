@@ -164,8 +164,16 @@ function applyLanguageCookies(
 
 // ─── Middleware ──────────────────────────────────────────────────────
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // 0. SEO: Enforce non-www canonical domain (redirect www to non-www)
+  const host = request.headers.get('host') || request.nextUrl.hostname || '';
+  if (host === 'www.vedashi.com' || host === 'www.vedashi.onrender.com') {
+    const targetUrl = request.nextUrl.clone();
+    targetUrl.host = 'vedashi.com';
+    return NextResponse.redirect(targetUrl, 301);
+  }
 
   // 1. Skip static assets, API routes, Next.js internals
   if (shouldSkip(pathname)) {
@@ -218,7 +226,15 @@ export async function proxy(request: NextRequest) {
   // 4. Build redirect to /{country}{pathname}
   const currency = getCurrency(country);
   const url = request.nextUrl.clone();
-  url.pathname = `/${country}${pathname}`;
+  
+  // Ensure we don't create a double-redirect by adding a trailing slash 
+  // that Next.js will just remove anyway.
+  let targetPath = `/${country}${pathname}`;
+  if (targetPath.endsWith('/') && targetPath.length > 3) {
+    targetPath = targetPath.slice(0, -1);
+  }
+  
+  url.pathname = targetPath;
 
   const response = NextResponse.redirect(url);
 

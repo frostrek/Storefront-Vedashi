@@ -5,6 +5,7 @@
  */
 
 import type { Metadata } from 'next';
+import { SUPPORTED_COUNTRIES } from './currency';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -35,8 +36,6 @@ export interface ProductSeoInput {
     thumbnail_url?: string;
     images?: string[];
     slug?: string;
-    alcohol_percentage?: number;
-    vintage_year?: number;
     sku?: string;
     rating_average?: number;
     review_count?: number;
@@ -47,7 +46,6 @@ export interface ProductSeoInput {
         price?: number;
         stock_quantity?: number;
         variant_sku?: string;
-        alcohol_percentage?: number;
     }>;
     seo?: SeoData;
 }
@@ -64,7 +62,7 @@ export interface CategorySeoInput {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const SITE_NAME = 'Vedashi';
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.onrender.com';
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-default.jpg`;
 
 // ─── Sanitization ─────────────────────────────────────────────────────────────
@@ -111,23 +109,41 @@ function categoryFallbackDescription(c: CategorySeoInput): string {
 
 // ─── Metadata Builders ───────────────────────────────────────────────────────
 
+/** Generates alternate languages maps based on our supported regions. */
+export function buildHreflang(pathStrategy: string): Record<string, string> {
+    const languages: Record<string, string> = {
+        'x-default': `${SITE_URL}/in/${pathStrategy}`
+    };
+    Object.values(SUPPORTED_COUNTRIES).forEach((c) => {
+        languages[c.locale] = `${SITE_URL}/${c.code}/${pathStrategy}`;
+    });
+    return languages;
+}
+
 /** Build Next.js Metadata for a product page */
-export function buildProductMeta(product: ProductSeoInput): Metadata {
+export function buildProductMeta(product: ProductSeoInput, currentCountry: string = 'in'): Metadata {
     const seo = product.seo;
-    const title = seo?.meta_title || productFallbackTitle(product);
+    const regionName = SUPPORTED_COUNTRIES[currentCountry as keyof typeof SUPPORTED_COUNTRIES]?.name || 'India';
+    const title = `${seo?.meta_title || productFallbackTitle(product)} | ${regionName}`;
     const description = seo?.meta_description || productFallbackDescription(product);
-    const canonical = seo?.canonical_url || `${SITE_URL}/products/${product.slug || product.product_id}`;
+    
+    const pathStrategy = `products/${product.slug || product.product_id}`;
+    const canonical = seo?.canonical_url || `${SITE_URL}/${currentCountry}/${pathStrategy}`;
+    
     const ogImage = seo?.og_image || product.thumbnail_url || DEFAULT_OG_IMAGE;
     const keywords = seo?.meta_keywords || [product.product_name, product.brand, product.category, SITE_NAME].filter(Boolean).join(', ');
 
     const robotsValue = seo?.robots || 'index, follow';
-    const [indexDirective, followDirective] = robotsValue.split(',').map(s => s.trim());
+    const [indexDirective, followDirective] = robotsValue.split(',').map((s: string) => s.trim());
 
     return {
         title,
         description,
         keywords,
-        alternates: { canonical },
+        alternates: { 
+            canonical,
+            languages: buildHreflang(pathStrategy)
+        },
         robots: {
             index: indexDirective !== 'noindex',
             follow: followDirective !== 'nofollow',
@@ -150,20 +166,27 @@ export function buildProductMeta(product: ProductSeoInput): Metadata {
 }
 
 /** Build Next.js Metadata for a category page */
-export function buildCategoryMeta(category: CategorySeoInput): Metadata {
+export function buildCategoryMeta(category: CategorySeoInput, currentCountry: string = 'in'): Metadata {
     const seo = category.seo;
-    const title = seo?.meta_title || categoryFallbackTitle(category);
+    const regionName = SUPPORTED_COUNTRIES[currentCountry as keyof typeof SUPPORTED_COUNTRIES]?.name || 'India';
+    const title = `${seo?.meta_title || categoryFallbackTitle(category)} | ${regionName}`;
     const description = seo?.meta_description || categoryFallbackDescription(category);
-    const canonical = seo?.canonical_url || `${SITE_URL}/categories/${category.slug || category.category_id}`;
+    
+    const pathStrategy = `categories/${category.slug || category.category_id}`;
+    const canonical = seo?.canonical_url || `${SITE_URL}/${currentCountry}/${pathStrategy}`;
+    
     const ogImage = seo?.og_image || category.image_url || DEFAULT_OG_IMAGE;
 
     const robotsValue = seo?.robots || 'index, follow';
-    const [indexDirective, followDirective] = robotsValue.split(',').map(s => s.trim());
+    const [indexDirective, followDirective] = robotsValue.split(',').map((s: string) => s.trim());
 
     return {
         title,
         description,
-        alternates: { canonical },
+        alternates: { 
+            canonical,
+            languages: buildHreflang(pathStrategy)
+        },
         robots: {
             index: indexDirective !== 'noindex',
             follow: followDirective !== 'nofollow',
@@ -186,16 +209,22 @@ export function buildCategoryMeta(category: CategorySeoInput): Metadata {
 }
 
 /** Build Next.js Metadata for the product listing page */
-export function buildPLPMeta(hasFilters = false): Metadata {
+export function buildPLPMeta(hasFilters = false, currentCountry: string = 'in'): Metadata {
+    const pathStrategy = 'products';
     return {
         title: 'Shop Premium Ayurvedic Wellness | Vedashi',
         description: 'Browse our curated collection of premium Ayurvedic remedies and wellness formulations. Filter by category, benefit, and more. Fast delivery across India.',
+        alternates: {
+            canonical: `${SITE_URL}/${currentCountry}/${pathStrategy}`,
+            languages: buildHreflang(pathStrategy)
+        },
         robots: hasFilters
             ? { index: false, follow: true }   // noindex filtered pages
             : { index: true, follow: true },
         openGraph: {
             title: 'Shop Premium Ayurvedic Wellness | Vedashi',
             description: 'Browse our curated collection of premium Ayurvedic remedies and wellness formulations.',
+            url: `${SITE_URL}/${currentCountry}/${pathStrategy}`,
             siteName: SITE_NAME,
             type: 'website',
         },
@@ -205,7 +234,11 @@ export function buildPLPMeta(hasFilters = false): Metadata {
 // ─── JSON-LD Structured Data ─────────────────────────────────────────────────
 
 /** Product schema (JSON-LD) */
-export function generateProductJsonLd(product: ProductSeoInput): Record<string, unknown> {
+export function generateProductJsonLd(
+    product: ProductSeoInput,
+    shippingConfig?: any,
+    returnConfig?: any
+): Record<string, unknown> {
     const defaultVariant = product.variants?.find((v: any) => v.is_default) || product.variants?.[0];
     const price = defaultVariant?.price || product.price || 0;
     const sku = defaultVariant?.variant_sku || product.sku || '';
@@ -222,8 +255,13 @@ export function generateProductJsonLd(product: ProductSeoInput): Record<string, 
         name: product.product_name,
         description: product.description || productFallbackDescription(product),
         sku,
+        mpn: sku,
         image: Array.from(imageSet),
         url: `${SITE_URL}/products/${product.slug || product.product_id}`,
+        brand: {
+            '@type': 'Brand',
+            name: product.brand || SITE_NAME
+        },
         offers: {
             '@type': 'Offer',
             price: price,
@@ -232,11 +270,67 @@ export function generateProductJsonLd(product: ProductSeoInput): Record<string, 
                 ? 'https://schema.org/InStock'
                 : 'https://schema.org/OutOfStock',
             url: `${SITE_URL}/products/${product.slug || product.product_id}`,
+            priceValidUntil: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
+            itemCondition: 'https://schema.org/NewCondition',
+            seller: {
+                '@type': 'Organization',
+                name: SITE_NAME
+            }
         },
     };
 
-    if (product.brand) {
-        schema.brand = { '@type': 'Brand', name: product.brand };
+    // Add Shipping Details if config is provided
+    if (shippingConfig && schema.offers) {
+        (schema.offers as any).shippingDetails = {
+            '@type': 'OfferShippingDetails',
+            shippingRate: {
+                '@type': 'MonetaryAmount',
+                value: shippingConfig.is_free ? 0 : (shippingConfig.flat_rate || 0),
+                currency: shippingConfig.currency || 'INR'
+            },
+            deliveryTime: {
+                '@type': 'ShippingDeliveryTime',
+                handlingTime: {
+                    '@type': 'QuantitativeValue',
+                    minValue: shippingConfig.handling_time_days_min || 1,
+                    maxValue: shippingConfig.handling_time_days_max || 2,
+                    unitCode: 'd'
+                },
+                transitTime: {
+                    '@type': 'QuantitativeValue',
+                    minValue: shippingConfig.transit_time_days_min || 3,
+                    maxValue: shippingConfig.transit_time_days_max || 5,
+                    unitCode: 'd'
+                }
+            },
+            shippingDestination: {
+                '@type': 'DefinedRegion',
+                addressCountry: 'IN'
+            }
+        };
+
+        if (shippingConfig.description) {
+            (schema.offers as any).description = shippingConfig.description;
+        }
+    }
+
+    // Add Return Policy ONLY if real data is provided
+    if (returnConfig && returnConfig.policy_days) {
+        schema.hasMerchantReturnPolicy = {
+            '@type': 'MerchantReturnPolicy',
+            applicableCountry: 'IN',
+            returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnPeriod',
+            merchantReturnDays: returnConfig.policy_days,
+            returnMethod: 'https://schema.org/ReturnByMail',
+            returnFees: returnConfig.return_fees === 'free' 
+                ? 'https://schema.org/FreeReturn' 
+                : 'https://schema.org/ReturnShippingFeesCustomerPays',
+            url: returnConfig.policy_url
+        };
+
+        if (returnConfig.description) {
+            (schema.hasMerchantReturnPolicy as any).description = returnConfig.description;
+        }
     }
 
     if (product.rating_average && product.review_count) {
@@ -249,19 +343,41 @@ export function generateProductJsonLd(product: ProductSeoInput): Record<string, 
         };
     }
 
-    // Add alcohol percentage if available
-    const abv = product.alcohol_percentage ?? product.variants?.[0]?.alcohol_percentage;
-    if (abv) {
-        schema.additionalProperty = [
-            {
-                '@type': 'PropertyValue',
-                name: 'Alcohol Content',
-                value: `${abv}% ABV`
-            }
-        ];
-    }
-
     return schema;
+}
+
+/** LocalBusiness schema (JSON-LD) */
+export function generateLocalBusinessJsonLd(): Record<string, unknown> {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'Store',
+        name: SITE_NAME,
+        url: SITE_URL,
+        logo: `${SITE_URL}/logo.png`,
+        image: `${SITE_URL}/og-default.jpg`,
+        description: 'Premium Ayurvedic Wellness and Natural Herbal Remedies.',
+        address: {
+            '@type': 'PostalAddress',
+            addressLocality: 'Gurgaon',
+            addressRegion: 'Haryana',
+            postalCode: '122001',
+            addressCountry: 'IN'
+        },
+        geo: {
+            '@type': 'GeoCoordinates',
+            latitude: '28.4595',
+            longitude: '77.0266'
+        },
+        openingHoursSpecification: [
+            {
+                '@type': 'OpeningHoursSpecification',
+                dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+                opens: '09:00',
+                closes: '21:00'
+            }
+        ],
+        sameAs: []
+    };
 }
 
 /** FAQPage schema (JSON-LD) */
@@ -321,7 +437,10 @@ export function generateBreadcrumbJsonLd(
             '@type': 'ListItem',
             position: i + 1,
             name: item.name,
-            item: item.url,
+            item: {
+                '@id': item.url,
+                name: item.name
+            }
         })),
     };
 }

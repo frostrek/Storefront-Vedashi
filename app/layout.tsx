@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import Script from "next/script";
+import { Suspense } from "react";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -15,8 +16,10 @@ import { CookieConsentProvider } from "@/context/CookieConsentContext";
 import CookieBanner from "@/components/CookieBanner";
 import LanguageSuggestionBanner from "@/components/LanguageSuggestionBanner";
 import DynamicScriptLoader from "@/components/DynamicScriptLoader";
+import RouteTracker from "@/components/RouteTracker";
+import GlobalErrorTracker from "@/components/GlobalErrorTracker";
 import MaintenancePage from "@/components/MaintenancePage";
-import { generateOrganizationJsonLd, generateWebSiteJsonLd } from "@/lib/seo";
+import { generateLocalBusinessJsonLd, generateOrganizationJsonLd, generateWebSiteJsonLd } from "@/lib/seo";
 import ButterflyEffect from "@/components/animations/ButterflyEffect";
 import { API_URL } from "@/lib/api";
 
@@ -34,7 +37,10 @@ const playfair = Playfair_Display({
   weight: ["400", "500", "600", "700", "800"],
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.com';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Vedashi — Premium Ayurvedic Wellness",
     template: "%s | Vedashi",
@@ -66,18 +72,28 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Check global maintenance status
+  // Check global maintenance status with a tight timeout to prevent site hangs
   let isMaintenance = false;
   let maintenanceMessage = "";
+  
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 2500); // 2.5s ceiling for health check
+  
   try {
-    const res = await fetch(`${API_URL}/health`, { next: { revalidate: 10 } });
+    const res = await fetch(`${API_URL}/health`, { 
+      signal: controller.signal,
+      next: { revalidate: 10 } 
+    });
     const data = await res.json();
     if (data?.maintenance?.enabled) {
       isMaintenance = true;
       maintenanceMessage = data.maintenance.message || "The Vedashi experience is currently undergoing routine maintenance.";
     }
   } catch (error) {
-    // Ignore network errors her
+    // If the health check times out or fails, we assume the site is NOT in maintenance
+    // This prioritizes speed and prevents the "TimeoutError" crash in dev
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   if (isMaintenance) {
@@ -93,10 +109,23 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
       <body className={`min-h-screen flex flex-col ${inter.className}`} suppressHydrationWarning>
+        {/* GA4 — Set default consent BEFORE any gtag scripts load */}
+        <Script id="ga4-default-consent" strategy="beforeInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){window.dataLayer.push(arguments);}
+            gtag('consent', 'default', { analytics_storage: 'denied' });
+          `}
+        </Script>
         <Script
           id="structured-data-organization"
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(generateOrganizationJsonLd()) }}
+        />
+        <Script
+          id="structured-data-business"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(generateLocalBusinessJsonLd()) }}
         />
         <Script
           id="structured-data-website"
@@ -116,6 +145,10 @@ export default async function RootLayout({
           />
           <CookieConsentProvider>
             <DynamicScriptLoader />
+            <Suspense fallback={null}>
+              <RouteTracker />
+            </Suspense>
+            <GlobalErrorTracker />
             <AuthProvider>
               <CartProvider>
                 <WishlistProvider>
@@ -144,8 +177,8 @@ export default async function RootLayout({
                       }
                     }}
                   />
-                  <Navbar />
                   <PromoBanner />
+                  <Navbar />
                   <main className="flex-1">{children}</main>
                   <Footer />
                   <ButterflyEffect />

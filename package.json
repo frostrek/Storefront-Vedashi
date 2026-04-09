@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3000",
+    "dev": "cross-env NODE_OPTIONS='--max-old-space-size=8192' next dev -p 3000",
     "build": "next build",
     "start": "next start -p 3000",
     "lint": "eslint"
@@ -16,8 +16,9 @@
     "gsap": "^3.14.2",
     "jspdf": "^4.2.0",
     "jspdf-autotable": "^5.0.7",
+    "libphonenumber-js": "^1.12.40",
     "lucide-react": "^0.575.0",
-    "next": "16.1.6",
+    "next": "^16.2.1",
     "next-intl": "^4.8.3",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -30,6 +31,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/react-select": "^5.0.0",
+    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",

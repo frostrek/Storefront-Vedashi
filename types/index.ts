@@ -1,6 +1,8 @@
 /* === Storefront Type Definitions === */
 /* Maps to existing backend inventory.products schema */
 
+import { CountryPriceOverride } from '@/lib/currency';
+
 export interface Product {
     product_id: string;
     sku: string;
@@ -15,6 +17,8 @@ export interface Product {
     country_of_origin?: string;
     form?: string;
     specialities?: string[];
+    thumbnail_url?: string;
+    short_description?: string;
 
     created_at?: string;
     updated_at?: string;
@@ -34,6 +38,23 @@ export interface Product {
     is_availability_expired?: boolean;
     available_from?: string;
     available_until?: string;
+    stock_status?: string;
+    status?: string;
+    image_url?: string;
+    base64_image?: string;
+    added_at?: string;
+    stock_quantity?: number;
+    avg_rating?: number | string;
+    review_count?: number | string;
+    variant_count?: number;
+    variants?: ProductVariant[];
+    default_variant_id?: string;
+
+    /* Shared variant attributes */
+    common_form?: string;
+    common_strength?: string;
+    common_flavor?: string;
+    country_prices?: CountryPriceOverride[] | null;
 }
 
 /** Shape returned by GET /api/products/filter */
@@ -44,6 +65,14 @@ export interface FilteredProduct extends Product {
     review_count?: number;
     total_stock?: number;
     thumbnail_url?: string;
+}
+
+export interface Category {
+    category_id: string;
+    parent_id: string | null;
+    name: string;
+    slug: string;
+    children?: Category[];
 }
 
 export interface FilterMeta {
@@ -65,6 +94,8 @@ export interface ProductWithDetails extends Product {
     variants?: ProductVariant[];
     compliance?: ProductCompliance | null;
     assets?: ProductAsset[];
+    review_count?: number | string;
+    avg_rating?: number | string;
 }
 
 export interface ProductSpecification {
@@ -125,6 +156,8 @@ export interface ProductVariant {
     units_count?: number;
     form_factor?: string;
     flavor?: string;
+    sku?: string;
+    country_prices?: CountryPriceOverride[] | null;
 }
 
 export interface ProductCompliance {
@@ -216,7 +249,6 @@ export interface BackendCartItem {
         discount_amount: number;
         discount_source: string | null;
         line_subtotal: number;
-        line_tax: number;
         line_total: number;
         currency?: string;
     };
@@ -239,7 +271,6 @@ export interface BackendCart {
         item_count: number;
         unique_items: number;
         subtotal: number;
-        total_tax: number;
         grand_total: number;
     };
     /* Legacy flat fields (fallback) */
@@ -268,7 +299,6 @@ export interface Order {
     customer_email?: string;
     // Legacy fields (kept for backward compat)
     total_amount: string | number;
-    total_tax?: string | number;
     grand_total?: number;
     // VND breakdown fields (new)
     subtotal?: number;
@@ -276,8 +306,7 @@ export interface Order {
     coupon_discount_amount?: number;
     discount_amount?: number;
     coupon_code?: string;
-    taxable_amount?: number;
-    vat_amount?: number;
+
     shipping_amount?: number;
     final_total?: number;
     currency?: string;
@@ -307,7 +336,6 @@ export interface OrderItem {
     product_id?: string;
     quantity: number;
     unit_price: number;
-    tax_amount?: number;
     product_name?: string;
     product_name_snapshot?: string;
     variant_name_snapshot?: string;

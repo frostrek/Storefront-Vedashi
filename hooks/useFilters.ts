@@ -1,5 +1,5 @@
 'use client';
-
+//   j
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useCallback, useMemo } from 'react';
 import { FILTER_CONFIGS } from '@/lib/filterConfig';
@@ -14,7 +14,6 @@ export interface FilterState {
     specialities: string[];
     ratings: string[];
     priceRange: [number, number];
-    alcoholRange: [number, number];
     inStock: boolean;
     bestSellers: boolean;
     newArrivals: boolean;
@@ -33,7 +32,6 @@ const DEFAULTS: FilterState = {
     specialities: [],
     ratings: [],
     priceRange: [0, Infinity],
-    alcoholRange: [0, 100],
     inStock: false,
     bestSellers: false,
     newArrivals: false,
@@ -81,10 +79,9 @@ export function useFilters() {
             specialities: parseArray(searchParams.get('specialities')),
             ratings: parseArray(searchParams.get('rating')),
             priceRange: parseRange(searchParams.get('price'), DEFAULTS.priceRange),
-            alcoholRange: parseRange(searchParams.get('alcohol'), DEFAULTS.alcoholRange),
             inStock: searchParams.get('inStock') === 'true',
-            bestSellers: searchParams.get('bestSeller') === 'true',
-            newArrivals: searchParams.get('newArrival') === 'true',
+            bestSellers: (searchParams.get('bestSeller') === 'true' || searchParams.get('bestSellers') === 'true'),
+            newArrivals: (searchParams.get('newArrival') === 'true' || searchParams.get('newArrivals') === 'true'),
             sort: searchParams.get('sort') || DEFAULTS.sort,
             discountMin: searchParams.get('discount_min') ? Number(searchParams.get('discount_min')) : null,
             attributes,
@@ -121,11 +118,7 @@ export function useFilters() {
         const isDefault = val[0] === 0 && (val[1] === pMax || val[1] === Infinity);
         setParam({ price: isDefault ? null : `${val[0]}-${val[1]}` });
     }, [setParam]);
-    const setAlcoholRange = useCallback((val: [number, number]) => {
-        const alcConfig = FILTER_CONFIGS.find(f => f.key === 'alcohol');
-        const isDefault = val[0] === (alcConfig?.min ?? 0) && val[1] === (alcConfig?.max ?? 60);
-        setParam({ alcohol: isDefault ? null : `${val[0]}-${val[1]}` });
-    }, [setParam]);
+
     const setInStock = useCallback((val: boolean) => setParam({ inStock: val ? 'true' : null }), [setParam]);
     const setBestSellers = useCallback((val: boolean) => setParam({ bestSeller: val ? 'true' : null }), [setParam]);
     const setNewArrivals = useCallback((val: boolean) => setParam({ newArrival: val ? 'true' : null }), [setParam]);
@@ -156,14 +149,13 @@ export function useFilters() {
             case 'sub_category': setSubCategory(''); break;
             case 'search': setSearch(''); break;
             case 'price': setPriceRange(DEFAULTS.priceRange); break;
-            case 'alcohol': setAlcoholRange(DEFAULTS.alcoholRange); break;
             case 'inStock': setInStock(false); break;
             case 'bestSellers': setBestSellers(false); break;
             case 'newArrivals': setNewArrivals(false); break;
             case 'discount_min': setDiscountMin(null); break;
             case 'sort': setSort(''); break;
         }
-    }, [filters, setBrands, setCountry, setRatings, setCategory, setSubCategory, setSearch, setPriceRange, setAlcoholRange, setInStock, setBestSellers, setNewArrivals, setSort, setDiscountMin, setAttribute, setParam]);
+    }, [filters, setBrands, setCountry, setRatings, setCategory, setSubCategory, setSearch, setPriceRange, setInStock, setBestSellers, setNewArrivals, setSort, setDiscountMin, setAttribute, setParam]);
 
     // Build chips from active filters
     const activeChips = useMemo(() => {
@@ -176,13 +168,11 @@ export function useFilters() {
         filters.form.forEach(f => chips.push({ key: 'form', label: 'Form', value: f }));
         filters.specialities.forEach(s => chips.push({ key: 'specialities', label: 'Speciality', value: s }));
         filters.ratings.forEach(r => chips.push({ key: 'rating', label: 'Rating', value: r }));
-        const pMax = filters.priceRange[1] === Infinity ? 'Max' : `$${filters.priceRange[1]}`;
+        
         if (filters.priceRange[0] !== 0 || filters.priceRange[1] !== Infinity) {
-            chips.push({ key: 'price', label: 'Price', value: `$${filters.priceRange[0]} – ${pMax}` });
-        }
-        const alcConfig = FILTER_CONFIGS.find(f => f.key === 'alcohol');
-        if (filters.alcoholRange[0] !== (alcConfig?.min ?? 0) || filters.alcoholRange[1] !== (alcConfig?.max ?? 100)) {
-            chips.push({ key: 'alcohol', label: 'Alcohol', value: `${filters.alcoholRange[0]}% – ${filters.alcoholRange[1]}%` });
+            const min = `₹${filters.priceRange[0].toLocaleString()}`;
+            const max = filters.priceRange[1] === Infinity ? 'Max' : `₹${filters.priceRange[1].toLocaleString()}`;
+            chips.push({ key: 'price', label: 'Price', value: `${min} – ${max}` });
         }
         if (filters.inStock) chips.push({ key: 'inStock', label: 'Status', value: 'In Stock' });
         if (filters.bestSellers) chips.push({ key: 'bestSellers', label: 'Collection', value: 'Best Sellers' });
@@ -208,7 +198,6 @@ export function useFilters() {
         setSpecialities,
         setRatings,
         setPriceRange,
-        setAlcoholRange,
         setInStock,
         setBestSellers,
         setNewArrivals,
