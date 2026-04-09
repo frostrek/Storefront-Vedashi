@@ -58,6 +58,17 @@ const nextConfig: NextConfig = {
         destination: '/sitemap.xml',
         permanent: true,
       },
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'www.vedashi.com',
+          },
+        ],
+        destination: 'https://vedashi.com/:path*',
+        permanent: true,
+      },
     ];
   },
 };
