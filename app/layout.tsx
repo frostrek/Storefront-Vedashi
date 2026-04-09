@@ -50,9 +50,11 @@ export const metadata: Metadata = {
   keywords: ["ayurveda", "ayurvedic wellness", "herbal remedies", "Vedashi", "natural healing", "dosha", "panchakarma"],
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
-    other: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION ? {
-      "msvalidate.01": [process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION],
-    } : undefined,
+    yandex: "40dd8bca6ac40b29",
+    other: {
+      "naver-site-verification": ["abc7e3ec4e7003d600d9ff8eb8a87428"],
+      "msvalidate.01": [process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION].filter(Boolean) as string[],
+    },
   },
   openGraph: {
     type: "website",

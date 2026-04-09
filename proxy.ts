@@ -162,17 +162,22 @@ function applyLanguageCookies(
   response.cookies.set('suggested_lang', suggestedLang, SUGGESTED_LANG_COOKIE_OPTIONS);
 }
 
+// ─── Constants ──────────────────────────────────────────────────────
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.com';
+
 // ─── Proxy (Next.js 16 convention, replaces middleware) ──────────────
 
 export async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname, search } = request.nextUrl;
 
-  // 0. SEO: Enforce non-www canonical domain (redirect www to non-www)
+  // 0. SEO: Enforce HTTPS and non-www canonical domain (redirect www to non-www)
   const host = request.headers.get('host') || request.nextUrl.hostname || '';
-  if (host === 'www.vedashi.com' || host === 'www.vedashi.onrender.com') {
-    const targetUrl = request.nextUrl.clone();
-    targetUrl.host = 'vedashi.com';
-    return NextResponse.redirect(targetUrl, 301);
+  const isWww = host === 'www.vedashi.com' || host === 'www.vedashi.onrender.com';
+  
+  if (isWww) {
+    // Build a clean URL using SITE_URL to strip internal ports like :3000
+    const target = new URL(`${pathname}${search}`, SITE_URL);
+    return NextResponse.redirect(target, 301);
   }
 
   // 1. Skip static assets, API routes, Next.js internals
@@ -225,7 +230,6 @@ export async function proxy(request: NextRequest) {
 
   // 4. Build redirect to /{country}{pathname}
   const currency = getCurrency(country);
-  const url = request.nextUrl.clone();
   
   // Ensure we don't create a double-redirect by adding a trailing slash 
   // that Next.js will just remove anyway.
@@ -234,9 +238,9 @@ export async function proxy(request: NextRequest) {
     targetPath = targetPath.slice(0, -1);
   }
   
-  url.pathname = targetPath;
-
-  const response = NextResponse.redirect(url);
+  // Build absolute redirect using SITE_URL to strip internal ports
+  const redirectUrl = new URL(`${targetPath}${search}`, SITE_URL);
+  const response = NextResponse.redirect(redirectUrl);
 
   // 5. Set geo cookies
   response.cookies.set('geo_country', country, GEO_COOKIE_OPTIONS);
