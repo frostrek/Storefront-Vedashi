@@ -162,9 +162,9 @@ function applyLanguageCookies(
   response.cookies.set('suggested_lang', suggestedLang, SUGGESTED_LANG_COOKIE_OPTIONS);
 }
 
-// ─── Middleware ──────────────────────────────────────────────────────
+// ─── Proxy (Next.js 16 convention, replaces middleware) ──────────────
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 0. SEO: Enforce non-www canonical domain (redirect www to non-www)
