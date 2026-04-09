@@ -89,6 +89,20 @@ export default function ProductLayout({
     );
 }
 
+/** Fetch the full category ancestor path for breadcrumbs (fail-silent) */
+async function fetchCategoryBreadcrumb(categoryId: string): Promise<Array<{ category_id: string; name: string; slug: string }>> {
+    try {
+        const res = await fetch(`${API_URL}/api/categories/${categoryId}/breadcrumb`, {
+            next: { revalidate: 3600 }, // cache for 1 hour — hierarchy changes rarely
+        });
+        if (!res.ok) return [];
+        const json = await res.json();
+        return json.success ? (json.data?.breadcrumb ?? []) : [];
+    } catch {
+        return [];
+    }
+}
+
 /** Server component that injects JSON-LD structured data */
 async function ProductJsonLd({ paramsPromise }: { paramsPromise: Promise<{ id: string; country: string }> }) {
     const { id, country } = await paramsPromise;
@@ -114,16 +128,23 @@ async function ProductJsonLd({ paramsPromise }: { paramsPromise: Promise<{ id: s
         variants: product.variants,
     }, siteConfigs?.merchant_shipping, siteConfigs?.merchant_returns);
 
+    // Build breadcrumb from full category hierarchy (closure table)
     const breadcrumbItems = [
         { name: 'Home', url: `${SITE_URL}/${currentCountry}` },
         { name: 'Shop', url: `${SITE_URL}/${currentCountry}/products` },
     ];
-    if (product.category) {
-        breadcrumbItems.push({ 
-            name: product.category, 
-            url: `${SITE_URL}/${currentCountry}/products?category=${encodeURIComponent(product.category)}` 
-        });
+
+    // Fetch real ancestor path when category_id is available
+    if (product.category_id) {
+        const ancestors = await fetchCategoryBreadcrumb(product.category_id);
+        for (const cat of ancestors) {
+            breadcrumbItems.push({
+                name: cat.name,
+                url: `${SITE_URL}/${currentCountry}/products?category=${encodeURIComponent(cat.slug)}`,
+            });
+        }
     }
+
     breadcrumbItems.push({ 
         name: product.product_name, 
         url: `${SITE_URL}/${currentCountry}/products/${product.slug || product.product_id}` 
