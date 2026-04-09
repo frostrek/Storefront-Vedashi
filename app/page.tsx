@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 
 /**
- * Root Page Utility
+ * Root Page Utilities
  * 
  * This file handles the root '/' request by redirecting to the default region.
  * While the middleware handles most traffic, having a physical page.tsx 
