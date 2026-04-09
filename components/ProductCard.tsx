@@ -986,7 +986,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
 
                         {/* Content */}
                         <div className={`p-4 ${isList ? 'flex-1 flex flex-col justify-center min-w-0 p-0 sm:pr-4' : ''}`}>
-                            <h3 className={`font-accent text-gray-900 leading-tight mb-1 sm:mb-1.5 ${isList ? 'text-lg sm:text-xl line-clamp-1 sm:line-clamp-2' : 'text-base line-clamp-2'}`}>
+                            <h3 className={`font-sans font-bold text-gray-900 leading-tight mb-1 sm:mb-1.5 ${isList ? 'text-lg sm:text-xl line-clamp-1 sm:line-clamp-2' : 'text-base line-clamp-2'}`}>
                                 <Link 
                                     href={productUrl} 
                                     className="after:absolute after:inset-0 after:z-10"

@@ -174,7 +174,6 @@ export default async function RootLayout({
                       }
                     }}
                   />
-                  <PromoBanner />
                   <Navbar />
                   <main className="flex-1">{children}</main>
                   <Footer />

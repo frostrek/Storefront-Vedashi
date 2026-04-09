@@ -54,7 +54,7 @@ const QualityPromise = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
-                  className="bg-white px-6 py-5 rounded-xl border border-white flex items-center gap-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-md transition-shadow cursor-default group"
+                  className="bg-[#F0E7C8] px-6 py-5 rounded-xl border border-[#F0E7C8] flex items-center gap-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-md transition-shadow cursor-default group"
                 >
                   <div className="flex-shrink-0">
                     {feature.icon}

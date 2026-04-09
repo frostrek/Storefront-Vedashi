@@ -156,43 +156,6 @@ export default function HomePage() {
         </AnimateOnScroll>
       </section>
 
-      {/* ═══ 3. SHOP BY CATEGORY ═══ */}
-      <section className="py-12 sm:py-20 px-4 mt-8 bg-white relative z-10">
-        <AnimateOnScroll animation="fadeUp" className="mx-auto max-w-7xl">
-          <div className="flex flex-col items-center justify-center text-center mb-12">
-            <div className="flex items-center gap-2 mb-4">
-              <Leaf className="h-4 w-4 text-[#8B7A3D]" />
-              <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#8B7A3D]">
-                Pure Offerings
-              </span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C2C2C] mb-3">Shop by Category</h2>
-            <p className="mt-4 text-[#6B6B60] text-base max-w-2xl mx-auto">
-              Explore our physician-curated collections of authentic Ayurvedic remedies and natural wellness essentials.
-            </p>
-          </div>
-          
-          <div className="flex flex-wrap justify-center gap-6 sm:gap-10">
-            {[
-              { title: 'Herbal Wellness', src: '/icons/shop/ayurvedic-herbs.png', href: '#' },
-              { title: 'Natural Beauty', src: '/icons/shop/personal-care.png', href: '#' },
-              { title: 'Spices & Masalas', src: '/icons/shop/spices-masalas.png', href: '#' },
-              { title: 'Dry Fruits & Snacks', src: '/icons/shop/dry-fruits-snacks.png', href: '#' },
-              { title: 'Indian Foods', src: '/icons/shop/natural-foods.png', href: '#' },
-              { title: 'Teas & Superfoods', src: '/icons/shop/health-condition.png', href: '#' },
-              { title: 'Gifts & Combos', src: '/icons/shop/herbal-supplement.png', href: '#' },
-            ].map((cat, i) => (
-              <Link key={i} href={cat.href} className="flex flex-col items-center group w-32 sm:w-44">
-                <div className="w-28 h-28 sm:w-40 sm:h-40 mb-4 rounded-full bg-[#F5F2E8] border border-[#E0DCCF] flex items-center justify-center p-3 transition-all duration-300 group-hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] group-hover:border-[#8B7A3D] group-hover:-translate-y-1">
-                  <img src={cat.src} alt={cat.title} className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110" />
-                </div>
-                <span className="text-sm font-semibold text-[#2C2C2C] text-center group-hover:text-[#8B7A3D] transition-colors">{cat.title}</span>
-              </Link>
-            ))}
-          </div>
-        </AnimateOnScroll>
-      </section>
-
       {/* ═══ 4. TRUST & SCIENCE ═══ */}
       <section className="py-12 sm:py-20 lg:py-24 px-4 relative overflow-hidden bg-cream">
         {/* Realistic Botanical Leaf Watermarks */}

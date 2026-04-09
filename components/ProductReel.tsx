@@ -31,15 +31,27 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
 
     useEffect(() => {
         const ref = scrollRef.current;
+        let ticking = false;
+
+        const handleScroll = () => {
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    checkScroll();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        };
+
         if (ref) {
-            ref.addEventListener('scroll', checkScroll);
+            ref.addEventListener('scroll', handleScroll, { passive: true });
             checkScroll();
             // Also check on resize
-            window.addEventListener('resize', checkScroll);
+            window.addEventListener('resize', handleScroll, { passive: true });
         }
         return () => {
-            if (ref) ref.removeEventListener('scroll', checkScroll);
-            window.removeEventListener('resize', checkScroll);
+            if (ref) ref.removeEventListener('scroll', handleScroll);
+            window.removeEventListener('resize', handleScroll);
         };
     }, [products]);
 
@@ -58,14 +70,14 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
 
     return (
         <div className="relative group/reel py-8">
-            <div className="flex flex-col items-center mb-10 px-4 relative">
-                <div className="text-center">
-                    {title && <h2 className="text-4xl font-bold text-gray-900 mb-2">{title}</h2>}
-                    {subtitle && <p className="text-gray-500 font-medium italic mb-6">{subtitle}</p>}
+            <div className="flex flex-row items-end justify-between mb-8 px-4 sm:px-6 lg:px-8 relative">
+                <div className="text-left">
+                    {title && <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">{title}</h2>}
+                    {subtitle && <p className="text-gray-500 font-medium italic">{subtitle}</p>}
                 </div>
 
                 {viewAllLink && (
-                    <div className="absolute bottom-0 right-4 sm:right-8">
+                    <div className="flex-shrink-0 hidden sm:block pb-1">
                         <Link href={viewAllLink} className="group flex items-center gap-2 text-sm font-bold text-[#3B5D3B] hover:text-[#8B7A3D] transition-colors">
                             {viewAllText || 'Explore All'}
                             <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -74,7 +86,17 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
                 )}
             </div>
 
-            <div className="relative px-4 sm:px-8">
+            {/* Mobile View All Link */}
+            {viewAllLink && (
+                <div className="sm:hidden px-4 mb-6">
+                    <Link href={viewAllLink} className="group flex items-center gap-2 text-sm font-bold text-[#3B5D3B] hover:text-[#8B7A3D] transition-colors">
+                        {viewAllText || 'Explore All'}
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </Link>
+                </div>
+            )}
+
+            <div className="relative px-4 sm:px-6 lg:px-8">
                 {/* Navigation Arrows */}
                 {showLeftArrow && (
                     <button
@@ -103,24 +125,20 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
                 >
                     {loading ? (
                         Array.from({ length: 4 }).map((_, i) => (
-                            <div key={i} className="min-w-[280px] sm:min-w-[320px] aspect-[3/4] bg-gray-100 animate-pulse rounded-2xl" />
+                            <div key={i} className="min-w-[240px] sm:min-w-[280px] aspect-[3/4] bg-gray-100 animate-pulse rounded-2xl" />
                         ))
                     ) : (
                         products.map((product, i) => (
-                            <motion.div
+                            <div
                                 key={product.product_id}
-                                className="min-w-[280px] sm:min-w-[320px] snap-center"
-                                initial={{ opacity: 0, y: 20 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                transition={{ delay: i * 0.05 }}
-                                viewport={{ once: true }}
+                                className="min-w-[240px] sm:min-w-[280px] snap-center"
                             >
                                 <ProductCard
                                     product={product}
                                     listName={title || 'Product Reel'}
                                     listIndex={i + 1}
                                 />
-                            </motion.div>
+                            </div>
                         ))
                     )}
                     {/* Spacer for right padding in scroll */}

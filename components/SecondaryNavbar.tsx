@@ -17,7 +17,7 @@ interface Category {
 
 const SecondaryMegaMenuLinks = ({ item, country, topLevelSlug, secondLevelSlug, level = 0 }: { item: Category, country: string, topLevelSlug: string, secondLevelSlug?: string, level?: number }) => {
   const hasChildren = item.children && item.children.length > 0;
-  
+
   let href = `/${country}/products?category=${topLevelSlug}`;
   if (level === 0) {
     href += `&sub_category=${item.slug}`;
@@ -43,13 +43,13 @@ const SecondaryMegaMenuLinks = ({ item, country, topLevelSlug, secondLevelSlug, 
       {hasChildren && (
         <div className={`flex flex-col gap-1.5 ${level === 0 ? 'mt-1 pl-3' : 'pl-3'}`}>
           {item.children!.map(child => (
-            <SecondaryMegaMenuLinks 
-              key={child.category_id} 
-              item={child} 
-              country={country} 
-              topLevelSlug={topLevelSlug} 
-              secondLevelSlug={level === 0 ? item.slug : secondLevelSlug} 
-              level={level + 1} 
+            <SecondaryMegaMenuLinks
+              key={child.category_id}
+              item={child}
+              country={country}
+              topLevelSlug={topLevelSlug}
+              secondLevelSlug={level === 0 ? item.slug : secondLevelSlug}
+              level={level + 1}
             />
           ))}
         </div>
@@ -96,64 +96,67 @@ export default function SecondaryNavbar() {
   return (
     <div className="hidden md:block bg-white border-b border-gray-200 shadow-sm relative z-[90]">
       <div className="mx-auto max-w-[1800px] px-4 sm:px-6 lg:px-8">
-        <div className="flex h-[36px] items-center justify-between text-[14px] font-bold text-gray-700">
+        <div className="flex h-[32px] items-center justify-between text-[14px] uppercase font-bold text-black-700 font-sans">
 
           <div className="flex items-center gap-0 h-full overflow-x-auto no-scrollbar scroll-smooth">
             {/* Individual Categories */}
-            {!loading && parentCategories.map(parent => {
+            {!loading && parentCategories.map((parent, index) => {
               const subcats = parent.children || [];
 
               return (
-                <div key={parent.category_id} className="group/nav-item h-full flex items-center shrink-0">
-                  <Link
-                    href={`/${country}/products?category=${parent.slug}`}
-                    className="flex items-center h-full px-1.5 hover:text-[#3B5D3B] transition-colors cursor-pointer border-b-2 border-transparent group-hover/nav-item:border-[#3B5D3B]"
-                  >
-                    {parent.name}
-                  </Link>
+                <div key={parent.category_id} className="flex items-center h-full">
+                  {index > 0 && <div className="h-4 w-[1px] bg-gray-200 self-center mx-1.5" />}
+                  <div className="group/nav-item h-full flex items-center shrink-0">
+                    <Link
+                      href={`/${country}/products?category=${parent.slug}`}
+                      className="flex items-center h-full px-1.5 hover:text-[#3B5D3B] transition-colors cursor-pointer border-b-2 border-transparent group-hover/nav-item:border-[#3B5D3B]"
+                    >
+                      {parent.name}
+                    </Link>
 
-                  {/* Subcategories Dropdown (Mega Menu) */}
-                  {subcats.length > 0 && (
-                    <div className="absolute top-full left-0 w-[97vw] rounded-br-xl bg-white shadow-[0_15px_50px_rgba(0,0,0,0.15)] opacity-0 invisible group-hover/nav-item:opacity-100 group-hover/nav-item:visible transition-all duration-300 z-[100] border-t-[3px] border-[#3B5D3B]">
-                      <div className="mx-auto px-8 py-8 flex gap-8 min-h-[250px] relative mt-2">
+                    {/* Subcategories Dropdown (Mega Menu) */}
+                    {subcats.length > 0 && (
+                      <div className="absolute top-full left-0 w-[97vw] rounded-br-xl bg-white shadow-[0_15px_50px_rgba(0,0,0,0.15)] opacity-0 invisible group-hover/nav-item:opacity-100 group-hover/nav-item:visible transition-all duration-300 z-[100] border-t-[3px] border-[#3B5D3B]">
+                        <div className="mx-auto px-8 py-8 flex gap-8 min-h-[250px] relative mt-2">
 
-                        <div className="w-1/4 border-r border-[#3B5D3B]/10 pr-6 flex flex-col">
-                          {/* Heading Top Left */}
-                          <h3 className="text-xl font-extrabold text-gray-900 mb-4">{parent.name}</h3>
+                          <div className="w-1/4 border-r border-[#3B5D3B]/10 pr-6 flex flex-col">
+                            {/* Heading Top Left */}
+                            <h3 className="text-xl font-extrabold text-gray-900 mb-4">{parent.name}</h3>
 
-                          {/* Resized Image */}
-                          {parent.image_url && (
-                            <div className="mb-4 aspect-[4/3] w-full overflow-hidden rounded-xl bg-gray-50 shadow-sm border border-gray-100">
-                              <img src={parent.image_url} alt={parent.name} className="w-full h-full object-cover transition-transform duration-500 group-hover/nav-item:scale-105" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="w-3/4 flex flex-col justify-between">
-                          <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-3 gap-4 mb-2">
-                            {subcats.map(sub => (
-                              <div key={sub.category_id} className="break-inside-avoid">
-                                <SecondaryMegaMenuLinks item={sub} country={country} topLevelSlug={parent.slug} />
+                            {/* Resized Image */}
+                            {parent.image_url && (
+                              <div className="mb-4 aspect-[4/3] w-full overflow-hidden rounded-xl bg-gray-50 shadow-sm border border-gray-100">
+                                <img src={parent.image_url} alt={parent.name} className="w-full h-full object-cover transition-transform duration-500 group-hover/nav-item:scale-105" />
                               </div>
-                            ))}
+                            )}
                           </div>
+                          <div className="w-3/4 flex flex-col justify-between">
+                            <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-3 gap-4 mb-2">
+                              {subcats.map(sub => (
+                                <div key={sub.category_id} className="break-inside-avoid">
+                                  <SecondaryMegaMenuLinks item={sub} country={country} topLevelSlug={parent.slug} />
+                                </div>
+                              ))}
+                            </div>
 
-                          {/* "View All" link positioned at the bottom right */}
-                          <div className="flex justify-end mt-auto pt-4 border-t border-gray-50/50">
-                            <Link href={`/${country}/products?category=${parent.slug}`} className="text-[#3B5D3B] hover:text-[#2A432A] flex items-center gap-1 font-bold text-[13px] group/view-all">
-                              Explore All {parent.name} <span className="transition-transform group-hover/view-all:translate-x-1">→</span>
-                            </Link>
+                            {/* "View All" link positioned at the bottom right */}
+                            <div className="flex justify-end mt-auto pt-4 border-t border-gray-50/50">
+                              <Link href={`/${country}/products?category=${parent.slug}`} className="text-[#3B5D3B] hover:text-[#2A432A] flex items-center gap-1 font-bold text-[13px] group/view-all">
+                                Explore All {parent.name} <span className="transition-transform group-hover/view-all:translate-x-1">→</span>
+                              </Link>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               );
             })}
 
-            {/* Vertical Divider */}
+            {/* Vertical Divider before Brands */}
             {!loading && parentCategories.length > 0 && (
-              <div className="h-5 w-[1px] bg-gray-200 self-center shrink-0 mx-1" />
+              <div className="h-4 w-[1px] bg-gray-200 self-center shrink-0 mx-2" />
             )}
 
             {/* Brands A-Z Dropdown */}
@@ -200,8 +203,10 @@ export default function SecondaryNavbar() {
             </div>
           </div>
 
-          <div className="flex items-center gap-6 h-full text-[13px] font-bold tracking-wide shrink-0 ml-4">
+          <div className="flex items-center h-full text-[13px] font-bold tracking-wide shrink-0 ml-4">
+            <div className="h-4 w-[1px] bg-gray-200 self-center mx-3" />
             <Link href={`/${country}/products?bestSeller=true`} className="text-gray-900 hover:text-[#3B5D3B] h-full flex items-center">Best Sellers</Link>
+            <div className="h-4 w-[1px] bg-gray-200 self-center mx-3" />
             <Link href={`/${country}/products?newArrival=true`} className="text-gray-900 hover:text-[#3B5D3B] h-full flex items-center">New Arrivals</Link>
           </div>
         </div>

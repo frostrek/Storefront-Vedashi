@@ -15,6 +15,7 @@ import GoogleTranslateWidget from './GoogleTranslateWidget';
 import RegionSwitcher from './RegionSwitcher';
 import NotificationCenter from './account/NotificationCenter';
 import SecondaryNavbar from './SecondaryNavbar';
+import PromoBanner from './PromoBanner';
 
 interface Category {
   category_id: string;
@@ -49,7 +50,8 @@ interface HeaderConfig {
 const DEFAULT_CONFIG: HeaderConfig = {
   branding: { logo_url: '', logo_alt: 'Vedashi' },
   colors: {
-    navbar_bg: '#f0e7c8ff',
+    // navbar_bg: '#f0e7c8ff',
+    navbar_bg: '#E8DCAFff',
     navbar_text: '#374151',
     navbar_hover: '#3B5D3B',
     strip_bg: '#3B5D3B',
@@ -308,6 +310,40 @@ export default function Navbar() {
 
   return (
     <header className={`w-full sticky top-0 z-[1000] transition-all duration-500 ${scrolled ? 'shadow-lg' : ''}`}>
+      
+      <PromoBanner />
+
+      {/* ═══════════════ STRIP BAR (PROMOTION BANNER) ═══════════════ */}
+      {strip.enabled && (
+        <div className="hidden md:block font-sans" style={{ backgroundColor: colors.strip_bg }}>
+          <div className="mx-auto max-w-[2000px] w-full px-4 lg:px-6">
+            <div className="flex items-center justify-between h-8 text-[12px] tracking-wide">
+              <div className="flex items-center gap-5">
+                {strip.show_track_orders && (
+                  <Link href={`/${currentCountry}/account`} className="font-medium" style={{ color: colors.strip_text }}>Track Orders</Link>
+                )}
+                {strip.show_categories && (
+                  <div className="flex items-center gap-6">
+                    {parentCategories.slice(0, 5).map(parent => (
+                      <div key={parent.category_id} className="relative group flex items-center h-8">
+                        <Link href={`/${currentCountry}/products?category=${parent.slug}`} className="flex items-center gap-1 font-medium" style={{ color: colors.strip_text }}>
+                          {parent.name}
+                          {parent.children && parent.children.length > 0 && <ChevronDown className="h-3 w-3 transition-transform group-hover:rotate-180" />}
+                        </Link>
+                        <MegaMenuContent parent={parent} country={currentCountry} colors={colors} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <span className="font-medium" style={{ color: colors.strip_text }}>{strip.center_message}</span>
+              <div className="flex items-center gap-1.5 font-medium" style={{ color: colors.strip_text }}>
+                <span>Hotline: <span style={{ color: colors.strip_accent }}>{strip.hotline}</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ═══════════════ MAIN NAVBAR ═══════════════ */}
       <div
@@ -389,21 +425,39 @@ export default function Navbar() {
                     <User className="h-[20px] w-[20px]" style={{ color: colors.navbar_text }} />
                   )}
                 </Link>
-                <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[120] p-2">
+                <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[120] overflow-hidden">
                   {isAuthenticated ? (
-                    <>
-                      <div className="px-4 py-3 border-b border-gray-50 mb-2">
-                        <p className="text-sm font-bold text-gray-800 truncate">{user?.name}</p>
+                    <div className="p-2">
+                      <div className="px-4 py-3 border-b border-gray-50 mb-1">
+                        <p className="text-[13px] font-bold text-gray-800 truncate">{user?.name}</p>
                         <p className="text-[10px] text-gray-500 truncate">{user?.email}</p>
                       </div>
                       <Link href="/account" className="flex items-center gap-3 px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50"><Settings className="h-4 w-4" /> Settings</Link>
                       <Link href="/account/orders" className="flex items-center gap-3 px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50"><Package className="h-4 w-4" /> Orders</Link>
-                      <button onClick={() => logout()} className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm text-red-600 hover:bg-red-50 mt-2"><LogOut className="h-4 w-4" /> Logout</button>
-                    </>
+                      <button onClick={() => logout()} className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm text-red-600 hover:bg-red-50 mt-1"><LogOut className="h-4 w-4" /> Logout</button>
+                    </div>
                   ) : (
-                    <div className="p-2 space-y-2">
-                      <Link href={`/${currentCountry}/login`} className="block w-full text-center py-2 bg-[#3B5D3B] text-white rounded-lg text-sm font-bold">Sign In</Link>
-                      <Link href={`/${currentCountry}/login?mode=register`} className="block w-full text-center py-2 bg-gray-50 text-gray-700 rounded-lg text-sm border">Register</Link>
+                    <div className="flex flex-col">
+                      <div className="p-5 bg-gray-50/50 border-b border-gray-100">
+                        <h3 className="text-[15px] font-bold text-gray-900 mb-1">Welcome to Vedashi</h3>
+                        <p className="text-[11px] text-gray-500 leading-tight">Sign in to easily track orders, save items, and more.</p>
+                      </div>
+                      <div className="p-4 space-y-2">
+                        <Link 
+                          href={`/${currentCountry}/login`} 
+                          className="flex items-center gap-3 w-full px-4 py-2.5 bg-[#3B5D3B] text-white rounded-xl text-[13px] font-bold transition-all hover:bg-[#2D452D] hover:shadow-md active:scale-[0.98]"
+                        >
+                          <LogIn className="h-4 w-4" />
+                          Sign In
+                        </Link>
+                        <Link 
+                          href={`/${currentCountry}/login?mode=register`} 
+                          className="flex items-center gap-3 w-full px-4 py-2.5 bg-white text-gray-700 rounded-xl text-[13px] font-bold border border-gray-200 transition-all hover:bg-gray-50 active:scale-[0.98]"
+                        >
+                          <UserPlus className="h-4 w-4" />
+                          Create Account
+                        </Link>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -418,39 +472,6 @@ export default function Navbar() {
       </div>
 
       <SecondaryNavbar />
-
-      {/* ═══════════════ STRIP BAR ═══════════════ */}
-      {strip.enabled && (
-        <div className="hidden md:block" style={{ backgroundColor: colors.strip_bg }}>
-          <div className="mx-auto max-w-[2000px] w-full px-4 lg:px-6">
-            <div className="flex items-center justify-between h-8 text-[12px] tracking-wide">
-              <div className="flex items-center gap-5">
-                {strip.show_track_orders && (
-                  <Link href={`/${currentCountry}/account`} className="font-medium" style={{ color: colors.strip_text }}>Track Orders</Link>
-                )}
-                {strip.show_categories && (
-                  <div className="flex items-center gap-6">
-                    {parentCategories.slice(0, 5).map(parent => (
-                      <div key={parent.category_id} className="relative group flex items-center h-8">
-                        <Link href={`/${currentCountry}/products?category=${parent.slug}`} className="flex items-center gap-1 font-medium" style={{ color: colors.strip_text }}>
-                          {parent.name}
-                          {parent.children && parent.children.length > 0 && <ChevronDown className="h-3 w-3 transition-transform group-hover:rotate-180" />}
-                        </Link>
-                        <MegaMenuContent parent={parent} country={currentCountry} colors={colors} />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <span className="font-medium" style={{ color: colors.strip_text }}>{strip.center_message}</span>
-              <div className="flex items-center gap-1.5 font-medium" style={{ color: colors.strip_text }}>
-                <span>Hotline: <span style={{ color: colors.strip_accent }}>{strip.hotline}</span></span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* ═══════════════ MOBILE MENU ═══════════════ */}
       <AnimatePresence>
         {mobileOpen && (

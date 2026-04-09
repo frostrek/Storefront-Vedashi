@@ -30,6 +30,7 @@ import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, useParams } from 'next/navigation';
 import QualityPromise from '@/components/QualityPromise';
+import NeedHelpSection from '@/components/NeedHelpSection';
 
 export default function ShopPage() {
   const router = useRouter();
@@ -141,10 +142,12 @@ export default function ShopPage() {
         <HeroCarousel />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8 pt-0 pb-16 space-y-10">
+      <div className="relative z-10 mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8 pt-0 pb-0">
 
-        {/* 2. SHOP BY CATEGORY - FULL WIDTH GRID */}
-        <section className="relative pt-12 pb-16 px-4 sm:px-8 -mx-4 sm:-mx-8 overflow-hidden bg-white/40">
+        {/* 2 & 3 COMBINED TO REMOVE GAP */}
+        <div className="flex flex-col">
+          {/* 2. SHOP BY CATEGORY - FULL WIDTH GRID */}
+          <section className="relative pt-12 pb-4 px-4 sm:px-8 -mx-4 sm:-mx-8 overflow-hidden bg-white/40">
           {/* Layered Luxury Pattern */}
           <div
             className="absolute inset-0 opacity-[0.07] pointer-events-none"
@@ -281,7 +284,7 @@ export default function ShopPage() {
         </section>
 
         {/* 3. BEST SELLERS REEL SECTION */}
-        <section className="relative -mx-4 sm:-mx-8 py-5 overflow-hidden bg-[#FBF9F2]">
+        <section className="relative -mx-4 sm:-mx-8 pt-4 pb-12 overflow-hidden bg-[#FBF9F2]">
           {/* Layered Luxury Pattern */}
           <div
             className="absolute inset-0 opacity-[0.12] pointer-events-none"
@@ -293,7 +296,7 @@ export default function ShopPage() {
             }}
           />
 
-          <div className="max-w-[1440px] mx-auto relative z-10 pb-8">
+          <div className="max-w-[1500px] mx-auto relative z-10 pb-8">
             <ProductReel
               products={bestSellers}
               loading={loading}
@@ -304,61 +307,12 @@ export default function ShopPage() {
             />
           </div>
         </section>
+      </div>
 
-        {/* 4. PROMO GRID - MODERN LUXURY */}
-        <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 relative min-h-[450px] rounded-[40px] overflow-hidden group shadow-2xl">
-            <img
-              src="/shop-hero-promo.png"
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-              alt="Ayurvedic Rituals"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-10 sm:p-16">
-              <div className="max-w-xl">
-                <span className="inline-block px-4 py-1 bg-[#C9B87A] text-black text-[9px] font-black uppercase tracking-[0.3em] rounded-full mb-6">Limited Apothecary</span>
-                <h3 className="text-white text-5xl sm:text-6xl font-bold mb-6 leading-[1.1]">Seasonal<br />Immunity Kits.</h3>
-                <p className="text-white/80 text-lg mb-10 font-medium leading-relaxed italic">Hand-blended by master Vaidyas for constitutional harmony during seasonal shifts.</p>
-                <Link href="/products" className="group inline-flex items-center gap-3 px-10 py-4 bg-white text-black font-black uppercase tracking-widest rounded-2xl text-xs hover:bg-[#F5F2E8] transition-all shadow-2xl">
-                  Acquire the Kit
-                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-[#3B5D3B] rounded-3xl p-8 sm:p-10 flex flex-col justify-between text-white relative overflow-hidden group">
-            {/* Subtle Texture Overlay */}
-            <div
-              className="absolute inset-0 opacity-[0.05] pointer-events-none mix-blend-overlay"
-              style={{
-                backgroundImage: 'url(/ayurvedic-texture.png)',
-                backgroundSize: '400px',
-                backgroundPosition: 'center',
-                backgroundRepeat: 'repeat'
-              }}
-            />
-            <div className="relative z-10">
-              <Award className="h-10 w-10 text-[#C9B87A] mb-6" />
-              <h3 className="text-2xl font-bold mb-4">Purest Botanicals.</h3>
-              <p className="text-white/70 text-sm leading-relaxed mb-8">
-                Every ingredient is sourced from its native soil to ensure maximum therapeutic potency.
-              </p>
-              <ul className="space-y-3 mb-8">
-                {['Lab-Tested Purity', 'Ethically Sourced', 'Zero Additives'].map(item => (
-                  <li key={item} className="flex items-center gap-2 text-xs font-semibold">
-                    <Zap className="h-3 w-3 text-[#C9B87A]" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/about" className="text-sm font-bold border-b border-[#C9B87A] pb-1 text-[#C9B87A] hover:text-white hover:border-white transition-all">
-                Learn our Process
-              </Link>
-            </div>
-            {/* Decorative leaf */}
-            <Leaf className="absolute -bottom-8 -right-8 h-40 w-40 text-white/10 rotate-12 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-24" />
-          </div>
-        </section>
+      {/* 3.5 NEED HELP CHOOSING */}
+      <div className="-mx-4 sm:-mx-8">
+        <NeedHelpSection />
+      </div>
 
         {/* 5. NEW ARRIVALS - CLEAN & RADIANT */}
         <section className="relative -mx-4 sm:-mx-8 py-10 overflow-hidden bg-[#FBF9F2]">
@@ -373,7 +327,7 @@ export default function ShopPage() {
             }}
           />
 
-          <div className="relative z-10">
+          <div className="max-w-[1500px] mx-auto relative z-10">
             <ProductReel
               products={newArrivals}
               loading={loading}

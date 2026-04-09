@@ -129,7 +129,7 @@ export default function HeroCarousel() {
 
     if (loading) {
         return (
-            <section className="relative overflow-hidden bg-neutral-200/50 animate-pulse h-[350px] sm:h-[450px] lg:h-auto lg:aspect-[3/1] max-h-[640px]">
+            <section className="relative overflow-hidden bg-neutral-200/50 animate-pulse h-[350px] sm:h-[450px] lg:h-auto lg:aspect-[1920/500] max-h-[500px]">
                 <div className="relative z-20 mx-auto max-w-7xl px-4 h-full flex items-center justify-center"></div>
             </section>
         );
@@ -169,7 +169,7 @@ export default function HeroCarousel() {
 
     return (
         <section
-            className="relative overflow-hidden group h-[350px] sm:h-[450px] lg:h-auto lg:aspect-[3/1] max-h-[640px] w-full flex items-center justify-center"
+            className="relative overflow-hidden group h-[350px] sm:h-[450px] lg:h-auto lg:aspect-[1920/500] max-h-[500px] w-full flex items-center justify-center"
             onMouseEnter={() => { setPaused(true); setHovering(true); }}
             onMouseLeave={() => { setPaused(false); setHovering(false); }}
         >
