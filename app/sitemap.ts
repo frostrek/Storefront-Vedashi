@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 import { API_URL } from '@/lib/api';
 import { SUPPORTED_COUNTRIES } from '@/lib/currency';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.onrender.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.com';
 
 /**
  * Fetch data for sitemap generation

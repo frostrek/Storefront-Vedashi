@@ -41,6 +41,25 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/sitemap-in.xml',
+        destination: '/sitemap.xml',
+        permanent: true,
+      },
+      {
+        source: '/sitemap-ru.xml',
+        destination: '/sitemap.xml',
+        permanent: true,
+      },
+      {
+        source: '/sitemap-kr.xml',
+        destination: '/sitemap.xml',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
