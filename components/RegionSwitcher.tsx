@@ -68,11 +68,11 @@ export default function RegionSwitcher({ upward = false }: { upward?: boolean })
         suppressHydrationWarning
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 p-2 rounded-lg hover:bg-gray-100 transition-colors group"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 hover:border-gray-500 transition-all duration-200 group"
         aria-expanded={isOpen}
       >
-        <span className="text-base leading-none">{currentCountryConfig.flag}</span>
-        <span className="text-xs font-bold text-gray-700 uppercase">{currentCountryConfig.currency}</span>
+        <img src={`https://flagcdn.com/w40/${country}.png`} alt={currentCountryConfig.name} className="h-4 w-6 object-cover rounded-sm" />
+        <span className="text-xs font-bold text-gray-700 uppercase">{currentCountryConfig.currency} {currentCountryConfig.symbol}</span>
         <ChevronDown className={`h-3.5 w-3.5 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
@@ -89,8 +89,8 @@ export default function RegionSwitcher({ upward = false }: { upward?: boolean })
                   }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <span className="text-base">{config.flag}</span>
-                  <span>{config.name}</span>
+                  <img src={`https://flagcdn.com/w40/${code}.png`} alt={config.name} className="h-4 w-6 object-cover rounded-sm" />
+                  <span>{config.currency} {config.symbol}</span>
                 </div>
                 <span className={`text-[10px] tracking-widest uppercase ${country === code ? 'text-[#3B5D3B]' : 'text-gray-400'}`}>
                   {config.currency}

@@ -138,7 +138,7 @@ export default function ShopPage() {
       </div>
 
       {/* 1. BANNER REEL */}
-      <div className="relative z-10 max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         <HeroCarousel />
       </div>
 
@@ -147,7 +147,7 @@ export default function ShopPage() {
         {/* 2 & 3 COMBINED TO REMOVE GAP */}
         <div className="flex flex-col">
           {/* 2. SHOP BY CATEGORY - FULL WIDTH GRID */}
-          <section className="relative pt-12 pb-4 px-4 sm:px-8 -mx-4 sm:-mx-8 overflow-hidden bg-white/40">
+          <section className="relative pt-8 pb-0 px-4 sm:px-8 -mx-4 sm:-mx-8 overflow-hidden bg-white/40">
             <div
               className="absolute inset-0 opacity-[0.07] pointer-events-none"
             // style={{
@@ -159,7 +159,7 @@ export default function ShopPage() {
             />
 
             <div className="relative z-10">
-              <div className="relative text-center mb-10 px-4">
+              <div className="relative text-center mb-6 px-4">
                 <div className="absolute right-6 top-3 hidden lg:block">
                   <Link
                     href={`/${country}/products`}
@@ -226,7 +226,7 @@ export default function ShopPage() {
                               router.push(`/${country}/products?category=${cat.slug}`);
                             }
                           }}
-                          className="group flex flex-col items-center gap-6 transition-all duration-500 hover:-translate-y-2 cursor-pointer"
+                          className="group flex flex-col items-center gap-3 transition-all duration-500 hover:-translate-y-2 cursor-pointer"
                         >
                           <div className={`relative w-full aspect-square rounded-full ${categoryColors[cat.slug] || 'bg-[#F2F4F2]'} flex items-center justify-center shadow-sm group-hover:shadow-[0_20px_50px_rgba(59,93,59,0.12)] group-hover:bg-[#E2F0E2] transition-all duration-700 overflow-hidden isolate`}>
                             {/* Icon Render */}
@@ -269,10 +269,10 @@ export default function ShopPage() {
           </section>
 
           {/* 3. BEST SELLERS REEL SECTION */}
-          <section className="relative -mx-4 sm:-mx-8 pt-4 pb-12 overflow-hidden bg-[#FBF9F2]">
+          <section className="relative -mx-4 sm:-mx-8 pt-0 pb-0 overflow-hidden bg-[#FBF9F2]">
 
 
-            <div className="max-w-[1500px] mx-auto relative z-10 pb-8">
+            <div className="max-w-[1500px] mx-auto relative z-10 pb-0">
               <ProductReel
                 products={bestSellers}
                 loading={loading}
@@ -291,7 +291,7 @@ export default function ShopPage() {
         </div>
 
         {/* 5. NEW ARRIVALS - CLEAN & RADIANT */}
-        <section className="relative -mx-4 sm:-mx-8 py-10 overflow-hidden bg-[#FBF9F2]">
+        <section className="relative -mx-4 sm:-mx-8 py-0 overflow-hidden bg-[#FBF9F2]">
 
 
           <div className="max-w-[1500px] mx-auto relative z-10">
@@ -307,10 +307,38 @@ export default function ShopPage() {
         </section>
       </div>
 
+
       {/* 6. QUALITY PROMISE - TRUST & AUTHENTICITY */}
       <div className="relative z-10">
         <QualityPromise />
       </div>
+
+      {/* 5.5 VENDOR REGISTRATION CTA */}
+      <section className="bg-[#00472f] py-16 lg:py-14 border-y border-[#00472f] z-10 relative">
+        <div className="mx-auto max-w-[1700px] px-6 lg:px-12">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 lg:gap-30">
+
+            {/* Header */}
+            <div className="flex-none text-center md:text-left">
+              <h2 className="text-2xl lg:text-3xl font-bold text-[#F0E7C8] leading-snug">
+                Want to showcase your products to the world?<br className="hidden md:block" /> Sell with us.
+              </h2>
+            </div>
+
+            {/* Action */}
+            <div className="flex-none">
+              <Link
+                href={`/${country}/vendor-registration`}
+                className="inline-flex items-center gap-3 bg-[#C8E6C9] text-[#024C27] px-8 py-4 sm:py-5 rounded-xl font-bold shadow-[0_4px_14px_rgba(0,0,0,0.15)] hover:shadow-lg transition-all hover:-translate-y-0.5 group text-[15px] sm:text-base border border-transparent hover:border-[#C8E6C9]"
+              >
+                Vendor Registration
+                <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </div>
+
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

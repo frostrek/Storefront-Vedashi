@@ -17,27 +17,23 @@ const smallBanners = [
 
 export default function NeedHelpSection() {
   return (
-    <section className="relative py-6 sm:py-8 bg-[#FAF9F6] overflow-hidden">
+    <section className="relative py-4 sm:py-5 bg-[#FAF9F6] overflow-hidden">
 
 
       <div className="relative z-10 mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8">
         {/* Heading */}
         <div className="mb-7">
-          <h2 className="text-2xl sm:text-3xl font-bold text-[#1A1A1A]">
-            Need Help Choosing?{' '}
-            <span className="text-[#3B5D3B]">Start Here!</span>
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+            Need Help Choosing? Start Here!
           </h2>
-          <p className="mt-1.5 text-sm text-[#6B6B60]">
-            Explore our most-loved categories and find exactly what you need.
-          </p>
         </div>
 
         {/* Grid Cards Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 lg:gap-8 pb-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 lg:gap-4 pb-3">
           {smallBanners.map((banner, index) => (
-            <div key={index} className="flex justify-center">
+            <div key={index}>
               <div
-                className="relative w-[90%] md:w-[85%] rounded-2xl overflow-hidden cursor-pointer transition-transform duration-300 hover:shadow-xl hover:-translate-y-1"
+                className="relative rounded-2xl overflow-hidden cursor-pointer transition-transform duration-300 hover:shadow-xl hover:-translate-y-1"
               >
                 <img
                   src={banner}

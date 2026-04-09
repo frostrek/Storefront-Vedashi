@@ -72,15 +72,19 @@ const FALLBACK: FooterData = {
         {
             title: 'Explore',
             items: [
-                { label: 'Our Story', href: '/about' },
-                { label: 'Natural Products', href: '/products' },
+                { label: 'About Us', href: '/about' },
+                { label: 'Blogs', href: '/blog' },
+                { label: 'All Products', href: '/products' },
+                { label: 'Contact Us', href: '/contact' },
+
+
             ],
         },
         {
             title: 'Support',
             items: [
                 { label: 'Help Center', href: '/help-center' },
-                { label: 'Consultation FAQ', href: '/help-center/faq' },
+                { label: 'FAQ', href: '/help-center/faq' },
                 { label: 'Shipping Policy', href: '/shipping' },
                 { label: 'Terms of Service', href: '/terms' },
                 { label: 'Privacy Policy', href: '/privacy' },

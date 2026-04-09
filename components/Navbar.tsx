@@ -463,6 +463,9 @@ export default function Navbar() {
                 </div>
               </div>
 
+              <div className="hidden md:block">
+                <RegionSwitcher />
+              </div>
               <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2">
                 <Menu className="h-5 w-5" />
               </button>
