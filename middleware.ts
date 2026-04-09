@@ -218,7 +218,15 @@ export async function middleware(request: NextRequest) {
   // 4. Build redirect to /{country}{pathname}
   const currency = getCurrency(country);
   const url = request.nextUrl.clone();
-  url.pathname = `/${country}${pathname}`;
+  
+  // Ensure we don't create a double-redirect by adding a trailing slash 
+  // that Next.js will just remove anyway.
+  let targetPath = `/${country}${pathname}`;
+  if (targetPath.endsWith('/') && targetPath.length > 3) {
+    targetPath = targetPath.slice(0, -1);
+  }
+  
+  url.pathname = targetPath;
 
   const response = NextResponse.redirect(url);
 
