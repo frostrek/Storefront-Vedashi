@@ -167,6 +167,14 @@ function applyLanguageCookies(
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // 0. SEO: Enforce non-www canonical domain (redirect www to non-www)
+  const host = request.headers.get('host') || request.nextUrl.hostname || '';
+  if (host === 'www.vedashi.com' || host === 'www.vedashi.onrender.com') {
+    const targetUrl = request.nextUrl.clone();
+    targetUrl.host = 'vedashi.com';
+    return NextResponse.redirect(targetUrl, 301);
+  }
+
   // 1. Skip static assets, API routes, Next.js internals
   if (shouldSkip(pathname)) {
     return NextResponse.next();
