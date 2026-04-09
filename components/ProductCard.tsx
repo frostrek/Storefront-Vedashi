@@ -506,7 +506,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                     const countLabel = v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : '';
                                     const strengthLabel = v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : '';
                                     const labelParts = [
-                                        weightLabel, volLabel, 
+                                        weightLabel, volLabel,
                                         (product.common_form && countLabel === product.common_form) ? '' : countLabel,
                                         (product.common_strength && strengthLabel === product.common_strength) ? '' : strengthLabel,
                                         (product.common_flavor && v.flavor === product.common_flavor) ? '' : (v.flavor ?? ''),
@@ -610,11 +610,11 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                         {!isInCart ? (
                             <button
                                 onClick={(e) => handleModalAddToCart(e)}
-                                    disabled={!!(
-                                        (hasVariants && !selectedVariant) ||
-                                        addingToCart || cartLoading || justAdded ||
-                                        (hasVariants && selectedVariant && (selectedVariant.stock_quantity ?? 0) <= 0)
-                                    )}
+                                disabled={!!(
+                                    (hasVariants && !selectedVariant) ||
+                                    addingToCart || cartLoading || justAdded ||
+                                    (hasVariants && selectedVariant && (selectedVariant.stock_quantity ?? 0) <= 0)
+                                )}
                                 className={`
                                     w-full py-2.5 rounded-xl text-white text-[11px] font-bold
                                     flex items-center justify-center gap-2 transition-all duration-200
@@ -692,7 +692,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                 </button>
 
                 {/* Scrollable Body: Variants & Quantity */}
-                <div className="overflow-y-auto overflow-x-hidden p-4 flex-1 min-h-0 custom-scrollbar">
+                <div className="overflow-y-auto overflow-x-hidden p-3 sm:p-4 flex-1 min-h-0 custom-scrollbar">
                     {hasVariants ? (
                         loadingVariants ? (
                             <div className="flex flex-col items-center justify-center py-10 gap-3">
@@ -704,7 +704,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                         ) : variants.length > 0 ? (
                             <div className="mb-4">
                                 <div className="flex items-center justify-between mb-2">
-                                    <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500 font-ui">
+                                    <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-gray-400 font-ui">
                                         Select Option
                                     </p>
                                 </div>
@@ -748,7 +748,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                     }
                                                 }}
                                                 disabled={isDisabled}
-                                                className={`w-full group relative flex items-center justify-between p-2.5 rounded-xl border-2 text-left transition-all duration-300 transform outline-none focus:ring-2 focus:ring-[#3d5c3a]/50 ${isSelected
+                                                className={`w-full group relative flex items-center justify-between p-2 sm:p-2.5 rounded-xl border-2 text-left transition-all duration-300 transform outline-none focus:ring-2 focus:ring-[#3d5c3a]/50 ${isSelected
                                                     ? 'border-[#3d5c3a] bg-[#3d5c3a]/[0.02] shadow-[0_2px_10px_rgba(61,92,58,0.1)] z-10 scale-[1.02]'
                                                     : isInactive
                                                         ? 'border-gray-100 bg-gray-50 text-gray-300 opacity-50 cursor-not-allowed'
@@ -757,14 +757,14 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                             : 'border-gray-100 hover:border-[#3d5c3a]/30 hover:bg-gray-50'
                                                     }`}
                                             >
-                                                <div className="flex items-center gap-2.5 w-full pr-2">
+                                                <div className="flex items-center gap-2 w-full">
                                                     <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors duration-300 ${isSelected ? 'border-[#3d5c3a] bg-[#3d5c3a]' : 'border-gray-300 group-hover:border-[#3d5c3a]/50'
                                                         }`}>
                                                         <Check className={`h-2.5 w-2.5 text-white transition-opacity duration-300 ${isSelected ? 'opacity-100' : 'opacity-0'}`} />
                                                     </div>
 
                                                     <div className="flex-1 min-w-0">
-                                                        <p className={`text-sm font-semibold transition-colors duration-300 ${isSelected ? 'text-[#3d5c3a]' : 'text-gray-900'}`}>{label}</p>
+                                                        <p className={`text-[10px] sm:text-xs font-semibold leading-tight transition-colors duration-300 ${isSelected ? 'text-[#3d5c3a]' : 'text-gray-900'}`}>{label}</p>
                                                         {isInactive && (
                                                             <p className="text-[10px] text-gray-400 font-semibold mt-0.5 flex items-center gap-1">
                                                                 Unavailable
@@ -778,7 +778,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                     </div>
 
                                                     <div className="text-right flex-shrink-0">
-                                                        <p className={`text-sm font-bold transition-colors duration-300 ${isSelected ? 'text-[#3d5c3a]' : 'text-gray-900'}`}>{formatPrice(v.price, v.country_prices || product.country_prices)}</p>
+                                                        <p className={`text-[10px] sm:text-xs font-bold transition-colors duration-300 ${isSelected ? 'text-[#3d5c3a]' : 'text-gray-900'}`}>{formatPrice(v.price, v.country_prices || product.country_prices)}</p>
                                                         {v.is_on_sale && v.original_price && (
                                                             <p className="text-[10px] text-gray-400 line-through">{formatPrice(v.original_price, v.country_prices || product.country_prices)}</p>
                                                         )}
@@ -798,10 +798,10 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                 </div>
 
                 {/* Footer */}
-                <div className="bg-white border-t border-gray-100 p-4 flex flex-col gap-2.5 rounded-b-2xl sm:rounded-b-3xl">
+                <div className="bg-white border-t border-gray-100 p-3 sm:p-4 flex flex-col gap-2 rounded-b-2xl sm:rounded-b-3xl">
                     {hasVariants && variants.length > 0 && (
                         <div className="flex justify-end -mt-1 mb-1 pr-1">
-                            <span className="text-[9px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full font-ui">
+                            <span className="text-[8px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full font-ui tracking-wider uppercase">
                                 {variants.length} {variants.length === 1 ? 'Option' : 'Options'} Available
                             </span>
                         </div>
@@ -810,7 +810,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                         <button
                             onClick={(e) => handleModalAddToCart(e)}
                             disabled={!!((hasVariants && !selectedVariant) || addingToCart || cartLoading || justAdded || (hasVariants && selectedVariant && (selectedVariant.stock_quantity ?? 0) <= 0) || (!hasVariants && (product.stock_quantity ?? 0) <= 0))}
-                            className={`w-full py-3.5 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2 transition-all duration-300 disabled:opacity-50 cursor-pointer shadow-lg font-ui ${justAdded ? 'bg-[#2a4d2e] shadow-[#2a4d2e]/20' : 'bg-[#3d5c3a] hover:bg-[#2d4a2a] shadow-[#3d5c3a]/20 hover:shadow-[#3d5c3a]/40'}`}
+                            className={`w-full py-2.5 sm:py-3.5 rounded-xl text-white text-[11px] sm:text-sm font-bold flex items-center justify-center gap-1.5 sm:gap-2 transition-all duration-300 disabled:opacity-50 cursor-pointer shadow-lg font-ui ${justAdded ? 'bg-[#2a4d2e] shadow-[#2a4d2e]/20' : 'bg-[#3d5c3a] hover:bg-[#2d4a2a] shadow-[#3d5c3a]/20 hover:shadow-[#3d5c3a]/40'}`}
                         >
                             {addingToCart ? (
                                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -870,269 +870,269 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
         <>
             <div className="relative group block h-full" ref={cardRef}>
                 {/* ═══════ FRONT OF CARD ═══════ */}
-                    <div className={`h-full overflow-hidden bg-white border border-gray-100 transition-all duration-300 ${isList ? 'flex flex-row p-3 hover:bg-gray-50/50 hover:border-[#3d5c3a]/30 rounded-2xl gap-4 sm:gap-6 items-center shadow-sm hover:shadow-md' : 'flex flex-col rounded-2xl hover:-translate-y-1 hover:shadow-xl'}`}>
-                        <div className={`relative overflow-hidden bg-gradient-to-br from-[#f5f2ed] to-[#ece6dd] ${isList ? 'w-[100px] h-[100px] sm:w-[150px] sm:h-[150px] rounded-xl flex-shrink-0 border border-gray-100/50' : ''}`} style={isList ? {} : { aspectRatio: '1 / 1' }}>
-                            <div className="absolute inset-0 flex items-center justify-center p-4">
-                                {isBase64 ? (
-                                    <img
-                                        src={imageSrc}
-                                        alt={product.product_name}
-                                        className="object-contain w-full h-full transition-transform duration-500 group-hover:scale-105"
-                                        loading={priority ? 'eager' : 'lazy'}
-                                        decoding="async"
-                                    />
-                                ) : isExternal ? (
-                                    <Image
-                                        src={imageSrc}
-                                        alt={product.product_name}
-                                        fill
-                                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                                        className="object-contain transition-transform duration-500 group-hover:scale-105"
-                                        priority={priority}
-                                        loading={priority ? undefined : 'lazy'}
-                                        placeholder="blur"
-                                        blurDataURL={BLUR_DATA_URL}
-                                    />
-                                ) : (
-                                    <Image
-                                        src={imageSrc}
-                                        alt={product.product_name}
-                                        width={400}
-                                        height={400}
-                                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                                        className="object-contain w-full h-full transition-transform duration-500 group-hover:scale-105"
-                                        priority={priority}
-                                        loading={priority ? undefined : 'lazy'}
-                                        placeholder="blur"
-                                        blurDataURL={BLUR_DATA_URL}
-                                    />
-                                )}
-                            </div>
-
-                            {/* Wishlist (Grid only) */}
-                            {!isList && (
-                                <button
-                                    onClick={handleToggleWishlist}
-                                    className="absolute top-3 right-3 rounded-full bg-white/90 backdrop-blur-sm p-2 shadow-sm transition-all hover:scale-110 hover:shadow-md z-20 cursor-pointer"
-                                >
-                                    <Heart
-                                        className={`h-4 w-4 transition ${wishlisted
-                                            ? 'fill-[#3d5c3a] text-[#3d5c3a]'
-                                            : 'text-gray-400'
-                                            }`}
-                                    />
-                                </button>
-                            )}
-
-                            {/* Product Badges (Top Left Stack) */}
-                            <div className={`absolute ${isList ? 'left-2 top-2' : 'left-3 top-3'} flex flex-col gap-1 z-10`}>
-                                {product.category && (
-                                    <span className="rounded-full bg-[#3d5c3a] px-2.5 py-1 text-[9px] tracking-[0.15em] text-white uppercase font-black font-ui shadow-sm w-fit mb-0.5">
-                                        {product.category}
-                                    </span>
-                                )}
-                                {isExpired && !isComingSoon && (
-                                    <span className="rounded-full bg-red-600 px-2.5 py-0.5 text-[9px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
-                                        Expired
-                                    </span>
-                                )}
-                                {isComingSoon && (
-                                    <span className="rounded-full bg-purple-600 px-2.5 py-0.5 text-[9px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
-                                        Coming Soon
-                                    </span>
-                                )}
-                                {product.is_best_seller && !isComingSoon && (
-                                    <span className="rounded-full bg-amber-600 px-2.5 py-0.5 text-[9px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
-                                        Best Seller
-                                    </span>
-                                )}
-                                {product.is_new_arrival && !isComingSoon && (
-                                    <span className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-[9px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
-                                        New
-                                    </span>
-                                )}
-                            </div>
-
-                            {/* Hover overlay (grid only) */}
-                            {!isUnavailable && !isList && (
-                                <div className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out z-20">
-                                    {hasVariants ? (
-                                        <button
-                                            onClick={openCartModal}
-                                            className="w-full flex items-center justify-center gap-2 bg-[#3d5c3a]/95 backdrop-blur-sm py-3 text-xs font-black tracking-[0.05em] uppercase text-white hover:bg-[#3d5c3a] transition-colors cursor-pointer font-ui"
-                                        >
-                                            <Eye className="h-4 w-4" />
-                                            Preview Options
-                                        </button>
-                                    ) : (
-                                        <button
-                                            onClick={(e) => onMoveToCart ? onMoveToCart(e) : openCartModal(e)}
-                                            disabled={cartLoading || addingToCart || justAdded}
-                                            className={`w-full flex items-center justify-center gap-2 backdrop-blur-sm py-3 text-xs font-black tracking-[0.05em] uppercase text-white transition-all duration-300 cursor-pointer disabled:opacity-70 font-ui ${justAdded ? 'bg-[#2a4d2e]' : 'bg-[#3d5c3a]/95 hover:bg-[#3d5c3a]'}`}
-                                        >
-                                            {addingToCart ? (
-                                                <Loader2 className="h-4 w-4 animate-spin" />
-                                            ) : justAdded ? (
-                                                <Check className="h-4 w-4 animate-in zoom-in" />
-                                            ) : (
-                                                <ShoppingCart className="h-4 w-4" />
-                                            )}
-                                            {addingToCart ? 'Processing...' : justAdded ? 'Added to Bag' : 'Add to Cart'}
-                                        </button>
-                                    )}
-                                </div>
+                <div className={`h-full overflow-hidden bg-white border border-gray-100 transition-all duration-300 ${isList ? 'flex flex-row p-3 hover:bg-gray-50/50 hover:border-[#3d5c3a]/30 rounded-2xl gap-4 sm:gap-6 items-center shadow-sm hover:shadow-md' : 'flex flex-col rounded-2xl hover:-translate-y-1 hover:shadow-xl'}`}>
+                    <div className={`relative overflow-hidden bg-gradient-to-br from-[#f5f2ed] to-[#ece6dd] ${isList ? 'w-[100px] h-[100px] sm:w-[150px] sm:h-[150px] rounded-xl flex-shrink-0 border border-gray-100/50' : ''}`} style={isList ? {} : { aspectRatio: '1 / 1' }}>
+                        <div className="absolute inset-0 flex items-center justify-center p-4">
+                            {isBase64 ? (
+                                <img
+                                    src={imageSrc}
+                                    alt={product.product_name}
+                                    className="object-contain w-full h-full transition-transform duration-500 group-hover:scale-105"
+                                    loading={priority ? 'eager' : 'lazy'}
+                                    decoding="async"
+                                />
+                            ) : isExternal ? (
+                                <Image
+                                    src={imageSrc}
+                                    alt={product.product_name}
+                                    fill
+                                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                                    className="object-contain transition-transform duration-500 group-hover:scale-105"
+                                    priority={priority}
+                                    loading={priority ? undefined : 'lazy'}
+                                    placeholder="blur"
+                                    blurDataURL={BLUR_DATA_URL}
+                                />
+                            ) : (
+                                <Image
+                                    src={imageSrc}
+                                    alt={product.product_name}
+                                    width={400}
+                                    height={400}
+                                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                                    className="object-contain w-full h-full transition-transform duration-500 group-hover:scale-105"
+                                    priority={priority}
+                                    loading={priority ? undefined : 'lazy'}
+                                    placeholder="blur"
+                                    blurDataURL={BLUR_DATA_URL}
+                                />
                             )}
                         </div>
 
-                        {/* Content */}
-                        <div className={`p-4 ${isList ? 'flex-1 flex flex-col justify-center min-w-0 p-0 sm:pr-4' : ''}`}>
-                            <h3 className={`font-sans font-bold text-gray-900 leading-tight mb-1 sm:mb-1.5 ${isList ? 'text-lg sm:text-xl line-clamp-1 sm:line-clamp-2' : 'text-base line-clamp-2'}`}>
-                                <Link 
-                                    href={productUrl} 
-                                    className="after:absolute after:inset-0 after:z-10"
-                                    onClick={() => {
-                                        trackEcommerce('select_item', {
-                                            currency: 'INR',
-                                            value: Number(displayPrice),
-                                            items: [{
-                                                item_id: product.product_id,
-                                                item_name: product.product_name,
-                                                price: Number(displayPrice),
-                                                quantity: 1,
-                                                item_category: product.category,
-                                                item_brand: product.brand,
-                                                item_list_name: listName,
-                                                index: listIndex,
-                                            }]
-                                        });
-                                    }}
-                                >
-                                    {product.product_name}
-                                </Link>
-                            </h3>
+                        {/* Wishlist (Grid only) */}
+                        {!isList && (
+                            <button
+                                onClick={handleToggleWishlist}
+                                className="absolute top-2 right-2 rounded-full bg-white/90 backdrop-blur-sm p-1.5 shadow-sm transition-all hover:scale-110 hover:shadow-md z-20 cursor-pointer"
+                            >
+                                <Heart
+                                    className={`h-3.5 w-3.5 transition ${wishlisted
+                                        ? 'fill-[#3d5c3a] text-[#3d5c3a]'
+                                        : 'text-gray-400'
+                                        }`}
+                                />
+                            </button>
+                        )}
 
-                            {product.brand && (
-                                <Link 
-                                    href={`/${params.country || 'in'}/products?brand=${encodeURIComponent(product.brand)}`}
-                                    className={`relative z-20 block uppercase tracking-[0.12em] text-gray-400 font-medium mb-1.5 sm:mb-2 hover:text-[#3d5c3a] transition-colors cursor-pointer ${isList ? 'text-[10px] sm:text-[11px]' : 'text-[10px]'}`}
-                                >
-                                    {product.brand}
-                                </Link>
+                        {/* Product Badges (Top Left Stack) */}
+                        <div className={`absolute ${isList ? 'left-2 top-2' : 'left-2 top-2'} flex flex-col gap-1 z-10`}>
+                            {product.category && (
+                                <span className="rounded-full bg-[#3d5c3a] px-2 py-0.5 text-[8px] tracking-[0.1em] text-white uppercase font-black font-ui shadow-sm w-fit mb-0.5">
+                                    {product.category}
+                                </span>
                             )}
-
-                            {isList && product.category && (
-                                <div className="flex items-center gap-2 mb-2">
-                                    <span className="rounded leading-none bg-[#3d5c3a]/10 px-1.5 sm:px-2 py-0.5 sm:py-1 text-[8px] sm:text-[9px] tracking-widest text-[#3d5c3a] uppercase font-bold border border-[#3d5c3a]/10">
-                                        {product.category}
-                                    </span>
-                                </div>
+                            {isExpired && !isComingSoon && (
+                                <span className="rounded-full bg-red-600 px-2 py-0.5 text-[8px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
+                                    Expired
+                                </span>
                             )}
-
-                            {/* Rating */}
-                            {avgRating > 0 && (
-                                <div className="flex items-center gap-1.5 mb-2">
-                                    <StarRating value={avgRating} size="sm" />
-                                    <span className="text-xs text-gray-400">
-                                        {avgRating.toFixed(1)}
-                                        {totalReviews > 0 && <span className="ml-0.5">({totalReviews})</span>}
-                                    </span>
-                                </div>
+                            {isComingSoon && (
+                                <span className="rounded-full bg-purple-600 px-2 py-0.5 text-[8px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
+                                    Coming Soon
+                                </span>
                             )}
-
-                            {/* Short Description */}
-                            {product.short_description && (
-                                <p className={`text-[11px] sm:text-xs text-gray-500 mb-2 leading-relaxed ${isList ? 'line-clamp-2' : 'line-clamp-1'}`}>
-                                    {product.short_description}
-                                </p>
+                            {product.is_best_seller && !isComingSoon && (
+                                <span className="rounded-full bg-amber-600 px-2 py-0.5 text-[8px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
+                                    Best Seller
+                                </span>
                             )}
+                            {product.is_new_arrival && !isComingSoon && (
+                                <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[8px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
+                                    New
+                                </span>
+                            )}
+                        </div>
 
-                            {/* Price */}
-                            <div className="flex items-center gap-2 flex-wrap">
-                                <p className="text-xl font-black text-[#3d5c3a] font-ui tabular-nums tracking-tight">
-                                    {formatPrice(displayPrice, product.country_prices)}
-                                </p>
-                                {isOnSale && originalPrice && (
-                                    <>
-                                        <p className="text-xs text-gray-400 line-through">
-                                            {formatPrice(originalPrice, product.country_prices)}
-                                        </p>
-                                        <span className="bg-red-50 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded border border-red-100">
-                                            {discountPercent}% OFF
-                                        </span>
-                                    </>
+                        {/* Hover overlay (grid only) */}
+                        {!isUnavailable && !isList && (
+                            <div className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out z-20">
+                                {hasVariants ? (
+                                    <button
+                                        onClick={openCartModal}
+                                        className="w-full flex items-center justify-center gap-1.5 bg-[#3d5c3a]/95 backdrop-blur-sm py-2 sm:py-2.5 text-[10px] sm:text-[11px] font-black tracking-[0.05em] uppercase text-white hover:bg-[#3d5c3a] transition-colors cursor-pointer font-ui"
+                                    >
+                                        <Eye className="h-3.5 w-3.5" />
+                                        Preview Options
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={(e) => onMoveToCart ? onMoveToCart(e) : openCartModal(e)}
+                                        disabled={cartLoading || addingToCart || justAdded}
+                                        className={`w-full flex items-center justify-center gap-1.5 backdrop-blur-sm py-2 sm:py-2.5 text-[10px] sm:text-[11px] font-black tracking-[0.05em] uppercase text-white transition-all duration-300 cursor-pointer disabled:opacity-70 font-ui ${justAdded ? 'bg-[#2a4d2e]' : 'bg-[#3d5c3a]/95 hover:bg-[#3d5c3a]'}`}
+                                    >
+                                        {addingToCart ? (
+                                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                        ) : justAdded ? (
+                                            <Check className="h-3.5 w-3.5 animate-in zoom-in" />
+                                        ) : (
+                                            <ShoppingCart className="h-3.5 w-3.5" />
+                                        )}
+                                        {addingToCart ? 'Processing...' : justAdded ? 'Added to Bag' : 'Add to Cart'}
+                                    </button>
                                 )}
                             </div>
-                            
-                            {/* Shared Variant Attributes (Visible if common across all options) */}
-                            {/* Shared attributes at the bottom */}
-                            {( (product.variant_count ?? 0) > 1 || (product.variants?.length ?? 0) > 1) && (product.common_form || product.common_strength || product.common_flavor) && (
-                                <div className="mt-2.5 flex flex-wrap gap-1.5">
-                                    {[product.common_form, product.common_strength, product.common_flavor]
-                                        .filter(Boolean)
-                                        .map((attr, idx) => (
-                                            <span 
-                                                key={idx} 
-                                                className="text-[10px] font-bold tracking-wide text-[#3d5c3a] uppercase bg-[#6B8F5E]/10 border border-[#6B8F5E]/20 px-2.5 py-0.5 rounded-full"
-                                            >
-                                                {attr}
-                                            </span>
-                                        ))
-                                    }
-                                </div>
-                            )}
+                        )}
+                    </div>
 
-                            {/* List view: inline action buttons */}
-                            {isList && !isUnavailable && (
-                                <div className="mt-2.5 sm:mt-4 flex flex-wrap items-center gap-2 sm:gap-3 relative z-30">
-                                    {hasVariants ? (
-                                        <button
-                                            onClick={openCartModal}
-                                            className={`
+                    {/* Content */}
+                    <div className={`p-2.5 sm:p-3 ${isList ? 'flex-1 flex flex-col justify-center min-w-0 p-0 sm:pr-3' : ''}`}>
+                        <h3 className={`font-sans font-bold text-gray-900 leading-snug sm:leading-tight mb-0.5 sm:mb-1 ${isList ? 'text-lg sm:text-xl line-clamp-1 sm:line-clamp-2' : 'text-sm sm:text-[14px] line-clamp-2'}`}>
+                            <Link
+                                href={productUrl}
+                                className="after:absolute after:inset-0 after:z-10"
+                                onClick={() => {
+                                    trackEcommerce('select_item', {
+                                        currency: 'INR',
+                                        value: Number(displayPrice),
+                                        items: [{
+                                            item_id: product.product_id,
+                                            item_name: product.product_name,
+                                            price: Number(displayPrice),
+                                            quantity: 1,
+                                            item_category: product.category,
+                                            item_brand: product.brand,
+                                            item_list_name: listName,
+                                            index: listIndex,
+                                        }]
+                                    });
+                                }}
+                            >
+                                {product.product_name}
+                            </Link>
+                        </h3>
+
+                        {product.brand && (
+                            <Link
+                                href={`/${params.country || 'in'}/products?brand=${encodeURIComponent(product.brand)}`}
+                                className={`relative z-20 block uppercase tracking-[0.12em] text-gray-400 font-medium mb-1 sm:mb-1.5 hover:text-[#3d5c3a] transition-colors cursor-pointer ${isList ? 'text-[10px] sm:text-[11px]' : 'text-[9px]'}`}
+                            >
+                                {product.brand}
+                            </Link>
+                        )}
+
+                        {isList && product.category && (
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="rounded leading-none bg-[#3d5c3a]/10 px-1.5 sm:px-2 py-0.5 sm:py-1 text-[8px] sm:text-[9px] tracking-widest text-[#3d5c3a] uppercase font-bold border border-[#3d5c3a]/10">
+                                    {product.category}
+                                </span>
+                            </div>
+                        )}
+
+                        {/* Rating */}
+                        {avgRating > 0 && (
+                            <div className="flex items-center gap-1.5 mb-2">
+                                <StarRating value={avgRating} size="sm" />
+                                <span className="text-xs text-gray-400">
+                                    {avgRating.toFixed(1)}
+                                    {totalReviews > 0 && <span className="ml-0.5">({totalReviews})</span>}
+                                </span>
+                            </div>
+                        )}
+
+                        {/* Short Description */}
+                        {product.short_description && (
+                            <p className={`text-[11px] sm:text-xs text-gray-500 mb-2 leading-relaxed ${isList ? 'line-clamp-2' : 'line-clamp-1'}`}>
+                                {product.short_description}
+                            </p>
+                        )}
+
+                        {/* Price */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-lg sm:text-xl font-black text-[#3d5c3a] font-ui tabular-nums tracking-tight">
+                                {formatPrice(displayPrice, product.country_prices)}
+                            </p>
+                            {isOnSale && originalPrice && (
+                                <>
+                                    <p className="text-xs text-gray-400 line-through">
+                                        {formatPrice(originalPrice, product.country_prices)}
+                                    </p>
+                                    <span className="bg-red-50 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded border border-red-100">
+                                        {discountPercent}% OFF
+                                    </span>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Shared Variant Attributes (Visible if common across all options) */}
+                        {/* Shared attributes at the bottom */}
+                        {((product.variant_count ?? 0) > 1 || (product.variants?.length ?? 0) > 1) && (product.common_form || product.common_strength || product.common_flavor) && (
+                            <div className="mt-2.5 flex flex-wrap gap-1.5">
+                                {[product.common_form, product.common_strength, product.common_flavor]
+                                    .filter(Boolean)
+                                    .map((attr, idx) => (
+                                        <span
+                                            key={idx}
+                                            className="text-[10px] font-bold tracking-wide text-[#3d5c3a] uppercase bg-[#6B8F5E]/10 border border-[#6B8F5E]/20 px-2.5 py-0.5 rounded-full"
+                                        >
+                                            {attr}
+                                        </span>
+                                    ))
+                                }
+                            </div>
+                        )}
+
+                        {/* List view: inline action buttons */}
+                        {isList && !isUnavailable && (
+                            <div className="mt-2.5 sm:mt-4 flex flex-wrap items-center gap-2 sm:gap-3 relative z-30">
+                                {hasVariants ? (
+                                    <button
+                                        onClick={openCartModal}
+                                        className={`
                                                 inline-flex flex-1 sm:flex-none justify-center items-center gap-1.5
                                                 text-[11px] sm:text-xs font-bold px-3 sm:px-5 py-2 sm:py-2.5
                                                 rounded-lg transition-all duration-200 cursor-pointer shadow-sm
                                                 ${showInlineOptions
-                                                    ? 'bg-[#2d4a2a] text-white shadow-[0_0_0_3px_rgba(61,92,58,0.2)]'
-                                                    : 'bg-[#3d5c3a] text-white hover:bg-[#2d4a2a] hover:shadow'
-                                                }
+                                                ? 'bg-[#2d4a2a] text-white shadow-[0_0_0_3px_rgba(61,92,58,0.2)]'
+                                                : 'bg-[#3d5c3a] text-white hover:bg-[#2d4a2a] hover:shadow'
+                                            }
                                             `}
-                                        >
-                                            <Eye className={`h-3.5 w-3.5 transition-transform duration-300 ${showInlineOptions ? 'scale-110' : ''}`} />
-                                            {showInlineOptions ? 'Choosing…' : 'Options'}
-                                        </button>
-                                    ) : (
-                                        <button
-                                            onClick={(e) => onMoveToCart ? onMoveToCart(e) : openCartModal(e)}
-                                            disabled={cartLoading || addingToCart || justAdded}
-                                            className={`inline-flex flex-1 sm:flex-none justify-center items-center gap-1.5 text-white text-[11px] sm:text-xs font-bold px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg transition-all cursor-pointer shadow-sm hover:shadow disabled:opacity-70 ${justAdded ? 'bg-[#2a4d2e]' : 'bg-[#3d5c3a] hover:bg-[#2d4a2a]'}`}
-                                        >
-                                            {addingToCart ? (
-                                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                            ) : justAdded ? (
-                                                <Check className="h-3.5 w-3.5" />
-                                            ) : (
-                                                <ShoppingCart className="h-3.5 w-3.5" />
-                                            )}
-                                            <span className="truncate">{addingToCart ? 'Adding...' : justAdded ? 'Added' : 'Add to Cart'}</span>
-                                        </button>
-                                    )}
-                                    <button
-                                        onClick={handleToggleWishlist}
-                                        className={`relative z-30 inline-flex flex-shrink-0 items-center justify-center p-2.5 sm:p-2.5 rounded-lg border transition-all cursor-pointer ${wishlisted ? 'border-[#3d5c3a]/30 bg-[#3d5c3a]/5' : 'border-gray-200 bg-white hover:border-[#3d5c3a]/30 hover:bg-gray-50'}`}
                                     >
-                                        <Heart className={`h-4 w-4 sm:h-4 sm:w-4 ${wishlisted ? 'fill-[#3d5c3a] text-[#3d5c3a]' : 'text-gray-400'}`} />
+                                        <Eye className={`h-3.5 w-3.5 transition-transform duration-300 ${showInlineOptions ? 'scale-110' : ''}`} />
+                                        {showInlineOptions ? 'Choosing…' : 'Options'}
                                     </button>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Inline Options Panel (List View Only) */}
-                        {isList && (
-                            <div className="relative z-40">
-                                {renderInlineOptions()}
+                                ) : (
+                                    <button
+                                        onClick={(e) => onMoveToCart ? onMoveToCart(e) : openCartModal(e)}
+                                        disabled={cartLoading || addingToCart || justAdded}
+                                        className={`inline-flex flex-1 sm:flex-none justify-center items-center gap-1.5 text-white text-[11px] sm:text-xs font-bold px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg transition-all cursor-pointer shadow-sm hover:shadow disabled:opacity-70 ${justAdded ? 'bg-[#2a4d2e]' : 'bg-[#3d5c3a] hover:bg-[#2d4a2a]'}`}
+                                    >
+                                        {addingToCart ? (
+                                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                        ) : justAdded ? (
+                                            <Check className="h-3.5 w-3.5" />
+                                        ) : (
+                                            <ShoppingCart className="h-3.5 w-3.5" />
+                                        )}
+                                        <span className="truncate">{addingToCart ? 'Adding...' : justAdded ? 'Added' : 'Add to Cart'}</span>
+                                    </button>
+                                )}
+                                <button
+                                    onClick={handleToggleWishlist}
+                                    className={`relative z-30 inline-flex flex-shrink-0 items-center justify-center p-2.5 sm:p-2.5 rounded-lg border transition-all cursor-pointer ${wishlisted ? 'border-[#3d5c3a]/30 bg-[#3d5c3a]/5' : 'border-gray-200 bg-white hover:border-[#3d5c3a]/30 hover:bg-gray-50'}`}
+                                >
+                                    <Heart className={`h-4 w-4 sm:h-4 sm:w-4 ${wishlisted ? 'fill-[#3d5c3a] text-[#3d5c3a]' : 'text-gray-400'}`} />
+                                </button>
                             </div>
                         )}
                     </div>
+
+                    {/* Inline Options Panel (List View Only) */}
+                    {isList && (
+                        <div className="relative z-40">
+                            {renderInlineOptions()}
+                        </div>
+                    )}
+                </div>
                 {/* ═══════ CART / VARIANT OVERLAY ═══════ */}
                 {renderCartModal()}
             </div>

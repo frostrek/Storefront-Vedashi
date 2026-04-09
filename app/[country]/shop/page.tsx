@@ -138,7 +138,7 @@ export default function ShopPage() {
       </div>
 
       {/* 1. BANNER REEL */}
-      <div className="relative z-10">
+      <div className="relative z-10 max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
         <HeroCarousel />
       </div>
 
@@ -148,184 +148,151 @@ export default function ShopPage() {
         <div className="flex flex-col">
           {/* 2. SHOP BY CATEGORY - FULL WIDTH GRID */}
           <section className="relative pt-12 pb-4 px-4 sm:px-8 -mx-4 sm:-mx-8 overflow-hidden bg-white/40">
-          {/* Layered Luxury Pattern */}
-          <div
-            className="absolute inset-0 opacity-[0.07] pointer-events-none"
-            style={{
-              backgroundImage: 'url(/backgrounds/bg3.png)',
-              backgroundSize: '1200px',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'repeat'
-            }}
-          />
-
-          {/* Corner Decorations */}
-          <div className="absolute top-0 left-0 w-64 h-64 opacity-[0.08] pointer-events-none -translate-x-12 -translate-y-12">
-            <img src="/backgrounds/bg1.png" className="w-full h-full object-contain rotate-180" alt="" />
-          </div>
-          <div className="absolute top-0 right-0 w-64 h-64 opacity-[0.08] pointer-events-none translate-x-12 -translate-y-12">
-            <img src="/backgrounds/bg1.png" className="w-full h-full object-contain -rotate-90" alt="" />
-          </div>
-          <div className="absolute bottom-0 left-0 w-64 h-64 opacity-[0.08] pointer-events-none -translate-x-12 translate-y-12">
-            <img src="/backgrounds/bg1.png" className="w-full h-full object-contain rotate-90" alt="" />
-          </div>
-          <div className="absolute bottom-0 right-0 w-64 h-64 opacity-[0.08] pointer-events-none translate-x-12 translate-y-12">
-            <img src="/backgrounds/bg1.png" className="w-full h-full object-contain" alt="" />
-          </div>
-
-          <div className="relative z-10">
-            <div className="relative text-center mb-10 px-4">
-              <div className="absolute right-6 top-3 hidden lg:block">
-                <Link
-                  href={`/${country}/products`}
-                  className="group flex items-center gap-2 text-[15px] font-bold text-[#3B5D3B] transition-all"
-                >
-                  Explore all products
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Link>
-              </div>
-
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={navStack.length}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <h2 className="text-4xl font-bold text-gray-900 tracking-tight mb-4">
-                    {navStack.length > 0 ? navStack[navStack.length - 1].name : 'Shop by Category'}
-                  </h2>
-                  <p className="text-gray-500 font-medium italic mb-4 max-w-xl mx-auto">
-                    {navStack.length > 0
-                      ? navStack[navStack.length - 1].description || `Explore our ${navStack[navStack.length - 1].name} collection`
-                      : 'Explore our curated collections of traditional wisdom for modern living'}
-                  </p>
-                </motion.div>
-              </AnimatePresence>
-
-              <div className="flex items-center justify-center gap-4">
-                {navStack.length > 0 && (
-                  <button
-                    onClick={() => setNavStack(prev => prev.slice(0, -1))}
-                    className="group flex items-center gap-2 px-4 py-2 bg-white border border-[#3B5D3B]/20 rounded-full text-xs font-bold text-[#3B5D3B] hover:bg-[#3B5D3B] hover:text-white transition-all shadow-sm"
-                  >
-                    <ArrowRight className="h-3 w-3 rotate-180" />
-                    Back
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <div className="relative min-h-[300px]">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={navStack.length}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                  className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-6 lg:gap-8"
-                >
-                  {(navStack.length === 0 ? allCategories : navStack[navStack.length - 1].children || []).map((cat: any, i: number) => {
-                    const hasChildren = cat.children && cat.children.length > 0;
-
-                    return (
-                      <div
-                        key={cat.category_id}
-                        onClick={() => {
-                          if (hasChildren) {
-                            setNavStack(prev => [...prev, cat]);
-                            window.scrollTo({ top: document.querySelector('section')?.offsetTop || 0, behavior: 'smooth' });
-                          } else {
-                            router.push(`/${country}/products?category=${cat.slug}`);
-                          }
-                        }}
-                        className="group flex flex-col items-center gap-6 transition-all duration-500 hover:-translate-y-2 cursor-pointer"
-                      >
-                        <div className={`relative w-full aspect-square rounded-full ${categoryColors[cat.slug] || 'bg-[#F2F4F2]'} flex items-center justify-center shadow-sm group-hover:shadow-[0_20px_50px_rgba(59,93,59,0.12)] group-hover:bg-[#E2F0E2] transition-all duration-700 overflow-hidden isolate`}>
-                          {/* Icon Render */}
-                          <img
-                            src={cat.image_url || categoryImages[cat.slug?.toLowerCase() || ''] || `/icons/shop/${cat.slug}.png`}
-                            alt={cat.name}
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = '/icons/shop/category-sprite.png';
-                            }}
-                            className="w-[85%] h-[85%] object-contain relative z-10 mix-blend-multiply opacity-95 group-hover:opacity-100 transition-all duration-[800ms] cubic-bezier(0.34,1.56,0.64,1) group-hover:scale-110 pointer-events-none"
-                          />
-
-                          {hasChildren && (
-                            <div className="absolute bottom-4 right-4 z-20 bg-white/90 backdrop-blur-sm p-1.5 rounded-full shadow-md border border-[#3B5D3B]/10 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Plus className="h-3 w-3 text-[#3B5D3B]" />
-                            </div>
-                          )}
-
-                          {/* Hover Pulse Effect */}
-                          <div className="absolute inset-0 rounded-full border border-[#3B5D3B]/20 scale-100 opacity-0 group-hover:scale-105 group-hover:opacity-100 transition-all duration-700 pointer-events-none" />
-                        </div>
-
-                        <div className="text-center">
-                          <span className="text-base font-bold text-gray-800 group-hover:text-[#3B5D3B] transition-colors leading-tight block">
-                            {cat.name}
-                          </span>
-                          {hasChildren && (
-                            <span className="text-[10px] uppercase tracking-wider text-[#8B7A3D] font-bold mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              Explore Subcategories
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </motion.div>
-              </AnimatePresence>
-            </div>
-          </div>
-        </section>
-
-        {/* 3. BEST SELLERS REEL SECTION */}
-        <section className="relative -mx-4 sm:-mx-8 pt-4 pb-12 overflow-hidden bg-[#FBF9F2]">
-          {/* Layered Luxury Pattern */}
-          <div
-            className="absolute inset-0 opacity-[0.12] pointer-events-none"
-            style={{
-              backgroundImage: 'url(/backgrounds/bg1.png)',
-              backgroundSize: '1000px',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'repeat'
-            }}
-          />
-
-          <div className="max-w-[1500px] mx-auto relative z-10 pb-8">
-            <ProductReel
-              products={bestSellers}
-              loading={loading}
-              title="Best Sellers"
-              subtitle="Shop our most loved essentials"
-              viewAllLink="/products?sort=popular&bestSeller=true"
-              viewAllText="Explore our Best Sellers"
+            <div
+              className="absolute inset-0 opacity-[0.07] pointer-events-none"
+            // style={{
+            //   backgroundImage: 'url(/backgrounds/bg3.png)',
+            //   backgroundSize: '1200px',
+            //   backgroundPosition: 'center',
+            //   backgroundRepeat: 'repeat'
+            // }} 
             />
-          </div>
-        </section>
-      </div>
 
-      {/* 3.5 NEED HELP CHOOSING */}
-      <div className="-mx-4 sm:-mx-8">
-        <NeedHelpSection />
-      </div>
+            <div className="relative z-10">
+              <div className="relative text-center mb-10 px-4">
+                <div className="absolute right-6 top-3 hidden lg:block">
+                  <Link
+                    href={`/${country}/products`}
+                    className="group flex items-center gap-2 text-[15px] font-bold text-[#3B5D3B] transition-all"
+                  >
+                    Explore all products
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                </div>
+
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={navStack.length}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <h2 className="text-4xl font-bold text-gray-900 tracking-tight mb-4">
+                      {navStack.length > 0 ? navStack[navStack.length - 1].name : 'Shop by Category'}
+                    </h2>
+                    <p className="text-gray-500 font-medium italic mb-4 max-w-xl mx-auto">
+                      {navStack.length > 0
+                        ? navStack[navStack.length - 1].description || `Explore our ${navStack[navStack.length - 1].name} collection`
+                        : 'Explore our curated collections of traditional wisdom for modern living'}
+                    </p>
+                  </motion.div>
+                </AnimatePresence>
+
+                <div className="flex items-center justify-center gap-4">
+                  {navStack.length > 0 && (
+                    <button
+                      onClick={() => setNavStack(prev => prev.slice(0, -1))}
+                      className="group flex items-center gap-2 px-4 py-2 bg-white border border-[#3B5D3B]/20 rounded-full text-xs font-bold text-[#3B5D3B] hover:bg-[#3B5D3B] hover:text-white transition-all shadow-sm"
+                    >
+                      <ArrowRight className="h-3 w-3 rotate-180" />
+                      Back
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="relative min-h-[300px]">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={navStack.length}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                    className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-6 lg:gap-8"
+                  >
+                    {(navStack.length === 0 ? allCategories : navStack[navStack.length - 1].children || []).map((cat: any, i: number) => {
+                      const hasChildren = cat.children && cat.children.length > 0;
+
+                      return (
+                        <div
+                          key={cat.category_id}
+                          onClick={() => {
+                            if (hasChildren) {
+                              setNavStack(prev => [...prev, cat]);
+                              window.scrollTo({ top: document.querySelector('section')?.offsetTop || 0, behavior: 'smooth' });
+                            } else {
+                              router.push(`/${country}/products?category=${cat.slug}`);
+                            }
+                          }}
+                          className="group flex flex-col items-center gap-6 transition-all duration-500 hover:-translate-y-2 cursor-pointer"
+                        >
+                          <div className={`relative w-full aspect-square rounded-full ${categoryColors[cat.slug] || 'bg-[#F2F4F2]'} flex items-center justify-center shadow-sm group-hover:shadow-[0_20px_50px_rgba(59,93,59,0.12)] group-hover:bg-[#E2F0E2] transition-all duration-700 overflow-hidden isolate`}>
+                            {/* Icon Render */}
+                            <img
+                              src={cat.image_url || categoryImages[cat.slug?.toLowerCase() || ''] || `/icons/shop/${cat.slug}.png`}
+                              alt={cat.name}
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = '/icons/shop/category-sprite.png';
+                              }}
+                              className="w-[85%] h-[85%] object-contain relative z-10 mix-blend-multiply opacity-95 group-hover:opacity-100 transition-all duration-[800ms] cubic-bezier(0.34,1.56,0.64,1) group-hover:scale-110 pointer-events-none"
+                            />
+
+                            {hasChildren && (
+                              <div className="absolute bottom-4 right-4 z-20 bg-white/90 backdrop-blur-sm p-1.5 rounded-full shadow-md border border-[#3B5D3B]/10 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Plus className="h-3 w-3 text-[#3B5D3B]" />
+                              </div>
+                            )}
+
+                            {/* Hover Pulse Effect */}
+                            <div className="absolute inset-0 rounded-full border border-[#3B5D3B]/20 scale-100 opacity-0 group-hover:scale-105 group-hover:opacity-100 transition-all duration-700 pointer-events-none" />
+                          </div>
+
+                          <div className="text-center">
+                            <span className="text-base font-bold text-gray-800 group-hover:text-[#3B5D3B] transition-colors leading-tight block">
+                              {cat.name}
+                            </span>
+                            {hasChildren && (
+                              <span className="text-[10px] uppercase tracking-wider text-[#8B7A3D] font-bold mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                Explore Subcategories
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </div>
+          </section>
+
+          {/* 3. BEST SELLERS REEL SECTION */}
+          <section className="relative -mx-4 sm:-mx-8 pt-4 pb-12 overflow-hidden bg-[#FBF9F2]">
+
+
+            <div className="max-w-[1500px] mx-auto relative z-10 pb-8">
+              <ProductReel
+                products={bestSellers}
+                loading={loading}
+                title="Best Sellers"
+                subtitle="Shop our most loved essentials"
+                viewAllLink="/products?sort=popular&bestSeller=true"
+                viewAllText="Explore our Best Sellers"
+              />
+            </div>
+          </section>
+        </div>
+
+        {/* 3.5 NEED HELP CHOOSING */}
+        <div className="-mx-4 sm:-mx-8">
+          <NeedHelpSection />
+        </div>
 
         {/* 5. NEW ARRIVALS - CLEAN & RADIANT */}
         <section className="relative -mx-4 sm:-mx-8 py-10 overflow-hidden bg-[#FBF9F2]">
-          {/* Layered Luxury Pattern */}
-          <div
-            className="absolute inset-0 opacity-[0.12] pointer-events-none"
-            style={{
-              backgroundImage: 'url(/backgrounds/bg1.png)',
-              backgroundSize: '1000px',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'repeat'
-            }}
-          />
+
 
           <div className="max-w-[1500px] mx-auto relative z-10">
             <ProductReel

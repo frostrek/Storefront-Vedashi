@@ -50,8 +50,8 @@ interface HeaderConfig {
 const DEFAULT_CONFIG: HeaderConfig = {
   branding: { logo_url: '', logo_alt: 'Vedashi' },
   colors: {
-    // navbar_bg: '#f0e7c8ff',
-    navbar_bg: '#E8DCAFff',
+    // navbar_bg: '#E8DCAFff',
+    navbar_bg: '#f0e7c8ff',
     navbar_text: '#374151',
     navbar_hover: '#3B5D3B',
     strip_bg: '#3B5D3B',
@@ -310,7 +310,7 @@ export default function Navbar() {
 
   return (
     <header className={`w-full sticky top-0 z-[1000] transition-all duration-500 ${scrolled ? 'shadow-lg' : ''}`}>
-      
+
       <PromoBanner />
 
       {/* ═══════════════ STRIP BAR (PROMOTION BANNER) ═══════════════ */}
@@ -353,7 +353,7 @@ export default function Navbar() {
           }`}
         style={{ backgroundColor: scrolled ? `${colors.navbar_bg}CC` : colors.navbar_bg }}
       >
-        <div className="mx-auto max-w-[2000px] w-full px-2 sm:px-4 lg:px-6">
+        <div className="mx-auto max-w-[1500px] w-full px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 relative">
 
             {/* Logo Section */}
@@ -443,15 +443,15 @@ export default function Navbar() {
                         <p className="text-[11px] text-gray-500 leading-tight">Sign in to easily track orders, save items, and more.</p>
                       </div>
                       <div className="p-4 space-y-2">
-                        <Link 
-                          href={`/${currentCountry}/login`} 
+                        <Link
+                          href={`/${currentCountry}/login`}
                           className="flex items-center gap-3 w-full px-4 py-2.5 bg-[#3B5D3B] text-white rounded-xl text-[13px] font-bold transition-all hover:bg-[#2D452D] hover:shadow-md active:scale-[0.98]"
                         >
                           <LogIn className="h-4 w-4" />
                           Sign In
                         </Link>
-                        <Link 
-                          href={`/${currentCountry}/login?mode=register`} 
+                        <Link
+                          href={`/${currentCountry}/login?mode=register`}
                           className="flex items-center gap-3 w-full px-4 py-2.5 bg-white text-gray-700 rounded-xl text-[13px] font-bold border border-gray-200 transition-all hover:bg-gray-50 active:scale-[0.98]"
                         >
                           <UserPlus className="h-4 w-4" />
