@@ -1,13 +1,16 @@
  'use client';
 
 import { useState } from 'react';
-import { MapPin, Phone, Mail, Clock, Send } from 'lucide-react';
+import { useParams } from 'next/navigation';
+import { MapPin, Phone, Mail, Clock, Send, Globe } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { submitFeedback } from '@/lib/api';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 
 export default function ContactPage() {
+    const params = useParams();
+    const country = (params?.country as string) || 'in';
     const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -181,28 +184,28 @@ export default function ContactPage() {
 
                     {/* Right Column: Info Cards */}
                     <div className="space-y-4">
-                        {[
-                            { 
-                                icon: MapPin, 
-                                title: 'VISIT US', 
-                                lines: ['JMD Empire, Sector 62', 'Gurgaon, Haryana', 'India'] 
-                            },
-                            { 
-                                icon: Phone, 
-                                title: 'CALL US', 
-                                lines: ['+91 96677 88869'] 
-                            },
-                            { 
-                                icon: Mail, 
-                                title: 'EMAIL US', 
-                                lines: ['info@vedashi.com', 'orders@vedashi.com'] 
-                            },
-                            { 
-                                icon: Clock, 
-                                title: 'OPENING HOURS', 
-                                lines: ['Mon — Fri: 9:00 AM — 6:00 PM', 'Sat: 10:00 AM — 4:00 PM', 'Sun: Closed'] 
-                            },
-                        ].map((info, i) => (
+                        {(() => {
+                            if (country === 'ru') {
+                                return [
+                                    { icon: Globe, title: 'SHIPPING TO RUSSIA', lines: ['Nationwide delivery across Russia', 'Including Moscow & St. Petersburg', 'Via International Express'] },
+                                    { icon: Mail, title: 'EMAIL SUPPORT', lines: ['Russian Language Support Available', 'info@vedashi.com', 'orders@vedashi.com'] },
+                                    { icon: Clock, title: 'SUPPORT HOURS (MSK)', lines: ['Mon — Fri: 9:00 AM — 6:00 PM (Moscow Time)', 'Sat: 10:00 AM — 4:00 PM', 'Sun: Closed'] },
+                                ];
+                            }
+                            if (country === 'kr') {
+                                return [
+                                    { icon: Globe, title: 'SHIPPING TO S. KOREA', lines: ['Fast delivery to Seoul, Busan', 'and Incheon', 'Via International Express'] },
+                                    { icon: Mail, title: 'EMAIL SUPPORT', lines: ['Korean Language Support Available', 'info@vedashi.com', 'orders@vedashi.com'] },
+                                    { icon: Clock, title: 'SUPPORT HOURS (KST)', lines: ['Mon — Fri: 9:00 AM — 6:00 PM (Korea Standard Time)', 'Sat: 10:00 AM — 4:00 PM', 'Sun: Closed'] },
+                                ];
+                            }
+                            return [
+                                { icon: MapPin, title: 'VISIT US', lines: ['JMD Empire, Sector 62', 'Gurgaon, Haryana', 'India'] },
+                                { icon: Phone, title: 'CALL US', lines: ['+91 96677 88869'] },
+                                { icon: Mail, title: 'EMAIL US', lines: ['info@vedashi.com', 'orders@vedashi.com'] },
+                                { icon: Clock, title: 'OPENING HOURS', lines: ['Mon — Fri: 9:00 AM — 6:00 PM', 'Sat: 10:00 AM — 4:00 PM', 'Sun: Closed'] },
+                            ];
+                        })().map((info, i) => (
                             <motion.div 
                                 key={i} 
                                 initial={{ opacity: 0, y: 20 }}
