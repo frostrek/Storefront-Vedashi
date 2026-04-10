@@ -42,6 +42,15 @@ export const metadata: Metadata = {
   description:
     "Experience the healing power of authentic Ayurvedic remedies crafted from nature. Discover clinically tested herbal formulations for holistic wellness.",
   keywords: ["ayurveda", "ayurvedic wellness", "herbal remedies", "Vedashi", "natural healing", "dosha", "panchakarma"],
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/vedashi-logo.png', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/vedashi-logo.png' },
+    ],
+  },
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
     yandex: "40dd8bca6ac40b29",
