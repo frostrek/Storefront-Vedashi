@@ -187,23 +187,25 @@ export default function ContactPage() {
                         {(() => {
                             if (country === 'ru') {
                                 return [
+                                    { icon: MapPin, title: 'SELLER — RUSSIA', lines: ['LLC Vedashi Herbals (ООО "ВЕДАШИ ХЕРБАЛС")', '117292, Moscow, Municipal District Akademichesky,', 'Shvernika Street, Building 6, Block 1, Premises 8P'] },
                                     { icon: Globe, title: 'SHIPPING TO RUSSIA', lines: ['Nationwide delivery across Russia', 'Including Moscow & St. Petersburg', 'Via International Express'] },
-                                    { icon: Mail, title: 'EMAIL SUPPORT', lines: ['Russian Language Support Available', 'info@vedashi.com', 'orders@vedashi.com'] },
-                                    { icon: Clock, title: 'SUPPORT HOURS (MSK)', lines: ['Mon — Fri: 9:00 AM — 6:00 PM (Moscow Time)', 'Sat: 10:00 AM — 4:00 PM', 'Sun: Closed'] },
+                                    { icon: Mail, title: 'EMAIL SUPPORT', lines: ['Russian Language Support Available', 'info@vedashi.com'] },
+                                    { icon: Clock, title: 'BUSINESS HOURS (IST)', lines: ['Mon — Fri: 9:00 AM — 6:00 PM (IST)', 'Sat: 10:00 AM — 4:00 PM (IST)', 'Sun: Closed', 'Response Time: 24–48 business hours'] },
                                 ];
                             }
                             if (country === 'kr') {
                                 return [
+                                    { icon: MapPin, title: 'SELLER — SOUTH KOREA', lines: ['Vedashi Wellness', 'Plot No. E-56, Shop No. 2, Sector-09, Airoli,', 'Navi Mumbai, Thane, Maharashtra – 400708, India'] },
                                     { icon: Globe, title: 'SHIPPING TO S. KOREA', lines: ['Fast delivery to Seoul, Busan', 'and Incheon', 'Via International Express'] },
-                                    { icon: Mail, title: 'EMAIL SUPPORT', lines: ['Korean Language Support Available', 'info@vedashi.com', 'orders@vedashi.com'] },
-                                    { icon: Clock, title: 'SUPPORT HOURS (KST)', lines: ['Mon — Fri: 9:00 AM — 6:00 PM (Korea Standard Time)', 'Sat: 10:00 AM — 4:00 PM', 'Sun: Closed'] },
+                                    { icon: Mail, title: 'EMAIL SUPPORT', lines: ['Korean Language Support Available', 'info@vedashi.com'] },
+                                    { icon: Clock, title: 'BUSINESS HOURS (IST)', lines: ['Mon — Fri: 9:00 AM — 6:00 PM (IST)', 'Sat: 10:00 AM — 4:00 PM (IST)', 'Sun: Closed', 'Response Time: 24–48 business hours'] },
                                 ];
                             }
                             return [
-                                { icon: MapPin, title: 'VISIT US', lines: ['JMD Empire, Sector 62', 'Gurgaon, Haryana', 'India'] },
+                                { icon: MapPin, title: 'VISIT US', lines: ['Plot No. E-56, Shop No. 2, Sector-09, Airoli,', 'Navi Mumbai, Thane, Maharashtra – 400708', 'India'] },
                                 { icon: Phone, title: 'CALL US', lines: ['+91 96677 88869'] },
-                                { icon: Mail, title: 'EMAIL US', lines: ['info@vedashi.com', 'orders@vedashi.com'] },
-                                { icon: Clock, title: 'OPENING HOURS', lines: ['Mon — Fri: 9:00 AM — 6:00 PM', 'Sat: 10:00 AM — 4:00 PM', 'Sun: Closed'] },
+                                { icon: Mail, title: 'EMAIL US', lines: ['info@vedashi.com'] },
+                                { icon: Clock, title: 'BUSINESS HOURS', lines: ['Mon — Fri: 9:00 AM — 6:00 PM (IST)', 'Sat: 10:00 AM — 4:00 PM (IST)', 'Sun: Closed', 'Response Time: 24–48 business hours'] },
                             ];
                         })().map((info, i) => (
                             <motion.div 

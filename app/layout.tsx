@@ -1,26 +1,20 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import Script from "next/script";
-import { Suspense } from "react";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import DeferredComponents from "@/components/DeferredComponents";
 
-import PromoBanner from "@/components/PromoBanner";
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "react-hot-toast";
 import { CookieConsentProvider } from "@/context/CookieConsentContext";
-import CookieBanner from "@/components/CookieBanner";
-import LanguageSuggestionBanner from "@/components/LanguageSuggestionBanner";
 import DynamicScriptLoader from "@/components/DynamicScriptLoader";
-import RouteTracker from "@/components/RouteTracker";
-import GlobalErrorTracker from "@/components/GlobalErrorTracker";
 import MaintenancePage from "@/components/MaintenancePage";
 import { generateLocalBusinessJsonLd, generateOrganizationJsonLd, generateWebSiteJsonLd } from "@/lib/seo";
-import ButterflyEffect from "@/components/animations/ButterflyEffect";
 import { API_URL } from "@/lib/api";
 
 const inter = Inter({
@@ -135,22 +129,19 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(generateWebSiteJsonLd()) }}
         />
 
-
         <ClerkProvider>
+          {/* Deferred: Turnstile only needed on login/register pages */}
           <Script
             src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-            strategy="afterInteractive"
+            strategy="lazyOnload"
           />
+          {/* Deferred: Razorpay only needed on checkout */}
           <Script
             src="https://checkout.razorpay.com/v1/checkout.js"
             strategy="lazyOnload"
           />
           <CookieConsentProvider>
             <DynamicScriptLoader />
-            <Suspense fallback={null}>
-              <RouteTracker />
-            </Suspense>
-            <GlobalErrorTracker />
             <AuthProvider>
               <CartProvider>
                 <WishlistProvider>
@@ -179,13 +170,10 @@ export default async function RootLayout({
                       }
                     }}
                   />
-                  <PromoBanner />
+                  <DeferredComponents />
                   <Navbar />
                   <main className="flex-1">{children}</main>
                   <Footer />
-                  <ButterflyEffect />
-                  <CookieBanner />
-                  <LanguageSuggestionBanner />
                 </WishlistProvider>
               </CartProvider>
             </AuthProvider>
