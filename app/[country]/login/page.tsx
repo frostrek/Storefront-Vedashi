@@ -239,7 +239,7 @@ function LoginContent() {
     // ── Email/Password Submit ────────────────────────────────────────
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!agreeTerms) {
+        if (isRegister && !agreeTerms) {
             toast.error('You must agree to the Terms of Service and Privacy Policy to continue.');
             return;
         }
@@ -688,36 +688,38 @@ function LoginContent() {
                                 )}
 
                                 {/* Terms checkbox */}
-                                <div className="flex items-start gap-2.5 mb-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => setAgreeTerms(!agreeTerms)}
-                                        className={`w-4 h-4 mt-0.5 rounded flex items-center justify-center flex-shrink-0 border transition-all cursor-pointer ${agreeTerms
-                                            ? 'bg-[#1e3d1e] border-[#1e3d1e]'
-                                            : 'bg-white border-[#d4e4d4] hover:border-[#2d5a2d]'
-                                            }`}
-                                    >
-                                        {agreeTerms && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
-                                    </button>
-                                    <p className="text-xs text-[#6b7b6b] leading-relaxed">
-                                        I agree to the{' '}
+                                {isRegister && (
+                                    <div className="flex items-start gap-2.5 mb-3">
                                         <button
                                             type="button"
-                                            onClick={() => setShowTermsModal(true)}
-                                            className="text-[#2d5a2d] font-semibold hover:underline cursor-pointer bg-transparent border-none p-0 inline"
+                                            onClick={() => setAgreeTerms(!agreeTerms)}
+                                            className={`w-4 h-4 mt-0.5 rounded flex items-center justify-center flex-shrink-0 border transition-all cursor-pointer ${agreeTerms
+                                                ? 'bg-[#1e3d1e] border-[#1e3d1e]'
+                                                : 'bg-white border-[#d4e4d4] hover:border-[#2d5a2d]'
+                                                }`}
                                         >
-                                            Terms of Service
+                                            {agreeTerms && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
                                         </button>
-                                        {' '}and{' '}
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPrivacyModal(true)}
-                                            className="text-[#2d5a2d] font-semibold hover:underline cursor-pointer bg-transparent border-none p-0 inline"
-                                        >
-                                            Privacy Policy
-                                        </button>.
-                                    </p>
-                                </div>
+                                        <p className="text-xs text-[#6b7b6b] leading-relaxed">
+                                            I agree to the{' '}
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowTermsModal(true)}
+                                                className="text-[#2d5a2d] font-semibold hover:underline cursor-pointer bg-transparent border-none p-0 inline"
+                                            >
+                                                Terms of Service
+                                            </button>
+                                            {' '}and{' '}
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPrivacyModal(true)}
+                                                className="text-[#2d5a2d] font-semibold hover:underline cursor-pointer bg-transparent border-none p-0 inline"
+                                            >
+                                                Privacy Policy
+                                            </button>.
+                                        </p>
+                                    </div>
+                                )}
 
                                 <LegalModal
                                     isOpen={showTermsModal}
