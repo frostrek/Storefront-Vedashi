@@ -29,7 +29,7 @@ export default function PromoBanner() {
 
         const fetchBanner = async () => {
             try {
-                // Extract country slug from pathname (e.g., /ru/shop -> ru)
+                // Extract country slug from pathname (e.g., /ru/products -> ru)
                 const segments = pathname?.split('/').filter(Boolean) || [];
                 const country = segments[0] || '';
                 const countryParam = country ? `?country=${country}` : '';

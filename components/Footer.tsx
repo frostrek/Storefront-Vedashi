@@ -86,8 +86,10 @@ const FALLBACK: FooterData = {
                 { label: 'Help Center', href: '/help-center' },
                 { label: 'FAQ', href: '/help-center/faq' },
                 { label: 'Shipping Policy', href: '/shipping' },
+                { label: 'Return Policy', href: '/return-policy' },
                 { label: 'Terms of Service', href: '/terms' },
                 { label: 'Privacy Policy', href: '/privacy' },
+
             ],
         },
     ],

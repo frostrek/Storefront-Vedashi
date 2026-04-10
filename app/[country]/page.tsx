@@ -2,68 +2,62 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import toast from 'react-hot-toast';
-import { ArrowRight, Star, Sparkles, Leaf, ShieldCheck, Beaker, Heart, Stethoscope, Salad, FlaskConical, CalendarCheck, Loader2 } from 'lucide-react';
-import { getBestSellers, getFeaturedProducts as fetchFeatured, subscribeNewsletter } from '@/lib/api';
-import { trackEcommerce, EcommerceItem } from '@/lib/analytics/gtag';
+import {
+  ArrowRight,
+  Leaf,
+  Pill,
+  Sprout,
+  Stethoscope,
+  Sparkles,
+  Wind,
+  Milk,
+  Bath,
+  Heart,
+  ArrowRightCircle,
+  TrendingUp,
+  Award,
+  Zap,
+  Plus
+} from 'lucide-react';
+import HeroCarousel from '@/components/HeroCarousel';
 import { Product } from '@/types';
+import { getBestSellers, getNewArrivals, getCategories } from '@/lib/api';
 import ProductCard from '@/components/ProductCard';
 import ProductReel from '@/components/ProductReel';
-import HeroSection from '@/components/HeroSection';
+import { trackEcommerce, EcommerceItem } from '@/lib/analytics/gtag';
 import { SkeletonProductGrid } from '@/components/Skeleton';
 import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter, useParams } from 'next/navigation';
+import QualityPromise from '@/components/QualityPromise';
+import NeedHelpSection from '@/components/NeedHelpSection';
 
 export default function HomePage() {
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
-  const [featuredLoading, setFeaturedLoading] = useState(true);
+  const router = useRouter();
+  const params = useParams();
+  const country = params?.country as string || 'in';
+
   const [bestSellers, setBestSellers] = useState<Product[]>([]);
+  const [newArrivals, setNewArrivals] = useState<Product[]>([]);
+  const [allCategories, setAllCategories] = useState<any[]>([]);
+  const [navStack, setNavStack] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Newsletter State
-  const [newsletterEmail, setNewsletterEmail] = useState('');
-  const [isSubscribing, setIsSubscribing] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  const handleSubscribe = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newsletterEmail || !newsletterEmail.includes('@')) {
-      toast.error('Please enter a valid email.');
-      return;
-    }
-    setIsSubscribing(true);
-    try {
-      const res = await subscribeNewsletter(newsletterEmail);
-      if (res.success) {
-        toast.success('Welcome to the Healed.');
-        setNewsletterEmail('');
-      } else {
-        toast.error(res.message || 'Failed to subscribe.');
-      }
-    } catch (error) {
-      toast.error('An error occurred. Please try again.');
-    } finally {
-      setIsSubscribing(false);
-    }
-  };
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [bestRes, featuredRes] = await Promise.all([
-          getBestSellers({ limit: 12 }),
-          fetchFeatured()
+        const [bestRes, newRes, catRes] = await Promise.all([
+          getBestSellers({ limit: 10 }),
+          getNewArrivals({ limit: 10 }),
+          getCategories(true)
         ]);
         setBestSellers(bestRes.data);
-        setFeaturedProducts(featuredRes);
+        setNewArrivals(newRes.data);
+        setAllCategories(catRes);
       } catch (err) {
-        console.warn('Failed to load home data', err);
+        console.error('Failed to load shop data', err);
       } finally {
         setLoading(false);
-        setFeaturedLoading(false);
       }
     }
     loadData();
@@ -71,321 +65,279 @@ export default function HomePage() {
 
   const viewListHashRef = useRef<string>('');
   useEffect(() => {
-    if (featuredProducts.length === 0 && bestSellers.length === 0) return;
-    
-    const allP = featuredProducts.length > 0 ? featuredProducts : bestSellers;
-    const currentHash = allP.map(p => p.product_id).join(',');
-    if (viewListHashRef.current === currentHash) return;
-    viewListHashRef.current = currentHash;
+    const allItems = [...bestSellers, ...newArrivals].slice(0, 15);
+    if (allItems.length === 0) return;
 
-    const gaItems: EcommerceItem[] = allP.slice(0, 10).map((item, index) => ({
+    const currentHash = allItems.map(p => p.product_id).join(',');
+    if (viewListHashRef.current === currentHash) return;
+
+    viewListHashRef.current = currentHash;
+    const gaItems: EcommerceItem[] = allItems.map((item, index) => ({
       item_id: item.product_id,
       item_name: item.product_name,
       price: Number(item.price ?? 0),
       quantity: 1,
       index: index + 1,
-      item_list_name: 'Homepage Curated Spotlight',
+      item_list_name: 'Shop Discovery Highlights',
       item_category: item.category,
       item_brand: item.brand
     }));
-    
+
     trackEcommerce('view_item_list', {
       currency: 'INR',
       value: gaItems.reduce((acc, curr) => acc + curr.price, 0),
       items: gaItems
     });
-  }, [featuredProducts, bestSellers]);
+  }, [bestSellers, newArrivals]);
 
-  const allProducts = featuredProducts.length > 0 ? featuredProducts : bestSellers;
-  const productsLoading = featuredLoading && loading;
+  // Map of category slugs to colors for consistent aesthetic
+  const categoryColors: Record<string, string> = {
+    'herbal-supplement': 'bg-[#F5F2E8]',
+    'Ayurvedic-Herbs': 'bg-[#F5F2E8]',
+    'dry-fruits--snacks': 'bg-[#F5F2E8]',
+    'health-condition': 'bg-[#F5F2E8]',
+    'skin-care': 'bg-[#F5F2E8]',
+    'hair-care': 'bg-[#F5F2E8]',
+    'Natural-Foods': 'bg-[#F5F2E8]',
+    'Personal-Care': 'bg-[#F5F2E8]',
+    'spices-and-masala': 'bg-[#F5F2E8]',
+    'teas-and-superfoods': 'bg-[#F5F2E8]',
+    'natural-beauty': 'bg-[#F5F2E8]',
+    'gifts--combos': 'bg-[#F5F2E8]',
+    'herbal-wellness': 'bg-[#F5F2E8]',
+    'indian-fruits': 'bg-[#F5F2E8]'
+  };
+
+  // Map of category slugs to specific image paths to avoid full sprite sheets
+  const categoryImages: Record<string, string> = {
+    'herbal-supplement': '/icons/shop/herbal-supplement.png',
+    'ayurvedic-herbs': '/icons/shop/ayurvedic-herbs.png',
+    'health-condition': '/icons/shop/health-condition.png',
+    'skin-care': '/icons/shop/skin-care.png',
+    'hair-care': '/icons/shop/hair-care.png',
+    'natural-foods': '/icons/shop/natural-foods.png',
+    'personal-care': '/icons/shop/personal-care.png',
+
+    // Exact matching for DB slugs
+    'dry-fruits--snacks': '/icons/shop/dry-fruits-snacks.png',
+    'gifts--combos': '/icons/shop/gifts-and-combos.png',
+    'herbal-wellness': '/icons/shop/ayurvedic-herbs.png',
+    'spices-and-masala': '/icons/shop/spices-masalas.png',
+    'indian-fruits': '/icons/shop/indian-foods.png',
+    'teas-and-superfoods': '/icons/shop/teas-and-superfoods.png',
+    'natural-beauty': '/icons/shop/natural-beauty.png'
+  };
 
   return (
-    <div className="bg-cream relative">
-      {/* Ayurvedic Botanical Texture Background - Absolute ensures it doesn't overlap global footer */}
-      <div className="absolute inset-0 pointer-events-none z-0 opacity-[0.10]" style={{
-        backgroundImage: `url("/ayurvedic-texture.png")`,
-        backgroundSize: '400px 400px',
-        backgroundRepeat: 'repeat'
-      }} />
-      {/* ═══ 1. HERO ═══ */}
-      <HeroSection />
+    <div className="bg-[#FAF9F6] min-h-screen relative overflow-hidden">
+      {/* Decorative Background Elements */}
+      <div className="absolute top-0 left-0 w-full h-full opacity-[0.03] pointer-events-none z-0 overflow-hidden">
+        <Leaf className="absolute top-[10%] -left-20 w-[400px] h-[400px] rotate-45 text-[#3B5D3B]" />
+        <Leaf className="absolute top-[40%] -right-20 w-[600px] h-[600px] -rotate-12 text-[#3B5D3B]" />
+        <Leaf className="absolute bottom-0 left-[20%] w-[500px] h-[500px] rotate-180 text-[#3B5D3B]" />
+      </div>
 
-      {/* ═══ 2. DOSHA DISCOVERY ═══ */}
-      <section className="py-12 sm:py-20 lg:py-24 px-4">
-        <AnimateOnScroll animation="fadeUp" className="mx-auto max-w-7xl">
-          <div className="rounded-3xl bg-[#F5F2E8] border border-[#E0DCCF] overflow-hidden shadow-sm relative z-10">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
-              {/* Left — Text */}
-              <div className="p-8 sm:p-12 lg:p-16 flex flex-col justify-center relative">
-                <div className="flex items-center gap-2 mb-4">
-                  <Sparkles className="h-4 w-4 text-[#8B7A3D]" />
-                  <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#8B7A3D]">
-                    Discover Your Nature
-                  </span>
+      {/* 1. BANNER REEL */}
+      <div className="relative z-10 max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        <HeroCarousel />
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8 pt-0 pb-0">
+
+        {/* 2 & 3 COMBINED TO REMOVE GAP */}
+        <div className="flex flex-col">
+          {/* 2. SHOP BY CATEGORY - FULL WIDTH GRID */}
+          <section className="relative pt-8 pb-0 px-4 sm:px-8 -mx-4 sm:-mx-8 overflow-hidden bg-white/40">
+            <div
+              className="absolute inset-0 opacity-[0.07] pointer-events-none"
+            // style={{
+            //   backgroundImage: 'url(/backgrounds/bg3.png)',
+            //   backgroundSize: '1200px',
+            //   backgroundPosition: 'center',
+            //   backgroundRepeat: 'repeat'
+            // }} 
+            />
+
+            <div className="relative z-10">
+              <div className="relative text-center mb-6 px-4">
+                <div className="absolute right-6 top-3 hidden lg:block">
+                  <Link
+                    href={`/${country}/products`}
+                    className="group flex items-center gap-2 text-[15px] font-bold text-[#3B5D3B] transition-all"
+                  >
+                    Explore all products
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </Link>
                 </div>
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C2C2C] leading-tight">
-                  What is your unique <em className="italic">Dosha</em>?
-                </h2>
-                <p className="mt-5 text-[#6B6B60] text-base leading-relaxed max-w-lg">
-                  In Ayurveda, your &lsquo;Dosha&rsquo; is your unique mind-body type.
-                  Knowing your Vata, Pitta, or Kapha profile is the first step
-                  toward personalized healing and lasting energy.
-                </p>
-              </div>
-              {/* Right — Image + Testimonial */}
-              <div className="relative hidden lg:block min-h-[420px]">
-                <img src="/dosha-woman.png" alt="Woman enjoying herbal tea" className="absolute inset-0 w-full h-full object-cover" />
-                <div className="absolute bottom-8 right-8 left-8 max-w-xs ml-auto">
-                  <div className="rounded-xl bg-white p-5 shadow-xl border border-[#E0DCCF]/40">
-                    <p className="text-sm text-[#2C2C2C] leading-relaxed">
-                      &ldquo;This assessment changed how I view my
-                      energy cycles entirely. It&apos;s more than a
-                      quiz; it&apos;s a mirror.&rdquo;
+
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={navStack.length}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <h2 className="text-4xl font-bold text-gray-900 tracking-tight mb-4">
+                      {navStack.length > 0 ? navStack[navStack.length - 1].name : 'Shop by Category'}
+                    </h2>
+                    <p className="text-gray-500 font-medium italic mb-4 max-w-xl mx-auto">
+                      {navStack.length > 0
+                        ? navStack[navStack.length - 1].description || `Explore our ${navStack[navStack.length - 1].name} collection`
+                        : 'Explore our curated collections of traditional wisdom for modern living'}
                     </p>
-                    <div className="mt-3 flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-[#3B5D3B]/10 flex items-center justify-center">
-                        <span className="text-sm font-bold text-[#3B5D3B]">A</span>
-                      </div>
-                      <span className="text-[11px] font-bold tracking-widest text-[#6B6B60] uppercase">Amanda K.</span>
-                    </div>
-                  </div>
+                  </motion.div>
+                </AnimatePresence>
+
+                <div className="flex items-center justify-center gap-4">
+                  {navStack.length > 0 && (
+                    <button
+                      onClick={() => setNavStack(prev => prev.slice(0, -1))}
+                      className="group flex items-center gap-2 px-4 py-2 bg-white border border-[#3B5D3B]/20 rounded-full text-xs font-bold text-[#3B5D3B] hover:bg-[#3B5D3B] hover:text-white transition-all shadow-sm"
+                    >
+                      <ArrowRight className="h-3 w-3 rotate-180" />
+                      Back
+                    </button>
+                  )}
                 </div>
               </div>
+
+              <div className="relative min-h-[300px]">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={navStack.length}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                    className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-6 lg:gap-8"
+                  >
+                    {(navStack.length === 0 ? allCategories : navStack[navStack.length - 1].children || []).map((cat: any, i: number) => {
+                      const hasChildren = cat.children && cat.children.length > 0;
+
+                      return (
+                        <div
+                          key={cat.category_id}
+                          onClick={() => {
+                            if (hasChildren) {
+                              setNavStack(prev => [...prev, cat]);
+                              window.scrollTo({ top: document.querySelector('section')?.offsetTop || 0, behavior: 'smooth' });
+                            } else {
+                              router.push(`/${country}/products?category=${cat.slug}`);
+                            }
+                          }}
+                          className="group flex flex-col items-center gap-3 transition-all duration-500 hover:-translate-y-2 cursor-pointer"
+                        >
+                          <div className={`relative w-full aspect-square rounded-full ${categoryColors[cat.slug] || 'bg-[#F2F4F2]'} flex items-center justify-center shadow-sm group-hover:shadow-[0_20px_50px_rgba(59,93,59,0.12)] group-hover:bg-[#E2F0E2] transition-all duration-700 overflow-hidden isolate`}>
+                            {/* Icon Render */}
+                            <img
+                              src={cat.image_url || categoryImages[cat.slug?.toLowerCase() || ''] || `/icons/shop/${cat.slug}.png`}
+                              alt={cat.name}
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = '/icons/shop/category-sprite.png';
+                              }}
+                              className="w-[85%] h-[85%] object-contain relative z-10 mix-blend-multiply opacity-95 group-hover:opacity-100 transition-all duration-[800ms] cubic-bezier(0.34,1.56,0.64,1) group-hover:scale-110 pointer-events-none"
+                            />
+
+                            {hasChildren && (
+                              <div className="absolute bottom-4 right-4 z-20 bg-white/90 backdrop-blur-sm p-1.5 rounded-full shadow-md border border-[#3B5D3B]/10 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Plus className="h-3 w-3 text-[#3B5D3B]" />
+                              </div>
+                            )}
+
+                            {/* Hover Pulse Effect */}
+                            <div className="absolute inset-0 rounded-full border border-[#3B5D3B]/20 scale-100 opacity-0 group-hover:scale-105 group-hover:opacity-100 transition-all duration-700 pointer-events-none" />
+                          </div>
+
+                          <div className="text-center">
+                            <span className="text-base font-bold text-gray-800 group-hover:text-[#3B5D3B] transition-colors leading-tight block">
+                              {cat.name}
+                            </span>
+                            {hasChildren && (
+                              <span className="text-[10px] uppercase tracking-wider text-[#8B7A3D] font-bold mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                Explore Subcategories
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
             </div>
+          </section>
+
+          {/* 3. BEST SELLERS REEL SECTION */}
+          <section className="relative -mx-4 sm:-mx-8 pt-0 pb-0 overflow-hidden bg-[#FBF9F2]">
+
+
+            <div className="max-w-[1500px] mx-auto relative z-10 pb-0">
+              <ProductReel
+                products={bestSellers}
+                loading={loading}
+                title="Best Sellers"
+                subtitle="Shop our most loved essentials"
+                viewAllLink="/products?sort=popular&bestSeller=true"
+                viewAllText="Explore our Best Sellers"
+              />
+            </div>
+          </section>
+        </div>
+
+        {/* 3.5 NEED HELP CHOOSING */}
+        <div className="-mx-4 sm:-mx-8">
+          <NeedHelpSection />
+        </div>
+
+        {/* 5. NEW ARRIVALS - CLEAN & RADIANT */}
+        <section className="relative -mx-4 sm:-mx-8 py-0 overflow-hidden bg-[#FBF9F2]">
+
+
+          <div className="max-w-[1500px] mx-auto relative z-10">
+            <ProductReel
+              products={newArrivals}
+              loading={loading}
+              title="New Arrivals"
+              subtitle="Discover the newest additions to our natural wellness collection."
+              viewAllLink="/products?newArrival=true"
+              viewAllText="Shop New Arrivals"
+            />
           </div>
-        </AnimateOnScroll>
-      </section>
+        </section>
+      </div>
 
-      {/* ═══ 4. TRUST & SCIENCE ═══ */}
-      <section className="py-12 sm:py-20 lg:py-24 px-4 relative overflow-hidden bg-cream">
-        {/* Realistic Botanical Leaf Watermarks */}
-        <img
-          src="/leaf-watermark.png"
-          alt=""
-          aria-hidden="true"
-          className="absolute top-[-5%] right-[-8%] w-[350px] sm:w-[500px] lg:w-[650px] pointer-events-none opacity-[0.08] rotate-[25deg] transform-gpu animate-float select-none"
-          style={{ animationDuration: '8s', filter: 'blur(0.5px)' }}
-        />
-        <img
-          src="/leaf-watermark.png"
-          alt=""
-          aria-hidden="true"
-          className="absolute bottom-[-10%] left-[-12%] w-[280px] sm:w-[400px] lg:w-[500px] pointer-events-none opacity-[0.06] -rotate-[50deg] transform-gpu animate-float select-none"
-          style={{ animationDuration: '10s', animationDelay: '2s', filter: 'blur(0.5px)', transform: 'scaleX(-1) rotate(-50deg)' }}
-        />
-        <img
-          src="/leaf-watermark.png"
-          alt=""
-          aria-hidden="true"
-          className="absolute top-[40%] left-[50%] w-[150px] sm:w-[200px] pointer-events-none opacity-[0.04] rotate-[140deg] transform-gpu animate-float select-none"
-          style={{ animationDuration: '12s', animationDelay: '1s', filter: 'blur(1px)' }}
-        />
-        <div className="mx-auto max-w-7xl relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-            {/* Left — Image Collage */}
-            <AnimateOnScroll animation="fadeLeft" duration={0.9}>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-4">
-                  <div className="rounded-2xl overflow-hidden shadow-lg">
-                    <img src="/trust-lab.png" alt="Lab testing" className="w-full h-48 sm:h-56 object-cover" />
-                  </div>
-                  <div className="rounded-2xl bg-[#3B5D3B] p-6 text-white">
-                    <p className="text-3xl font-bold">100%</p>
-                    <p className="text-xs font-bold tracking-widest uppercase mt-1 text-[#C9B87A]">Purity Lab-Tested</p>
-                  </div>
-                </div>
-                <div className="space-y-4 pt-8">
-                  <div className="rounded-2xl bg-white border border-[#E0DCCF] p-6 text-center">
-                    <Stethoscope className="h-6 w-6 mx-auto text-[#8B7A3D] mb-2" />
-                    <p className="text-3xl font-bold text-[#2C2C2C]">50k+</p>
-                    <p className="text-[10px] font-bold tracking-widest uppercase mt-1 text-[#8B7A3D]">Lives Healed</p>
-                  </div>
-                  <div className="rounded-2xl overflow-hidden shadow-lg">
-                    <img src="/trust-healing.png" alt="Healing space" className="w-full h-48 sm:h-56 object-cover" />
-                  </div>
-                </div>
-              </div>
-            </AnimateOnScroll>
 
-            {/* Right — Text */}
-            <div>
-              <AnimateOnScroll animation="fadeRight" delay={0.1}>
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#3B5D3B] leading-tight italic">
-                  Rooted in Nature, Verified by Science
-                </h2>
-                <p className="mt-5 text-[#6B6B60] text-base leading-relaxed">
-                  We don&apos;t just believe in tradition; we measure its success. Every
-                  Vedashi formula undergoes rigorous multi-stage clinical trials
-                  and third-party purity testing.
-                </p>
-              </AnimateOnScroll>
+      {/* 6. QUALITY PROMISE - TRUST & AUTHENTICITY */}
+      <div className="relative z-10">
+        <QualityPromise />
+      </div>
 
-              <div className="mt-10 space-y-8">
-                {[
-                  { icon: FlaskConical, title: 'Clinical Transparency', desc: 'Full access to batch-specific lab results via QR codes on every bottle.' },
-                  { icon: Leaf, title: 'Ethical Sourcing', desc: 'Fair-trade partnerships with tribal farmers across the Himalayan belt.' },
-                  { icon: ShieldCheck, title: 'Physician Formulated', desc: 'Direct oversight by our board of certified MDs and Ayurvedic Vaidyas.' },
-                ].map((item, i) => (
-                  <AnimateOnScroll key={i} animation="fadeRight" delay={0.2 + i * 0.1}>
-                    <div className="flex gap-4 items-start">
-                      <div className="flex-shrink-0 h-10 w-10 rounded-full bg-[#3B5D3B]/10 flex items-center justify-center">
-                        <item.icon className="h-5 w-5 text-[#3B5D3B]" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-[#2C2C2C] text-base">{item.title}</h3>
-                        <p className="mt-1 text-sm text-[#6B6B60] leading-relaxed">{item.desc}</p>
-                      </div>
-                    </div>
-                  </AnimateOnScroll>
-                ))}
-              </div>
+      {/* 5.5 VENDOR REGISTRATION CTA */}
+      <section className="bg-[#00472f] py-16 lg:py-14 border-y border-[#00472f] z-10 relative">
+        <div className="mx-auto max-w-[1700px] px-6 lg:px-12">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 lg:gap-30">
+
+            {/* Header */}
+            <div className="flex-none text-center md:text-left">
+              <h2 className="text-2xl lg:text-3xl font-bold text-[#F0E7C8] leading-snug">
+                Want to showcase your products to the world?<br className="hidden md:block" /> Sell with us.
+              </h2>
             </div>
+
+            {/* Action */}
+            <div className="flex-none">
+              <Link
+                href={`/${country}/vendor-registration`}
+                className="inline-flex items-center gap-3 bg-[#C8E6C9] text-[#024C27] px-8 py-4 sm:py-5 rounded-xl font-bold shadow-[0_4px_14px_rgba(0,0,0,0.15)] hover:shadow-lg transition-all hover:-translate-y-0.5 group text-[15px] sm:text-base border border-transparent hover:border-[#C8E6C9]"
+              >
+                Vendor Registration
+                <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </div>
+
           </div>
         </div>
-      </section>
-
-      {/* ═══ 5. HEALING SERVICES ═══ */}
-      <section className="py-12 sm:py-20 lg:py-24 px-4 bg-white relative z-10 overflow-hidden">
-        {/* Decorative Background Elements */}
-        <div className="absolute inset-0 pointer-events-none opacity-[0.08]" style={{
-          backgroundImage: `url("/ayurvedic-texture.png")`,
-          backgroundSize: '300px 300px',
-          backgroundRepeat: 'repeat'
-        }} />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#8B7A3D]/15 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#3B5D3B]/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
-
-        <div className="mx-auto max-w-7xl text-center">
-          <AnimateOnScroll animation="fadeUp">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C2C2C]">
-              The Path to <em className="italic text-[#3B5D3B]">Prakriti</em>
-            </h2>
-            <p className="mt-3 text-[#6B6B60] text-base max-w-2xl mx-auto">
-              Beyond products, we offer a comprehensive healing ecosystem to restore your natural harmony.
-            </p>
-          </AnimateOnScroll>
-
-          <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {[
-              { icon: Heart, title: 'Panchakarma', desc: 'Five-fold detoxification therapy for complete cellular renewal.', color: 'bg-[#F5F2E8]' },
-              { icon: Salad, title: 'Dietary Guidance', desc: 'Personalized nutrition plans aligned with your unique Prakriti.', color: 'bg-[#E8F0E8]' },
-              { icon: Beaker, title: 'Herbal Therapy', desc: 'Custom-compounded remedies from our private botanical garden.', color: 'bg-[#F0F0E4]' },
-              { icon: CalendarCheck, title: 'Lifestyle Coaching', desc: 'Daily routines (Dinacharya) to harmonize with cosmic cycles.', color: 'bg-[#F5EFE4]' },
-            ].map((service, i) => (
-              <AnimateOnScroll key={i} animation="fadeUp" delay={i * 0.1}>
-                <div className={`rounded-2xl p-8 text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group bg-[#F5F2E8] border border-[#E0DCCF] shadow-sm`}>
-                  <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#3B5D3B]/10 group-hover:bg-[#3B5D3B]/15 transition-colors">
-                    <service.icon className="h-6 w-6 text-[#3B5D3B]" />
-                  </div>
-                  <h3 className="text-lg font-bold text-[#2C2C2C]">{service.title}</h3>
-                  <p className="mt-2 text-sm text-[#6B6B60] leading-relaxed">{service.desc}</p>
-                </div>
-              </AnimateOnScroll>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══ 6. TESTIMONIALS ═══ */}
-      <section className="py-12 sm:py-20 lg:py-24 px-4 relative z-10">
-        <AnimateOnScroll animation="fadeUp" className="mx-auto max-w-4xl text-center">
-          <div className="flex justify-center gap-1 mb-6">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Star key={i} className="h-5 w-5 fill-[#8B7A3D] text-[#8B7A3D]" />
-            ))}
-          </div>
-          <blockquote className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#3B5D3B] leading-snug italic">
-            &ldquo;Vedashi hasn&apos;t just improved my health; it has fundamentally changed
-            how I relate to my body and the seasons.&rdquo;
-          </blockquote>
-          <div className="mt-8 flex flex-col items-center gap-3">
-            <div className="h-16 w-16 rounded-full bg-[#3B5D3B]/10 flex items-center justify-center border-2 border-[#3B5D3B]/20">
-              <span className="text-xl font-bold text-[#3B5D3B]">S</span>
-            </div>
-            <p className="text-[11px] font-bold tracking-[0.2em] text-[#6B6B60] uppercase">
-              Wellness Consultant, Madrid
-            </p>
-          </div>
-        </AnimateOnScroll>
-
-        <AnimateOnScroll animation="fadeUp" delay={0.2} className="mx-auto max-w-4xl">
-          <div className="mt-14 grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {[
-              { name: 'Priya M.', role: 'Yoga Instructor', text: 'The Ashwagandha Gold has transformed my energy levels. I feel balanced throughout the day without any crashes.', rating: 5 },
-              { name: 'David L.', role: 'Naturopath', text: 'Finally, an Ayurvedic brand that combines authentic formulations with modern clinical rigor. My patients love it.', rating: 5 },
-              { name: 'Aisha R.', role: 'Wellness Coach', text: 'The Triphala Detox has become a staple in my daily routine. Gentle yet effective — exactly what Ayurveda should be.', rating: 5 },
-            ].map((testimonial, i) => (
-              <div key={i} className="rounded-2xl border border-[#E0DCCF] bg-white p-6 text-left transition-all hover:shadow-md shadow-sm">
-                <div className="flex gap-0.5 mb-3">
-                  {Array.from({ length: testimonial.rating }).map((_, j) => (
-                    <Star key={j} className="h-3.5 w-3.5 fill-[#8B7A3D] text-[#8B7A3D]" />
-                  ))}
-                </div>
-                <p className="text-sm text-[#6B6B60] leading-relaxed">&ldquo;{testimonial.text}&rdquo;</p>
-                <div className="mt-4 flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-full bg-[#3B5D3B]/10 flex items-center justify-center text-[#3B5D3B] font-bold text-sm">
-                    {testimonial.name.charAt(0)}
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-[#2C2C2C]">{testimonial.name}</p>
-                    <p className="text-xs text-[#6B6B60]">{testimonial.role}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </AnimateOnScroll>
-      </section>
-      {/* ═══ 7. NEWSLETTER ═══ */}
-      <section className="py-12 sm:py-20 lg:py-24 px-4">
-        <AnimateOnScroll animation="scaleUp" className="mx-auto max-w-4xl">
-          <div className="rounded-3xl bg-[#3B5D3B] px-8 sm:px-16 py-14 sm:py-20 text-center relative overflow-hidden">
-            <div className="absolute -top-10 -left-10 w-40 h-40 opacity-10 pointer-events-none">
-              <svg viewBox="0 0 200 200" fill="white">
-                <path d="M100 0C120 60 200 80 200 140C200 180 160 200 100 200C40 200 0 180 0 140C0 80 80 60 100 0Z" />
-              </svg>
-            </div>
-            <div className="absolute -bottom-10 -right-10 w-40 h-40 opacity-10 pointer-events-none rotate-180">
-              <svg viewBox="0 0 200 200" fill="white">
-                <path d="M100 0C120 60 200 80 200 140C200 180 160 200 100 200C40 200 0 180 0 140C0 80 80 60 100 0Z" />
-              </svg>
-            </div>
-            <h2 className="relative z-10 text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
-              Join the <em className="italic text-[#C9B87A]">Healed</em>.
-            </h2>
-            <p className="relative z-10 mt-4 text-[#C9B87A]/80 text-sm sm:text-base max-w-lg mx-auto">
-              Receive weekly Ayurvedic insights, seasonal recipes, and early access to physician-curated kits.
-            </p>
-            {isMounted && (
-               <form onSubmit={handleSubscribe} className="relative z-10 mt-8 flex flex-col sm:flex-row max-w-md mx-auto justify-center gap-3">
-                 <input 
-                   type="email" 
-                   value={newsletterEmail}
-                   onChange={(e) => setNewsletterEmail(e.target.value)}
-                   placeholder="Enter your email" 
-                   className="w-full sm:w-auto flex-grow rounded-lg border-2 border-white/30 bg-white/10 px-4 py-3 text-sm text-white placeholder-white/80 focus:outline-none focus:border-white/60 backdrop-blur-sm transition-all" 
-                   disabled={isSubscribing}
-                   required
-                 />
-                 <button 
-                   type="submit" 
-                   disabled={isSubscribing}
-                   className="w-full sm:w-auto rounded-lg bg-[#C9B87A] px-8 py-3 text-sm font-semibold text-[#2C2C2C] transition-all hover:bg-[#D4C38A] hover:-translate-y-0.5 shadow-lg whitespace-nowrap flex items-center justify-center disabled:opacity-70 disabled:hover:translate-y-0 font-ui"
-                 >
-                   {isSubscribing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Subscribe'}
-                 </button>
-               </form>
-            )}
-            {!isMounted && (
-               <div className="relative z-10 mt-8 flex flex-col sm:flex-row max-w-md mx-auto justify-center gap-3">
-                 <div className="w-full sm:w-auto flex-grow rounded-lg border-2 border-white/30 bg-white/10 px-4 py-3 h-[48px] animate-pulse"></div>
-                 <div className="w-full sm:w-[120px] rounded-lg bg-[#C9B87A]/50 px-8 py-3 h-[48px] animate-pulse"></div>
-               </div>
-            )}
-            <p className="relative z-10 mt-6 text-[10px] text-white/40 tracking-wide">We respect your peace. Unsubscribe at any time.</p>
-          </div>
-        </AnimateOnScroll>
-
       </section>
     </div>
   );

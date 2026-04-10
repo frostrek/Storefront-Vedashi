@@ -162,7 +162,7 @@ function ProductDetailContent({ params }: Props) {
                 setVariants(vs);
 
                 const requestedVariantId = searchParams.get('variant');
-                const matchedVariant = requestedVariantId 
+                const matchedVariant = requestedVariantId
                     ? vs.find((v: ProductVariant) => v.variant_id === requestedVariantId)
                     : null;
 
@@ -244,7 +244,7 @@ function ProductDetailContent({ params }: Props) {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#FDFCFB]" style={{ backgroundImage: "url('/botanical-page-bg.png')", backgroundAttachment: 'fixed', backgroundSize: '600px' }}>
+            <div className="min-h-screen bg-[#FDFCFB]">
                 <div className="mx-auto max-w-7xl px-4 py-8">
                     <div className="grid gap-10 lg:grid-cols-2">
                         <div className="aspect-square rounded-2xl animate-shimmer" />
@@ -341,14 +341,16 @@ function ProductDetailContent({ params }: Props) {
     };
 
     return (
-        <div className="min-h-screen bg-[#FDFCFB] pb-16" style={{ backgroundImage: "url('/botanical-page-bg.png')", backgroundAttachment: 'fixed', backgroundSize: '600px' }}>
+        <div className="min-h-screen bg-[#FDFCFB] pb-16">
             {/* Structured Data */}
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(generateProductJsonLd({
-                    ...product,
-                    review_count: Number(product.review_count || 0)
-                } as any)) }}
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify(generateProductJsonLd({
+                        ...product,
+                        review_count: Number(product.review_count || 0)
+                    } as any))
+                }}
             />
             <script
                 type="application/ld+json"
@@ -457,13 +459,13 @@ function ProductDetailContent({ params }: Props) {
 
                         {/* ✅ VARIANT SELECTORS: Weight, Strength, Volume, Count, Flavor, Pack */}
                         <div className="min-h-[120px]">
-                        {variants.length > 0 && (() => {
-                            const uniqueWeights = [...new Set(variants.map((v: ProductVariant) => v.weight_g as number))].filter(Boolean).sort((a, b) => a - b);
-                            const uniqueStrengths = [...new Set(variants.map((v: ProductVariant) => v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : null))].filter(Boolean);
-                            const uniqueVolumes = [...new Set(variants.map((v: ProductVariant) => v.volume_ml as number))].filter(Boolean).sort((a, b) => a - b);
-                            const uniqueCounts = [...new Set(variants.map((v: ProductVariant) => v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : null))].filter(Boolean);
-                            const uniqueFlavors = [...new Set(variants.map((v: ProductVariant) => v.flavor as string))].filter(Boolean);
-                            const uniquePacks = [...new Set(variants.map((v: ProductVariant) => (v.pack_quantity ?? 1) as number))].filter(Boolean).sort((a, b) => a - b);
+                            {variants.length > 0 && (() => {
+                                const uniqueWeights = [...new Set(variants.map((v: ProductVariant) => v.weight_g as number))].filter(Boolean).sort((a, b) => a - b);
+                                const uniqueStrengths = [...new Set(variants.map((v: ProductVariant) => v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : null))].filter(Boolean);
+                                const uniqueVolumes = [...new Set(variants.map((v: ProductVariant) => v.volume_ml as number))].filter(Boolean).sort((a, b) => a - b);
+                                const uniqueCounts = [...new Set(variants.map((v: ProductVariant) => v.units_count ? `${v.units_count} ${v.form_factor || 'Units'}` : null))].filter(Boolean);
+                                const uniqueFlavors = [...new Set(variants.map((v: ProductVariant) => v.flavor as string))].filter(Boolean);
+                                const uniquePacks = [...new Set(variants.map((v: ProductVariant) => (v.pack_quantity ?? 1) as number))].filter(Boolean).sort((a, b) => a - b);
 
                                 const formatVolume = (ml: number) => {
                                     return ml >= 999 ? `${(ml / 1000).toFixed(ml % 1000 === 0 ? 0 : 1)} L` : `${ml} ml`;
@@ -607,28 +609,28 @@ function ProductDetailContent({ params }: Props) {
                                             <div>
                                                 <p className="text-sm font-semibold mb-2">Choose Weight:</p>
                                                 <div className="flex gap-2 flex-wrap">
-                                                        {uniqueWeights.map((w) => {
-                                                            const isSelected = selectedWeight === w;
-                                                            const available = checkAvailable('weight', w);
-                                                            const active = isOptionActive('weight', w);
-                                                            
-                                                            return (
-                                                                <button
-                                                                    key={w}
-                                                                    onClick={() => active && updateSelection({ weight: w })}
-                                                                    disabled={!active}
-                                                                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200 shadow-sm
+                                                    {uniqueWeights.map((w) => {
+                                                        const isSelected = selectedWeight === w;
+                                                        const available = checkAvailable('weight', w);
+                                                        const active = isOptionActive('weight', w);
+
+                                                        return (
+                                                            <button
+                                                                key={w}
+                                                                onClick={() => active && updateSelection({ weight: w })}
+                                                                disabled={!active}
+                                                                className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200 shadow-sm
                                                                     ${isSelected
-                                                                            ? 'bg-[#3d5c3a] text-white border-[#3d5c3a] shadow-lg scale-[1.02]'
-                                                                            : !available
-                                                                                ? 'border-gray-300 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
-                                                                                : 'bg-white border-gray-200 text-gray-700 hover:bg-[#edf5ed] hover:border-[#3d5c3a]/40 hover:text-[#3d5c3a] hover:shadow-md'
-                                                                        }`}
-                                                                >
-                                                                    {formatWeight(w)}
-                                                                </button>
-                                                            );
-                                                        })}
+                                                                        ? 'bg-[#3d5c3a] text-white border-[#3d5c3a] shadow-lg scale-[1.02]'
+                                                                        : !available
+                                                                            ? 'border-gray-300 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
+                                                                            : 'bg-white border-gray-200 text-gray-700 hover:bg-[#edf5ed] hover:border-[#3d5c3a]/40 hover:text-[#3d5c3a] hover:shadow-md'
+                                                                    }`}
+                                                            >
+                                                                {formatWeight(w)}
+                                                            </button>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
                                         )}
@@ -638,28 +640,28 @@ function ProductDetailContent({ params }: Props) {
                                             <div>
                                                 <p className="text-sm font-semibold mb-2">By Strength:</p>
                                                 <div className="flex gap-2 flex-wrap">
-                                                        {uniqueStrengths.map((str) => {
-                                                            const isSelected = selectedStrength === str;
-                                                            const available = checkAvailable('strength', str);
-                                                            const active = isOptionActive('strength', str);
+                                                    {uniqueStrengths.map((str) => {
+                                                        const isSelected = selectedStrength === str;
+                                                        const available = checkAvailable('strength', str);
+                                                        const active = isOptionActive('strength', str);
 
-                                                            return (
-                                                                <button
-                                                                    key={str}
-                                                                    onClick={() => active && updateSelection({ strength: str })}
-                                                                    disabled={!active}
-                                                                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200 shadow-sm
+                                                        return (
+                                                            <button
+                                                                key={str}
+                                                                onClick={() => active && updateSelection({ strength: str })}
+                                                                disabled={!active}
+                                                                className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200 shadow-sm
                                                                     ${isSelected
-                                                                            ? 'bg-[#3d5c3a] text-white border-[#3d5c3a] shadow-lg scale-[1.02]'
-                                                                            : !available
-                                                                                ? 'border-gray-300 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
-                                                                                : 'bg-white border-gray-200 text-gray-700 hover:bg-[#edf5ed] hover:border-[#3d5c3a]/40 hover:text-[#3d5c3a] hover:shadow-md'
-                                                                        }`}
-                                                                >
-                                                                    {str}
-                                                                </button>
-                                                            );
-                                                        })}
+                                                                        ? 'bg-[#3d5c3a] text-white border-[#3d5c3a] shadow-lg scale-[1.02]'
+                                                                        : !available
+                                                                            ? 'border-gray-300 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
+                                                                            : 'bg-white border-gray-200 text-gray-700 hover:bg-[#edf5ed] hover:border-[#3d5c3a]/40 hover:text-[#3d5c3a] hover:shadow-md'
+                                                                    }`}
+                                                            >
+                                                                {str}
+                                                            </button>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
                                         )}
@@ -669,28 +671,28 @@ function ProductDetailContent({ params }: Props) {
                                             <div>
                                                 <p className="text-sm font-semibold mb-2">Choose Volume:</p>
                                                 <div className="flex gap-2 flex-wrap">
-                                                        {uniqueVolumes.map((vol) => {
-                                                            const isSelected = selectedVolume === vol;
-                                                            const available = checkAvailable('volume', vol);
-                                                            const active = isOptionActive('volume', vol);
+                                                    {uniqueVolumes.map((vol) => {
+                                                        const isSelected = selectedVolume === vol;
+                                                        const available = checkAvailable('volume', vol);
+                                                        const active = isOptionActive('volume', vol);
 
-                                                            return (
-                                                                <button
-                                                                    key={vol}
-                                                                    onClick={() => active && updateSelection({ volume: vol })}
-                                                                    disabled={!active}
-                                                                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200 shadow-sm
+                                                        return (
+                                                            <button
+                                                                key={vol}
+                                                                onClick={() => active && updateSelection({ volume: vol })}
+                                                                disabled={!active}
+                                                                className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200 shadow-sm
                                                                     ${isSelected
-                                                                            ? 'bg-[#3d5c3a] text-white border-[#3d5c3a] shadow-lg scale-[1.02]'
-                                                                            : !available
-                                                                                ? 'border-gray-300 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
-                                                                                : 'bg-white border-gray-200 text-gray-700 hover:bg-[#edf5ed] hover:border-[#3d5c3a]/40 hover:text-[#3d5c3a] hover:shadow-md'
-                                                                        }`}
-                                                                >
-                                                                    {formatVolume(vol)}
-                                                                </button>
-                                                            );
-                                                        })}
+                                                                        ? 'bg-[#3d5c3a] text-white border-[#3d5c3a] shadow-lg scale-[1.02]'
+                                                                        : !available
+                                                                            ? 'border-gray-300 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
+                                                                            : 'bg-white border-gray-200 text-gray-700 hover:bg-[#edf5ed] hover:border-[#3d5c3a]/40 hover:text-[#3d5c3a] hover:shadow-md'
+                                                                    }`}
+                                                            >
+                                                                {formatVolume(vol)}
+                                                            </button>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
                                         )}
@@ -700,28 +702,28 @@ function ProductDetailContent({ params }: Props) {
                                             <div>
                                                 <p className="text-sm font-semibold mb-2">By Count:</p>
                                                 <div className="flex gap-2 flex-wrap">
-                                                        {uniqueCounts.map((countStr) => {
-                                                            const isSelected = selectedCount === countStr;
-                                                            const available = checkAvailable('count', countStr);
-                                                            const active = isOptionActive('count', countStr);
+                                                    {uniqueCounts.map((countStr) => {
+                                                        const isSelected = selectedCount === countStr;
+                                                        const available = checkAvailable('count', countStr);
+                                                        const active = isOptionActive('count', countStr);
 
-                                                            return (
-                                                                <button
-                                                                    key={countStr}
-                                                                    onClick={() => active && updateSelection({ count: countStr })}
-                                                                    disabled={!active}
-                                                                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200 shadow-sm
+                                                        return (
+                                                            <button
+                                                                key={countStr}
+                                                                onClick={() => active && updateSelection({ count: countStr })}
+                                                                disabled={!active}
+                                                                className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200 shadow-sm
                                                                     ${isSelected
-                                                                            ? 'bg-[#3d5c3a] text-white border-[#3d5c3a] shadow-lg scale-[1.02]'
-                                                                            : !available
-                                                                                ? 'border-gray-300 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
-                                                                                : 'bg-white border-gray-200 text-gray-700 hover:bg-[#edf5ed] hover:border-[#3d5c3a]/40 hover:text-[#3d5c3a] hover:shadow-md'
-                                                                        }`}
-                                                                >
-                                                                    {countStr}
-                                                                </button>
-                                                            );
-                                                        })}
+                                                                        ? 'bg-[#3d5c3a] text-white border-[#3d5c3a] shadow-lg scale-[1.02]'
+                                                                        : !available
+                                                                            ? 'border-gray-300 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
+                                                                            : 'bg-white border-gray-200 text-gray-700 hover:bg-[#edf5ed] hover:border-[#3d5c3a]/40 hover:text-[#3d5c3a] hover:shadow-md'
+                                                                    }`}
+                                                            >
+                                                                {countStr}
+                                                            </button>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
                                         )}
@@ -731,28 +733,28 @@ function ProductDetailContent({ params }: Props) {
                                             <div>
                                                 <p className="text-sm font-semibold mb-2">By Flavour:</p>
                                                 <div className="flex gap-2 flex-wrap">
-                                                        {uniqueFlavors.map((flav) => {
-                                                            const isSelected = selectedFlavor === flav;
-                                                            const available = checkAvailable('flavor', flav);
-                                                            const active = isOptionActive('flavor', flav);
+                                                    {uniqueFlavors.map((flav) => {
+                                                        const isSelected = selectedFlavor === flav;
+                                                        const available = checkAvailable('flavor', flav);
+                                                        const active = isOptionActive('flavor', flav);
 
-                                                            return (
-                                                                <button
-                                                                    key={flav}
-                                                                    onClick={() => active && updateSelection({ flavor: flav })}
-                                                                    disabled={!active}
-                                                                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200 shadow-sm
+                                                        return (
+                                                            <button
+                                                                key={flav}
+                                                                onClick={() => active && updateSelection({ flavor: flav })}
+                                                                disabled={!active}
+                                                                className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200 shadow-sm
                                                                     ${isSelected
-                                                                            ? 'bg-[#3d5c3a] text-white border-[#3d5c3a] shadow-lg scale-[1.02]'
-                                                                            : !available
-                                                                                ? 'border-gray-300 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
-                                                                                : 'bg-white border-gray-200 text-gray-700 hover:bg-[#edf5ed] hover:border-[#3d5c3a]/40 hover:text-[#3d5c3a] hover:shadow-md'
-                                                                        }`}
-                                                                >
-                                                                    {flav}
-                                                                </button>
-                                                            );
-                                                        })}
+                                                                        ? 'bg-[#3d5c3a] text-white border-[#3d5c3a] shadow-lg scale-[1.02]'
+                                                                        : !available
+                                                                            ? 'border-gray-300 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
+                                                                            : 'bg-white border-gray-200 text-gray-700 hover:bg-[#edf5ed] hover:border-[#3d5c3a]/40 hover:text-[#3d5c3a] hover:shadow-md'
+                                                                    }`}
+                                                            >
+                                                                {flav}
+                                                            </button>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
                                         )}
@@ -762,28 +764,28 @@ function ProductDetailContent({ params }: Props) {
                                             <div>
                                                 <p className="text-sm font-semibold mb-2">Choose Pack:</p>
                                                 <div className="flex gap-2 flex-wrap">
-                                                        {uniquePacks.map((pack) => {
-                                                            const isSelected = selectedPack === pack;
-                                                            const available = checkAvailable('pack', pack);
-                                                            const active = isOptionActive('pack', pack);
+                                                    {uniquePacks.map((pack) => {
+                                                        const isSelected = selectedPack === pack;
+                                                        const available = checkAvailable('pack', pack);
+                                                        const active = isOptionActive('pack', pack);
 
-                                                            return (
-                                                                <button
-                                                                    key={pack}
-                                                                    onClick={() => active && updateSelection({ pack })}
-                                                                    disabled={!active}
-                                                                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200 shadow-sm
+                                                        return (
+                                                            <button
+                                                                key={pack}
+                                                                onClick={() => active && updateSelection({ pack })}
+                                                                disabled={!active}
+                                                                className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200 shadow-sm
                                                                     ${isSelected
-                                                                            ? 'bg-[#3d5c3a] text-white border-[#3d5c3a] shadow-lg scale-[1.02]'
-                                                                            : !available
-                                                                                ? 'border-gray-300 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
-                                                                                : 'bg-white border-gray-200 text-gray-700 hover:bg-[#edf5ed] hover:border-[#3d5c3a]/40 hover:text-[#3d5c3a] hover:shadow-md'
-                                                                        }`}
-                                                                >
-                                                                    Pack of {pack}
-                                                                </button>
-                                                            );
-                                                        })}
+                                                                        ? 'bg-[#3d5c3a] text-white border-[#3d5c3a] shadow-lg scale-[1.02]'
+                                                                        : !available
+                                                                            ? 'border-gray-300 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
+                                                                            : 'bg-white border-gray-200 text-gray-700 hover:bg-[#edf5ed] hover:border-[#3d5c3a]/40 hover:text-[#3d5c3a] hover:shadow-md'
+                                                                    }`}
+                                                            >
+                                                                Pack of {pack}
+                                                            </button>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
                                         )}
@@ -979,7 +981,7 @@ function ProductDetailContent({ params }: Props) {
                                 <p className="text-white/80 text-[15px] leading-relaxed mb-8 max-w-md">
                                     We utilize chromatographic fingerprinting to ensure every drop of our Rejuvenating Elixir contains the precise concentration of bioactive alkaloids described in the Charaka Samhita.
                                 </p>
-                                
+
                                 <ul className="space-y-4 mb-10">
                                     <li className="flex items-center gap-3">
                                         <div className="h-5 w-5 rounded-full border border-white/30 flex items-center justify-center flex-shrink-0">
@@ -1005,11 +1007,11 @@ function ProductDetailContent({ params }: Props) {
                             {/* Right Grid Collage */}
                             <div className="p-8 lg:p-12 lg:pl-0 grid grid-cols-2 gap-4 h-[500px] lg:h-auto">
                                 <div className="space-y-4 h-full flex flex-col">
-                                    <div className="bg-black/20 rounded-2xl h-[55%] bg-cover bg-center" style={{backgroundImage: "url('https://images.unsplash.com/photo-1611078519632-132d7515dbbf?q=80&w=800&auto=format&fit=crop')"}} />
-                                    <div className="bg-black/20 rounded-2xl h-[45%] bg-cover bg-center" style={{backgroundImage: "url('https://images.unsplash.com/photo-1532094349884-543bc11b234d?q=80&w=800&auto=format&fit=crop')"}} />
+                                    <div className="bg-black/20 rounded-2xl h-[55%] bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1611078519632-132d7515dbbf?q=80&w=800&auto=format&fit=crop')" }} />
+                                    <div className="bg-black/20 rounded-2xl h-[45%] bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1532094349884-543bc11b234d?q=80&w=800&auto=format&fit=crop')" }} />
                                 </div>
                                 <div className="space-y-4 flex flex-col pt-12">
-                                    <div className="bg-black/20 rounded-2xl h-[45%] bg-cover bg-center" style={{backgroundImage: "url('https://images.unsplash.com/photo-1563241527-310ca0fa8f12?q=80&w=800&auto=format&fit=crop')"}} />
+                                    <div className="bg-black/20 rounded-2xl h-[45%] bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1563241527-310ca0fa8f12?q=80&w=800&auto=format&fit=crop')" }} />
                                     <div className="bg-[#8b997c] rounded-2xl h-[40%] flex flex-col justify-center p-6 text-[#1a2e18]">
                                         <div className="text-5xl font-bold mb-2">24+</div>
                                         <div className="text-xs font-bold uppercase tracking-wider leading-relaxed">CLINICAL TRIALS<br />COMPLETED IN 2022</div>
@@ -1045,8 +1047,8 @@ function ProductDetailContent({ params }: Props) {
                                         <button
                                             onClick={() => setActiveInfoTab('description')}
                                             className={`relative px-6 py-3 text-sm font-semibold transition-colors ${activeInfoTab === 'description'
-                                                    ? 'text-[#1d351d]'
-                                                    : 'text-gray-500 hover:text-gray-800'
+                                                ? 'text-[#1d351d]'
+                                                : 'text-gray-500 hover:text-gray-800'
                                                 }`}
                                         >
                                             Description
@@ -1059,8 +1061,8 @@ function ProductDetailContent({ params }: Props) {
                                         <button
                                             onClick={() => setActiveInfoTab('howToUse')}
                                             className={`relative px-6 py-3 text-sm font-semibold transition-colors ${activeInfoTab === 'howToUse'
-                                                    ? 'text-[#1d351d]'
-                                                    : 'text-gray-500 hover:text-gray-800'
+                                                ? 'text-[#1d351d]'
+                                                : 'text-gray-500 hover:text-gray-800'
                                                 }`}
                                         >
                                             How To Use
@@ -1073,8 +1075,8 @@ function ProductDetailContent({ params }: Props) {
                                         <button
                                             onClick={() => setActiveInfoTab('specifications')}
                                             className={`relative px-6 py-3 text-sm font-semibold transition-colors ${activeInfoTab === 'specifications'
-                                                    ? 'text-[#1d351d]'
-                                                    : 'text-gray-500 hover:text-gray-800'
+                                                ? 'text-[#1d351d]'
+                                                : 'text-gray-500 hover:text-gray-800'
                                                 }`}
                                         >
                                             Specifications

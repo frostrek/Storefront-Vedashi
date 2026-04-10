@@ -22,7 +22,7 @@ export async function GET() {
     const { products, categories } = await fetchSitemapData();
     const lastMod = new Date().toISOString();
 
-    const staticPages = ['', '/shop', '/about', '/contact', '/blog'].map(p => ({
+    const staticPages = ['', '/about', '/contact', '/blog'].map(p => ({
         loc: `${SITE_URL}/in${p}`,
         lastmod: lastMod,
         changefreq: 'daily',

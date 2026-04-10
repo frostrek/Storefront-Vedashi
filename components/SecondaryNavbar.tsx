@@ -32,16 +32,15 @@ const SecondaryMegaMenuLinks = ({ item, country, topLevelSlug, secondLevelSlug, 
       <Link
         href={href}
         className={`transition-colors duration-200 block ${level === 0
-          ? 'text-[15px] font-bold text-gray-900 hover:text-[#3B5D3B] flex items-center gap-1'
-          : 'text-[13px] text-gray-700 hover:text-[#3B5D3B] py-0.5'
+          ? 'text-[15px] font-semibold text-[#29553A] hover:text-[#3B5D3B] hover:underline uppercase'
+          : 'text-[13px] text-gray-600 font-semibold hover:text-[#3B5D3B] hover:underline py-0.5 normal-case'
           }`}
       >
         <span>{item.name}</span>
-        {hasChildren && <span className="font-normal text-xs mt-[1px]">›</span>}
       </Link>
 
       {hasChildren && (
-        <div className={`flex flex-col gap-1.5 ${level === 0 ? 'mt-1 pl-3' : 'pl-3'}`}>
+        <div className={`flex flex-col gap-1.5 ${level === 0 ? 'mt-1 pl-6' : 'pl-6'}`}>
           {item.children!.map(child => (
             <SecondaryMegaMenuLinks
               key={child.category_id}

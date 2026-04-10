@@ -175,6 +175,14 @@ export async function middleware(request: NextRequest) {
   // 2. URL already has a valid country prefix → pass through, sync cookies
   const existingCountry = pathHasCountryPrefix(pathname);
   if (existingCountry) {
+    // ─── Legacy /shop redirect: shop content now lives at root ───
+    const restOfPath = pathname.slice(existingCountry.length + 1); // e.g., "/in/shop" → "/shop"
+    if (restOfPath === '/shop' || restOfPath === '/shop/') {
+      const url = request.nextUrl.clone();
+      url.pathname = `/${existingCountry}`;
+      return NextResponse.redirect(url, 301);
+    }
+
     const response = NextResponse.next();
     const currency = getCurrency(existingCountry);
 

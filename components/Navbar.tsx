@@ -87,18 +87,16 @@ const MegaMenuLinks = ({ item, country, topLevelSlug, secondLevelSlug, level = 0
     <div className={`flex flex-col ${level === 0 ? 'gap-3' : 'gap-1.5'}`}>
       <Link
         href={href}
-        className={`transition-colors duration-200 ${level === 0
-          ? 'text-[13px] font-bold text-gray-900 uppercase tracking-wider hover:text-[#3B5D3B]'
-          : level === 1
-            ? 'text-xs font-semibold text-gray-800 hover:text-[#3B5D3B] mt-1'
-            : 'text-[11px] text-gray-500 hover:text-[#3B5D3B] pl-2 border-l border-gray-100/50'
+        className={`transition-colors duration-200 block ${level === 0
+          ? 'text-[15px] font-semibold text-[#29553A] hover:text-[#3B5D3B] hover:underline uppercase'
+          : 'text-[13px] text-gray-600 font-semibold hover:text-[#3B5D3B] hover:underline py-0.5 normal-case'
           }`}
       >
         {item.name}
       </Link>
 
       {hasChildren && (
-        <div className={`flex flex-col gap-1.5 ${level === 0 ? 'border-l border-gray-100 pl-4 ml-1 mt-1' : 'pl-3'}`}>
+        <div className={`flex flex-col gap-1.5 ${level === 0 ? 'border-l border-gray-100 pl-7 ml-1 mt-1' : 'pl-6'}`}>
           {item.children!.map(child => (
             <MegaMenuLinks
               key={child.category_id}
