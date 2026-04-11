@@ -7,19 +7,19 @@ import { motion } from 'framer-motion';
 const QualityPromise = () => {
   const features = [
     {
-      icon: <ShieldCheck className="h-6 w-6 text-[#1a5b2e]" />,
+      icon: <ShieldCheck className="h-6 w-6 text-[#F0E7C8]" />,
       title: 'Authentic products',
     },
     {
-      icon: <Microscope className="h-6 w-6 text-[#1a5b2e]" />,
+      icon: <Microscope className="h-6 w-6 text-[#F0E7C8]" />,
       title: 'Tested ingredients',
     },
     {
-      icon: <Leaf className="h-6 w-6 text-[#1a5b2e]" />,
+      icon: <Leaf className="h-6 w-6 text-[#F0E7C8]" />,
       title: 'Preserved freshness',
     },
     {
-      icon: <RefreshCcw className="h-6 w-6 text-[#1a5b2e]" />,
+      icon: <RefreshCcw className="h-6 w-6 text-[#F0E7C8]" />,
       title: 'Easy returns and refunds',
     },
   ];
@@ -54,12 +54,12 @@ const QualityPromise = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
-                  className="bg-[#F0E7C8] px-6 py-5 rounded-xl border border-[#F0E7C8] flex items-center gap-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-md transition-shadow cursor-default group"
+                  className="bg-[#00472F] px-6 py-5 rounded-xl border border-[#00472F] flex items-center gap-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-md transition-shadow cursor-default group"
                 >
                   <div className="flex-shrink-0">
                     {feature.icon}
                   </div>
-                  <h3 className="text-[15px] font-bold text-gray-800 leading-tight">
+                  <h3 className="text-[16px] font-bold text-[#F0E7C8] leading-tight">
                     {feature.title}
                   </h3>
                 </motion.div>

@@ -764,6 +764,28 @@ div.skiptranslate,
 }
 
 /* ============================================
+   Brand Reel — Infinite Marquee
+   ============================================ */
+
+@keyframes brandReelScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.brand-reel-track {
+  animation: brandReelScroll 25s linear infinite;
+  width: max-content;
+}
+
+.brand-reel-track:hover {
+  animation-play-state: paused;
+}
+
+/* ============================================
    CART PAGE — Light Ayurvedic Theme
    ============================================ */
 

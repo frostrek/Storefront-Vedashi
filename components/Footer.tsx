@@ -151,7 +151,7 @@ export default function Footer() {
     return (
         <footer className="bg-cream text-[#4a4a4a] border-t border-[#e8e8e0] relative z-10">
             {/* ── Main footer body ── */}
-            <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12 py-4">
+            <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12 pt-6">
                 <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
 
                     {/* Brand column */}
@@ -249,24 +249,22 @@ export default function Footer() {
                                     {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Join'}
                                 </button>
                             </form>
+
+                            {/* Moved elements from bottom bar to here */}
+                            <div className="mt-6">
+                                <div className="flex items-center gap-6 mb-3">
+                                    <RegionSwitcher upward={true} />
+                                    <GoogleTranslateWidget upward={true} />
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>
 
-                {/* ── Bottom bar ── */}
-                <div className="mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[#e8e8e0]">
+                <div className="mt-10 pb-2 text-center">
                     <p className="text-[10px] font-bold font-base uppercase tracking-widest text-[#999]">
                         {bottomBar?.copyright || `© ${new Date().getFullYear()} Vedashi. All rights reserved.`}
                     </p>
-                    <div className="flex items-center gap-6">
-                        <RegionSwitcher upward={true} />
-                        <GoogleTranslateWidget upward={true} />
-                        {bottomBar?.text && (
-                            <p className="text-xs text-[#999] italic font-accent">
-                                {bottomBar.text}
-                            </p>
-                        )}
-                    </div>
                 </div>
             </div>
         </footer>

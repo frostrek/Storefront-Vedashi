@@ -28,19 +28,20 @@ const SecondaryMegaMenuLinks = ({ item, country, topLevelSlug, secondLevelSlug, 
   }
 
   return (
-    <div className={`flex flex-col ${level === 0 ? 'mb-6' : ''}`}>
+    <div className={`flex flex-col items-start ${level === 0 ? 'mb-6' : 'mb-0'}`}>
       <Link
         href={href}
-        className={`transition-colors duration-200 block ${level === 0
-          ? 'text-[15px] font-semibold text-[#29553A] hover:text-[#3B5D3B] hover:underline uppercase'
-          : 'text-[13px] text-gray-600 font-semibold hover:text-[#3B5D3B] hover:underline py-0.5 normal-case'
+        className={`transition-colors duration-200 inline-block mb-3 ${level === 0
+          ? 'text-[15px] font-black text-[#3B5D3B] pb-0.5 border-b-2 border-[#3B5D3B] uppercase tracking-wide'
+          : 'text-[13px] text-gray-500 font-semibold hover:text-[#3B5D3B] hover:underline uppercase tracking-tight'
           }`}
       >
+
         <span>{item.name}</span>
       </Link>
 
       {hasChildren && (
-        <div className={`flex flex-col gap-1.5 ${level === 0 ? 'mt-1 pl-6' : 'pl-6'}`}>
+        <div className={`flex flex-col gap-1.5 ${level === 0 ? 'mt-1' : ''}`}>
           {item.children!.map(child => (
             <SecondaryMegaMenuLinks
               key={child.category_id}
@@ -116,21 +117,15 @@ export default function SecondaryNavbar() {
                     {/* Subcategories Dropdown (Mega Menu) */}
                     {subcats.length > 0 && (
                       <div className="absolute top-full left-0 w-[97vw] rounded-br-xl bg-white shadow-[0_15px_50px_rgba(0,0,0,0.15)] opacity-0 invisible group-hover/nav-item:opacity-100 group-hover/nav-item:visible transition-all duration-300 z-[100] border-t-[3px] border-[#3B5D3B]">
-                        <div className="mx-auto px-8 py-8 flex gap-8 min-h-[250px] relative mt-2">
-
-                          <div className="w-1/4 border-r border-[#3B5D3B]/10 pr-6 flex flex-col">
-                            {/* Heading Top Left */}
-                            <h3 className="text-xl font-extrabold text-gray-900 mb-4">{parent.name}</h3>
-
-                            {/* Resized Image */}
-                            {parent.image_url && (
-                              <div className="mb-4 aspect-[4/3] w-full overflow-hidden rounded-xl bg-gray-50 shadow-sm border border-gray-100">
-                                <img src={parent.image_url} alt={parent.name} className="w-full h-full object-cover transition-transform duration-500 group-hover/nav-item:scale-105" />
-                              </div>
-                            )}
+                        <div className="mx-auto px-8 pb-8 pt-4 flex flex-col gap-6 min-h-[250px] relative">
+                          {/* Category Name on top */}
+                          <div className="border-b border-[#3B5D3B]/10 pb-3">
+                            <h3 className="text-xl font-extrabold text-gray-900">{parent.name}</h3>
                           </div>
-                          <div className="w-3/4 flex flex-col justify-between">
-                            <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-3 gap-4 mb-2">
+
+                          <div className="flex flex-col justify-between flex-1">
+                            {/* Subcategories and Sub-subcategories below */}
+                            <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-10 mb-2">
                               {subcats.map(sub => (
                                 <div key={sub.category_id} className="break-inside-avoid">
                                   <SecondaryMegaMenuLinks item={sub} country={country} topLevelSlug={parent.slug} />
@@ -167,8 +162,8 @@ export default function SecondaryNavbar() {
               {/* Brands Mega Dropdown */}
               {!loading && brands.length > 0 && (
                 <div className="absolute top-full left-0 w-[90vw] rounded-br-xl bg-white shadow-[0_15px_50px_rgba(0,0,0,0.15)] opacity-0 invisible group-hover/nav-item:opacity-100 group-hover/nav-item:visible transition-all duration-300 z-[100] border-t-[3px] border-[#3B5D3B]">
-                  <div className="mx-auto px-8 py-8 max-h-[450px] overflow-y-auto w-full">
-                    <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-6">
+                  <div className="mx-auto px-8 pt-4 pb-8 max-h-[450px] overflow-y-auto w-full">
+                    <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-4">
                       <h3 className="text-xl font-bold text-gray-900">All Brands A-Z</h3>
                       <div className="flex gap-2 invisible md:visible flex-wrap">
                         {alphabetKeys.map(letter => (
@@ -206,7 +201,10 @@ export default function SecondaryNavbar() {
             <div className="h-4 w-[1px] bg-gray-200 self-center mx-3" />
             <Link href={`/${country}/products?bestSeller=true`} className="text-gray-900 hover:text-[#3B5D3B] h-full flex items-center">Best Sellers</Link>
             <div className="h-4 w-[1px] bg-gray-200 self-center mx-3" />
-            <Link href={`/${country}/products?newArrival=true`} className="text-gray-900 hover:text-[#3B5D3B] h-full flex items-center">New Arrivals</Link>
+            <Link href={`/${country}/products?newArrival=true`} className="text-[#FF0000] font-bold h-full flex items-center gap-1.5 group">
+              <span className="flex h-2 w-2 rounded-full bg-[#FF0000] animate-promo-blink shadow-[0_0_8px_rgba(255,0,0,0.5)]"></span>
+              New Arrivals
+            </Link>
           </div>
         </div>
       </div>

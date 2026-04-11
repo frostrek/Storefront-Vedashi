@@ -13,6 +13,8 @@ const smallBanners = [
   '/small banners/8.png',
   '/small banners/9.png',
   '/small banners/10.png',
+  '/small banners/11.png',
+  '/small banners/12.png',
 ];
 
 export default function NeedHelpSection() {
