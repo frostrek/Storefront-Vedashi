@@ -927,7 +927,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                         {/* Product Badges (Top Left Stack) */}
                         <div className={`absolute ${isList ? 'left-2 top-2' : 'left-2 top-2'} flex flex-col gap-1 z-10`}>
                             {product.category && (
-                                <span className="rounded-full bg-[#3d5c3a] px-2 py-0.5 text-[8px] tracking-[0.1em] text-white uppercase font-black font-ui shadow-sm w-fit mb-0.5">
+                                <span className="rounded-full bg-[#01CC00] px-2 py-0.5 text-[8px] tracking-[0.1em] text-white uppercase font-black font-ui shadow-sm w-fit mb-0.5">
                                     {product.category}
                                 </span>
                             )}
@@ -942,12 +942,12 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                 </span>
                             )}
                             {product.is_best_seller && !isComingSoon && (
-                                <span className="rounded-full bg-amber-600 px-2 py-0.5 text-[8px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
+                                <span className="rounded-full bg-yellow-400 px-2 py-0.5 text-[8px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
                                     Best Seller
                                 </span>
                             )}
                             {product.is_new_arrival && !isComingSoon && (
-                                <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[8px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
+                                <span className="rounded-full bg-[#FF0000] px-2 py-0.5 text-[8px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
                                     New
                                 </span>
                             )}
@@ -959,7 +959,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                 {hasVariants ? (
                                     <button
                                         onClick={openCartModal}
-                                        className="w-full flex items-center justify-center gap-1.5 bg-[#3d5c3a]/95 backdrop-blur-sm py-2 sm:py-2.5 text-[10px] sm:text-[11px] font-black tracking-[0.05em] uppercase text-white hover:bg-[#3d5c3a] transition-colors cursor-pointer font-ui"
+                                        className="w-full flex items-center justify-center gap-1.5 bg-[#01CC00] backdrop-blur-sm py-2 sm:py-2.5 text-[10px] sm:text-[11px] font-black tracking-[0.05em] uppercase text-white hover:bg-[#03b302] transition-colors cursor-pointer font-ui"
                                     >
                                         <Eye className="h-3.5 w-3.5" />
                                         Preview Options
@@ -968,7 +968,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                     <button
                                         onClick={(e) => onMoveToCart ? onMoveToCart(e) : openCartModal(e)}
                                         disabled={cartLoading || addingToCart || justAdded}
-                                        className={`w-full flex items-center justify-center gap-1.5 backdrop-blur-sm py-2 sm:py-2.5 text-[10px] sm:text-[11px] font-black tracking-[0.05em] uppercase text-white transition-all duration-300 cursor-pointer disabled:opacity-70 font-ui ${justAdded ? 'bg-[#2a4d2e]' : 'bg-[#3d5c3a]/95 hover:bg-[#3d5c3a]'}`}
+                                        className={`w-full flex items-center justify-center gap-1.5 backdrop-blur-sm py-2 sm:py-2.5 text-[10px] sm:text-[11px] font-black tracking-[0.05em] uppercase text-white transition-all duration-300 cursor-pointer disabled:opacity-70 font-ui ${justAdded ? 'bg-[#2a4d2e]' : 'bg-[#01CC00] hover:bg-[#03b302]'}`}
                                     >
                                         {addingToCart ? (
                                             <Loader2 className="h-3.5 w-3.5 animate-spin" />
