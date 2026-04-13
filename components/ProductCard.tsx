@@ -942,7 +942,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                 </span>
                             )}
                             {product.is_best_seller && !isComingSoon && (
-                                <span className="rounded-full bg-yellow-400 px-2 py-0.5 text-[8px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
+                                <span className="rounded-full bg-[#FFD801] px-2 py-0.5 text-[8px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
                                     Best Seller
                                 </span>
                             )}
