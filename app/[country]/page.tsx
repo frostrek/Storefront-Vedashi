@@ -143,12 +143,12 @@ export default function HomePage() {
         <HeroCarousel />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8 pt-0 pb-0">
+      <div className="relative z-10 pt-0 pb-0">
 
         {/* 2 & 3 COMBINED TO REMOVE GAP */}
         <div className="flex flex-col">
           {/* 2. SHOP BY CATEGORY - FULL WIDTH GRID */}
-          <section className="relative pt-8 pb-0 px-4 sm:px-8 -mx-4 sm:-mx-8 overflow-hidden bg-white/40">
+          <section className="relative pt-8 pb-0 overflow-hidden bg-white/40">
             <div
               className="absolute inset-0 opacity-[0.07] pointer-events-none"
             // style={{
@@ -159,7 +159,7 @@ export default function HomePage() {
             // }} 
             />
 
-            <div className="relative z-10">
+            <div className="relative z-10 max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
               <div className="relative text-center mb-6 px-4">
                 <div className="absolute right-6 top-3 hidden lg:block">
                   <Link
@@ -207,14 +207,13 @@ export default function HomePage() {
                           className="group flex flex-col items-center gap-3 transition-all duration-500 hover:-translate-y-2 cursor-pointer"
                         >
                           <div className={`relative w-full aspect-square rounded-full ${categoryColors[cat.slug] || 'bg-[#F2F4F2]'} flex items-center justify-center shadow-sm group-hover:shadow-[0_20px_50px_rgba(59,93,59,0.12)] group-hover:bg-[#E2F0E2] transition-all duration-700 overflow-hidden isolate`}>
-                            {/* Icon Render */}
                             <img
                               src={cat.image_url || categoryImages[cat.slug?.toLowerCase() || ''] || `/icons/shop/${cat.slug}.png`}
                               alt={cat.name}
                               onError={(e) => {
                                 (e.target as HTMLImageElement).src = '/icons/shop/category-sprite.png';
                               }}
-                              className="w-[85%] h-[85%] object-contain relative z-10 mix-blend-multiply opacity-95 group-hover:opacity-100 transition-all duration-[800ms] cubic-bezier(0.34,1.56,0.64,1) group-hover:scale-110 pointer-events-none"
+                              className="w-full h-full object-cover relative z-10 opacity-90 group-hover:opacity-100 transition-all duration-[800ms] cubic-bezier(0.34,1.56,0.64,1) group-hover:scale-110 pointer-events-none"
                             />
 
                             {/* Hover Pulse Effect */}
@@ -235,25 +234,24 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* BEST SELLERS IMAGE TITLE (ABOVE SECTION) */}
-          <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+          <div className="w-full pt-4">
             <motion.div
-              initial={{ opacity: 0, x: -60 }}
-              whileInView={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 1, ease: "easeOut" }}
-              className="flex items-center justify-center"
+              className="w-full"
             >
               <img
                 src="/shop-animations/best sellers.png"
                 alt="Best Sellers"
-                className="h-[60px] sm:h-[100px] w-auto object-contain"
+                className="w-full h-auto min-h-[60px] sm:min-h-[100px] object-cover"
               />
             </motion.div>
           </div>
 
           {/* 3. BEST SELLERS - SHOWCASE LAYOUT */}
-          <section className="relative -mx-4 sm:-mx-8 pt-0 pb-0 overflow-hidden bg-[#F6F1DB]">
+          <section className="relative pt-0 pb-0 overflow-hidden bg-[#F6F1DB]">
             <div className="max-w-[1500px] mx-auto relative z-10 pb-0">
               <BestSellerShowcase
                 products={bestSellers}
@@ -268,17 +266,17 @@ export default function HomePage() {
         </div>
 
         {/* 3.5 BRAND REEL */}
-        <div className="-mx-4 sm:-mx-8">
+        <div className="w-full">
           <BrandReel />
         </div>
 
         {/* 3.6 NEED HELP CHOOSING */}
-        <div className="-mx-4 sm:-mx-8">
+        <div className="w-full">
           <NeedHelpSection />
         </div>
 
         {/* 5. NEW ARRIVALS - CLEAN & RADIANT */}
-        <section className="relative -mx-4 sm:-mx-8 py-0 overflow-hidden bg-[#FBF9F2]">
+        <section className="relative py-0 overflow-hidden bg-[#FBF9F2]">
 
 
           <div className="max-w-[1500px] mx-auto relative z-10">

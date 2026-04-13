@@ -50,9 +50,7 @@ interface HeaderConfig {
 const DEFAULT_CONFIG: HeaderConfig = {
   branding: { logo_url: '', logo_alt: 'Vedashi' },
   colors: {
-    // navbar_bg: '#E8DCAFff',
-    // navbar_bg: '#f0e7c8ff',
-    navbar_bg: '#C1D3BEff',
+    navbar_bg: '#f0faeeff',
     navbar_text: '#374151',
     navbar_hover: '#3B5D3B',
     strip_bg: '#3B5D3B',

@@ -13,7 +13,7 @@ interface SearchAutocompleteProps {
     placeholder?: string;
     /** Additional wrap per classes */
     className?: string;
-} 
+}
 
 export default function SearchAutocomplete({
     onClose,
@@ -187,9 +187,9 @@ export default function SearchAutocomplete({
                     autoComplete="off"
                     className="
             w-full pl-12 pr-10 py-2.5 rounded-full
-            bg-gray-100 border border-gray-200
-            text-base text-gray-800 placeholder-gray-400
-            focus:outline-none focus:ring-2 focus:ring-[#4b0f1a]/30 focus:border-[#4b0f1a]/40
+            bg-gray-100 border border-gray-300
+            text-base text-gray-800 placeholder-gray-600
+            focus:outline-none focus:ring-2 focus:ring-[#e6e3e4]/30 focus:border-[#4b0f1a]/40
             transition-all duration-200
           "
                 />
