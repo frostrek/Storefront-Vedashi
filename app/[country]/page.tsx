@@ -234,30 +234,13 @@ export default function HomePage() {
             </div>
           </section>
 
-          <div className="w-full pt-4">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 1, ease: "easeOut" }}
-              className="w-full"
-            >
-              <img
-                src="/shop-animations/best sellers.png"
-                alt="Best Sellers"
-                className="w-full h-auto min-h-[60px] sm:min-h-[100px] object-cover"
-              />
-            </motion.div>
-          </div>
-
-          {/* 3. BEST SELLERS - SHOWCASE LAYOUT */}
-          <section className="relative pt-0 pb-0 overflow-hidden bg-[#F6F1DB]">
-            <div className="max-w-[1500px] mx-auto relative z-10 pb-0">
+          <section className="relative pt-12 pb-2 overflow-hidden bg-[#FCFBFA]">
+            <div className="max-w-[1500px] mx-auto relative z-10">
               <BestSellerShowcase
                 products={bestSellers}
                 loading={loading}
-                title="" // Empty title as image is above
-                subtitle=""
+                title="Best Sellers"
+                subtitle="Our most-loved natural wellness essentials, chosen by you."
                 viewAllLink={`/${country}/products?sort=popular&bestSeller=true`}
                 viewAllText="Explore our Best Sellers"
               />
