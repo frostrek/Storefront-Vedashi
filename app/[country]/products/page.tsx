@@ -461,7 +461,7 @@ function ProductsContent() {
     );
 
     return (
-        <div className="min-h-screen bg-[#FAF9F6]">
+        <div className="min-h-screen bg-white">
 
 
             {/* ═══════ MAIN CONTENT ═══════ */}
@@ -668,7 +668,7 @@ function ProductsContent() {
 
 export default function ProductsPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen bg-[#FAF9F6] p-8 pt-24"><SkeletonProductGrid count={8} /></div>}>
+        <Suspense fallback={<div className="min-h-screen bg-white p-8 pt-24"><SkeletonProductGrid count={8} /></div>}>
             <ProductsContent />
         </Suspense>
     );

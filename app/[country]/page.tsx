@@ -130,14 +130,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="bg-[#FAF9F6] min-h-screen relative overflow-hidden">
-      {/* Decorative Background Elements */}
-      <div className="absolute top-0 left-0 w-full h-full opacity-[0.03] pointer-events-none z-0 overflow-hidden">
-        <Leaf className="absolute top-[10%] -left-20 w-[400px] h-[400px] rotate-45 text-[#3B5D3B]" />
-        <Leaf className="absolute top-[40%] -right-20 w-[600px] h-[600px] -rotate-12 text-[#3B5D3B]" />
-        <Leaf className="absolute bottom-0 left-[20%] w-[500px] h-[500px] rotate-180 text-[#3B5D3B]" />
-      </div>
-
+    <div className="bg-white min-h-screen relative overflow-hidden">
       {/* 1. BANNER REEL */}
       <div className="relative z-10 max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         <HeroCarousel />
