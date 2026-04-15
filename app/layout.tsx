@@ -20,7 +20,7 @@ import RouteTracker from "@/components/RouteTracker";
 import GlobalErrorTracker from "@/components/GlobalErrorTracker";
 import MaintenancePage from "@/components/MaintenancePage";
 import { generateLocalBusinessJsonLd, generateOrganizationJsonLd, generateWebSiteJsonLd } from "@/lib/seo";
-import ButterflyEffect from "@/components/animations/ButterflyEffect";
+
 import { API_URL } from "@/lib/api";
 
 const inter = Inter({
@@ -177,7 +177,7 @@ export default async function RootLayout({
                   <Navbar />
                   <main className="flex-1">{children}</main>
                   <Footer />
-                  <ButterflyEffect />
+
                   <CookieBanner />
                   <LanguageSuggestionBanner />
                 </WishlistProvider>

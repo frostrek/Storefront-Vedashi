@@ -342,6 +342,9 @@ export default function Navbar() {
         </div>
       )}
 
+      {/* ═══════════════ THIN ACCENT STRIP ═══════════════ */}
+      <div className="w-full h-[20px] bg-[#01CC00]" />
+
       {/* ═══════════════ MAIN NAVBAR ═══════════════ */}
       <div
         className={`relative z-[100] border-b transition-all duration-500 ${scrolled
@@ -351,15 +354,15 @@ export default function Navbar() {
         style={{ backgroundColor: scrolled ? `${colors.navbar_bg}CC` : colors.navbar_bg }}
       >
         <div className="mx-auto max-w-[1500px] w-full px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 relative">
+          <div className="flex items-center justify-between h-14 relative">
 
             {/* Logo Section */}
             <div className="flex-none flex items-center justify-start">
               <Link href={`/${currentCountry}`} className="flex items-center gap-2">
                 {branding.logo_url ? (
-                  <img src={branding.logo_url} alt={branding.logo_alt} className="h-10 sm:h-12 md:h-16 lg:h-18 w-auto object-contain transition-all" />
+                  <img src={branding.logo_url} alt={branding.logo_alt} className="h-7 sm:h-9 md:h-11 lg:h-12 w-auto object-contain transition-all" />
                 ) : (
-                  <img src="/vedashi-logo.png" alt="Vedashi" className="h-10 sm:h-12 md:h-16 lg:h-18 w-auto object-contain transition-all" />
+                  <img src="/vedashi-logo.png" alt="Vedashi" className="h-7 sm:h-9 md:h-11 lg:h-12 w-auto object-contain transition-all" />
                 )}
               </Link>
             </div>

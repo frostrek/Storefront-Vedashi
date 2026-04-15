@@ -25,9 +25,9 @@ export default function BrandReel() {
   const duplicatedBrands = [...brands, ...brands];
 
   return (
-    <section className="relative pb-6 pt-4 overflow-hidden" style={{ background: '#b4e39cff' }}>
+    <div className="flex flex-col w-full">
       {/* Section heading (Animated Image) */}
-      <div className="mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8 mb-4">
+      <div className="mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, x: -60, scale: 1 }}
           whileInView={{ opacity: 1, x: 0, scale: 1 }}
@@ -44,55 +44,57 @@ export default function BrandReel() {
         </motion.div>
       </div>
 
-      {/* Marquee container with entrance animation */}
-      <motion.div
-        initial={{ opacity: 0, x: 100 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        viewport={{ once: true, margin: "-50px" }}
-        transition={{ type: "spring", stiffness: 45, damping: 20, delay: 0.2 }}
-        className="relative w-full overflow-hidden"
-        style={{ willChange: "transform, opacity" }}
-      >
-        {/* Gradient fades on edges */}
-        <div className="absolute left-0 top-0 bottom-0 w-20 z-10 pointer-events-none"
-          style={{ background: 'linear-gradient(to right, #b4e39cff, transparent)' }}
-        />
-        <div className="absolute right-0 top-0 bottom-0 w-20 z-10 pointer-events-none"
-          style={{ background: 'linear-gradient(to left, #b4e39cff, transparent)' }}
-        />
+      <section className="relative py-2 overflow-hidden" style={{ background: '#b4e39cff' }}>
+        {/* Marquee container with entrance animation */}
+        <motion.div
+          initial={{ opacity: 0, x: 100 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ type: "spring", stiffness: 45, damping: 20, delay: 0.2 }}
+          className="relative w-full overflow-hidden"
+          style={{ willChange: "transform, opacity" }}
+        >
+          {/* Gradient fades on edges */}
+          <div className="absolute left-0 top-0 bottom-0 w-20 z-10 pointer-events-none"
+            style={{ background: 'linear-gradient(to right, #b4e39cff, transparent)' }}
+          />
+          <div className="absolute right-0 top-0 bottom-0 w-20 z-10 pointer-events-none"
+            style={{ background: 'linear-gradient(to left, #b4e39cff, transparent)' }}
+          />
 
-        {/* Scrolling track */}
-        <div className="brand-reel-track flex items-center gap-6 py-4">
-          {duplicatedBrands.map((brand, index) => (
-            <Link
-              key={`${brand.slug}-${index}`}
-              href={`/${country}/products?brand=${encodeURIComponent(brand.slug)}`}
-              className="flex-shrink-0 group"
-            >
-              <div className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 flex items-center justify-center px-8 py-5 h-[120px] w-[240px] group-hover:scale-105 group-hover:-translate-y-1">
-                <img
-                  src={brand.logo}
-                  alt={brand.name}
-                  className="max-h-[80px] max-w-[190px] object-contain transition-all duration-300 grayscale-[30%] group-hover:grayscale-0"
-                  onError={(e) => {
-                    // Fallback: show brand name as text if logo is missing
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    const textEl = target.nextElementSibling as HTMLElement;
-                    if (textEl) textEl.style.display = 'flex';
-                  }}
-                />
-                <span
-                  className="text-sm font-bold text-gray-700 hidden items-center justify-center text-center leading-tight"
-                  style={{ display: 'none' }}
-                >
-                  {brand.name}
-                </span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </motion.div>
-    </section>
+          {/* Scrolling track */}
+          <div className="brand-reel-track flex items-center gap-6 py-2">
+            {duplicatedBrands.map((brand, index) => (
+              <Link
+                key={`${brand.slug}-${index}`}
+                href={`/${country}/products?brand=${encodeURIComponent(brand.slug)}`}
+                className="flex-shrink-0 group"
+              >
+                <div className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 flex items-center justify-center px-8 py-5 h-[120px] w-[240px] group-hover:scale-105 group-hover:-translate-y-1">
+                  <img
+                    src={brand.logo}
+                    alt={brand.name}
+                    className="max-h-[80px] max-w-[190px] object-contain transition-all duration-300 grayscale-[30%] group-hover:grayscale-0"
+                    onError={(e) => {
+                      // Fallback: show brand name as text if logo is missing
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const textEl = target.nextElementSibling as HTMLElement;
+                      if (textEl) textEl.style.display = 'flex';
+                    }}
+                  />
+                  <span
+                    className="text-sm font-bold text-gray-700 hidden items-center justify-center text-center leading-tight"
+                    style={{ display: 'none' }}
+                  >
+                    {brand.name}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+    </div>
   );
 }

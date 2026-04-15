@@ -268,12 +268,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
 
             setAddingToCart(true);
             try {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const startX = rect.left + rect.width / 2;
-                const startY = rect.top + rect.height / 2;
-                window.dispatchEvent(new CustomEvent('add-to-cart-butterfly', {
-                    detail: { startX, startY }
-                }));
+
 
                 const variantIdToUse = product.default_variant_id || null;
                 await addItem(product.product_id, variantIdToUse, 1);
@@ -334,12 +329,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
 
         setAddingToCart(true);
         try {
-            const rect = e.currentTarget.getBoundingClientRect();
-            const startX = rect.left + rect.width / 2;
-            const startY = rect.top + rect.height / 2;
-            window.dispatchEvent(new CustomEvent('add-to-cart-butterfly', {
-                detail: { startX, startY }
-            }));
+
 
             const variantIdToUse = (hasVariants && selectedVariant) ? selectedVariant.variant_id : (product.default_variant_id || null);
             await addItem(product.product_id, variantIdToUse, quantity);
@@ -1030,12 +1020,20 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
 
                         {/* Rating */}
                         {avgRating > 0 && (
-                            <div className="flex items-center gap-1.5 mb-2">
-                                <StarRating value={avgRating} size="sm" />
-                                <span className="text-xs text-gray-400">
-                                    {avgRating.toFixed(1)}
-                                    {totalReviews > 0 && <span className="ml-0.5">({totalReviews})</span>}
-                                </span>
+                            <div className="inline-flex items-center w-fit mb-2 sm:mb-2.5 relative z-20">
+                                <div className="inline-flex items-center gap-[2px] bg-gradient-to-r from-[#FFD801]/15 to-transparent rounded-l-full pr-2 pl-1.5 py-0.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-[12px] h-[12px] fill-[#FFD801] text-[#FFD801] mt-[0.5px]">
+                                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                    </svg>
+                                    <span className="text-[12px] font-bold text-[#FFD801] leading-none mt-0.5">
+                                        {avgRating % 1 === 0 ? avgRating.toFixed(1) : parseFloat(avgRating.toFixed(1))}
+                                    </span>
+                                </div>
+                                {totalReviews > 0 && (
+                                    <span className="text-[11px] font-medium text-gray-500 leading-none mt-0.5 -ml-1.5">
+                                        ({Intl.NumberFormat('en-US', { notation: "compact", compactDisplay: "short", maximumFractionDigits: 1 }).format(totalReviews).toLowerCase()})
+                                    </span>
+                                )}
                             </div>
                         )}
 

@@ -297,15 +297,6 @@ function ProductDetailContent({ params }: Props) {
     const handleAddToCart = async (e: React.MouseEvent<HTMLButtonElement>) => {
         if (!product || isOutOfStock) return;
 
-        // Trigger Butterfly Animation
-        const rect = e.currentTarget.getBoundingClientRect();
-        const startX = rect.left + rect.width / 2;
-        const startY = rect.top + rect.height / 2;
-
-        window.dispatchEvent(new CustomEvent('add-to-cart-butterfly', {
-            detail: { startX, startY }
-        }));
-
         await addItem(
             product.product_id,
             selectedVariant?.variant_id || null,

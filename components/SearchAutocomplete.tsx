@@ -186,9 +186,9 @@ export default function SearchAutocomplete({
                     placeholder={placeholder}
                     autoComplete="off"
                     className="
-            w-full pl-12 pr-10 py-2.5 rounded-full
+            w-full pl-11 pr-10 py-[10px] rounded-full
             bg-gray-100 border border-gray-300
-            text-base text-gray-800 placeholder-gray-600
+            text-sm text-gray-800 placeholder-gray-00
             focus:outline-none focus:ring-2 focus:ring-[#e6e3e4]/30 focus:border-[#4b0f1a]/40
             transition-all duration-200
           "

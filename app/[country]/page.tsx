@@ -188,16 +188,16 @@ export default function HomePage() {
                 </AnimatePresence>
               </div>
 
-              <div className="relative min-h-[300px]">
+              <div className="relative min-h-[250px]">
                 <AnimatePresence mode="wait">
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.4, ease: "easeOut" }}
-                    className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-6 lg:gap-8"
+                    className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 lg:gap-8"
                   >
-                    {allCategories.map((cat: any, i: number) => {
+                    {allCategories.slice(0, 6).map((cat: any, i: number) => {
                       return (
                         <div
                           key={cat.category_id}
@@ -299,13 +299,13 @@ export default function HomePage() {
       </div>
 
       {/* 5.5 VENDOR REGISTRATION CTA */}
-      <section className="bg-[#00472f] py-16 lg:py-14 border-y border-[#00472f] z-10 relative">
+      <section className="bg-[#01C800] py-10 lg:py-8 border-y border-[#01C800] z-10 relative">
         <div className="mx-auto max-w-[1700px] px-6 lg:px-12">
-          <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 lg:gap-30">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10 lg:gap-16">
 
             {/* Header */}
             <div className="flex-none text-center md:text-left">
-              <h2 className="text-2xl lg:text-3xl font-bold text-[#F0E7C8] leading-snug">
+              <h2 className="text-2xl lg:text-3xl font-bold text-white leading-snug drop-shadow-sm">
                 Want to showcase your products to the world?<br className="hidden md:block" /> Sell with us.
               </h2>
             </div>
@@ -314,7 +314,7 @@ export default function HomePage() {
             <div className="flex-none">
               <Link
                 href={`/${country}/vendor-registration`}
-                className="inline-flex items-center gap-3 bg-[#C8E6C9] text-[#024C27] px-8 py-4 sm:py-5 rounded-xl font-bold shadow-[0_4px_14px_rgba(0,0,0,0.15)] hover:shadow-lg transition-all hover:-translate-y-0.5 group text-[15px] sm:text-base border border-transparent hover:border-[#C8E6C9]"
+                className="inline-flex items-center gap-3 bg-white text-[#01C800] px-6 py-3 sm:py-4 rounded-xl font-bold shadow-[0_4px_14px_rgba(0,0,0,0.12)] hover:shadow-xl transition-all hover:-translate-y-0.5 group text-[15px] sm:text-base border border-transparent"
               >
                 Vendor Registration
                 <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />

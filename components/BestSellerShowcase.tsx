@@ -90,8 +90,8 @@ export default function BestSellerShowcase({
                 initial={{ x: '100%' }}
                 animate={{ x: 0 }}
                 exit={{ x: '-100%' }}
-                transition={{ 
-                  duration: 0.8, 
+                transition={{
+                  duration: 0.8,
                   ease: [0.4, 0, 0.2, 1] // Custom cubic-bezier for a smooth pan
                 }}
                 className="absolute inset-0"
