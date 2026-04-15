@@ -79,11 +79,11 @@ export default function BestSellerShowcase({
       </div>
 
       {/* Main Layout: Ad Banner | Product Grid */}
-      <div className="flex gap-2 px-4 sm:px-6 lg:px-8">
+      <div className="flex items-start gap-2 px-4 sm:px-6 lg:px-8">
 
         {/* LEFT: Rotating Ad Banner */}
-        <div className="hidden lg:flex flex-col flex-shrink-0 w-[350px] xl:w-[450px] gap-2 self-stretch bg-white rounded-2xl">
-          <div className="relative flex-1 rounded-2xl overflow-hidden shadow-md cursor-pointer min-h-[500px]">
+        <div className="hidden lg:flex flex-col flex-shrink-0 w-[350px] xl:w-[450px]">
+          <div className="relative aspect-[4/5] w-full overflow-hidden cursor-pointer rounded-2xl shadow-md border border-gray-100/50">
             <AnimatePresence initial={false}>
               <motion.div
                 key={adIndex}
@@ -99,7 +99,7 @@ export default function BestSellerShowcase({
                 <img
                   src={adBanners[adIndex].src}
                   alt="Promotional Banner"
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-cover"
                 />
               </motion.div>
             </AnimatePresence>

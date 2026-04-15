@@ -239,6 +239,15 @@ export default function HomePage() {
               />
             </div>
           </section>
+
+          {/* 3.4 PROMO BANNER */}
+          <div className="relative z-10 max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <img
+              src="/shop-animations/20 percent.png"
+              alt="20 Percent Off Promo"
+              className="w-full h-[200px] object-cover shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-lg transition-shadow duration-300"
+            />
+          </div>
         </div>
 
         {/* 3.5 BRAND REEL */}
@@ -273,33 +282,6 @@ export default function HomePage() {
       <div className="relative z-10">
         <QualityPromise />
       </div>
-
-      {/* 5.5 VENDOR REGISTRATION CTA */}
-      <section className="bg-[#01C800] py-10 lg:py-8 border-y border-[#01C800] z-10 relative">
-        <div className="mx-auto max-w-[1700px] px-6 lg:px-12">
-          <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10 lg:gap-16">
-
-            {/* Header */}
-            <div className="flex-none text-center md:text-left">
-              <h2 className="text-2xl lg:text-3xl font-bold text-white leading-snug drop-shadow-sm">
-                Want to showcase your products to the world?<br className="hidden md:block" /> Sell with us.
-              </h2>
-            </div>
-
-            {/* Action */}
-            <div className="flex-none">
-              <Link
-                href={`/${country}/vendor-registration`}
-                className="inline-flex items-center gap-3 bg-white text-[#01C800] px-6 py-3 sm:py-4 rounded-xl font-bold shadow-[0_4px_14px_rgba(0,0,0,0.12)] hover:shadow-xl transition-all hover:-translate-y-0.5 group text-[15px] sm:text-base border border-transparent"
-              >
-                Vendor Registration
-                <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-              </Link>
-            </div>
-
-          </div>
-        </div>
-      </section>
     </div>
   );
 }

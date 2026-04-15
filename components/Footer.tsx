@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Facebook, Instagram, Twitter, Youtube, Linkedin, Globe } from 'lucide-react';
+import { Facebook, Instagram, Twitter, Youtube, Linkedin, Globe, MapPin, Phone, Mail } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import RegionSwitcher from './RegionSwitcher';
 import GoogleTranslateWidget from './GoogleTranslateWidget';
@@ -149,124 +149,178 @@ export default function Footer() {
     const bottomBar = (isDynamic && data?.bottom_bar) ? data.bottom_bar : FALLBACK.bottom_bar;
 
     return (
-        <footer className="bg-cream text-[#4a4a4a] border-t border-[#e8e8e0] relative z-10">
-            {/* ── Main footer body ── */}
-            <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12 pt-6">
-                <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <footer className="bg-[#F3F4F6] text-black border-t border-gray-200 relative z-10 pt-4 pb-0 font-sans">
+            <div className="mx-auto max-w-[1500px] px-6 sm:px-8 lg:px-12">
 
-                    {/* Brand column */}
-                    <div>
-                        <Link href="/" className="flex items-center gap-2 mb-4 group">
-                            <img
-                                src={company?.logo_url || '/vedashi-logo.png'}
-                                alt={company?.name || 'Vedashi'}
-                                className="h-16 w-auto object-contain"
-                            />
+                {/* ── Top Row (Buttons & Social Icons) ── */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                    <div className="flex flex-col sm:flex-row justify-start gap-3 lg:gap-4">
+                        <Link
+                            href="/vendor-registration"
+                            className="min-w-[220px] bg-white hover:bg-gray-50 hover:-translate-y-0.5 transition-all duration-300 py-3 px-6 rounded-xl shadow-[0_2px_15px_rgba(0,0,0,0.04)] border border-gray-100 flex items-center justify-center gap-2.5 group whitespace-nowrap"
+                        >
+                            <span className="font-normal text-[14px] sm:text-[15px] text-black group-hover:text-[#3B5D3B]">Vendor Registration</span>
                         </Link>
-                        <p className="text-sm leading-relaxed text-[#6b6b6b] max-w-[260px]">
-                            {company?.description}
-                        </p>
-
-                        {/* Social icons */}
-                        {social.length > 0 && (
-                            <div className="mt-4 flex gap-3">
-                                {social.map((s, i) => {
-                                    const IconComp = SOCIAL_ICONS[s.icon_name ?? s.platform?.toLowerCase()] ?? Globe;
-                                    if (!s.url) return null;
-                                    return (
-                                        <a
-                                            key={i}
-                                            href={s.url}
-                                            aria-label={s.platform}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors"
-                                        >
-                                            <IconComp className="w-[18px] h-[18px]" />
-                                        </a>
-                                    );
-                                })}
-                            </div>
-                        )}
+                        <Link
+                            href="/bulk-order"
+                            className="min-w-[220px] bg-white hover:bg-gray-50 hover:-translate-y-0.5 transition-all duration-300 py-3 px-6 rounded-xl shadow-[0_2px_15px_rgba(0,0,0,0.04)] border border-gray-100 flex items-center justify-center gap-2.5 group whitespace-nowrap"
+                        >
+                            <span className="font-normal text-[14px] sm:text-[15px] text-black group-hover:text-[#3B5D3B]">Bulk Order</span>
+                        </Link>
                     </div>
 
-                    {/* Dynamic link columns */}
-                    {columns.map((col, ci) => (
-                        <div key={ci}>
-                            <h4 className="font-display font-bold text-[#333] text-lg mb-3">{col.title}</h4>
-                            <ul className="space-y-2">
-                                {col.items.map((item, ii) => (
-                                    <li key={ii}>
-                                        <Link
-                                            href={item.href}
-                                            className="text-sm text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors"
-                                        >
-                                            {item.label}
-                                        </Link>
-                                    </li>
-                                ))}
-                                {/* Cookie Settings is always injected into the last column */}
-                                {ci === columns.length - 1 && (
-                                    <li>
-                                        <button
-                                            suppressHydrationWarning
-                                            onClick={openSettings}
-                                            className="text-sm font-medium text-[#6b6b6b] hover:text-[#3B5D3B] transition-colors bg-transparent border-none p-0 cursor-pointer text-left"
-                                        >
-                                            Cookie Settings
-                                        </button>
-                                    </li>
-                                )}
-                            </ul>
+                    {/* Social icons moved to top right */}
+                    {social.length > 0 && (
+                        <div className="flex gap-2.5 px-1">
+                            {social.map((s, i) => {
+                                const IconComp = SOCIAL_ICONS[s.icon_name ?? s.platform?.toLowerCase()] ?? Globe;
+                                if (!s.url) return null;
+                                return (
+                                    <a
+                                        key={i}
+                                        href={s.url}
+                                        aria-label={s.platform}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="h-9 w-9 rounded-full bg-white border border-gray-200 flex items-center justify-center text-black hover:text-[#3B5D3B] hover:border-[#3B5D3B]/30 hover:shadow-md transition-all shadow-sm"
+                                    >
+                                        <IconComp className="w-4.5 h-4.5" />
+                                    </a>
+                                );
+                            })}
                         </div>
-                    ))}
+                    )}
+                </div>
 
-                    {/* Newsletter column */}
+                {/* ── Main footer body ── */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 pb-2">
+
+                    {/* 1. Contact Us */}
+                    <div>
+                        <h4 className="inline-flex items-center justify-center bg-[#FFD100] text-black font-normal text-[11px] tracking-widest uppercase px-3 py-1 rounded-full mb-2.5 shadow-sm min-h-[22px]">
+                            Contact Us
+                        </h4>
+                        <div className="space-y-1">
+                            <div className="flex items-start gap-2.5 p-2 rounded-lg border border-gray-200/80 bg-white hover: transition-colors">
+                                <MapPin className="text-black h-3.5 w-3.5 flex-shrink-0 mt-[1px]" />
+                                <span className="text-[12px] font-normal text-black leading-tight">
+                                    {data?.contact?.address || 'Plot No. E-56, Shop No. 2, Sector-09, Airoli, Navi Mumbai, Thane, Maharashtra – 400708 India'}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-2.5 p-2 rounded-lg border border-gray-200/80 bg-white hover: transition-colors">
+                                <Phone className="text-black h-3.5 w-3.5 flex-shrink-0" />
+                                <span className="text-[12px] font-normal text-black leading-tight">
+                                    {data?.contact?.phone || '+91 96677 88869'}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-2.5 p-2 rounded-lg border border-gray-200/80 bg-white hover: transition-colors">
+                                <Mail className="text-black h-3.5 w-3.5 flex-shrink-0" />
+                                <span className="text-[12px] font-normal text-black leading-tight">
+                                    {data?.contact?.email || 'info@vedashi.com'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 2. Explore */}
+                    <div>
+                        <h4 className="inline-flex items-center justify-center bg-[#FFD100] text-black font-normal text-[11px] tracking-widest uppercase px-3 py-1 rounded-full mb-2.5 shadow-sm min-h-[22px]">
+                            {columns[0]?.title || 'Explore'}
+                        </h4>
+                        <ul className="space-y-0 px-1">
+                            {columns[0]?.items.map((item, ii) => (
+                                <li key={ii} className="flex items-center">
+                                    <Link
+                                        href={item.href}
+                                        className="text-[12px] font-normal text-black hover:text-[#3B5D3B] flex items-center h-5 transition-all"
+                                    >
+                                        {item.label}
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    {/* 3. Support */}
+                    <div>
+                        <h4 className="inline-flex items-center justify-center bg-[#FFD100] text-black font-normal text-[11px] tracking-widest uppercase px-3 py-1 rounded-full mb-2.5 shadow-sm min-h-[22px]">
+                            {columns[1]?.title || 'Support'}
+                        </h4>
+                        <ul className="space-y-0 px-1">
+                            {columns[1]?.items.map((item, ii) => (
+                                <li key={ii} className="flex items-center">
+                                    <Link
+                                        href={item.href}
+                                        className="text-[12px] font-normal text-black hover:text-[#3B5D3B] flex items-center h-5 transition-all"
+                                    >
+                                        {item.label}
+                                    </Link>
+                                </li>
+                            ))}
+                            <li className="flex items-center">
+                                <button
+                                    suppressHydrationWarning
+                                    onClick={openSettings}
+                                    className="text-[12px] font-normal text-black hover:text-[#3B5D3B] flex items-center h-5 transition-all bg-transparent border-none p-0 cursor-pointer text-left"
+                                >
+                                    Cookie Settings
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+
+                    {/* 4. Newsletter */}
                     {newsletter && (
                         <div>
-                            <h4 className="font-display font-bold text-[#333] text-lg mb-3">
+                            <h4 className="inline-flex items-center justify-center bg-[#FFD100] text-black font-normal text-[11px] tracking-widest uppercase px-3 py-1 rounded-full mb-2.5 shadow-sm min-h-[22px]">
                                 {newsletter.title || 'Newsletter'}
                             </h4>
-                            <p className="text-sm text-[#6b6b6b] leading-relaxed mb-4">
+                            <p className="text-[12px] font-normal text-black leading-tight mb-2.5 px-1 min-h-[1.5rem] flex items-center">
                                 {newsletter.description}
                             </p>
-                            <form onSubmit={handleSubscribe} className="flex gap-2" suppressHydrationWarning>
+                            <form onSubmit={handleSubscribe} className="flex gap-2 mb-3" suppressHydrationWarning>
                                 <input
                                     suppressHydrationWarning
                                     type="email"
-                                    placeholder="Your email"
+                                    placeholder="Your email address"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     disabled={loading}
-                                    className="flex-1 min-w-0 rounded-md px-3 py-2 text-sm bg-white border border-[#d9d9d0] focus:outline-none focus:border-[#3B5D3B] focus:ring-1 focus:ring-[#3B5D3B]/20 placeholder:text-[#aaa] text-[#333] transition-all disabled:opacity-50"
+                                    className="flex-1 min-w-0 rounded-lg px-3 py-1.5 text-[11px] bg-white border border-gray-200 focus:outline-none focus:border-[#3B5D3B] placeholder:text-gray-400 font-normal text-black transition-all disabled:opacity-50"
                                 />
                                 <button
                                     suppressHydrationWarning
                                     type="submit"
                                     disabled={loading}
-                                    className="px-5 py-2 bg-[#3B5D3B] text-white text-xs font-black font-ui uppercase tracking-widest rounded-md hover:bg-[#2d472d] transition-colors whitespace-nowrap disabled:opacity-70 flex items-center justify-center min-w-[70px]"
+                                    className="px-4 py-1.5 bg-[#01C800] text-white text-[10px] font-semibold uppercase tracking-widest rounded-lg hover:bg-[#03B302] shadow-sm transition-all whitespace-nowrap disabled:opacity-70 flex items-center justify-center min-w-[70px]"
                                 >
-                                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Join'}
+                                    {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Subscribe'}
                                 </button>
                             </form>
 
-                            {/* Moved elements from bottom bar to here */}
-                            <div className="mt-6">
-                                <div className="flex items-center gap-6 mb-3">
-                                    <RegionSwitcher upward={true} />
-                                    <GoogleTranslateWidget upward={true} />
-                                </div>
+                            <div className="flex items-center gap-3 px-1 mt-3">
+                                <RegionSwitcher upward={true} />
+                                <GoogleTranslateWidget upward={true} />
                             </div>
                         </div>
                     )}
                 </div>
 
-                <div className="mt-10 pb-2 text-center">
-                    <p className="text-[10px] font-bold font-base uppercase tracking-widest text-[#999]">
-                        {bottomBar?.copyright || `© ${new Date().getFullYear()} Vedashi. All rights reserved.`}
+                {/* ── Bottom Bar ── */}
+                <div className="mt-2 pt-2 border-t border-gray-300/80 flex flex-col md:flex-row items-center justify-between gap-3">
+                    <p className="text-[12px] font-normal text-black">
+                        {bottomBar?.copyright || `Copyright © ${new Date().getFullYear()} Vedashi | All Rights Reserved`}
                     </p>
+                    <div className="flex items-center gap-1.5 opacity-50">
+                        <div className="h-5 w-8 bg-gray-200 rounded-sm"></div>
+                        <div className="h-5 w-8 bg-gray-200 rounded-sm"></div>
+                        <div className="h-5 w-8 bg-gray-200 rounded-sm"></div>
+                        <div className="h-5 w-8 bg-gray-200 rounded-sm"></div>
+                    </div>
                 </div>
             </div>
+            {/* ── Bottom Green Strip ── */}
+            <div className="w-full h-5 bg-[#01CC00] mt-4" />
         </footer>
     );
 }

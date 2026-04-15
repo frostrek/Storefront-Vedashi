@@ -360,9 +360,9 @@ export default function Navbar() {
             <div className="flex-none flex items-center justify-start">
               <Link href={`/${currentCountry}`} className="flex items-center gap-2 p-2 relative overflow-visible">
                 {branding.logo_url ? (
-                  <img src={branding.logo_url} alt={branding.logo_alt} className="h-7 sm:h-9 md:h-11 lg:h-12 w-auto transition-all" style={{ filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.4))' }} />
+                  <img src={branding.logo_url} alt={branding.logo_alt} className="h-8 sm:h-10 md:h-12 lg:h-14 w-auto transition-all" />
                 ) : (
-                  <img src="/vedashi-logo.png" alt="Vedashi" className="h-7 sm:h-9 md:h-11 lg:h-12 w-auto transition-all" style={{ filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.4))' }} />
+                  <img src="/vedashi-logo.png" alt="Vedashi" className="h-8 sm:h-10 md:h-12 lg:h-14 w-auto transition-all" />
                 )}
               </Link>
             </div>
@@ -482,7 +482,7 @@ export default function Navbar() {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setMobileOpen(false)} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000]" />
             <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} className="fixed right-0 top-0 h-full w-[320px] bg-white z-[2001] flex flex-col">
               <div className="p-4 border-b flex justify-between items-center">
-                <img src="/vedashi-logo.png" alt="Vedashi" className="h-8 w-auto" />
+                <img src="/vedashi-logo.png" alt="Vedashi" className="h-10 w-auto" />
                 <button onClick={() => setMobileOpen(false)}><X className="h-6 w-6" /></button>
               </div>
               <div className="flex-1 overflow-y-auto p-5">
