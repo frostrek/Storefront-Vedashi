@@ -19,7 +19,7 @@ const smallBanners = [
 
 export default function NeedHelpSection() {
   return (
-    <section className="relative py-4 sm:py-5 bg-[#FAF9F6] overflow-hidden">
+    <section className="relative py-4 sm:py-5 bg-white overflow-hidden">
 
 
       <div className="relative z-10 mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8">

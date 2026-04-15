@@ -358,11 +358,11 @@ export default function Navbar() {
 
             {/* Logo Section */}
             <div className="flex-none flex items-center justify-start">
-              <Link href={`/${currentCountry}`} className="flex items-center gap-2">
+              <Link href={`/${currentCountry}`} className="flex items-center gap-2 p-2 relative overflow-visible">
                 {branding.logo_url ? (
-                  <img src={branding.logo_url} alt={branding.logo_alt} className="h-7 sm:h-9 md:h-11 lg:h-12 w-auto object-contain transition-all" />
+                  <img src={branding.logo_url} alt={branding.logo_alt} className="h-7 sm:h-9 md:h-11 lg:h-12 w-auto transition-all" style={{ filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.4))' }} />
                 ) : (
-                  <img src="/vedashi-logo.png" alt="Vedashi" className="h-7 sm:h-9 md:h-11 lg:h-12 w-auto object-contain transition-all" />
+                  <img src="/vedashi-logo.png" alt="Vedashi" className="h-7 sm:h-9 md:h-11 lg:h-12 w-auto transition-all" style={{ filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.4))' }} />
                 )}
               </Link>
             </div>

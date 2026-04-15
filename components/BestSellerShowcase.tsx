@@ -58,7 +58,7 @@ export default function BestSellerShowcase({
     : `/${country}/products?sort=popular&bestSeller=true`;
 
   return (
-    <div className="relative pt-2 pb-6">
+    <div className="relative pt-0 pb-0">
       {/* Section Header */}
       <div className="mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8 mb-2">
         <div className="flex items-end justify-between">

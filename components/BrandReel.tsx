@@ -25,26 +25,18 @@ export default function BrandReel() {
   const duplicatedBrands = [...brands, ...brands];
 
   return (
-    <div className="flex flex-col w-full">
-      {/* Section heading (Animated Image) */}
-      <div className="mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, x: -60, scale: 1 }}
-          whileInView={{ opacity: 1, x: 0, scale: 1 }}
-          viewport={{ once: true, margin: "-50px" }}
-          transition={{ duration: 1, ease: "easeOut" }}
-          className="flex items-center justify-center"
-          style={{ willChange: "transform, opacity" }}
-        >
-          <img
-            src="/shop-animations/brands people.png"
-            alt="Brands People Love"
-            className="h-[60px] sm:h-[80px] w-auto object-contain"
-          />
-        </motion.div>
+    <div className="flex flex-col w-full pt-2 pb-6">
+      {/* Section Header */}
+      <div className="mx-auto max-w-[1500px] w-full px-4 sm:px-6 lg:px-8 mb-4">
+        <div className="flex items-end justify-between">
+          <div>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-1">Brands People Like</h2>
+            <p className="text-gray-500 font-medium italic text-sm">Discover premium brands handpicked for quality and authenticity.</p>
+          </div>
+        </div>
       </div>
 
-      <section className="relative py-2 overflow-hidden" style={{ background: '#b4e39cff' }}>
+      <section className="relative py-4 overflow-hidden" style={{ background: '#fff09b' }}>
         {/* Marquee container with entrance animation */}
         <motion.div
           initial={{ opacity: 0, x: 100 }}
@@ -56,10 +48,10 @@ export default function BrandReel() {
         >
           {/* Gradient fades on edges */}
           <div className="absolute left-0 top-0 bottom-0 w-20 z-10 pointer-events-none"
-            style={{ background: 'linear-gradient(to right, #b4e39cff, transparent)' }}
+            style={{ background: 'linear-gradient(to right, #fff09b, transparent)' }}
           />
           <div className="absolute right-0 top-0 bottom-0 w-20 z-10 pointer-events-none"
-            style={{ background: 'linear-gradient(to left, #b4e39cff, transparent)' }}
+            style={{ background: 'linear-gradient(to left, #fff09b, transparent)' }}
           />
 
           {/* Scrolling track */}
@@ -70,11 +62,11 @@ export default function BrandReel() {
                 href={`/${country}/products?brand=${encodeURIComponent(brand.slug)}`}
                 className="flex-shrink-0 group"
               >
-                <div className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 flex items-center justify-center px-8 py-5 h-[120px] w-[240px] group-hover:scale-105 group-hover:-translate-y-1">
+                <div className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 flex items-center justify-center px-6 py-4 h-[100px] w-[200px] group-hover:scale-105 group-hover:-translate-y-1">
                   <img
                     src={brand.logo}
                     alt={brand.name}
-                    className="max-h-[80px] max-w-[190px] object-contain transition-all duration-300 grayscale-[30%] group-hover:grayscale-0"
+                    className="max-h-[60px] max-w-[150px] object-contain transition-all duration-300 grayscale-[30%] group-hover:grayscale-0"
                     onError={(e) => {
                       // Fallback: show brand name as text if logo is missing
                       const target = e.target as HTMLImageElement;

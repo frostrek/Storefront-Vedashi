@@ -141,7 +141,7 @@ export default function HomePage() {
         {/* 2 & 3 COMBINED TO REMOVE GAP */}
         <div className="flex flex-col">
           {/* 2. SHOP BY CATEGORY - FULL WIDTH GRID */}
-          <section className="relative pt-8 pb-0 overflow-hidden bg-white/40">
+          <section className="relative pt-8 pb-0 overflow-hidden bg-white">
             <div
               className="absolute inset-0 opacity-[0.07] pointer-events-none"
             // style={{
@@ -153,7 +153,7 @@ export default function HomePage() {
             />
 
             <div className="relative z-10 max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="relative text-center mb-6 px-4">
+              <div className="relative text-center mb-2 px-4">
                 <div className="absolute right-6 top-3 hidden lg:block">
                   <Link
                     href={`/${country}/products`}
@@ -181,16 +181,16 @@ export default function HomePage() {
                 </AnimatePresence>
               </div>
 
-              <div className="relative min-h-[250px]">
+              <div className="relative min-h-[220px]">
                 <AnimatePresence mode="wait">
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.4, ease: "easeOut" }}
-                    className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 lg:gap-8"
+                    className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 lg:gap-5"
                   >
-                    {allCategories.slice(0, 6).map((cat: any, i: number) => {
+                    {allCategories.slice(0, 8).map((cat: any, i: number) => {
                       return (
                         <div
                           key={cat.category_id}
@@ -199,7 +199,7 @@ export default function HomePage() {
                           }}
                           className="group flex flex-col items-center gap-3 transition-all duration-500 hover:-translate-y-2 cursor-pointer"
                         >
-                          <div className={`relative w-full aspect-square rounded-full ${categoryColors[cat.slug] || 'bg-[#F2F4F2]'} flex items-center justify-center shadow-sm group-hover:shadow-[0_20px_50px_rgba(59,93,59,0.12)] group-hover:bg-[#E2F0E2] transition-all duration-700 overflow-hidden isolate`}>
+                          <div className={`relative w-full aspect-[4/3] rounded-2xl ${categoryColors[cat.slug] || 'bg-[#F2F4F2]'} flex items-center justify-center shadow-sm group-hover:shadow-[0_20px_50px_rgba(59,93,59,0.12)] group-hover:bg-[#E2F0E2] transition-all duration-700 overflow-hidden isolate`}>
                             <img
                               src={cat.image_url || categoryImages[cat.slug?.toLowerCase() || ''] || `/icons/shop/${cat.slug}.png`}
                               alt={cat.name}
@@ -210,7 +210,7 @@ export default function HomePage() {
                             />
 
                             {/* Hover Pulse Effect */}
-                            <div className="absolute inset-0 rounded-full border border-[#3B5D3B]/20 scale-100 opacity-0 group-hover:scale-105 group-hover:opacity-100 transition-all duration-700 pointer-events-none" />
+                            <div className="absolute inset-0 rounded-2xl border border-[#3B5D3B]/20 scale-100 opacity-0 group-hover:scale-105 group-hover:opacity-100 transition-all duration-700 pointer-events-none" />
                           </div>
 
                           <div className="text-center">
@@ -227,7 +227,7 @@ export default function HomePage() {
             </div>
           </section>
 
-          <section className="relative pt-12 pb-2 overflow-hidden bg-[#FCFBFA]">
+          <section className="relative pt-0 pb-0 overflow-hidden bg-white">
             <div className="max-w-[1500px] mx-auto relative z-10">
               <BestSellerShowcase
                 products={bestSellers}
@@ -252,7 +252,7 @@ export default function HomePage() {
         </div>
 
         {/* 5. NEW ARRIVALS - CLEAN & RADIANT */}
-        <section className="relative py-0 overflow-hidden bg-[#FBF9F2]">
+        <section className="relative py-0 overflow-hidden bg-white">
 
 
           <div className="max-w-[1500px] mx-auto relative z-10">
