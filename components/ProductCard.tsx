@@ -15,6 +15,7 @@ import { createPortal } from 'react-dom';
 import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { trackEcommerce } from '@/lib/analytics/gtag';
+import { hasDiscount, getDiscountPercent } from '@/utils/discount';
 
 
 const BLUR_DATA_URL =
@@ -519,7 +520,19 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                         (product.common_flavor && v.flavor === product.common_flavor) ? '' : (v.flavor ?? ''),
                                         (v.pack_quantity ?? 0) > 1 ? `Pack of ${v.pack_quantity ?? 0}` : ''
                                     ].filter(Boolean);
-                                    const label = labelParts.join(' · ') || v.sku || 'Standard';
+                                    
+                                    let parsedOptions = v.options;
+                                    if (typeof parsedOptions === 'string') {
+                                        try { parsedOptions = JSON.parse(parsedOptions); } catch (e) {}
+                                    }
+                                    let optionsValList: string[] = [];
+                                    if (parsedOptions && typeof parsedOptions === 'object') {
+                                        optionsValList = Object.values(parsedOptions).filter(val => val !== null && val !== undefined && String(val).trim() !== '').map(String);
+                                    }
+                                    
+                                    const label = optionsValList.length > 0 
+                                        ? optionsValList.join(' · ') 
+                                        : (labelParts.join(' · ') || v.sku || 'Standard');
 
                                     return (
                                         <button
@@ -586,10 +599,21 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                     `}>
                                                         {formatPrice(v.price, v.country_prices || product.country_prices)}
                                                     </span>
-                                                    {v.is_on_sale && v.original_price && (
-                                                        <span className={`text-[10px] line-through ${isSelected ? 'text-white/50' : 'text-gray-400'}`}>
-                                                            {formatPrice(v.original_price, v.country_prices || product.country_prices)}
-                                                        </span>
+                                                    {hasDiscount(v) ? (
+                                                        <>
+                                                            <span className={`text-[10px] line-through ${isSelected ? 'text-white/50' : 'text-gray-400'}`}>
+                                                                {formatPrice(v.discount_base_price ?? 0, v.country_prices || product.country_prices)}
+                                                            </span>
+                                                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isSelected ? 'bg-red-500/20 text-red-100' : 'text-red-500 bg-red-50'}`}>
+                                                                {getDiscountPercent(v)}% OFF
+                                                            </span>
+                                                        </>
+                                                    ) : (
+                                                        v.is_on_sale && v.original_price && (
+                                                            <span className={`text-[10px] line-through ${isSelected ? 'text-white/50' : 'text-gray-400'}`}>
+                                                                {formatPrice(v.original_price, v.country_prices || product.country_prices)}
+                                                            </span>
+                                                        )
                                                     )}
                                                     {!isInactive && isOut && (
                                                         <span className="text-[9px] font-bold text-red-400 bg-red-50 px-1.5 py-0.5 rounded-full">
@@ -752,7 +776,19 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                             (product.common_flavor && v.flavor === product.common_flavor) ? '' : (v.flavor ?? ''),
                                             (v.pack_quantity ?? 0) > 1 ? `Pack of ${v.pack_quantity ?? 0}` : ''
                                         ].filter(Boolean);
-                                        const label = labelParts.join(' · ') || v.sku || 'Standard';
+                                        
+                                        let parsedOptions = v.options;
+                                        if (typeof parsedOptions === 'string') {
+                                            try { parsedOptions = JSON.parse(parsedOptions); } catch (e) {}
+                                        }
+                                        let optionsValList: string[] = [];
+                                        if (parsedOptions && typeof parsedOptions === 'object') {
+                                            optionsValList = Object.values(parsedOptions).filter(val => val !== null && val !== undefined && String(val).trim() !== '').map(String);
+                                        }
+                                        
+                                        const label = optionsValList.length > 0 
+                                            ? optionsValList.join(' · ') 
+                                            : (labelParts.join(' · ') || v.sku || 'Standard');
 
                                         return (
                                             <button
@@ -796,8 +832,19 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
 
                                                     <div className="text-right flex-shrink-0">
                                                         <p className={`text-sm font-bold transition-colors duration-300 ${isSelected ? 'text-[#3d5c3a]' : 'text-gray-900'}`}>{formatPrice(v.price, v.country_prices || product.country_prices)}</p>
-                                                        {v.is_on_sale && v.original_price && (
-                                                            <p className="text-[10px] text-gray-400 line-through">{formatPrice(v.original_price, v.country_prices || product.country_prices)}</p>
+                                                        {hasDiscount(v) ? (
+                                                            <div className="flex items-center gap-1.5 mt-0.5">
+                                                                <p className="text-[10px] text-gray-400 line-through">
+                                                                    {formatPrice(v.discount_base_price ?? 0, v.country_prices || product.country_prices)}
+                                                                </p>
+                                                                <span className="text-red-500 bg-red-50 text-[9px] font-bold px-1.5 py-0.5 rounded">
+                                                                    {getDiscountPercent(v)}% OFF
+                                                                </span>
+                                                            </div>
+                                                        ) : (
+                                                            v.is_on_sale && v.original_price && (
+                                                                <p className="text-[10px] text-gray-400 line-through mt-0.5">{formatPrice(v.original_price, v.country_prices || product.country_prices)}</p>
+                                                            )
                                                         )}
                                                     </div>
                                                 </div>
@@ -1063,7 +1110,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                         });
                                     }}
                                 >
-                                    {product.product_name}
+                                    {variants?.find(v => v.is_default)?.variant_name ?? variants?.[0]?.variant_name ?? product.product_name}
                                 </Link>
                             </h3>
 
@@ -1103,21 +1150,41 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             )}
 
                             {/* Price */}
-                            <div className="flex items-center gap-2 flex-wrap">
-                                <p className="text-xl font-black text-[#3d5c3a] font-ui tabular-nums tracking-tight">
-                                    {formatPrice(displayPrice, product.country_prices)}
-                                </p>
-                                {isOnSale && originalPrice && (
-                                    <>
-                                        <p className="text-xs text-gray-400 line-through">
-                                            {formatPrice(originalPrice, product.country_prices)}
+                            {(() => {
+                                const activeV = selectedVariant || (product.variants?.find((v: ProductVariant) => v.is_default) || product.variants?.[0]);
+                                if (activeV && hasDiscount(activeV)) {
+                                    return (
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <p className="text-xl font-black text-[#3d5c3a] font-ui tabular-nums tracking-tight">
+                                                {formatPrice(hasVariants && selectedVariant ? selectedVariant.price! : displayPrice, product.country_prices)}
+                                            </p>
+                                            <p className="text-xs text-gray-400 line-through">
+                                                {formatPrice(activeV.discount_base_price ?? 0, product.country_prices)}
+                                            </p>
+                                            <span className="bg-red-50 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded border border-red-100">
+                                                {getDiscountPercent(activeV)}% OFF
+                                            </span>
+                                        </div>
+                                    );
+                                }
+                                return (
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <p className="text-xl font-black text-[#3d5c3a] font-ui tabular-nums tracking-tight">
+                                            {formatPrice(hasVariants && selectedVariant ? selectedVariant.price! : displayPrice, product.country_prices)}
                                         </p>
-                                        <span className="bg-red-50 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded border border-red-100">
-                                            {discountPercent}% OFF
-                                        </span>
-                                    </>
-                                )}
-                            </div>
+                                        {isOnSale && originalPrice && (
+                                            <>
+                                                <p className="text-xs text-gray-400 line-through">
+                                                    {formatPrice(originalPrice, product.country_prices)}
+                                                </p>
+                                                <span className="bg-red-50 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded border border-red-100">
+                                                    {discountPercent}% OFF
+                                                </span>
+                                            </>
+                                        )}
+                                    </div>
+                                );
+                            })()}
                             
                             {/* Shared Variant Attributes (Visible if common across all options) */}
                             {/* Shared attributes at the bottom */}

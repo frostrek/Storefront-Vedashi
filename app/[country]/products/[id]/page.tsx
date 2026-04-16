@@ -21,6 +21,7 @@ import { useRouter, useSearchParams, notFound } from 'next/navigation';
 import { CheckCircle2, FlaskConical, Leaf as LeafIcon, ShieldCheck } from 'lucide-react';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { generateProductJsonLd, generateBreadcrumbJsonLd } from '@/lib/seo';
+import { hasDiscount, getDiscountPercent } from '@/utils/discount';
 
 // Dynamic imports for below-fold sections
 const ReviewSection = dynamic(
@@ -44,7 +45,7 @@ const ProductCarousel = dynamic(
 );
 
 interface Props {
-    params: Promise<{ id: string, country: string }>;
+    params: Promise<any>;
 }
 
 
@@ -158,7 +159,24 @@ function ProductDetailContent({ params }: Props) {
 
             // ✅ store variants with size/pack defaults
             if (data?.variants?.length) {
-                const vs = data.variants;
+                const vs = data.variants.map((v: any) => {
+                    let opts: any = {};
+                    if (typeof v.options === 'string') {
+                        try { opts = JSON.parse(v.options); } catch (e) {}
+                    } else if (typeof v.options === 'object' && v.options !== null) {
+                        opts = v.options;
+                    }
+                    return {
+                        ...v,
+                        options: opts,
+                        weight_g: v.weight_g ?? (opts['Weight'] ? parseFloat(opts['Weight']) : null),
+                        volume_ml: v.volume_ml ?? (opts['Volume'] ? parseFloat(opts['Volume']) : null),
+                        units_count: v.units_count ?? (opts['Count'] ? parseInt(opts['Count'], 10) : null),
+                        strength: v.strength ?? (opts['Strength'] || null),
+                        flavor: v.flavor ?? (opts['Flavor'] || null),
+                        pack_quantity: v.pack_quantity ?? (opts['Pack'] && String(opts['Pack']).toLowerCase() !== 'single' ? parseInt(opts['Pack'].replace(/\D/g, '') || '1', 10) : 1),
+                    };
+                });
                 setVariants(vs);
 
                 const requestedVariantId = searchParams.get('variant');
@@ -431,7 +449,7 @@ function ProductDetailContent({ params }: Props) {
 
 
                         <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 italic tracking-tight leading-[1.1]">
-                            {product.product_name}
+                            {selectedVariant?.variant_name ?? variants?.[0]?.variant_name ?? product.product_name}
                         </h1>
 
                         {(product.review_count && Number(product.review_count) > 0) ? (
@@ -461,17 +479,33 @@ function ProductDetailContent({ params }: Props) {
 
                         {/* PRICE */}
                         <div className="flex items-end gap-3 mt-4">
-                            <p className="text-2xl font-bold text-gray-900">
-                                {formatPrice(displayPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)} <span className="text-sm font-normal text-gray-500">/ set</span>
-                            </p>
-                            {isOnSale && originalPrice && (
+                            {selectedVariant && hasDiscount(selectedVariant) ? (
                                 <>
-                                    <p className="text-base text-gray-400 line-through mb-0.5">
-                                        {formatPrice(originalPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
+                                    <p className="text-2xl font-bold text-gray-900">
+                                        {formatPrice(displayPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
                                     </p>
-                                    <span className="bg-[#3d5c3a]/10 text-[#3d5c3a] text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wide mb-1">
-                                        {discountPercent}% OFF
+                                    <p className="text-base text-gray-400 line-through mb-0.5">
+                                        {formatPrice(selectedVariant?.discount_base_price ?? 0, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
+                                    </p>
+                                    <span className="bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wide mb-0.5">
+                                        {getDiscountPercent(selectedVariant)}% OFF
                                     </span>
+                                </>
+                            ) : (
+                                <>
+                                    <p className="text-2xl font-bold text-gray-900">
+                                        {formatPrice(displayPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)} <span className="text-sm font-normal text-gray-500">/ set</span>
+                                    </p>
+                                    {isOnSale && originalPrice && (
+                                        <>
+                                            <p className="text-base text-gray-400 line-through mb-0.5">
+                                                {formatPrice(originalPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
+                                            </p>
+                                            <span className="bg-[#3d5c3a]/10 text-[#3d5c3a] text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wide mb-1">
+                                                {discountPercent}% OFF
+                                            </span>
+                                        </>
+                                    )}
                                 </>
                             )}
                         </div>
@@ -485,6 +519,107 @@ function ProductDetailContent({ params }: Props) {
                         {/* ✅ VARIANT SELECTORS: Weight, Strength, Volume, Count, Flavor, Pack */}
                         <div className="min-h-[120px]">
                         {variants.length > 0 && (() => {
+                            // --- CHECK IF ANY VARIANT HAS OPTIONS JSONB ---
+                            const optionsKeysMap = new Map<string, Set<string>>();
+                            variants.forEach((v: any) => {
+                                if (v.options && typeof v.options === 'object') {
+                                    Object.keys(v.options).forEach(k => {
+                                        if (v.options[k] !== null && v.options[k] !== undefined && String(v.options[k]).trim() !== '') {
+                                            if (!optionsKeysMap.has(k)) optionsKeysMap.set(k, new Set());
+                                            optionsKeysMap.get(k)!.add(String(v.options[k]));
+                                        }
+                                    });
+                                }
+                            });
+                            
+                            const hasOptionsJson = optionsKeysMap.size > 0;
+
+                            if (hasOptionsJson) {
+                                // --- PRIMARY LOGIC: Driven by options JSONB ---
+                                const updateOptionSelection = (optionKey: string, optionValue: string) => {
+                                    const currentOpts = selectedVariant?.options || {};
+                                    const targetOpts = { ...currentOpts, [optionKey]: optionValue };
+
+                                    // Find exact match (matches all target options)
+                                    let match = variants.find((v: any) => {
+                                        if (v.status === 'Inactive' || v.is_active === false) return false;
+                                        const vOpts = v.options || {};
+                                        return Object.keys(targetOpts).every(k => String(vOpts[k]) === String(targetOpts[k]));
+                                    });
+
+                                    // If no exact match, fallback to finding the first variant that matches the MOST RECENTLY updated option
+                                    if (!match) {
+                                        match = variants.find((v: any) => {
+                                            if (v.status === 'Inactive' || v.is_active === false) return false;
+                                            return String((v.options || {})[optionKey]) === optionValue;
+                                        });
+                                    }
+
+                                    if (match) {
+                                        setSelectedVariant(match);
+                                        // Update fallback stat variables just in case
+                                        setSelectedWeight(match.weight_g || null);
+                                        setSelectedStrength(match.strength ? `${match.strength} ${match.strength_unit || ''}`.trim() : null);
+                                        setSelectedVolume(match.volume_ml || null);
+                                        setSelectedCount(match.units_count ? `${match.units_count} ${match.form_factor || 'Units'}` : null);
+                                        setSelectedFlavor(match.flavor || null);
+                                        setSelectedPack(match.pack_quantity ?? 1);
+                                    }
+                                };
+
+                                return (
+                                    <div className="space-y-4">
+                                        {Array.from(optionsKeysMap.entries()).map(([key, uniqueValsSet]) => {
+                                            const uniqueVals = Array.from(uniqueValsSet);
+                                            // 1. Single Value -> show as simple text
+                                            // Make sure we never show the variant logic pills if it's a single value
+                                            if (uniqueVals.length === 1) {
+                                                return (
+                                                    <div key={key} className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-2 pb-2">
+                                                        <div className="flex items-baseline">
+                                                            <span className="text-sm text-gray-500 mr-2">{key}:</span>
+                                                            <span className="text-sm font-medium text-gray-900">{uniqueVals[0]}</span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            }
+                                            // 2. Multiple Values -> show as pills
+                                            const currentSelectedVal = String((selectedVariant?.options as any)?.[key] || '');
+                                            return (
+                                                <div key={key} className="mb-4">
+                                                    <p className="text-sm font-semibold mb-2">{key}:</p>
+                                                    <div className="flex gap-2 flex-wrap">
+                                                        {uniqueVals.map(val => {
+                                                            const isSelected = currentSelectedVal === val;
+                                                            // Check if ANY active variant exists for this option value
+                                                            const active = variants.some((v: any) => String((v.options || {})[key] || '') === val && v.status !== 'Inactive' && v.is_active !== false);
+
+                                                            return (
+                                                                <button
+                                                                    key={val}
+                                                                    onClick={() => active && updateOptionSelection(key, val)}
+                                                                    disabled={!active}
+                                                                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200 shadow-sm
+                                                                    ${isSelected
+                                                                            ? 'bg-[#3d5c3a] text-white border-[#3d5c3a] shadow-lg scale-[1.02]'
+                                                                            : !active
+                                                                                ? 'border-gray-300 border-dashed text-gray-400 bg-gray-50/30 cursor-not-allowed text-xs'
+                                                                                : 'bg-white border-gray-200 text-gray-700 hover:bg-[#edf5ed] hover:border-[#3d5c3a]/40 hover:text-[#3d5c3a] hover:shadow-md'
+                                                                        }`}
+                                                                >
+                                                                    {val}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                );
+                            }
+
+                            // --- FALLBACK LOGIC: Driven by dimension columns ---
                             const uniqueWeights = [...new Set(variants.map((v: ProductVariant) => v.weight_g as number))].filter(Boolean).sort((a, b) => a - b);
                             const uniqueStrengths = [...new Set(variants.map((v: ProductVariant) => v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : null))].filter(Boolean);
                             const uniqueVolumes = [...new Set(variants.map((v: ProductVariant) => v.volume_ml as number))].filter(Boolean).sort((a, b) => a - b);
@@ -814,6 +949,7 @@ function ProductDetailContent({ params }: Props) {
                                                 </div>
                                             </div>
                                         )}
+
                                     </div>
                                 );
                             })()}

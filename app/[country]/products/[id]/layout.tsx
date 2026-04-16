@@ -41,7 +41,7 @@ async function fetchSiteConfig(keys: string[]) {
 export async function generateMetadata({
     params,
 }: {
-    params: Promise<{ id: string; country: string }>;
+    params: Promise<any>;
 }): Promise<Metadata> {
     const { id, country } = await params;
     const product = await fetchProductForMeta(id);
@@ -76,7 +76,7 @@ export default function ProductLayout({
     params,
 }: {
     children: React.ReactNode;
-    params: Promise<{ id: string; country: string }>;
+    params: Promise<any>;
 }) {
     // We render JSON-LD here on the server si  de
     // The actual product data fetch hap  pens async via generateMetadata
@@ -104,7 +104,7 @@ async function fetchCategoryBreadcrumb(categoryId: string): Promise<Array<{ cate
 }
 
 /** Server component that injects JSON-LD structured data */
-async function ProductJsonLd({ paramsPromise }: { paramsPromise: Promise<{ id: string; country: string }> }) {
+async function ProductJsonLd({ paramsPromise }: { paramsPromise: Promise<any> }) {
     const { id, country } = await paramsPromise;
     const currentCountry = country || 'in';
     const product = await fetchProductForMeta(id);
