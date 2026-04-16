@@ -30,7 +30,6 @@ import { SkeletonProductGrid } from '@/components/Skeleton';
 import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, useParams } from 'next/navigation';
-import QualityPromise from '@/components/QualityPromise';
 import NeedHelpSection from '@/components/NeedHelpSection';
 import BrandReel from '@/components/BrandReel';
 
@@ -278,10 +277,6 @@ export default function HomePage() {
       </div>
 
 
-      {/* 6. QUALITY PROMISE - TRUST & AUTHENTICITY */}
-      <div className="relative z-10">
-        <QualityPromise />
-      </div>
     </div>
   );
 }
