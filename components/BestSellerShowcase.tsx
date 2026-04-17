@@ -69,7 +69,7 @@ export default function BestSellerShowcase({
           {viewAllLink && (
             <Link
               href={resolvedViewAllLink}
-              className="hidden sm:flex items-center gap-2 text-sm font-bold text-[#3B5D3B] hover:text-[#8B7A3D] transition-colors group pb-1"
+              className="hidden sm:flex items-center gap-2 text-sm font-bold text-[#91CA35] hover:text-[#8B7A3D] transition-colors group pb-1"
             >
               {viewAllText}
               <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -79,11 +79,11 @@ export default function BestSellerShowcase({
       </div>
 
       {/* Main Layout: Ad Banner | Product Grid */}
-      <div className="flex items-start gap-2 px-4 sm:px-6 lg:px-8">
+      <div className="flex items-stretch gap-2 px-4 sm:px-6 lg:px-8">
 
         {/* LEFT: Rotating Ad Banner */}
         <div className="hidden lg:flex flex-col flex-shrink-0 w-[350px] xl:w-[450px]">
-          <div className="relative aspect-[4/5] w-full overflow-hidden cursor-pointer rounded-2xl shadow-md border border-gray-100/50">
+          <div className="relative h-full w-full overflow-hidden cursor-pointer rounded-2xl shadow-md border border-gray-100/50">
             <AnimatePresence initial={false}>
               <motion.div
                 key={adIndex}
@@ -151,7 +151,7 @@ export default function BestSellerShowcase({
             <div className="sm:hidden mt-4">
               <Link
                 href={resolvedViewAllLink}
-                className="flex items-center gap-2 text-sm font-bold text-[#3B5D3B] transition-colors group"
+                className="flex items-center gap-2 text-sm font-bold text-[#91CA35] transition-colors group"
               >
                 {viewAllText}
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />

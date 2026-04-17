@@ -78,7 +78,7 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
 
                 {viewAllLink && (
                     <div className="flex-shrink-0 hidden sm:block pb-1">
-                        <Link href={viewAllLink} className="group flex items-center gap-2 text-sm font-bold text-[#3B5D3B] hover:text-[#8B7A3D] transition-colors">
+                        <Link href={viewAllLink} className="group flex items-center gap-2 text-sm font-bold text-[#91CA35] hover:text-[#8B7A3D] transition-colors">
                             {viewAllText || 'Explore All'}
                             <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                         </Link>
@@ -89,7 +89,7 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
             {/* Mobile View All Link */}
             {viewAllLink && (
                 <div className="sm:hidden px-4 mb-6">
-                    <Link href={viewAllLink} className="group flex items-center gap-2 text-sm font-bold text-[#3B5D3B] hover:text-[#8B7A3D] transition-colors">
+                    <Link href={viewAllLink} className="group flex items-center gap-2 text-sm font-bold text-[#91CA35] hover:text-[#8B7A3D] transition-colors">
                         {viewAllText || 'Explore All'}
                         <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </Link>
@@ -101,7 +101,7 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
                 {showLeftArrow && (
                     <button
                         onClick={() => scroll('left')}
-                        className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-30 p-3 rounded-full bg-white/90 shadow-xl border border-gray-100 text-[#3B5D3B] hover:bg-[#3B5D3B] hover:text-white transition-all duration-300 backdrop-blur-sm group-hover/reel:scale-110"
+                        className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-30 p-3 rounded-full bg-white/90 shadow-xl border border-gray-100 text-[#91CA35] hover:bg-[#91CA35] hover:text-white transition-all duration-300 backdrop-blur-sm group-hover/reel:scale-110"
                         aria-label="Scroll left"
                     >
                         <ChevronLeft className="h-6 w-6" />
@@ -110,7 +110,7 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
                 {showRightArrow && (
                     <button
                         onClick={() => scroll('right')}
-                        className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-30 p-3 rounded-full bg-white/90 shadow-xl border border-gray-100 text-[#3B5D3B] hover:bg-[#3B5D3B] hover:text-white transition-all duration-300 backdrop-blur-sm group-hover/reel:scale-110"
+                        className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-30 p-3 rounded-full bg-white/90 shadow-xl border border-gray-100 text-[#91CA35] hover:bg-[#91CA35] hover:text-white transition-all duration-300 backdrop-blur-sm group-hover/reel:scale-110"
                         aria-label="Scroll right"
                     >
                         <ChevronRight className="h-6 w-6" />

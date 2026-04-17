@@ -156,7 +156,7 @@ export default function HomePage() {
                 <div className="absolute right-6 top-3 hidden lg:block">
                   <Link
                     href={`/${country}/products`}
-                    className="group flex items-center gap-2 text-[15px] font-bold text-[#3B5D3B] transition-all"
+                    className="group flex items-center gap-2 text-[15px] font-bold text-[#91CA35] transition-all"
                   >
                     Explore all products
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />

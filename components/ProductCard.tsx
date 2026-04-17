@@ -890,8 +890,8 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
         <>
             <div className="relative group block h-full" ref={cardRef}>
                 {/* ═══════ FRONT OF CARD ═══════ */}
-                <div className={`h-full bg-white border border-gray-100 transition-all duration-300 ${isList ? 'overflow-hidden flex flex-row p-3 hover:bg-gray-50/50 hover:border-[#3d5c3a]/30 rounded-2xl gap-4 sm:gap-6 items-center shadow-sm hover:shadow-md' : 'flex flex-col rounded-2xl hover:-translate-y-1 hover:shadow-xl overflow-visible'}`}>
-                    <div className={`relative overflow-hidden bg-gradient-to-br from-[#f5f2ed] to-[#ece6dd] ${isList ? 'w-[100px] h-[100px] sm:w-[150px] sm:h-[150px] rounded-xl flex-shrink-0 border border-gray-100/50' : 'rounded-t-2xl'}`} style={isList ? {} : { aspectRatio: '1 / 1' }}>
+                <div className={`h-full bg-white transition-all duration-300 ${isList ? 'overflow-hidden flex flex-row p-3 border border-gray-100 hover:bg-gray-50/50 hover:border-[#3d5c3a]/30 rounded-2xl gap-4 sm:gap-6 items-center shadow-sm hover:shadow-md' : 'flex flex-col rounded-2xl overflow-visible'}`}>
+                    <div className={`relative overflow-hidden bg-gradient-to-br from-[#f5f2ed] to-[#ece6dd] ${isList ? 'w-[100px] h-[100px] sm:w-[150px] sm:h-[150px] rounded-xl flex-shrink-0 border border-gray-100/50' : 'rounded-2xl border border-gray-200 mx-2 mt-2'}`} style={isList ? {} : { aspectRatio: '5 / 4' }}>
                         <div className="absolute inset-0 flex items-center justify-center p-4">
                             {isBase64 ? (
                                 <img
@@ -977,7 +977,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                     {/* ═══ Always-visible ADD button (Grid only) — outside image overflow ═══ */}
                     {!isUnavailable && !isList && (
                         <div className="relative">
-                            <div className="absolute bottom-6 right-2 translate-y-1/2 z-30">
+                            <div className="absolute bottom-6 right-4 translate-y-1/2 z-30">
                                 {/* Single variant: show ADD or quantity stepper */}
                                 {!hasVariants ? (
                                     isInCart && currentItemInCart ? (
@@ -1044,7 +1044,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                     <div className={`p-2.5 sm:p-3 ${isList ? 'flex-1 flex flex-col justify-center min-w-0 p-0 sm:pr-3' : 'pt-5'}`}>
                         {/* Price Display Block (Box Style) */}
                         <div className="flex items-center gap-2 mb-2 sm:mb-3">
-                            <div className="bg-[#01CC00] text-white px-2.5 py-1 rounded-lg font-black text-[13px] sm:text-[15px] shadow-[0_3px_0_0_#008000] flex items-center justify-center min-w-[60px]">
+                            <div className="bg-black text-white px-2.5 py-1 rounded-lg font-black text-[13px] sm:text-[15px] shadow-[0_3px_0_0_#75A32B] flex items-center justify-center min-w-[60px]">
                                 {formatPrice(displayPrice, product.country_prices)}
                             </div>
                             {(discountPercent > 0 || originalPrice > displayPrice) && (
@@ -1053,6 +1053,9 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                 </span>
                             )}
                         </div>
+
+                        {/* Dashed green separator */}
+                        <div className="border-b border-dashed border-[#91C934] mb-2 sm:mb-2.5" />
 
                         <h3 className={`font-sans font-bold text-gray-900 leading-snug sm:leading-tight mb-0.5 sm:mb-1 ${isList ? 'text-lg sm:text-xl line-clamp-1 sm:line-clamp-2' : 'text-sm sm:text-[14px] line-clamp-2'}`}>
                             <Link

@@ -163,7 +163,7 @@ export default function Footer() {
                             suppressHydrationWarning
                             type="submit"
                             disabled={loading}
-                            className="px-7 py-3 bg-[#91CA35] text-white text-[11px] font-bold uppercase tracking-widest rounded-r-full hover:bg-[#b49d6a] transition-all whitespace-nowrap disabled:opacity-70 flex items-center justify-center min-w-[110px] shadow-sm"
+                            className="px-7 py-3 bg-[#91CA35] text-white text-[11px] font-bold uppercase tracking-widest rounded-r-full hover:bg-[#7eb02e] transition-all whitespace-nowrap disabled:opacity-70 flex items-center justify-center min-w-[110px] shadow-sm"
                         >
                             {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Subscribe'}
                         </button>
@@ -174,36 +174,66 @@ export default function Footer() {
             {/* ═══════════════ MAIN DARK SECTION ═══════════════ */}
             <div className="bg-[#1a1a1a] text-gray-300 pt-10 pb-5">
                 <div className="mx-auto max-w-[1500px] px-6 sm:px-8 lg:px-12">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 justify-between">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-between">
 
                         {/* 1. Vedashi Logo + Address */}
-                        <div className="flex flex-col gap-2.5 items-start">
-                            <Image
-                                src={company?.logo_url || '/vedashi-logo.png'}
-                                alt={company?.name || 'Vedashi'}
-                                width={180}
-                                height={48}
-                                className="h-10 w-auto object-contain brightness-0 invert object-left"
-                            />
-                            <div className="flex flex-col gap-1.5">
-                                <div className="flex items-start gap-2">
-                                    <MapPin className="text-gray-500 h-3 w-3 flex-shrink-0 mt-0.5" />
-                                    <span className="text-[11.5px] text-gray-400 leading-snug">
-                                        {data?.contact?.address || 'Plot No C-89, Shop No: 2, Sector-04, Airoli, Navi Mumbai, Thane, Maharashtra – 400708 India'}
-                                    </span>
+                        <div className="flex flex-col gap-6 items-start">
+                            <div className="flex flex-col gap-2.5 items-start">
+                                <Image
+                                    src={company?.logo_url || '/vedashi-logo.png'}
+                                    alt={company?.name || 'Vedashi'}
+                                    width={180}
+                                    height={48}
+                                    className="h-10 w-auto object-contain brightness-0 invert object-left"
+                                />
+                                <div className="flex flex-col gap-1.5">
+                                    <div className="flex items-start gap-2">
+                                        <MapPin className="text-gray-500 h-3 w-3 flex-shrink-0 mt-0.5" />
+                                        <span className="text-[11.5px] text-gray-400 leading-snug">
+                                            {data?.contact?.address || 'Plot No C-89, Shop No: 2, Sector-04, Airoli, Navi Mumbai, Thane, Maharashtra – 400708 India'}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Phone className="text-gray-500 h-3 w-3 flex-shrink-0" />
+                                        <span className="text-[11.5px] text-gray-400">
+                                            {data?.contact?.phone || '+91 96677 88869'}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Mail className="text-gray-500 h-3 w-3 flex-shrink-0" />
+                                        <span className="text-[11.5px] text-gray-400">
+                                            {data?.contact?.email || 'info@vedashi.com'}
+                                        </span>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <Phone className="text-gray-500 h-3 w-3 flex-shrink-0" />
-                                    <span className="text-[11.5px] text-gray-400">
-                                        {data?.contact?.phone || '+91 96677 88869'}
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Mail className="text-gray-500 h-3 w-3 flex-shrink-0" />
-                                    <span className="text-[11.5px] text-gray-400">
-                                        {data?.contact?.email || 'info@vedashi.com'}
-                                    </span>
-                                </div>
+                            </div>
+
+                            {/* Follow Us moved here */}
+                            <div className="flex flex-col items-start pt-2">
+                                <h4 className="text-[#91CA35] font-semibold text-[12px] tracking-widest uppercase mb-1">
+                                    Follow Us
+                                </h4>
+                                <div className="w-7 h-[2px] bg-[#91CA35] mb-2.5" />
+                                {social.length > 0 && (
+                                    <div className="flex gap-3">
+                                        {social.map((s, i) => {
+                                            const IconComp = SOCIAL_ICONS[s.icon_name ?? s.platform?.toLowerCase()] ?? Globe;
+                                            if (!s.url) return null;
+                                            return (
+                                                <a
+                                                    key={i}
+                                                    href={s.url}
+                                                    aria-label={s.platform}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="h-9 w-9 rounded-full bg-[#2a2a2a] border border-[#3a3a3a] flex items-center justify-center text-gray-400 hover:text-white hover:border-[#91CA35] hover:bg-[#91CA35]/10 transition-all duration-200"
+                                                >
+                                                    <IconComp className="w-4.5 h-4.5" />
+                                                </a>
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -254,34 +284,6 @@ export default function Footer() {
                                     </button>
                                 </li>
                             </ul>
-                        </div>
-
-                        {/* 4. Follow Us + Social */}
-                        <div className="flex flex-col items-start lg:items-end">
-                            <h4 className="text-[#91CA35] font-semibold text-[12px] tracking-widest uppercase mb-1">
-                                Follow Us
-                            </h4>
-                            <div className="w-7 h-[2px] bg-[#91CA35] mb-2.5" />
-                            {social.length > 0 && (
-                                <div className="flex gap-3">
-                                    {social.map((s, i) => {
-                                        const IconComp = SOCIAL_ICONS[s.icon_name ?? s.platform?.toLowerCase()] ?? Globe;
-                                        if (!s.url) return null;
-                                        return (
-                                            <a
-                                                key={i}
-                                                href={s.url}
-                                                aria-label={s.platform}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="h-9 w-9 rounded-full bg-[#2a2a2a] border border-[#3a3a3a] flex items-center justify-center text-gray-400 hover:text-white hover:border-[#91CA35] hover:bg-[#91CA35]/10 transition-all duration-200"
-                                            >
-                                                <IconComp className="w-4.5 h-4.5" />
-                                            </a>
-                                        );
-                                    })}
-                                </div>
-                            )}
                         </div>
                     </div>
                 </div>
