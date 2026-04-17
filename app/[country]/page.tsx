@@ -239,14 +239,7 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* 3.4 PROMO BANNER */}
-          <div className="relative z-10 max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <img
-              src="/shop-animations/20 percent.png"
-              alt="20 Percent Off Promo"
-              className="w-full h-[200px] object-cover shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-lg transition-shadow duration-300"
-            />
-          </div>
+
         </div>
 
         {/* 3.5 BRAND REEL */}
