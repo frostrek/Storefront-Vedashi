@@ -50,7 +50,7 @@ interface HeaderConfig {
 const DEFAULT_CONFIG: HeaderConfig = {
   branding: { logo_url: '', logo_alt: 'Vedashi' },
   colors: {
-    navbar_bg: '#f0faeeff',
+    navbar_bg: '#FFFFFF',
     navbar_text: '#374151',
     navbar_hover: '#3B5D3B',
     strip_bg: '#3B5D3B',
@@ -342,16 +342,15 @@ export default function Navbar() {
         </div>
       )}
 
-      {/* ═══════════════ THIN ACCENT STRIP ═══════════════ */}
-      <div className="w-full h-[20px] bg-[#01CC00]" />
+
 
       {/* ═══════════════ MAIN NAVBAR ═══════════════ */}
       <div
         className={`relative z-[100] border-b transition-all duration-500 ${scrolled
-          ? 'backdrop-blur-xl border-black/10 shadow-[0_2px_20px_rgba(0,0,0,0.1)]'
-          : 'border-white/10 shadow-sm'
+          ? 'backdrop-blur-xl border-black/10'
+          : 'border-gray-200'
           }`}
-        style={{ backgroundColor: scrolled ? `${colors.navbar_bg}CC` : colors.navbar_bg }}
+        style={{ backgroundColor: scrolled ? '#FFFFFFCC' : '#FFFFFF' }}
       >
         <div className="mx-auto max-w-[1500px] w-full px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 relative">

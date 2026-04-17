@@ -33,7 +33,7 @@ const SecondaryMegaMenuLinks = ({ item, country, topLevelSlug, secondLevelSlug, 
         href={href}
         className={`transition-colors duration-200 inline-block mb-3 ${level === 0
           ? 'text-[15px] font-black text-black uppercase tracking-wide'
-          : 'text-[13px] text-gray-500 font-semibold hover:text-[#FF0000] uppercase tracking-tight'
+          : 'text-[13px] text-gray-500 font-semibold hover:text-[#91CA35] uppercase tracking-tight'
           }`}
       >
 
@@ -94,7 +94,7 @@ export default function SecondaryNavbar() {
   const alphabetKeys = Object.keys(groupedBrands).sort();
 
   return (
-    <div className="hidden md:block bg-white border-b border-gray-200 shadow-sm relative z-[90]">
+    <div className="hidden md:block bg-white relative z-[90]">
       <div className="mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8">
         <div className="flex h-[32px] items-center justify-between text-[14px] uppercase font-bold text-black-700 font-sans">
 
@@ -108,9 +108,7 @@ export default function SecondaryNavbar() {
                   <div className="group/nav-item h-full flex items-center shrink-0">
                     <Link
                       href={`/${country}/products?category=${parent.slug}`}
-                      className={`flex items-center h-full px-1.5 transition-colors cursor-pointer border-b-2 border-transparent group-hover/nav-item:border-[#FF0000] ${
-                        parent.name.toUpperCase() === 'SPICES' ? 'text-[#FF0000]' : 'hover:text-[#FF0000]'
-                      }`}
+                      className="flex items-center h-full px-1.5 transition-colors cursor-pointer border-b-2 border-transparent group-hover/nav-item:border-[#91CA35] hover:text-[#91CA35]"
                     >
                       {parent.name}
                     </Link>
@@ -136,7 +134,7 @@ export default function SecondaryNavbar() {
 
                             {/* "View All" link positioned at the bottom right */}
                             <div className="flex justify-end mt-auto pt-4 border-t border-gray-50/50">
-                              <Link href={`/${country}/products?category=${parent.slug}`} className="text-[#3B5D3B] hover:text-[#FF0000] flex items-center gap-1 font-bold text-[13px] group/view-all">
+                              <Link href={`/${country}/products?category=${parent.slug}`} className="text-[#3B5D3B] hover:text-[#91CA35] flex items-center gap-1 font-bold text-[13px] group/view-all">
                                 Explore All {parent.name} <span className="transition-transform group-hover/view-all:translate-x-1">→</span>
                               </Link>
                             </div>
@@ -156,7 +154,7 @@ export default function SecondaryNavbar() {
 
             {/* Brands A-Z Dropdown */}
             <div className="group/nav-item h-full flex items-center shrink-0">
-              <span className="flex items-center h-full px-1.5 hover:text-[#FF0000] transition-colors cursor-pointer border-b-2 border-transparent group-hover/nav-item:border-[#FF0000]">
+              <span className="flex items-center h-full px-1.5 hover:text-[#91CA35] transition-colors cursor-pointer border-b-2 border-transparent group-hover/nav-item:border-[#91CA35]">
                 Brands A-Z
               </span>
 
@@ -182,7 +180,7 @@ export default function SecondaryNavbar() {
                               <li key={brand}>
                                 <Link
                                   href={`/${country}/products?brand=${encodeURIComponent(brand)}`}
-                                  className="text-[13px] text-gray-600 font-medium hover:text-[#FF0000] transition-all block truncate"
+                                  className="text-[13px] text-gray-600 font-medium hover:text-[#91CA35] transition-all block truncate"
                                 >
                                   {brand}
                                 </Link>
@@ -200,7 +198,7 @@ export default function SecondaryNavbar() {
 
           <div className="flex items-center h-full text-[13px] font-bold tracking-wide shrink-0 ml-4">
             <div className="h-4 w-[1px] bg-gray-200 self-center mx-3" />
-            <Link href={`/${country}/products?bestSeller=true`} className="text-gray-900 hover:text-[#FF0000] h-full flex items-center">Best Sellers</Link>
+            <Link href={`/${country}/products?bestSeller=true`} className="text-gray-900 hover:text-[#91CA35] h-full flex items-center">Best Sellers</Link>
             <div className="h-4 w-[1px] bg-gray-200 self-center mx-3" />
             <Link href={`/${country}/products?newArrival=true`} className="text-[#FF0000] font-bold h-full flex items-center gap-1.5 group">
               <span className="flex h-2 w-2 rounded-full bg-[#FF0000] animate-promo-blink shadow-[0_0_8px_rgba(255,0,0,0.5)]"></span>
@@ -209,6 +207,7 @@ export default function SecondaryNavbar() {
           </div>
         </div>
       </div>
+      <div className="w-full h-[3px] bg-[#91CA35]" />
     </div>
   );
 }

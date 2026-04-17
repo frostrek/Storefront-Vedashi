@@ -171,7 +171,7 @@ export default function HomePage() {
                     transition={{ duration: 0.3 }}
                   >
                     <h2 className="text-4xl font-bold text-gray-900 tracking-tight mb-4">
-                      Shop by Category
+                      Categories
                     </h2>
                     <p className="text-gray-500 font-medium italic mb-4 max-w-xl mx-auto">
                       Explore our curated collections of traditional wisdom for modern living

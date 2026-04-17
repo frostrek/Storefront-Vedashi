@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Facebook, Instagram, Twitter, Youtube, Linkedin, Globe, MapPin, Phone, Mail } from 'lucide-react';
+import { Facebook, Instagram, Twitter, Youtube, Linkedin, Globe, MapPin, Phone, Mail, Leaf, Truck, RotateCcw, ShieldCheck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import RegionSwitcher from './RegionSwitcher';
 import GoogleTranslateWidget from './GoogleTranslateWidget';
@@ -72,39 +73,36 @@ const FALLBACK: FooterData = {
         {
             title: 'Explore',
             items: [
-                { label: 'About Us', href: '/about' },
+                { label: 'Our Story', href: '/about' },
                 { label: 'Blogs', href: '/blog' },
                 { label: 'All Products', href: '/products' },
+                { label: 'Press & Media', href: '/press' },
                 { label: 'Contact Us', href: '/contact' },
-
-
             ],
         },
         {
             title: 'Support',
             items: [
                 { label: 'Help Center', href: '/help-center' },
-                { label: 'FAQ', href: '/help-center/faq' },
-                { label: 'Shipping Policy', href: '/shipping' },
-                { label: 'Return Policy', href: '/return-policy' },
+                { label: 'Track Order', href: '/track-order' },
+                { label: 'Shipping & Returns', href: '/shipping' },
                 { label: 'Terms of Service', href: '/terms' },
                 { label: 'Privacy Policy', href: '/privacy' },
-
             ],
         },
     ],
     social: [
         { platform: 'Instagram', url: '#', icon_name: 'instagram' },
+        { platform: 'YouTube', url: '#', icon_name: 'youtube' },
         { platform: 'Facebook', url: '#', icon_name: 'facebook' },
-        { platform: 'Twitter', url: '#', icon_name: 'twitter' },
     ],
     newsletter: {
         title: 'Newsletter',
-        description: 'Join our community for weekly wellness rituals.',
+        description: 'Get 10% OFF + Weekly Ayurvedic Secrets',
     },
     bottom_bar: {
         copyright: `© ${new Date().getFullYear()} Vedashi. All rights reserved.`,
-        text: 'Gently crafted for modern balance.',
+        text: 'Made with 💚 in India | Inspired by Ayurveda, backed by science.',
     },
 };
 
@@ -138,189 +136,220 @@ export default function Footer() {
 
     if (pathname?.endsWith('/login') || pathname?.endsWith('/signup')) return null;
 
-    // Check if the dynamic footer is explicitly disabled from the CMS settings
     const isDynamic = data?.settings?.use_dynamic_footer !== false;
 
-    // If dynamic is enabled AND data exists, use it. Otherwise, use FALLBACK.
     const company = (isDynamic && data?.company) ? data.company : FALLBACK.company;
     const columns = (isDynamic && data?.links && data.links.length > 0) ? data.links : (FALLBACK.links ?? []);
     const social = (isDynamic && data?.social && data.social.length > 0) ? data.social : (FALLBACK.social ?? []);
-    const newsletter = (isDynamic && data?.newsletter) ? data.newsletter : FALLBACK.newsletter;
     const bottomBar = (isDynamic && data?.bottom_bar) ? data.bottom_bar : FALLBACK.bottom_bar;
 
     return (
-        <footer className="bg-[#F3F4F6] text-black border-t border-gray-200 relative z-10 pt-4 pb-0 font-sans">
-            <div className="mx-auto max-w-[1500px] px-6 sm:px-8 lg:px-12">
+        <footer className="relative z-10 font-sans">
 
-                {/* ── Top Row (Buttons & Social Icons) ── */}
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
-                    <div className="flex flex-col sm:flex-row justify-start gap-3 lg:gap-4">
-                        <Link
-                            href="/vendor-registration"
-                            className="min-w-[220px] bg-white hover:bg-gray-50 hover:-translate-y-0.5 transition-all duration-300 py-3 px-6 rounded-xl shadow-[0_2px_15px_rgba(0,0,0,0.04)] border border-gray-100 flex items-center justify-center gap-2.5 group whitespace-nowrap"
+            {/* ═══════════════ SUBSCRIBE BAR (floating at top) ═══════════════ */}
+            <div className="bg-white">
+                <div className="mx-auto max-w-[600px] px-6 relative -mb-5 pt-5">
+                    <form onSubmit={handleSubscribe} className="flex relative z-20" suppressHydrationWarning>
+                        <input
+                            suppressHydrationWarning
+                            type="email"
+                            placeholder="Enter email address"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            disabled={loading}
+                            className="flex-1 min-w-0 rounded-l-full px-6 py-3 text-[13px] bg-white border border-gray-200 border-r-0 focus:outline-none focus:border-[#91CA35] placeholder:text-gray-400 text-black transition-all disabled:opacity-50 shadow-sm"
+                        />
+                        <button
+                            suppressHydrationWarning
+                            type="submit"
+                            disabled={loading}
+                            className="px-7 py-3 bg-[#91CA35] text-white text-[11px] font-bold uppercase tracking-widest rounded-r-full hover:bg-[#b49d6a] transition-all whitespace-nowrap disabled:opacity-70 flex items-center justify-center min-w-[110px] shadow-sm"
                         >
-                            <span className="font-normal text-[14px] sm:text-[15px] text-black group-hover:text-[#3B5D3B]">Vendor Registration</span>
-                        </Link>
-                        <Link
-                            href="/bulk-order"
-                            className="min-w-[220px] bg-white hover:bg-gray-50 hover:-translate-y-0.5 transition-all duration-300 py-3 px-6 rounded-xl shadow-[0_2px_15px_rgba(0,0,0,0.04)] border border-gray-100 flex items-center justify-center gap-2.5 group whitespace-nowrap"
-                        >
-                            <span className="font-normal text-[14px] sm:text-[15px] text-black group-hover:text-[#3B5D3B]">Bulk Order</span>
-                        </Link>
-                    </div>
-
-                    {/* Social icons moved to top right */}
-                    {social.length > 0 && (
-                        <div className="flex gap-2.5 px-1">
-                            {social.map((s, i) => {
-                                const IconComp = SOCIAL_ICONS[s.icon_name ?? s.platform?.toLowerCase()] ?? Globe;
-                                if (!s.url) return null;
-                                return (
-                                    <a
-                                        key={i}
-                                        href={s.url}
-                                        aria-label={s.platform}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="h-9 w-9 rounded-full bg-white border border-gray-200 flex items-center justify-center text-black hover:text-[#3B5D3B] hover:border-[#3B5D3B]/30 hover:shadow-md transition-all shadow-sm"
-                                    >
-                                        <IconComp className="w-4.5 h-4.5" />
-                                    </a>
-                                );
-                            })}
-                        </div>
-                    )}
+                            {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Subscribe'}
+                        </button>
+                    </form>
                 </div>
+            </div>
 
-                {/* ── Main footer body ── */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 pb-2">
+            {/* ═══════════════ MAIN DARK SECTION ═══════════════ */}
+            <div className="bg-[#1a1a1a] text-gray-300 pt-10 pb-5">
+                <div className="mx-auto max-w-[1500px] px-6 sm:px-8 lg:px-12">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 justify-between">
 
-                    {/* 1. Contact Us */}
-                    <div>
-                        <h4 className="inline-flex items-center justify-center bg-[#FFD100] text-black font-normal text-[11px] tracking-widest uppercase px-3 py-1 rounded-full mb-2.5 shadow-sm min-h-[22px]">
-                            Contact Us
-                        </h4>
-                        <div className="space-y-1">
-                            <div className="flex items-start gap-2.5 p-2 rounded-lg border border-gray-200/80 bg-white hover: transition-colors">
-                                <MapPin className="text-black h-3.5 w-3.5 flex-shrink-0 mt-[1px]" />
-                                <span className="text-[12px] font-normal text-black leading-tight">
-                                    {data?.contact?.address || 'Plot No. E-56, Shop No. 2, Sector-09, Airoli, Navi Mumbai, Thane, Maharashtra – 400708 India'}
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-2.5 p-2 rounded-lg border border-gray-200/80 bg-white hover: transition-colors">
-                                <Phone className="text-black h-3.5 w-3.5 flex-shrink-0" />
-                                <span className="text-[12px] font-normal text-black leading-tight">
-                                    {data?.contact?.phone || '+91 96677 88869'}
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-2.5 p-2 rounded-lg border border-gray-200/80 bg-white hover: transition-colors">
-                                <Mail className="text-black h-3.5 w-3.5 flex-shrink-0" />
-                                <span className="text-[12px] font-normal text-black leading-tight">
-                                    {data?.contact?.email || 'info@vedashi.com'}
-                                </span>
+                        {/* 1. Vedashi Logo + Address */}
+                        <div className="flex flex-col gap-2.5 items-start">
+                            <Image
+                                src={company?.logo_url || '/vedashi-logo.png'}
+                                alt={company?.name || 'Vedashi'}
+                                width={180}
+                                height={48}
+                                className="h-10 w-auto object-contain brightness-0 invert object-left"
+                            />
+                            <div className="flex flex-col gap-1.5">
+                                <div className="flex items-start gap-2">
+                                    <MapPin className="text-gray-500 h-3 w-3 flex-shrink-0 mt-0.5" />
+                                    <span className="text-[11.5px] text-gray-400 leading-snug">
+                                        {data?.contact?.address || 'Plot No C-89, Shop No: 2, Sector-04, Airoli, Navi Mumbai, Thane, Maharashtra – 400708 India'}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Phone className="text-gray-500 h-3 w-3 flex-shrink-0" />
+                                    <span className="text-[11.5px] text-gray-400">
+                                        {data?.contact?.phone || '+91 96677 88869'}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Mail className="text-gray-500 h-3 w-3 flex-shrink-0" />
+                                    <span className="text-[11.5px] text-gray-400">
+                                        {data?.contact?.email || 'info@vedashi.com'}
+                                    </span>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* 2. Explore */}
-                    <div>
-                        <h4 className="inline-flex items-center justify-center bg-[#FFD100] text-black font-normal text-[11px] tracking-widest uppercase px-3 py-1 rounded-full mb-2.5 shadow-sm min-h-[22px]">
-                            {columns[0]?.title || 'Explore'}
-                        </h4>
-                        <ul className="space-y-0 px-1">
-                            {columns[0]?.items.map((item, ii) => (
-                                <li key={ii} className="flex items-center">
-                                    <Link
-                                        href={item.href}
-                                        className="text-[12px] font-normal text-black hover:text-[#3B5D3B] flex items-center h-5 transition-all"
-                                    >
-                                        {item.label}
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    {/* 3. Support */}
-                    <div>
-                        <h4 className="inline-flex items-center justify-center bg-[#FFD100] text-black font-normal text-[11px] tracking-widest uppercase px-3 py-1 rounded-full mb-2.5 shadow-sm min-h-[22px]">
-                            {columns[1]?.title || 'Support'}
-                        </h4>
-                        <ul className="space-y-0 px-1">
-                            {columns[1]?.items.map((item, ii) => (
-                                <li key={ii} className="flex items-center">
-                                    <Link
-                                        href={item.href}
-                                        className="text-[12px] font-normal text-black hover:text-[#3B5D3B] flex items-center h-5 transition-all"
-                                    >
-                                        {item.label}
-                                    </Link>
-                                </li>
-                            ))}
-                            <li className="flex items-center">
-                                <button
-                                    suppressHydrationWarning
-                                    onClick={openSettings}
-                                    className="text-[12px] font-normal text-black hover:text-[#3B5D3B] flex items-center h-5 transition-all bg-transparent border-none p-0 cursor-pointer text-left"
-                                >
-                                    Cookie Settings
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
-
-                    {/* 4. Newsletter */}
-                    {newsletter && (
+                        {/* 2. Explore */}
                         <div>
-                            <h4 className="inline-flex items-center justify-center bg-[#FFD100] text-black font-normal text-[11px] tracking-widest uppercase px-3 py-1 rounded-full mb-2.5 shadow-sm min-h-[22px]">
-                                {newsletter.title || 'Newsletter'}
+                            <h4 className="text-[#91CA35] font-semibold text-[12px] tracking-widest uppercase mb-1">
+                                {columns[0]?.title || 'Explore'}
                             </h4>
-                            <p className="text-[12px] font-normal text-black leading-tight mb-2.5 px-1 min-h-[1.5rem] flex items-center">
-                                {newsletter.description}
-                            </p>
-                            <form onSubmit={handleSubscribe} className="flex gap-2 mb-3" suppressHydrationWarning>
-                                <input
-                                    suppressHydrationWarning
-                                    type="email"
-                                    placeholder="Your email address"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    disabled={loading}
-                                    className="flex-1 min-w-0 rounded-lg px-3 py-1.5 text-[11px] bg-white border border-gray-200 focus:outline-none focus:border-[#3B5D3B] placeholder:text-gray-400 font-normal text-black transition-all disabled:opacity-50"
-                                />
-                                <button
-                                    suppressHydrationWarning
-                                    type="submit"
-                                    disabled={loading}
-                                    className="px-4 py-1.5 bg-[#01C800] text-white text-[10px] font-semibold uppercase tracking-widest rounded-lg hover:bg-[#03B302] shadow-sm transition-all whitespace-nowrap disabled:opacity-70 flex items-center justify-center min-w-[70px]"
-                                >
-                                    {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Subscribe'}
-                                </button>
-                            </form>
-
-                            <div className="flex items-center gap-3 px-1 mt-3">
-                                <RegionSwitcher upward={true} />
-                                <GoogleTranslateWidget upward={true} />
-                            </div>
+                            <div className="w-7 h-[2px] bg-[#91CA35] mb-2.5" />
+                            <ul className="space-y-1.5">
+                                {columns[0]?.items.map((item, ii) => (
+                                    <li key={ii}>
+                                        <Link
+                                            href={item.href}
+                                            className="text-[12px] text-gray-400 hover:text-white transition-colors duration-200"
+                                        >
+                                            {item.label}
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ul>
                         </div>
-                    )}
-                </div>
 
-                {/* ── Bottom Bar ── */}
-                <div className="mt-2 pt-2 border-t border-gray-300/80 flex flex-col md:flex-row items-center justify-between gap-3">
-                    <p className="text-[12px] font-normal text-black">
-                        {bottomBar?.copyright || `Copyright © ${new Date().getFullYear()} Vedashi | All Rights Reserved`}
-                    </p>
-                    <div className="flex items-center gap-1.5 opacity-50">
-                        <div className="h-5 w-8 bg-gray-200 rounded-sm"></div>
-                        <div className="h-5 w-8 bg-gray-200 rounded-sm"></div>
-                        <div className="h-5 w-8 bg-gray-200 rounded-sm"></div>
-                        <div className="h-5 w-8 bg-gray-200 rounded-sm"></div>
+                        {/* 3. Support */}
+                        <div>
+                            <h4 className="text-[#91CA35] font-semibold text-[12px] tracking-widest uppercase mb-1">
+                                {columns[1]?.title || 'Support'}
+                            </h4>
+                            <div className="w-7 h-[2px] bg-[#91CA35] mb-2.5" />
+                            <ul className="space-y-1.5">
+                                {columns[1]?.items.map((item, ii) => (
+                                    <li key={ii}>
+                                        <Link
+                                            href={item.href}
+                                            className="text-[12px] text-gray-400 hover:text-white transition-colors duration-200"
+                                        >
+                                            {item.label}
+                                        </Link>
+                                    </li>
+                                ))}
+                                <li>
+                                    <button
+                                        suppressHydrationWarning
+                                        onClick={openSettings}
+                                        className="text-[12px] text-gray-400 hover:text-white transition-colors duration-200 bg-transparent border-none p-0 cursor-pointer text-left"
+                                    >
+                                        Cookie Settings
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+
+                        {/* 4. Follow Us + Social */}
+                        <div className="flex flex-col items-start lg:items-end">
+                            <h4 className="text-[#91CA35] font-semibold text-[12px] tracking-widest uppercase mb-1">
+                                Follow Us
+                            </h4>
+                            <div className="w-7 h-[2px] bg-[#91CA35] mb-2.5" />
+                            {social.length > 0 && (
+                                <div className="flex gap-3">
+                                    {social.map((s, i) => {
+                                        const IconComp = SOCIAL_ICONS[s.icon_name ?? s.platform?.toLowerCase()] ?? Globe;
+                                        if (!s.url) return null;
+                                        return (
+                                            <a
+                                                key={i}
+                                                href={s.url}
+                                                aria-label={s.platform}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="h-9 w-9 rounded-full bg-[#2a2a2a] border border-[#3a3a3a] flex items-center justify-center text-gray-400 hover:text-white hover:border-[#91CA35] hover:bg-[#91CA35]/10 transition-all duration-200"
+                                            >
+                                                <IconComp className="w-4.5 h-4.5" />
+                                            </a>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
-            {/* ── Bottom Green Strip ── */}
-            <div className="w-full h-5 bg-[#01CC00] mt-4" />
+
+            {/* ═══════════════ TRUST BADGES STRIP ═══════════════ */}
+            <div className="bg-[#222222] py-3 border-t border-[#2a2a2a]">
+                <div className="mx-auto max-w-[1500px] px-6 sm:px-8 lg:px-12">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="flex items-center gap-3">
+                            <div className="h-8 w-8 rounded-full bg-[#2a2a2a] border border-[#3a3a3a] flex items-center justify-center">
+                                <Leaf className="h-5 w-5 text-[#91CA35]" />
+                            </div>
+                            <div>
+                                <p className="text-[11px] font-bold text-white uppercase tracking-wide">100% Natural</p>
+                                <p className="text-[10px] text-gray-500">Ayurveda Certified</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="h-8 w-8 rounded-full bg-[#2a2a2a] border border-[#3a3a3a] flex items-center justify-center">
+                                <Truck className="h-5 w-5 text-[#91CA35]" />
+                            </div>
+                            <div>
+                                <p className="text-[11px] font-bold text-white uppercase tracking-wide">Free Shipping</p>
+                                <p className="text-[10px] text-gray-500">above ₹499</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="h-8 w-8 rounded-full bg-[#2a2a2a] border border-[#3a3a3a] flex items-center justify-center">
+                                <RotateCcw className="h-5 w-5 text-[#91CA35]" />
+                            </div>
+                            <div>
+                                <p className="text-[11px] font-bold text-white uppercase tracking-wide">Easy Returns</p>
+                                <p className="text-[10px] text-gray-500">within 7 days</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="h-8 w-8 rounded-full bg-[#2a2a2a] border border-[#3a3a3a] flex items-center justify-center">
+                                <ShieldCheck className="h-5 w-5 text-[#91CA35]" />
+                            </div>
+                            <div>
+                                <p className="text-[11px] font-bold text-white uppercase tracking-wide">Secure Payments</p>
+                                <p className="text-[10px] text-gray-500">100% protected</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* ═══════════════ BOTTOM BAR ═══════════════ */}
+            <div className="bg-[#111111] py-2.5">
+                <div className="mx-auto max-w-[1500px] px-6 sm:px-8 lg:px-12">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-2">
+                        <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-3">
+                            <p className="text-[11px] text-gray-500">
+                                {bottomBar?.copyright || `© ${new Date().getFullYear()} Vedashi. All rights reserved.`}
+                            </p>
+                        </div>
+                        <p className="text-[11px] text-gray-500">
+                            Made with 💚 in India | Inspired by Ayurveda, backed by science.
+                        </p>
+                        <div className="flex items-center gap-3">
+                            <RegionSwitcher upward={true} />
+                            <GoogleTranslateWidget upward={true} />
+                        </div>
+                    </div>
+                </div>
+            </div>
         </footer>
     );
 }
