@@ -424,12 +424,12 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
             >
                 {/* ── Frosted panel background ────────────────────────────────── */}
-                <div className="absolute inset-0 bg-gradient-to-br from-[#f3f8f3] via-white to-[#f8fbf8] border-l border-[#3d5c3a]/10" />
+                <div className="absolute inset-0 bg-gradient-to-br from-[#fff5f5] via-white to-[#fffafa] border-l border-[#FF0000]/10" />
 
                 {/* ── Top accent bar: draws left → right via GSAP scaleX ──────── */}
                 <div
                     ref={borderLineRef}
-                    className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#3d5c3a] via-[#5a8a56] to-transparent rounded-b"
+                    className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#FF0000] via-[#ff4d4d] to-transparent rounded-b"
                     style={{ transform: 'scaleX(0)', transformOrigin: 'left center' }}
                 />
 
@@ -442,7 +442,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                     {/* ── Header ────────────────────────────────────────────────── */}
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
-                            <span className="inline-flex items-center gap-1 bg-[#3d5c3a] text-white text-[9px] font-black uppercase tracking-[0.1em] px-2 py-1 rounded-full leading-none">
+                            <span className="inline-flex items-center gap-1 bg-[#FF0000] text-white text-[9px] font-black uppercase tracking-[0.1em] px-2 py-1 rounded-full leading-none">
                                 <Eye className="h-2.5 w-2.5" />
                                 Options
                             </span>
@@ -520,13 +520,13 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                 relative w-full flex items-start gap-2.5
                                                 px-3 py-2.5 rounded-xl text-left outline-none
                                                 transition-all duration-200 cursor-pointer
-                                                focus-visible:ring-2 focus-visible:ring-[#3d5c3a]/40
+                                                focus-visible:ring-2 focus-visible:ring-[#FF0000]/40
                                                 overflow-hidden group
                                                 ${isSelected
-                                                    ? 'bg-[#3d5c3a] shadow-[0_3px_12px_rgba(61,92,58,0.28)] scale-[1.01]'
+                                                    ? 'bg-[#FF0000] shadow-[0_3px_12px_rgba(255,0,0,0.28)] scale-[1.01]'
                                                     : isDisabled
                                                         ? 'bg-gray-50 opacity-40 cursor-not-allowed'
-                                                        : 'bg-white border border-gray-100 hover:border-[#3d5c3a]/25 hover:bg-[#f4f9f4] hover:shadow-sm'
+                                                        : 'bg-white border border-gray-100 hover:border-[#FF0000]/25 hover:bg-[#fff5f5] hover:shadow-sm'
                                                 }
                                             `}
                                         >
@@ -541,7 +541,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                 flex items-center justify-center transition-all duration-150
                                                 ${isSelected
                                                     ? 'border-white/60 bg-white/20'
-                                                    : 'border-gray-300 group-hover:border-[#3d5c3a]/50'
+                                                    : 'border-gray-300 group-hover:border-[#FF0000]/50'
                                                 }
                                             `}>
                                                 {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
@@ -564,7 +564,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                         transition-all duration-150
                                                         ${isSelected
                                                             ? 'bg-white/20 text-white'
-                                                            : 'bg-gray-100 text-gray-700 group-hover:bg-[#3d5c3a]/10 group-hover:text-[#3d5c3a]'
+                                                            : 'bg-gray-100 text-gray-700 group-hover:bg-[#FF0000]/10 group-hover:text-[#FF0000]'
                                                         }
                                                     `}>
                                                         {formatPrice(v.price, v.country_prices || product.country_prices)}
@@ -596,7 +596,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                     </div>
 
                     {/* ── Footer CTA ────────────────────────────────────────────── */}
-                    <div className="mt-3 pt-3 border-t border-[#3d5c3a]/8">
+                    <div className="mt-3 pt-3 border-t border-[#FF0000]/10">
                         {!isInCart ? (
                             <button
                                 onClick={(e) => handleModalAddToCart(e)}
@@ -611,7 +611,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                     active:scale-[0.97] disabled:opacity-50
                                     ${justAdded
                                         ? 'bg-emerald-600 shadow-[0_4px_14px_rgba(5,150,105,0.35)]'
-                                        : 'bg-[#3d5c3a] hover:bg-[#2d4a2a] shadow-[0_4px_14px_rgba(61,92,58,0.25)] hover:shadow-[0_6px_18px_rgba(61,92,58,0.35)]'
+                                        : 'bg-[#FF0000] hover:bg-red-700 shadow-[0_4px_14px_rgba(255,0,0,0.25)] hover:shadow-[0_6px_18px_rgba(255,0,0,0.35)]'
                                     }
                                 `}
                             >
@@ -643,15 +643,15 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                     {currentItemInCart.quantity > 1 ? <Minus className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
                                 </button>
 
-                                <div className="flex-1 flex flex-col items-center justify-center bg-[#3d5c3a]/5 rounded-xl py-1 border border-[#3d5c3a]/10">
-                                    <p className="text-[8px] font-bold text-[#3d5c3a]/60 uppercase tracking-widest leading-none mb-0.5">in cart</p>
-                                    <p className="text-base font-black text-[#3d5c3a] leading-none">{currentItemInCart.quantity}</p>
+                                <div className="flex-1 flex flex-col items-center justify-center bg-[#FF0000]/5 rounded-xl py-1 border border-[#FF0000]/10">
+                                    <p className="text-[8px] font-bold text-[#FF0000]/60 uppercase tracking-widest leading-none mb-0.5">in cart</p>
+                                    <p className="text-base font-black text-[#FF0000] leading-none">{currentItemInCart.quantity}</p>
                                 </div>
 
                                 <button
                                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleIncrement(); }}
                                     disabled={addingToCart}
-                                    className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-xl bg-[#3d5c3a] text-white hover:bg-[#2d4a2a] transition-all cursor-pointer shadow-sm shadow-[#3d5c3a]/30"
+                                    className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-xl bg-[#FF0000] text-white hover:bg-red-700 transition-all cursor-pointer shadow-sm shadow-[#FF0000]/30"
                                 >
                                     <Plus className="h-3.5 w-3.5" />
                                 </button>
@@ -835,7 +835,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                 {isDisabled ? (
                                                     <span className="text-[10px] text-gray-400 font-semibold">—</span>
                                                 ) : variantInCart ? (
-                                                    <div className="flex items-center gap-0 border border-[#3d5c3a] rounded-lg overflow-hidden shadow-sm">
+                                                    <div className="flex items-center gap-0 border border-[#FF0000] rounded-lg overflow-hidden shadow-sm">
                                                         <button
                                                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleVariantDecrement(variantCartItem!); }}
                                                             disabled={addingToCart}
@@ -843,13 +843,13 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                         >
                                                             {variantCartItem!.quantity > 1 ? <Minus className="h-3 w-3" /> : <X className="h-3 w-3" />}
                                                         </button>
-                                                        <span className="w-6 text-center text-[12px] font-bold text-[#3d5c3a] bg-[#3d5c3a]/5">
+                                                        <span className="w-6 text-center text-[12px] font-bold text-[#FF0000] bg-[#FF0000]/5">
                                                             {variantCartItem!.quantity}
                                                         </span>
                                                         <button
                                                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleVariantIncrement(variantCartItem!); }}
                                                             disabled={addingToCart}
-                                                            className="w-7 h-7 flex items-center justify-center bg-[#3d5c3a] hover:bg-[#2d4a2a] transition-colors cursor-pointer text-white"
+                                                            className="w-7 h-7 flex items-center justify-center bg-[#FF0000] hover:bg-red-700 transition-colors cursor-pointer text-white"
                                                         >
                                                             <Plus className="h-3 w-3" />
                                                         </button>
@@ -858,7 +858,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                     <button
                                                         onClick={(e) => handleVariantDirectAdd(v, e)}
                                                         disabled={addingToCart}
-                                                        className="px-4 py-1.5 border border-[#3d5c3a] rounded-lg text-[11px] font-bold text-[#3d5c3a] bg-white hover:bg-[#3d5c3a]/5 transition-all cursor-pointer shadow-sm"
+                                                        className="px-4 py-1.5 border border-[#FF0000] rounded-lg text-[11px] font-bold text-[#FF0000] bg-white hover:bg-[#FF0000]/5 transition-all cursor-pointer shadow-sm"
                                                     >
                                                         ADD
                                                     </button>
@@ -890,7 +890,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
         <>
             <div className="relative group block h-full" ref={cardRef}>
                 {/* ═══════ FRONT OF CARD ═══════ */}
-                <div className={`h-full bg-white transition-all duration-300 ${isList ? 'overflow-hidden flex flex-row p-3 border border-gray-100 hover:bg-gray-50/50 hover:border-[#3d5c3a]/30 rounded-2xl gap-4 sm:gap-6 items-center shadow-sm hover:shadow-md' : 'flex flex-col rounded-2xl overflow-visible'}`}>
+                <div className={`h-full bg-white transition-all duration-300 ${isList ? 'overflow-hidden flex flex-row p-3 border border-gray-100 hover:bg-gray-50/50 hover:border-[#FF0000]/30 rounded-2xl gap-4 sm:gap-6 items-center shadow-sm hover:shadow-md' : 'flex flex-col rounded-2xl overflow-visible'}`}>
                     <div className={`relative overflow-hidden bg-gradient-to-br from-[#f5f2ed] to-[#ece6dd] ${isList ? 'w-[100px] h-[100px] sm:w-[150px] sm:h-[150px] rounded-xl flex-shrink-0 border border-gray-100/50' : 'rounded-2xl border border-gray-200 mx-2 mt-2'}`} style={isList ? {} : { aspectRatio: '5 / 4' }}>
                         <div className="absolute inset-0 flex items-center justify-center p-4">
                             {isBase64 ? (
@@ -992,12 +992,12 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                             </button>
                                             <div className="px-2 flex flex-col items-center justify-center min-w-[36px]">
                                                 <span className="text-[7px] font-bold text-gray-400 uppercase tracking-wider leading-none">QTY</span>
-                                                <span className="text-[13px] font-black text-[#3d5c3a] leading-tight">{currentItemInCart.quantity}</span>
+                                                <span className="text-[13px] font-black text-[#FF0000] leading-tight">{currentItemInCart.quantity}</span>
                                             </div>
                                             <button
                                                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleIncrement(); }}
                                                 disabled={addingToCart}
-                                                className="w-8 h-8 flex items-center justify-center bg-[#3d5c3a] hover:bg-[#2d4a2a] transition-colors cursor-pointer text-white"
+                                                className="w-8 h-8 flex items-center justify-center bg-[#FF0000] hover:bg-red-700 transition-colors cursor-pointer text-white"
                                             >
                                                 <Plus className="h-3.5 w-3.5" />
                                             </button>
@@ -1008,8 +1008,8 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                             onClick={(e) => onMoveToCart ? onMoveToCart(e) : openCartModal(e)}
                                             disabled={cartLoading || addingToCart || justAdded}
                                             className={`relative flex items-center justify-center px-5 py-1.5 bg-white border-2 rounded-lg shadow-[0_2px_12px_rgba(0,0,0,0.1)] transition-all duration-200 cursor-pointer ${addingToCart || justAdded
-                                                ? 'border-[#3d5c3a] bg-[#3d5c3a]'
-                                                : 'border-[#3d5c3a] hover:bg-gray-50'
+                                                ? 'border-[#FF0000] bg-[#FF0000]'
+                                                : 'border-[#FF0000] hover:bg-gray-50'
                                                 }`}
                                         >
                                             {addingToCart ? (
@@ -1017,7 +1017,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                             ) : justAdded ? (
                                                 <Check className="h-4 w-4 text-white" />
                                             ) : (
-                                                <span className="text-[13px] font-extrabold text-[#3d5c3a] tracking-wide">ADD</span>
+                                                <span className="text-[13px] font-extrabold text-[#FF0000] tracking-wide">ADD</span>
                                             )}
                                         </button>
                                     )
@@ -1026,11 +1026,11 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                     <button
                                         onClick={openCartModal}
                                         className={`relative flex flex-col items-center px-5 py-1.5 bg-white border-2 rounded-lg shadow-[0_2px_12px_rgba(0,0,0,0.1)] transition-all duration-200 cursor-pointer ${showCartModal
-                                            ? 'border-[#3d5c3a] bg-[#3d5c3a]/5'
-                                            : 'border-[#3d5c3a] hover:bg-gray-50'
+                                            ? 'border-[#FF0000] bg-[#FF0000]/5'
+                                            : 'border-[#FF0000] hover:bg-gray-50'
                                             }`}
                                     >
-                                        <span className="text-[13px] font-extrabold text-[#3d5c3a] tracking-wide leading-tight">ADD</span>
+                                        <span className="text-[13px] font-extrabold text-[#FF0000] tracking-wide leading-tight">ADD</span>
                                         <span className="text-[8px] font-semibold text-gray-400 leading-none mt-[1px]">
                                             {product.variant_count ?? product.variants?.length ?? 0} options
                                         </span>
@@ -1044,7 +1044,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                     <div className={`p-2.5 sm:p-3 ${isList ? 'flex-1 flex flex-col justify-center min-w-0 p-0 sm:pr-3' : 'pt-5'}`}>
                         {/* Price Display Block (Box Style) */}
                         <div className="flex items-center gap-2 mb-2 sm:mb-3">
-                            <div className="bg-black text-white px-2.5 py-1 rounded-lg font-black text-[13px] sm:text-[15px] shadow-[0_3px_0_0_#75A32B] flex items-center justify-center min-w-[60px]">
+                            <div className="bg-black text-white px-2.5 py-1 rounded-lg font-black text-[13px] sm:text-[15px] shadow-[0_3px_0_0_#91CA35] flex items-center justify-center min-w-[60px]">
                                 {formatPrice(displayPrice, product.country_prices)}
                             </div>
                             {(discountPercent > 0 || originalPrice > displayPrice) && (
@@ -1055,7 +1055,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                         </div>
 
                         {/* Dashed green separator */}
-                        <div className="border-b border-dashed border-[#91C934] mb-2 sm:mb-2.5" />
+                        <div className="border-b border-dashed border-[#91CA35] mb-2 sm:mb-2.5" />
 
                         <h3 className={`font-sans font-bold text-gray-900 leading-snug sm:leading-tight mb-0.5 sm:mb-1 ${isList ? 'text-lg sm:text-xl line-clamp-1 sm:line-clamp-2' : 'text-sm sm:text-[14px] line-clamp-2'}`}>
                             <Link
@@ -1133,7 +1133,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                     .map((attr, idx) => (
                                         <span
                                             key={idx}
-                                            className="text-[10px] font-bold tracking-wide text-[#3d5c3a] uppercase bg-[#6B8F5E]/10 border border-[#6B8F5E]/20 px-2.5 py-0.5 rounded-full"
+                                            className="text-[10px] font-bold tracking-wide text-[#FF0000] uppercase bg-red-50 border border-red-100 px-2.5 py-0.5 rounded-full"
                                         >
                                             {attr}
                                         </span>
@@ -1153,8 +1153,8 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                 text-[11px] sm:text-xs font-bold px-3 sm:px-5 py-2 sm:py-2.5
                                                 rounded-lg transition-all duration-200 cursor-pointer shadow-sm
                                                 ${showInlineOptions
-                                                ? 'bg-[#2d4a2a] text-white shadow-[0_0_0_3px_rgba(61,92,58,0.2)]'
-                                                : 'bg-[#3d5c3a] text-white hover:bg-[#2d4a2a] hover:shadow'
+                                                ? 'bg-red-800 text-white shadow-[0_0_0_3px_rgba(255,0,0,0.2)]'
+                                                : 'bg-[#FF0000] text-white hover:bg-red-700 hover:shadow'
                                             }
                                             `}
                                     >
@@ -1165,7 +1165,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                     <button
                                         onClick={(e) => onMoveToCart ? onMoveToCart(e) : openCartModal(e)}
                                         disabled={cartLoading || addingToCart || justAdded}
-                                        className={`inline-flex flex-1 sm:flex-none justify-center items-center gap-1.5 text-white text-[11px] sm:text-xs font-bold px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg transition-all cursor-pointer shadow-sm hover:shadow disabled:opacity-70 ${justAdded ? 'bg-[#2a4d2e]' : 'bg-[#3d5c3a] hover:bg-[#2d4a2a]'}`}
+                                        className={`inline-flex flex-1 sm:flex-none justify-center items-center gap-1.5 text-white text-[11px] sm:text-xs font-bold px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg transition-all cursor-pointer shadow-sm hover:shadow disabled:opacity-70 ${justAdded ? 'bg-emerald-600' : 'bg-[#FF0000] hover:bg-red-700'}`}
                                     >
                                         {addingToCart ? (
                                             <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -1179,9 +1179,9 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                 )}
                                 <button
                                     onClick={handleToggleWishlist}
-                                    className={`relative z-30 inline-flex flex-shrink-0 items-center justify-center p-2.5 sm:p-2.5 rounded-lg border transition-all cursor-pointer ${wishlisted ? 'border-[#3d5c3a]/30 bg-[#3d5c3a]/5' : 'border-gray-200 bg-white hover:border-[#3d5c3a]/30 hover:bg-gray-50'}`}
+                                    className={`relative z-30 inline-flex flex-shrink-0 items-center justify-center p-2.5 sm:p-2.5 rounded-lg border transition-all cursor-pointer ${wishlisted ? 'border-red-500/30 bg-red-50' : 'border-gray-200 bg-white hover:border-red-500/30 hover:bg-gray-50'}`}
                                 >
-                                    <Heart className={`h-4 w-4 sm:h-4 sm:w-4 ${wishlisted ? 'fill-[#3d5c3a] text-[#3d5c3a]' : 'text-gray-400'}`} />
+                                    <Heart className={`h-4 w-4 sm:h-4 sm:w-4 ${wishlisted ? 'fill-[#FF0000] text-[#FF0000]' : 'text-gray-400'}`} />
                                 </button>
                             </div>
                         )}

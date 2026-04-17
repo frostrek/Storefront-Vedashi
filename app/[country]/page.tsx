@@ -233,7 +233,7 @@ export default function HomePage() {
                 loading={loading}
                 title="Best Sellers"
                 subtitle="Our most-loved natural wellness essentials, chosen by you."
-                viewAllLink={`/${country}/products?sort=popular&bestSeller=true`}
+                viewAllLink={`/${country}/products?bestSeller=true`}
                 viewAllText="Explore our Best Sellers"
               />
             </div>
