@@ -1042,11 +1042,11 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
 
                     {/* Content */}
                     <div className={`p-2 sm:p-2 ${isList ? 'flex-1 flex flex-col justify-center min-w-0 p-0 sm:pr-3' : 'pt-5'}`}>
-                        {/* Price Display Block (Box Style) */}
-                        <div className="flex items-center gap-2 mb-2 sm:mb-2">
-                            <div className="bg-[#91C935] text-white px-2.5 py-1 rounded-lg font-black text-[13px] sm:text-[15px] shadow-[0_3px_0_0_#7eb02e] flex items-center justify-center min-w-[60px]">
+                        {/* Price Display */}
+                        <div className="flex items-center gap-2 mb-1.5 sm:mb-2 px-1 text-[#91C935]">
+                            <span className="font-black text-[15px] sm:text-[17px] leading-none py-0.5">
                                 {formatPrice(displayPrice, product.country_prices)}
-                            </div>
+                            </span>
                             {(discountPercent > 0 || originalPrice > displayPrice) && (
                                 <span className="text-gray-400 line-through text-[11px] sm:text-xs font-bold font-ui">
                                     {formatPrice(originalPrice, product.country_prices)}

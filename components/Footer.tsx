@@ -67,7 +67,7 @@ const FALLBACK: FooterData = {
     company: {
         name: 'Vedashi',
         description: 'Nurturing your journey towards holistic health through the ancient wisdom of Ayurveda.',
-        logo_url: '/vedashi-logo.png',
+        logo_url: '/vedashi-logo-white.png',
     },
     links: [
         {
@@ -177,14 +177,14 @@ export default function Footer() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-6 xl:gap-8 justify-between">
 
                         {/* 1. Vedashi Logo + Address */}
-                        <div className="flex flex-col gap-6 items-start lg:col-span-4">
+                        <div className="flex flex-col gap-6 items-start lg:col-span-5">
                             <div className="flex flex-col gap-2.5 items-start">
                                 <Image
-                                    src={company?.logo_url || '/vedashi-logo.png'}
+                                    src={company?.logo_url || '/vedashi-logo-white.png'}
                                     alt={company?.name || 'Vedashi'}
                                     width={180}
                                     height={48}
-                                    className="h-10 w-auto object-contain brightness-0 invert object-left"
+                                    className="h-10 w-auto object-contain object-left"
                                 />
                                 <div className="flex flex-col gap-1.5">
                                     <div className="flex items-start gap-2">
@@ -287,8 +287,8 @@ export default function Footer() {
                         </div>
 
                         {/* 4. Partner / Vendor Registration */}
-                        <div className="lg:col-span-4 flex flex-col gap-4 justify-start">
-                            <div className="relative rounded-2xl overflow-hidden bg-[#181818] border border-[#2a2a2a] group flex flex-col justify-center shadow-lg min-h-[115px]">
+                        <div className="lg:col-span-3 flex flex-col gap-3 justify-start">
+                            <div className="relative rounded-xl overflow-hidden bg-[#181818] border border-[#2a2a2a] group flex flex-col justify-center shadow-lg min-h-[96px]">
                                 <div className="absolute inset-y-0 left-0 w-[60%] z-0 overflow-hidden">
                                     <Image
                                         src="/Footer-banners/vendor regis.jpeg"
@@ -300,16 +300,16 @@ export default function Footer() {
                                     <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-[#181818] to-transparent" />
                                 </div>
 
-                                <div className="relative z-10 py-3 px-4 sm:pr-5 flex flex-row items-center h-full w-full justify-end">
-                                    <div className="flex flex-col items-start max-w-[200px]">
-                                        <h5 className="text-[#91C935] text-base sm:text-lg font-bold mb-0.5 drop-shadow-md">Become a Partner</h5>
-                                        <p className="text-gray-200 text-[10.5px] sm:text-[11px] leading-snug mb-2 drop-shadow-sm">
+                                <div className="relative z-10 py-2 px-3 sm:pr-4 flex flex-row items-center h-full w-full justify-end">
+                                    <div className="flex flex-col items-start max-w-[170px]">
+                                        <h5 className="text-[#91C935] text-sm sm:text-base font-bold mb-0.5 drop-shadow-md">Become a Partner</h5>
+                                        <p className="text-gray-200 text-[9.5px] sm:text-[10px] leading-tight mb-1.5 drop-shadow-sm">
                                             Start selling with Vedashi<br />
-                                            and reach thousands of customers.
+                                            and reach thousands.
                                         </p>
                                         <Link
                                             href="/vendor-registration"
-                                            className="inline-flex w-fit items-center justify-center bg-[#91C935] hover:bg-[#7eb02e] text-white text-[12px] font-medium py-1.5 px-5 rounded-full transition-all duration-300 shadow-[0_4px_12px_rgba(110,147,42,0.2)] hover:shadow-[0_6px_16px_rgba(110,147,42,0.3)] hover:-translate-y-0.5"
+                                            className="inline-flex w-fit items-center justify-center bg-[#91C935] hover:bg-[#7eb02e] text-white text-[11px] font-medium py-1 px-4 rounded-full transition-all duration-300 shadow-[0_4px_12px_rgba(110,147,42,0.2)] hover:shadow-[0_6px_16px_rgba(110,147,42,0.3)] hover:-translate-y-0.5"
                                         >
                                             Register Now
                                         </Link>
@@ -317,7 +317,7 @@ export default function Footer() {
                                 </div>
                             </div>
                             {/* Bulk Orders */}
-                            <div className="relative rounded-2xl overflow-hidden bg-[#181818] border border-[#2a2a2a] group flex flex-col justify-center shadow-lg min-h-[115px]">
+                            <div className="relative rounded-xl overflow-hidden bg-[#181818] border border-[#2a2a2a] group flex flex-col justify-center shadow-lg min-h-[96px]">
                                 <div className="absolute inset-y-0 left-0 w-[60%] z-0 overflow-hidden">
                                     <Image
                                         src="/Footer-banners/bulk order.jpeg"
@@ -329,16 +329,16 @@ export default function Footer() {
                                     <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-[#181818] to-transparent" />
                                 </div>
 
-                                <div className="relative z-10 py-3 px-4 sm:pr-5 flex flex-row items-center h-full w-full justify-end">
-                                    <div className="flex flex-col items-start max-w-[200px]">
-                                        <h5 className="text-[#91C935] text-base sm:text-lg font-bold mb-0.5 drop-shadow-md">Bulk Orders</h5>
-                                        <p className="text-gray-200 text-[10.5px] sm:text-[11px] leading-snug mb-2 drop-shadow-sm">
-                                            Stock up on authentic Vedashi<br />
+                                <div className="relative z-10 py-2 px-3 sm:pr-4 flex flex-row items-center h-full w-full justify-end">
+                                    <div className="flex flex-col items-start max-w-[170px]">
+                                        <h5 className="text-[#91C935] text-sm sm:text-base font-bold mb-0.5 drop-shadow-md">Bulk Orders</h5>
+                                        <p className="text-gray-200 text-[9.5px] sm:text-[10px] leading-tight mb-1.5 drop-shadow-sm">
+                                            Stock up on Vedashi<br />
                                             products at special bulk prices.
                                         </p>
                                         <Link
                                             href="/contact"
-                                            className="inline-flex w-fit items-center justify-center bg-[#91C935] hover:bg-[#7eb02e] text-white text-[12px] font-medium py-1.5 px-5 rounded-full transition-all duration-300 shadow-[0_4px_12px_rgba(110,147,42,0.2)] hover:shadow-[0_6px_16px_rgba(110,147,42,0.3)] hover:-translate-y-0.5"
+                                            className="inline-flex w-fit items-center justify-center bg-[#91C935] hover:bg-[#7eb02e] text-white text-[11px] font-medium py-1 px-4 rounded-full transition-all duration-300 shadow-[0_4px_12px_rgba(110,147,42,0.2)] hover:shadow-[0_6px_16px_rgba(110,147,42,0.3)] hover:-translate-y-0.5"
                                         >
                                             Inquire Now
                                         </Link>
