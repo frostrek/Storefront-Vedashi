@@ -246,8 +246,9 @@ export async function proxy(request: NextRequest) {
     targetPath = targetPath.slice(0, -1);
   }
   
-  // Build absolute redirect using SITE_URL to strip internal ports
-  const redirectUrl = new URL(`${targetPath}${search}`, SITE_URL);
+  // Build absolute redirect using SITE_URL to strip internal ports in production
+  const baseUrl = process.env.NODE_ENV === 'production' ? SITE_URL : request.nextUrl.origin;
+  const redirectUrl = new URL(`${targetPath}${search}`, baseUrl);
   const response = NextResponse.redirect(redirectUrl);
 
   // 5. Set geo cookies
