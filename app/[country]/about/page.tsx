@@ -1,55 +1,56 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, Leaf, Star, Heart, Award, FlaskConical, ShieldCheck, Sparkles, BookOpen, Users } from 'lucide-react';
+import { ArrowRight, Leaf, ShieldCheck, MapPin, BookOpen, Globe, Rocket, ShoppingBag, TrendingUp } from 'lucide-react';
 import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
 
 export default function AboutPage() {
     return (
-        <div className="min-h-screen bg-cream relative">
-            {/* Ayurvedic Botanical Texture Background - Absolute ensures it doesn't overlap global footer */}
-            <div className="absolute inset-0 pointer-events-none z-0 opacity-[0.10]" style={{
+        <div className="min-h-screen bg-[#FDFCFB] relative">
+            {/* Background Texture */}
+            <div className="absolute inset-0 pointer-events-none z-0 opacity-[0.03]" style={{
                 backgroundImage: `url("/ayurvedic-texture.png")`,
                 backgroundSize: '400px 400px',
                 backgroundRepeat: 'repeat'
             }} />
 
             {/* ═══════════════════════════════════════════════════════════
-          HERO — "Crafting a Legacy of Balance"
+          HERO — Our Story
       ═══════════════════════════════════════════════════════════ */}
             <section className="relative overflow-hidden">
                 <div
                     className="absolute inset-0 bg-cover bg-center"
                     style={{
-                        backgroundImage: `linear-gradient(to bottom, rgba(44,44,44,0.50), rgba(44,44,44,0.70)),
-              url('/about-hero.png')`,
+                        backgroundImage: `linear-gradient(to bottom, rgba(30, 41, 30, 0.60), rgba(30, 41, 30, 0.85)), url('/about-hero.png')`,
                     }}
                 />
                 <div className="relative mx-auto max-w-4xl px-4 py-28 lg:py-44 text-center">
                     <AnimateOnScroll animation="fadeIn" duration={0.8}>
                         <p className="text-sm uppercase tracking-[0.3em] text-[#C9B87A] font-medium mb-4">
-                            Our Origin
+                            Our Story
                         </p>
                     </AnimateOnScroll>
                     <AnimateOnScroll animation="fadeUp" delay={0.1} duration={0.9}>
                         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight">
-                            Crafting a Legacy of{' '}
-                            <em className="italic text-[#C9B87A]">Balance</em>
+                            The Ancient Wisdom of India,<br />
+                            <em className="italic text-[#C9B87A]">Belongs to the World</em>
                         </h1>
                     </AnimateOnScroll>
                     <AnimateOnScroll animation="fadeUp" delay={0.25} duration={0.9}>
-                        <p className="mt-6 text-base sm:text-lg text-[#E8DCAF]/90 max-w-2xl mx-auto leading-relaxed">
-                            From ancient Himalayan traditions to your doorstep, every formulation
-                            carries the wisdom of 5,000 years and the precision of modern science.
+                        <p className="mt-8 text-base sm:text-lg text-[#E8DCAF]/90 max-w-2xl mx-auto leading-relaxed">
+                            Rooted in the Sanskrit words <strong>Veda</strong> (knowledge) and <strong>Ashi</strong> (blessing), we bring you authentic herbal wellness, pure spices, and natural beauty products sourced directly from India.
+                        </p>
+                        <p className="mt-4 text-base sm:text-lg text-[#E8DCAF]/90 max-w-2xl mx-auto leading-relaxed">
+                            From the foothills of the Himalayas to the spice gardens of Kerala, we work with trusted farmers, artisans, and certified manufacturers to deliver products that honor tradition while meeting the highest global standards.
                         </p>
                     </AnimateOnScroll>
                     <AnimateOnScroll animation="fadeUp" delay={0.4}>
-                        <div className="mt-8 flex flex-wrap justify-center gap-4">
+                        <div className="mt-10 flex flex-wrap justify-center gap-4">
                             <Link
                                 href="/products"
-                                className="inline-flex items-center gap-2.5 rounded-lg bg-[#3B5D3B] px-7 py-3.5 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:bg-[#2D4A2D] hover:-translate-y-0.5 hover:shadow-xl"
+                                className="inline-flex items-center gap-2.5 rounded-full bg-[#5F6F52] px-8 py-4 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:bg-[#4A5A3E] hover:-translate-y-0.5 hover:shadow-xl"
                             >
-                                Explore Remedies
+                                Explore Collections
                                 <ArrowRight className="h-4 w-4" />
                             </Link>
                         </div>
@@ -58,308 +59,177 @@ export default function AboutPage() {
             </section>
 
             {/* ═══════════════════════════════════════════════════════════
-          MISSION — "A Return to Purity"
+          MISSION
       ═══════════════════════════════════════════════════════════ */}
-            <section className="py-16 sm:py-24 lg:py-28 px-4 relative z-10">
-                <div className="mx-auto max-w-7xl grid grid-cols-1 gap-12 lg:grid-cols-2 items-center">
-                    {/* Image + floating card */}
+            <section className="py-20 sm:py-28 lg:py-32 px-4 relative z-10 bg-white">
+                <div className="mx-auto max-w-7xl grid grid-cols-1 gap-12 lg:gap-20 lg:grid-cols-2 items-center">
+                    {/* Image */}
                     <AnimateOnScroll animation="fadeLeft" duration={0.9}>
                         <div className="relative">
-                            <div className="rounded-2xl overflow-hidden shadow-xl">
+                            <div className="rounded-3xl overflow-hidden shadow-2xl">
                                 <img
                                     src="/about-mission.png"
-                                    alt="Herbal preparation"
-                                    className="w-full h-[380px] object-cover"
+                                    alt="Our Mission"
+                                    className="w-full h-[450px] object-cover transition-transform duration-700 hover:scale-105"
                                 />
                             </div>
-                            {/* Floating stat */}
-                            <div className="absolute -bottom-6 -right-4 sm:right-8 rounded-xl bg-white shadow-xl p-5 border border-[#E0DCCF]">
-                                <p className="text-xs font-bold tracking-widest uppercase text-[#8B7A3D]">
-                                    Preserving traditions from the heart of
-                                </p>
-                                <p className="text-lg font-bold text-[#3B5D3B] mt-1">
-                                    the Himalayas, 5000+ yrs
+                            <div className="absolute -bottom-8 -right-4 sm:right-8 rounded-2xl bg-white shadow-xl p-6 border border-[#F0EBE1] max-w-xs">
+                                <Leaf className="h-8 w-8 text-[#5F6F52] mb-3" />
+                                <p className="text-sm font-bold tracking-wide text-[#2C2C2C]">
+                                    Bridging the gap between traditional origins and conscious consumers globally.
                                 </p>
                             </div>
                         </div>
                     </AnimateOnScroll>
 
                     {/* Text */}
-                    <div>
+                    <div className="lg:pl-8">
                         <AnimateOnScroll animation="fadeRight" delay={0.1}>
+                            <p className="text-sm font-bold tracking-widest text-[#8B7A3D] uppercase mb-3">Our Mission</p>
                             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C2C2C] leading-tight">
-                                A Return to <em className="italic text-[#3B5D3B]">Purity</em>
+                                Empowering Brands,<br />
+                                <em className="italic text-[#5F6F52]">Enriching Lives</em>
                             </h2>
                         </AnimateOnScroll>
                         <AnimateOnScroll animation="fadeRight" delay={0.2}>
-                            <p className="mt-6 text-[#6B6B60] leading-relaxed text-base">
-                                Vedashi was founded on a provocative question: what if modern wellness
-                                didn&apos;t abandon ancient wisdom, but perfected it? We began by partnering
-                                directly with Ayurvedic physicians and tribal harvesters to create
-                                formulations that honor tradition while passing the most rigorous
-                                clinical trials.
+                            <p className="mt-6 text-[#6B6B60] leading-relaxed text-lg">
+                                To make authentic Indian wellness, food, and beauty products accessible to conscious consumers worldwide — while empowering Indian brands and startups to scale globally without the complexities of international expansion.
                             </p>
-                        </AnimateOnScroll>
-                        <AnimateOnScroll animation="fadeRight" delay={0.3}>
-                            <p className="mt-4 text-[#6B6B60] leading-relaxed text-base">
-                                Every Vedashi product represents our unwavering commitment to purity,
-                                efficacy, and sustainability — bringing you healing that is both ancient
-                                and evidence-based.
-                            </p>
-                        </AnimateOnScroll>
-                        <AnimateOnScroll animation="fadeRight" delay={0.4}>
-                            <div className="mt-8 flex flex-wrap gap-6">
-                                {[
-                                    { number: '40+', label: 'Years of Practice' },
-                                    { number: '250k+', label: 'Protocols Delivered' },
-                                    { number: '98%', label: 'Client Satisfaction' },
-                                ].map((stat, i) => (
-                                    <div key={i}>
-                                        <p className="text-2xl font-bold text-[#3B5D3B]">{stat.number}</p>
-                                        <p className="text-xs text-[#6B6B60] mt-0.5">{stat.label}</p>
-                                    </div>
-                                ))}
-                            </div>
                         </AnimateOnScroll>
                     </div>
                 </div>
             </section>
 
             {/* ═══════════════════════════════════════════════════════════
-          JOURNEY/TIMELINE — "The Path of Prakriti"
+          WHAT WE DO
       ═══════════════════════════════════════════════════════════ */}
-            <section className="py-16 sm:py-24 lg:py-28 px-4 bg-white relative z-10">
-                <div className="mx-auto max-w-4xl">
+            <section className="py-20 sm:py-28 px-4 bg-[#F9F8F6] relative z-10">
+                <div className="mx-auto max-w-7xl">
                     <AnimateOnScroll animation="fadeUp">
                         <div className="text-center mb-16">
                             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C2C2C]">
-                                The Path of <em className="italic text-[#3B5D3B]">Prakriti</em>
+                                What We <em className="italic text-[#5F6F52]">Do</em>
                             </h2>
-                            <p className="mt-3 text-[#6B6B60] italic">
-                                Milestones in our journey to bring Ayurveda to the modern world
+                            <p className="mt-4 text-[#6B6B60] max-w-xl mx-auto text-lg">
+                                Creating a seamless bridge between India's finest creators and the global market.
                             </p>
                         </div>
                     </AnimateOnScroll>
 
-                    <div className="space-y-0">
-                        {[
-                            {
-                                icon: Leaf,
-                                title: 'The Foundation',
-                                desc: 'Vedashi was established by a collective of Ayurvedic Vaidyas and modern physicians united by one mission: to clinically validate traditional healing.',
-                                year: '1984',
-                            },
-                            {
-                                icon: FlaskConical,
-                                title: 'The Vedashi Protocol',
-                                desc: 'Developed our proprietary extraction process that preserves the full-spectrum bioactive compounds of raw botanicals — a breakthrough in Ayurvedic pharmacology.',
-                                year: '2001',
-                            },
-                            {
-                                icon: Award,
-                                title: 'Global Recognition',
-                                desc: 'Received international clinical accreditation and began partnerships with leading wellness institutions across 12 countries.',
-                                year: '2015',
-                            },
-                            {
-                                icon: Users,
-                                title: 'Community of Healers',
-                                desc: 'Launched the Vedashi Practitioner Network, training over 1,200 certified Ayurvedic consultants worldwide.',
-                                year: '2023',
-                            },
-                        ].map((event, i) => (
-                            <AnimateOnScroll key={i} animation="fadeUp" delay={i * 0.1}>
-                                <div className="flex gap-6 items-start group">
-                                    <div className="flex-shrink-0 flex flex-col items-center">
-                                        <div className="h-12 w-12 rounded-full bg-[#3B5D3B]/10 flex items-center justify-center group-hover:bg-[#3B5D3B]/20 transition-colors">
-                                            <event.icon className="h-5 w-5 text-[#3B5D3B]" />
-                                        </div>
-                                        {i < 3 && <div className="w-0.5 h-16 bg-[#E0DCCF] mt-2" />}
-                                    </div>
-                                    <div className="pb-8 pt-1">
-                                        <span className="text-[11px] font-bold tracking-widest text-[#8B7A3D] uppercase">{event.year}</span>
-                                        <h3 className="text-xl font-bold text-[#2C2C2C] mt-1">{event.title}</h3>
-                                        <p className="mt-2 text-sm text-[#6B6B60] leading-relaxed max-w-md">{event.desc}</p>
-                                    </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <AnimateOnScroll animation="fadeUp" delay={0.1}>
+                            <div className="bg-white rounded-3xl p-10 sm:p-14 border border-[#F0EBE1] shadow-sm hover:shadow-xl transition-all duration-300 h-full flex flex-col group">
+                                <div className="h-16 w-16 rounded-2xl bg-[#5F6F52]/10 flex items-center justify-center mb-6 group-hover:bg-[#5F6F52]/20 transition-colors">
+                                    <ShoppingBag className="h-8 w-8 text-[#5F6F52]" />
                                 </div>
-                            </AnimateOnScroll>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* ═══════════════════════════════════════════════════════════
-          TEAM — "Meet the Visionaries"
-      ═══════════════════════════════════════════════════════════ */}
-            <section className="py-16 sm:py-24 lg:py-28 px-4 relative z-10">
-                <div className="mx-auto max-w-7xl">
-                    <AnimateOnScroll animation="fadeUp">
-                        <div className="text-center mb-14">
-                            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C2C2C]">
-                                Meet the Visionaries
-                            </h2>
-                            <p className="mt-3 text-[#6B6B60] max-w-lg mx-auto">
-                                A collective of healers, scientists, and practitioners dedicated to
-                                your highest wellness.
-                            </p>
-                        </div>
-                    </AnimateOnScroll>
-
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                        {[
-                            {
-                                name: 'Dr. Ananda Prabhu',
-                                role: 'Founder & Chief Vaidya',
-                                initial: 'A',
-                                color: 'bg-[#3B5D3B]/10',
-                                desc: 'Fourth-generation Ayurvedic physician with a doctorate in Integrative Medicine from Harvard.',
-                            },
-                            {
-                                name: 'Maya Chen',
-                                role: 'Head of R&D',
-                                initial: 'M',
-                                color: 'bg-[#8B7A3D]/10',
-                                desc: 'Ethnobotanist specializing in bioactive compound extraction from Himalayan medicinal plants.',
-                            },
-                            {
-                                name: 'Ashwin Mehta',
-                                role: 'Director of Clinical Operations',
-                                initial: 'A',
-                                color: 'bg-[#3B5D3B]/10',
-                                desc: 'MD with 20+ years in integrative oncology, overseeing all clinical trials and practitioner training.',
-                            },
-                        ].map((member, i) => (
-                            <AnimateOnScroll key={i} animation="fadeUp" delay={i * 0.12}>
-                                <div className="rounded-2xl border border-[#E0DCCF] bg-white p-8 text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group shadow-sm">
-                                    <div className={`mx-auto mb-5 h-20 w-20 rounded-full ${member.color} flex items-center justify-center transition-transform group-hover:scale-105`}>
-                                        <span className="text-2xl font-bold text-[#3B5D3B]">{member.initial}</span>
-                                    </div>
-                                    <h3 className="text-lg font-bold text-[#2C2C2C]">{member.name}</h3>
-                                    <p className="text-xs font-bold tracking-widest text-[#8B7A3D] uppercase mt-1">{member.role}</p>
-                                    <p className="mt-3 text-sm text-[#6B6B60] leading-relaxed">{member.desc}</p>
-                                </div>
-                            </AnimateOnScroll>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* ═══════════════════════════════════════════════════════════
-          VALUES — "Sourced by Nature, Verified by Science"
-      ═══════════════════════════════════════════════════════════ */}
-            <section className="py-16 sm:py-24 lg:py-28 px-4 bg-[#F5F2E8] relative overflow-hidden z-10">
-                {/* Realistic Leaf Watermarks */}
-                <img
-                    src="/leaf-watermark.png"
-                    alt=""
-                    aria-hidden="true"
-                    className="absolute top-[-8%] right-[-10%] w-[300px] sm:w-[450px] pointer-events-none opacity-[0.07] rotate-[30deg] transform-gpu animate-float select-none"
-                    style={{ animationDuration: '9s', filter: 'blur(0.5px)' }}
-                />
-                <img
-                    src="/leaf-watermark.png"
-                    alt=""
-                    aria-hidden="true"
-                    className="absolute bottom-[-8%] left-[-10%] w-[250px] sm:w-[380px] pointer-events-none opacity-[0.05] -rotate-[40deg] transform-gpu animate-float select-none"
-                    style={{ animationDuration: '11s', animationDelay: '3s', filter: 'blur(0.5px)', transform: 'scaleX(-1) rotate(-40deg)' }}
-                />
-                <div className="mx-auto max-w-7xl relative z-10">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-                        <AnimateOnScroll animation="fadeLeft" duration={0.9}>
-                            <div>
-                                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C2C2C] leading-tight italic">
-                                    Sourced by Nature,<br />Verified by Science.
-                                </h2>
-                                <p className="mt-5 text-[#6B6B60] text-base leading-relaxed">
-                                    Vedashi combines the purest Ayurvedic ingredients with rigorous
-                                    scientific validation, ensuring every product delivers measurable
-                                    results without compromise.
+                                <h3 className="text-2xl font-bold text-[#2C2C2C] mb-4">For Consumers</h3>
+                                <p className="text-[#6B6B60] leading-relaxed text-lg flex-grow">
+                                    We curate and deliver premium Indian wellness, beauty, food, and lifestyle products directly to your doorstep — anywhere in the world. Experience the true essence of India with uncompromising quality.
                                 </p>
                             </div>
                         </AnimateOnScroll>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            {[
-                                { title: 'Farm-to-Formula', desc: 'Direct sourcing from certified organic farms across India & Nepal.', icon: Leaf },
-                                { title: 'Yoga Integration', desc: 'Complementary asana guides tailored to each product\u2019s therapeutic goal.', icon: Heart },
-                                { title: 'Clinical Purity', desc: 'Every batch tested for 200+ contaminants by independent labs.', icon: ShieldCheck },
-                                { title: 'Online Satsangs', desc: 'Monthly virtual gatherings with our founding physicians.', icon: BookOpen },
-                            ].map((val, i) => (
-                                <AnimateOnScroll key={i} animation="scaleUp" delay={i * 0.1}>
-                                    <div className="rounded-2xl bg-white border border-[#E0DCCF] p-6 transition-all hover:shadow-md group shadow-sm">
-                                        <div className="h-10 w-10 rounded-lg bg-[#3B5D3B]/10 flex items-center justify-center mb-3 group-hover:bg-[#3B5D3B]/20 transition-colors">
-                                            <val.icon className="h-5 w-5 text-[#3B5D3B]" />
-                                        </div>
-                                        <h3 className="font-semibold text-sm text-[#2C2C2C]">{val.title}</h3>
-                                        <p className="mt-1.5 text-xs text-[#6B6B60] leading-relaxed">{val.desc}</p>
-                                    </div>
-                                </AnimateOnScroll>
-                            ))}
-                        </div>
+                        <AnimateOnScroll animation="fadeUp" delay={0.2}>
+                            <div className="bg-[#5F6F52] rounded-3xl p-10 sm:p-14 shadow-md hover:shadow-xl transition-all duration-300 h-full flex flex-col group relative overflow-hidden">
+                                <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none group-hover:scale-110 transition-transform duration-500">
+                                    <Globe className="h-40 w-40 text-white" />
+                                </div>
+                                <div className="relative z-10 h-16 w-16 rounded-2xl bg-white/20 flex items-center justify-center mb-6 backdrop-blur-sm">
+                                    <TrendingUp className="h-8 w-8 text-white" />
+                                </div>
+                                <h3 className="relative z-10 text-2xl font-bold text-white mb-4">For Brands & Startups</h3>
+                                <p className="relative z-10 text-[#E8DCAF] leading-relaxed text-lg flex-grow">
+                                    We are your global expansion partner. We handle export logistics, international compliance, marketplace positioning, and market entry — so you can focus on what you do best: creating exceptional products. No marketing spend. No export headaches. Just growth.
+                                </p>
+                                <div className="relative z-10 mt-8">
+                                    <Link href="/vendor-registration" className="inline-flex items-center text-sm font-bold text-white uppercase tracking-wider group/link">
+                                        Partner with us <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover/link:translate-x-1" />
+                                    </Link>
+                                </div>
+                            </div>
+                        </AnimateOnScroll>
                     </div>
                 </div>
             </section>
 
             {/* ═══════════════════════════════════════════════════════════
-          TESTIMONIAL
+          WHY CHOOSE VEDASHI
       ═══════════════════════════════════════════════════════════ */}
-            <section className="py-16 sm:py-24 lg:py-28 px-4 relative z-10">
-                <AnimateOnScroll animation="fadeUp" className="mx-auto max-w-3xl text-center">
-                    <div className="flex justify-center gap-1 mb-6">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                            <Star key={i} className="h-5 w-5 fill-[#8B7A3D] text-[#8B7A3D]" />
+            <section className="py-20 sm:py-28 px-4 bg-white relative z-10">
+                <div className="mx-auto max-w-7xl">
+                    <AnimateOnScroll animation="fadeUp">
+                        <div className="text-center mb-16">
+                            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C2C2C]">
+                                Why Choose <em className="italic text-[#5F6F52]">Vedashi?</em>
+                            </h2>
+                        </div>
+                    </AnimateOnScroll>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                        {[
+                            {
+                                icon: ShieldCheck,
+                                title: '100% Authentic Products',
+                                desc: 'Every item is genuine, sourced directly from trusted Indian manufacturers and brands.',
+                            },
+                            {
+                                icon: MapPin,
+                                title: 'Direct from India',
+                                desc: 'No middlemen, no dilution — products come straight from the source to your door.',
+                            },
+                            {
+                                icon: Leaf,
+                                title: 'Pure & Natural',
+                                desc: 'Formulated with clean ingredients—no harmful chemicals, preservatives, or artificial additives.',
+                            },
+                            {
+                                icon: BookOpen,
+                                title: 'Trusted Heritage',
+                                desc: 'Products and formulations deeply rooted in Ayurveda and traditional Indian knowledge.',
+                            },
+                            {
+                                icon: Globe,
+                                title: 'Worldwide Shipping',
+                                desc: 'We handle the logistics to deliver borderless wellness to your doorstep, anywhere in the world.',
+                            },
+                            {
+                                icon: Rocket,
+                                title: 'Empowering Indian Brands',
+                                desc: 'We help homegrown startups and established local artisans reach global markets seamlessly.',
+                            },
+                        ].map((feature, i) => (
+                            <AnimateOnScroll key={i} animation="fadeUp" delay={i * 0.1}>
+                                <div className="bg-[#FDFCFB] border border-[#F0EBE1] rounded-2xl p-8 hover:shadow-lg transition-all duration-300 group h-full">
+                                    <div className="h-14 w-14 rounded-xl bg-[#F0EBE1] flex items-center justify-center mb-6 group-hover:bg-[#5F6F52] group-hover:text-white text-[#5F6F52] transition-colors duration-300">
+                                        <feature.icon className="h-6 w-6" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-[#2C2C2C] mb-3">{feature.title}</h3>
+                                    <p className="text-[#6B6B60] leading-relaxed">
+                                        {feature.desc}
+                                    </p>
+                                </div>
+                            </AnimateOnScroll>
                         ))}
                     </div>
-                    <blockquote className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#3B5D3B] leading-snug italic">
-                        &ldquo;Vedashi hasn&apos;t just improved my health; it has fundamentally changed
-                        how I relate to my body and the seasons. It&apos;s the sanctuary I didn&apos;t know I needed.&rdquo;
-                    </blockquote>
-                    <div className="mt-8 flex flex-col items-center gap-3">
-                        <div className="h-16 w-16 rounded-full bg-[#3B5D3B]/10 flex items-center justify-center border-2 border-[#3B5D3B]/20">
-                            <span className="text-xl font-bold text-[#3B5D3B]">R</span>
-                        </div>
-                        <p className="text-[11px] font-bold tracking-[0.2em] text-[#6B6B60] uppercase">
-                            Dr. Rebecca Lane — Integrative Physician, London
-                        </p>
-                    </div>
-                </AnimateOnScroll>
+                </div>
             </section>
 
             {/* ═══════════════════════════════════════════════════════════
-          CTA — "Ready to return to your true nature?"
+          FOOTER CTA
       ═══════════════════════════════════════════════════════════ */}
-            <section className="py-16 sm:py-24 px-4">
-                <AnimateOnScroll animation="scaleUp" className="mx-auto max-w-4xl">
-                    <div className="rounded-3xl bg-[#3B5D3B] px-8 sm:px-16 py-14 sm:py-20 text-center relative overflow-hidden">
-                        {/* Decorative SVG */}
-                        <div className="absolute -top-10 -left-10 w-40 h-40 opacity-10 pointer-events-none">
-                            <svg viewBox="0 0 200 200" fill="white">
-                                <path d="M100 0C120 60 200 80 200 140C200 180 160 200 100 200C40 200 0 180 0 140C0 80 80 60 100 0Z" />
-                            </svg>
-                        </div>
-                        <div className="absolute -bottom-10 -right-10 w-40 h-40 opacity-10 pointer-events-none rotate-180">
-                            <svg viewBox="0 0 200 200" fill="white">
-                                <path d="M100 0C120 60 200 80 200 140C200 180 160 200 100 200C40 200 0 180 0 140C0 80 80 60 100 0Z" />
-                            </svg>
-                        </div>
-
+            <section className="py-16 sm:py-24 px-4 bg-[#F9F8F6]">
+                <AnimateOnScroll animation="scaleUp" className="mx-auto max-w-5xl">
+                    <div className="rounded-[2.5rem] bg-[#2C2C2C] px-8 sm:px-16 py-14 sm:py-20 text-center relative overflow-hidden">
+                        {/* Decorative Background Art */}
+                        <div className="absolute inset-0 opacity-[0.03] bg-[url('/ayurvedic-texture.png')] bg-repeat" />
+                        
                         <h2 className="relative z-10 text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
-                            Ready to return to your{' '}
-                            <em className="italic text-[#C9B87A]">true nature</em>?
+                            Experience the best of <em className="italic text-[#C9B87A]">India</em>.
                         </h2>
-                        <p className="relative z-10 mt-4 text-[#C9B87A]/80 text-sm sm:text-base max-w-lg mx-auto">
-                            Let our practitioners guide you toward a personalized journey of
-                            deep, lasting transformation.
+                        <p className="relative z-10 mt-6 text-[#A0A0A0] text-lg max-w-2xl mx-auto">
+                            Join thousands of global customers exploring the purity of Indian tradition. Or, partner with us to take your brand to the world.
                         </p>
-                        <div className="relative z-10 mt-8">
-                            <Link
-                                href="/products"
-                                className="inline-flex items-center gap-2.5 rounded-lg bg-[#C9B87A] px-8 py-3.5 text-sm font-semibold text-[#2C2C2C] transition-all duration-300 hover:bg-[#D4C38A] hover:-translate-y-0.5 shadow-lg"
-                            >
-                                Begin Your Journey
-                                <ArrowRight className="h-4 w-4" />
-                            </Link>
-                        </div>
+
                     </div>
                 </AnimateOnScroll>
             </section>

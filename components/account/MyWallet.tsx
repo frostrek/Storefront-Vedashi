@@ -56,7 +56,7 @@ export default function MyWallet({ customerId }: MyWalletProps) {
                 <h3 className="text-2xl font-bold text-[#1A2E1A]">Sanctuary Not Activated</h3>
                 <p className="text-[#4A5D4A] mt-2 max-w-sm mx-auto">Embrace the path of wellness. Your ritual journal begins with your first soulful purchase.</p>
                 <button 
-                    onClick={() => window.location.href = '/shop'}
+                    onClick={() => window.location.href = '/'}
                     className="mt-8 px-8 py-3 bg-[#2D4F1E] text-white font-bold rounded-xl hover:bg-[#1A2E1A] transition-all shadow-lg text-xs uppercase tracking-widest"
                 >
                     Begin Your Journey

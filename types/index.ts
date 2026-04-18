@@ -129,6 +129,9 @@ export interface ProductPackaging {
 export interface ProductVariant {
     variant_id: string;
     product_id: string;
+    discount_base_price: number | null;
+    options: Record<string, string> | null;
+    model_number: string | null;
     variant_name?: string;
     variant_sku?: string;
     size_label?: string;
