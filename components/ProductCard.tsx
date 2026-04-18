@@ -634,26 +634,26 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             </button>
                         ) : (
                             /* ── In-cart stepper ──────────────────────────────── */
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5">
                                 <button
                                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDecrement(); }}
                                     disabled={addingToCart}
-                                    className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-xl bg-white border border-gray-200 text-gray-500 hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all cursor-pointer shadow-sm"
+                                    className="w-7 h-7 flex-shrink-0 flex items-center justify-center rounded-xl bg-white border border-gray-200 text-gray-500 hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all cursor-pointer shadow-sm"
                                 >
-                                    {currentItemInCart.quantity > 1 ? <Minus className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
+                                    {currentItemInCart.quantity > 1 ? <Minus className="h-3 w-3" /> : <X className="h-3 w-3" />}
                                 </button>
 
-                                <div className="flex-1 flex flex-col items-center justify-center bg-[#FF0000]/5 rounded-xl py-1 border border-[#FF0000]/10">
-                                    <p className="text-[8px] font-bold text-[#FF0000]/60 uppercase tracking-widest leading-none mb-0.5">in cart</p>
-                                    <p className="text-base font-black text-[#FF0000] leading-none">{currentItemInCart.quantity}</p>
+                                <div className="flex-1 flex flex-col items-center justify-center bg-[#FF0000]/5 rounded-xl py-0.5 border border-[#FF0000]/10 min-w-[32px]">
+                                    <p className="text-[7px] font-bold text-[#FF0000]/60 uppercase tracking-widest leading-none mb-0.5">in cart</p>
+                                    <p className="text-sm font-black text-[#FF0000] leading-none">{currentItemInCart.quantity}</p>
                                 </div>
 
                                 <button
                                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleIncrement(); }}
                                     disabled={addingToCart}
-                                    className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-xl bg-[#FF0000] text-white hover:bg-red-700 transition-all cursor-pointer shadow-sm shadow-[#FF0000]/30"
+                                    className="w-7 h-7 flex-shrink-0 flex items-center justify-center rounded-xl bg-[#FF0000] text-white hover:bg-red-700 transition-all cursor-pointer shadow-sm shadow-[#FF0000]/30"
                                 >
-                                    <Plus className="h-3.5 w-3.5" />
+                                    <Plus className="h-3 w-3" />
                                 </button>
                             </div>
                         )}
@@ -858,7 +858,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                     <button
                                                         onClick={(e) => handleVariantDirectAdd(v, e)}
                                                         disabled={addingToCart}
-                                                        className="px-4 py-1.5 border border-[#FF0000] rounded-lg text-[11px] font-bold text-[#FF0000] bg-white hover:bg-[#FF0000]/5 transition-all cursor-pointer shadow-sm"
+                                                        className="px-2 py-1.5 border border-[#FF0000] rounded-lg text-[11px] font-bold text-[#FF0000] bg-white hover:bg-[#FF0000]/5 transition-all cursor-pointer shadow-sm"
                                                     >
                                                         ADD
                                                     </button>
@@ -986,20 +986,20 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                             <button
                                                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDecrement(); }}
                                                 disabled={addingToCart}
-                                                className="w-8 h-8 flex items-center justify-center bg-white hover:bg-red-50 transition-colors cursor-pointer text-gray-500 hover:text-red-500 border-r border-gray-100"
+                                                className="w-7 h-7 flex items-center justify-center bg-white hover:bg-red-50 transition-colors cursor-pointer text-gray-500 hover:text-red-500 border-r border-gray-100"
                                             >
-                                                {currentItemInCart.quantity > 1 ? <Minus className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
+                                                {currentItemInCart.quantity > 1 ? <Minus className="h-3 w-3" /> : <X className="h-3 w-3" />}
                                             </button>
-                                            <div className="px-2 flex flex-col items-center justify-center min-w-[36px]">
-                                                <span className="text-[7px] font-bold text-gray-400 uppercase tracking-wider leading-none">QTY</span>
-                                                <span className="text-[13px] font-black text-[#FF0000] leading-tight">{currentItemInCart.quantity}</span>
+                                            <div className="px-1.5 flex flex-col items-center justify-center min-w-[28px]">
+                                                <span className="text-[6.5px] font-bold text-gray-400 uppercase tracking-wider leading-none">QTY</span>
+                                                <span className="text-[12px] font-black text-[#FF0000] leading-tight">{currentItemInCart.quantity}</span>
                                             </div>
                                             <button
                                                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleIncrement(); }}
                                                 disabled={addingToCart}
-                                                className="w-8 h-8 flex items-center justify-center bg-[#FF0000] hover:bg-red-700 transition-colors cursor-pointer text-white"
+                                                className="w-7 h-7 flex items-center justify-center bg-[#FF0000] hover:bg-red-700 transition-colors cursor-pointer text-white"
                                             >
-                                                <Plus className="h-3.5 w-3.5" />
+                                                <Plus className="h-3 w-3" />
                                             </button>
                                         </div>
                                     ) : (
@@ -1007,7 +1007,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                         <button
                                             onClick={(e) => onMoveToCart ? onMoveToCart(e) : openCartModal(e)}
                                             disabled={cartLoading || addingToCart || justAdded}
-                                            className={`relative flex items-center justify-center px-5 py-1.5 bg-white border-2 rounded-lg shadow-[0_2px_12px_rgba(0,0,0,0.1)] transition-all duration-200 cursor-pointer ${addingToCart || justAdded
+                                            className={`relative flex items-center justify-center px-2.5 py-1.5 bg-white border-2 rounded-lg shadow-[0_2px_12px_rgba(0,0,0,0.1)] transition-all duration-200 cursor-pointer ${addingToCart || justAdded
                                                 ? 'border-[#FF0000] bg-[#FF0000]'
                                                 : 'border-[#FF0000] hover:bg-gray-50'
                                                 }`}
@@ -1025,7 +1025,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                     /* ── ADD button (multi-variant) with "X options" ── */
                                     <button
                                         onClick={openCartModal}
-                                        className={`relative flex flex-col items-center px-5 py-1.5 bg-white border-2 rounded-lg shadow-[0_2px_12px_rgba(0,0,0,0.1)] transition-all duration-200 cursor-pointer ${showCartModal
+                                        className={`relative flex flex-col items-center px-3 py-1.5 bg-white border-2 rounded-lg shadow-[0_2px_12px_rgba(0,0,0,0.1)] transition-all duration-200 cursor-pointer ${showCartModal
                                             ? 'border-[#FF0000] bg-[#FF0000]/5'
                                             : 'border-[#FF0000] hover:bg-gray-50'
                                             }`}
@@ -1041,10 +1041,10 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                     )}
 
                     {/* Content */}
-                    <div className={`p-2.5 sm:p-3 ${isList ? 'flex-1 flex flex-col justify-center min-w-0 p-0 sm:pr-3' : 'pt-5'}`}>
+                    <div className={`p-2 sm:p-2 ${isList ? 'flex-1 flex flex-col justify-center min-w-0 p-0 sm:pr-3' : 'pt-5'}`}>
                         {/* Price Display Block (Box Style) */}
-                        <div className="flex items-center gap-2 mb-2 sm:mb-3">
-                            <div className="bg-black text-white px-2.5 py-1 rounded-lg font-black text-[13px] sm:text-[15px] shadow-[0_3px_0_0_#91CA35] flex items-center justify-center min-w-[60px]">
+                        <div className="flex items-center gap-2 mb-2 sm:mb-2">
+                            <div className="bg-[#91C935] text-white px-2.5 py-1 rounded-lg font-black text-[13px] sm:text-[15px] shadow-[0_3px_0_0_#7eb02e] flex items-center justify-center min-w-[60px]">
                                 {formatPrice(displayPrice, product.country_prices)}
                             </div>
                             {(discountPercent > 0 || originalPrice > displayPrice) && (
@@ -1150,7 +1150,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                         onClick={openCartModal}
                                         className={`
                                                 inline-flex flex-1 sm:flex-none justify-center items-center gap-1.5
-                                                text-[11px] sm:text-xs font-bold px-3 sm:px-5 py-2 sm:py-2.5
+                                                text-[11px] sm:text-xs font-bold px-2 sm:px-3 py-2 sm:py-2.5
                                                 rounded-lg transition-all duration-200 cursor-pointer shadow-sm
                                                 ${showInlineOptions
                                                 ? 'bg-red-800 text-white shadow-[0_0_0_3px_rgba(255,0,0,0.2)]'
@@ -1165,7 +1165,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                     <button
                                         onClick={(e) => onMoveToCart ? onMoveToCart(e) : openCartModal(e)}
                                         disabled={cartLoading || addingToCart || justAdded}
-                                        className={`inline-flex flex-1 sm:flex-none justify-center items-center gap-1.5 text-white text-[11px] sm:text-xs font-bold px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg transition-all cursor-pointer shadow-sm hover:shadow disabled:opacity-70 ${justAdded ? 'bg-emerald-600' : 'bg-[#FF0000] hover:bg-red-700'}`}
+                                        className={`inline-flex flex-1 sm:flex-none justify-center items-center gap-1.5 text-white text-[11px] sm:text-xs font-bold px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg transition-all cursor-pointer shadow-sm hover:shadow disabled:opacity-70 ${justAdded ? 'bg-emerald-600' : 'bg-[#FF0000] hover:bg-red-700'}`}
                                     >
                                         {addingToCart ? (
                                             <Loader2 className="h-3.5 w-3.5 animate-spin" />

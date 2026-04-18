@@ -174,10 +174,10 @@ export default function Footer() {
             {/* ═══════════════ MAIN DARK SECTION ═══════════════ */}
             <div className="bg-[#1a1a1a] text-gray-300 pt-10 pb-5">
                 <div className="mx-auto max-w-[1500px] px-6 sm:px-8 lg:px-12">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-between">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-6 xl:gap-8 justify-between">
 
                         {/* 1. Vedashi Logo + Address */}
-                        <div className="flex flex-col gap-6 items-start">
+                        <div className="flex flex-col gap-6 items-start lg:col-span-4">
                             <div className="flex flex-col gap-2.5 items-start">
                                 <Image
                                     src={company?.logo_url || '/vedashi-logo.png'}
@@ -238,7 +238,7 @@ export default function Footer() {
                         </div>
 
                         {/* 2. Explore */}
-                        <div>
+                        <div className="lg:col-span-2">
                             <h4 className="text-[#91CA35] font-semibold text-[12px] tracking-widest uppercase mb-1">
                                 {columns[0]?.title || 'Explore'}
                             </h4>
@@ -258,7 +258,7 @@ export default function Footer() {
                         </div>
 
                         {/* 3. Support */}
-                        <div>
+                        <div className="lg:col-span-2">
                             <h4 className="text-[#91CA35] font-semibold text-[12px] tracking-widest uppercase mb-1">
                                 {columns[1]?.title || 'Support'}
                             </h4>
@@ -284,6 +284,67 @@ export default function Footer() {
                                     </button>
                                 </li>
                             </ul>
+                        </div>
+
+                        {/* 4. Partner / Vendor Registration */}
+                        <div className="lg:col-span-4 flex flex-col gap-4 justify-start">
+                            <div className="relative rounded-2xl overflow-hidden bg-[#181818] border border-[#2a2a2a] group flex flex-col justify-center shadow-lg min-h-[115px]">
+                                <div className="absolute inset-y-0 left-0 w-[60%] z-0 overflow-hidden">
+                                    <Image
+                                        src="/Footer-banners/vendor regis.jpeg"
+                                        alt="Become a Partner"
+                                        fill
+                                        className="object-cover object-center opacity-90 group-hover:opacity-100 transition-opacity duration-300"
+                                    />
+                                    {/* Fade out the right edge of the block to blend smoothly */}
+                                    <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-[#181818] to-transparent" />
+                                </div>
+
+                                <div className="relative z-10 py-3 px-4 sm:pr-5 flex flex-row items-center h-full w-full justify-end">
+                                    <div className="flex flex-col items-start max-w-[200px]">
+                                        <h5 className="text-[#91C935] text-base sm:text-lg font-bold mb-0.5 drop-shadow-md">Become a Partner</h5>
+                                        <p className="text-gray-200 text-[10.5px] sm:text-[11px] leading-snug mb-2 drop-shadow-sm">
+                                            Start selling with Vedashi<br />
+                                            and reach thousands of customers.
+                                        </p>
+                                        <Link
+                                            href="/vendor-registration"
+                                            className="inline-flex w-fit items-center justify-center bg-[#91C935] hover:bg-[#7eb02e] text-white text-[12px] font-medium py-1.5 px-5 rounded-full transition-all duration-300 shadow-[0_4px_12px_rgba(110,147,42,0.2)] hover:shadow-[0_6px_16px_rgba(110,147,42,0.3)] hover:-translate-y-0.5"
+                                        >
+                                            Register Now
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
+                            {/* Bulk Orders */}
+                            <div className="relative rounded-2xl overflow-hidden bg-[#181818] border border-[#2a2a2a] group flex flex-col justify-center shadow-lg min-h-[115px]">
+                                <div className="absolute inset-y-0 left-0 w-[60%] z-0 overflow-hidden">
+                                    <Image
+                                        src="/Footer-banners/bulk order.jpeg"
+                                        alt="Bulk Orders"
+                                        fill
+                                        className="object-cover object-center opacity-90 group-hover:opacity-100 transition-opacity duration-300"
+                                    />
+                                    {/* Fade out the right edge of the block to blend smoothly */}
+                                    <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-[#181818] to-transparent" />
+                                </div>
+
+                                <div className="relative z-10 py-3 px-4 sm:pr-5 flex flex-row items-center h-full w-full justify-end">
+                                    <div className="flex flex-col items-start max-w-[200px]">
+                                        <h5 className="text-[#91C935] text-base sm:text-lg font-bold mb-0.5 drop-shadow-md">Bulk Orders</h5>
+                                        <p className="text-gray-200 text-[10.5px] sm:text-[11px] leading-snug mb-2 drop-shadow-sm">
+                                            Stock up on authentic Vedashi<br />
+                                            products at special bulk prices.
+                                        </p>
+                                        <Link
+                                            href="/contact"
+                                            className="inline-flex w-fit items-center justify-center bg-[#91C935] hover:bg-[#7eb02e] text-white text-[12px] font-medium py-1.5 px-5 rounded-full transition-all duration-300 shadow-[0_4px_12px_rgba(110,147,42,0.2)] hover:shadow-[0_6px_16px_rgba(110,147,42,0.3)] hover:-translate-y-0.5"
+                                        >
+                                            Inquire Now
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
