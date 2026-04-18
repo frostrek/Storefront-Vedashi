@@ -81,6 +81,9 @@ function ProductsContent() {
 
     useEffect(() => {
         setIsMounted(true);
+        // Ensure page starts at top when hero is removed
+        window.scrollTo(0, 0);
+        
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem('vedashi_view_mode') as 'grid' | 'list';
             if (saved === 'grid' || saved === 'list') {
@@ -458,43 +461,11 @@ function ProductsContent() {
     );
 
     return (
-        <div className="min-h-screen bg-[#FDFCFB]" style={{ backgroundImage: "url('/botanical-page-bg.png')", backgroundAttachment: 'fixed', backgroundSize: '600px' }}>
-            {/* ═══════ HERO SECTION ═══════ */}
-            <section
-                className="relative overflow-hidden py-12 md:py-16 px-6 bg-cover bg-center border-b border-[#3d5c3a]/10"
-                style={{ backgroundImage: "url('/ayurvedic-texture.png')" }}
-            >
-                <div className="absolute inset-0 bg-[#3d5c3a]/40 mix-blend-multiply" /> {/* Herbal depth overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#1a2e1a]/60 to-transparent" />
+        <div className="min-h-screen bg-white">
 
-                <div className="max-w-xl mx-auto text-center relative z-10">
-                    <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-1.5 mb-4 shadow-xl">
-                        <Leaf className="h-3.5 w-3.5 text-[#c8d8a0]" />
-                        <span className="text-[10px] font-bold tracking-widest uppercase text-white/90">Refine Collection</span>
-                    </div>
-
-                    <h1 className="text-3xl md:text-5xl font-bold text-white mb-3 italic tracking-tight drop-shadow-lg">
-                        Ancient Remedies
-                    </h1>
-                    <p className="text-sm md:text-base text-white/80 mb-8 max-w-md mx-auto font-medium leading-relaxed">
-                        Explore our curated collection of authentic Ayurvedic wellness products,
-                        harvested from the heart of the Himalayas.
-                    </p>
-
-                    {/* Advanced Search Bar */}
-                    <SearchBar
-                        value={filters.search}
-                        onSearch={setSearch}
-                        variant="hero"
-                        live={true}
-                        className="max-w-md mx-auto"
-                        placeholder="Search products, brands, or categories..."
-                    />
-                </div>
-            </section>
 
             {/* ═══════ MAIN CONTENT ═══════ */}
-            <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-12 relative z-10">
+            <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-12 pt-16 sm:pt-20 relative z-10">
                 {/* Mobile Filter Button */}
                 <button
                     onClick={() => setMobileOpen(true)}
@@ -689,41 +660,7 @@ function ProductsContent() {
                 </div>
             </div>
 
-            {/* ═══════ BRAND SECTION ═══════ */}
-            <section className="bg-gradient-to-br from-[#3d5c3a] via-[#4a6b47] to-[#5a7a57] py-16 px-6 mt-8">
-                <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-10 items-center">
-                    <div>
-                        <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 mb-4">
-                            <Sparkles className="h-3.5 w-3.5 text-[#c8d8a0]" />
-                            <span className="text-[10px] font-bold tracking-widest uppercase text-white/90">Vedashi Clinical Standard</span>
-                        </div>
-                        <h2 className="text-3xl font-bold text-white mb-4 leading-tight">
-                            Where Tradition Meets<br /><em>Clinical Rigor.</em>
-                        </h2>
-                        <p className="text-white/70 text-sm leading-relaxed mb-6">
-                            Every formulation at Vedashi undergoes a double-blind purification process.
-                            We combine the botanical manuscripts of Charaka Samhita with ISO-certified lab testing
-                            to ensure your path to wellness is both sacred and safe.
-                        </p>
-                        <div className="grid grid-cols-3 gap-4">
-                            {[
-                                { value: '100%', label: 'Organic Sourcing' },
-                                { value: 'GMP', label: 'Certified Facility' },
-                                { value: '500+', label: 'Herb Varieties' },
-                            ].map(s => (
-                                <div key={s.label} className="text-center">
-                                    <p className="text-2xl font-bold text-white">{s.value}</p>
-                                    <p className="text-[10px] uppercase tracking-wider text-white/50 mt-0.5">{s.label}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                    <div className="hidden md:grid grid-cols-2 gap-3">
-                        <div className="rounded-2xl overflow-hidden bg-white/10 aspect-[4/5]" />
-                        <div className="rounded-2xl overflow-hidden bg-white/10 aspect-square mt-8" />
-                    </div>
-                </div>
-            </section>
+
 
         </div>
     );
@@ -731,7 +668,7 @@ function ProductsContent() {
 
 export default function ProductsPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen bg-[#FAF7F2] p-8"><SkeletonProductGrid count={8} /></div>}>
+        <Suspense fallback={<div className="min-h-screen bg-white p-8 pt-24"><SkeletonProductGrid count={8} /></div>}>
             <ProductsContent />
         </Suspense>
     );
