@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface Block {
-    type: 'heading' | 'paragraph';
+    type: 'heading' | 'paragraph' | 'html';
     text: string;
 }
 
@@ -26,9 +26,16 @@ export default function LegalContentRenderer({ content }: LegalContentRendererPr
                                     {block.text}
                                 </h2>
                             ) : (
-                                <p className="text-gray-700 text-lg leading-relaxed whitespace-pre-wrap mb-6 last:mb-0 text-left">
-                                    {block.text}
-                                </p>
+                                block.type === 'paragraph' && !/<[a-z][\s\S]*>/i.test(block.text) ? (
+                                    <p className="text-gray-700 text-lg leading-relaxed whitespace-pre-wrap mb-6 last:mb-0 text-left">
+                                        {block.text}
+                                    </p>
+                                ) : (
+                                    <div 
+                                        className="legal-custom-html max-w-none text-left" 
+                                        dangerouslySetInnerHTML={{ __html: block.text }} 
+                                    />
+                                )
                             )}
                         </div>
                     ))}

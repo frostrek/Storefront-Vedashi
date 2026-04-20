@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Search, X, Loader2 } from 'lucide-react';
 import { searchAutocomplete, type SearchSuggestion } from '@/lib/api';
 import { useCurrency } from '@/context/CurrencyContext';
@@ -13,7 +13,7 @@ interface SearchAutocompleteProps {
     placeholder?: string;
     /** Additional wrap per classes */
     className?: string;
-} 
+}
 
 export default function SearchAutocomplete({
     onClose,
@@ -21,6 +21,7 @@ export default function SearchAutocomplete({
     className = '',
 }: SearchAutocompleteProps) {
     const router = useRouter();
+    const pathname = usePathname();
     const { formatPrice } = useCurrency();
     const [query, setQuery] = useState('');
     const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
@@ -167,16 +168,21 @@ export default function SearchAutocomplete({
         <div ref={containerRef} className={`relative ${className}`}>
             {/* ─── Search Input ─── */}
             <div className="relative flex items-center">
-                <Search className="absolute left-4 h-4 w-4 text-gray-400 pointer-events-none" />
+                <Search className="absolute left-4 h-5 w-5 text-gray-400 pointer-events-none" />
                 <input
                     ref={inputRef}
                     type="text"
                     value={query}
                     onChange={e => {
-                        setQuery(e.target.value);
+                        const val = e.target.value;
+                        setQuery(val);
                         setActiveIndex(-1);
-                        if (e.target.value.trim().length >= 2 && !isOpen) {
+                        if (val.trim().length >= 2 && !isOpen) {
                             setIsOpen(true);
+                        }
+                        // If they clear the search string manually while on the search page, send them back to home
+                        if (val.trim().length === 0 && pathname.endsWith('/search')) {
+                            router.push('/');
                         }
                     }}
                     onFocus={() => {
@@ -186,10 +192,10 @@ export default function SearchAutocomplete({
                     placeholder={placeholder}
                     autoComplete="off"
                     className="
-            w-full pl-11 pr-9 py-2 rounded-full
-            bg-gray-100 border border-gray-200
-            text-sm text-gray-800 placeholder-gray-400
-            focus:outline-none focus:ring-2 focus:ring-[#4b0f1a]/30 focus:border-[#4b0f1a]/40
+            w-full pl-11 pr-10 py-[10px] rounded-full
+            bg-gray-100 border border-gray-300
+            text-sm text-gray-800 placeholder-gray-00
+            focus:outline-none focus:ring-2 focus:ring-[#e6e3e4]/30 focus:border-[#4b0f1a]/40
             transition-all duration-200
           "
                 />
@@ -201,13 +207,16 @@ export default function SearchAutocomplete({
                             setSuggestions([]);
                             setIsOpen(false);
                             inputRef.current?.focus();
+                            if (pathname.endsWith('/search')) {
+                                router.push('/');
+                            }
                         }}
-                        className="absolute right-3 p-0.5 text-gray-400 hover:text-gray-600 transition-colors"
+                        className="absolute right-4 p-0.5 text-gray-400 hover:text-gray-600 transition-colors"
                     >
                         {isLoading ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <Loader2 className="h-5 w-5 animate-spin" />
                         ) : (
-                            <X className="h-4 w-4" />
+                            <X className="h-5 w-5" />
                         )}
                     </button>
                 )}

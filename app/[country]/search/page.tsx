@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Search, SlidersHorizontal, X } from 'lucide-react';
+import { Search, SlidersHorizontal } from 'lucide-react';
 import { advancedSearch, type SearchParams } from '@/lib/api';
 import { FilteredProduct, FilterMeta } from '@/types';
 import ProductCard from '@/components/ProductCard';
@@ -27,7 +27,6 @@ function SearchPageContent() {
     const [products, setProducts] = useState<FilteredProduct[]>([]);
     const [meta, setMeta] = useState<FilterMeta | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [searchInput, setSearchInput] = useState(q);
 
     const fetchResults = useCallback(async () => {
         if (!q.trim()) {
@@ -71,15 +70,7 @@ function SearchPageContent() {
         fetchResults();
     }, [fetchResults]);
 
-    useEffect(() => {
-        setSearchInput(q);
-    }, [q]);
-
     // ── Navigation helpers ─────────────────────────────────────
-    const updateSearch = (newQ: string) => {
-        if (!newQ.trim()) return;
-        router.push(`/search?q=${encodeURIComponent(newQ.trim())}`);
-    };
 
     const updateSort = (sort: string) => {
         const sp = new URLSearchParams(searchParams.toString());
@@ -98,56 +89,10 @@ function SearchPageContent() {
     return (
         <main className="min-h-screen bg-gray-50">
             {/* ═══ Search Header ═══ */}
-            <div className="bg-white border-b border-gray-200">
-                <div className="mx-auto max-w-[1400px] px-6 py-8">
-                    {/* Search Bar */}
-                    <form
-                        onSubmit={e => {
-                            e.preventDefault();
-                            updateSearch(searchInput);
-                        }}
-                        className="relative max-w-2xl mx-auto mb-6"
-                    >
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                        <input
-                            type="text"
-                            value={searchInput}
-                            onChange={e => setSearchInput(e.target.value)}
-                            placeholder="Search products, brands, categories…"
-                            className="
-                w-full pl-8 pr-8 py-1.5 rounded-full
-                bg-gray-50 border border-gray-200
-                text-base text-gray-800 placeholder-gray-400
-                focus:outline-none focus:ring-2 focus:ring-[#4b0f1a]/30 focus:border-[#4b0f1a]/40
-                transition-all duration-200
-              "
-                        />
-                        {searchInput && (
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setSearchInput('');
-                                }}
-                                className="absolute right-14 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
-                            >
-                                <X className="h-4 w-4" />
-                            </button>
-                        )}
-                        <button
-                            type="submit"
-                            className="
-                absolute right-2 top-1/2 -translate-y-1/2
-                px-5 py-2 rounded-full
-                bg-[#4b0f1a] text-white text-sm font-medium
-                hover:bg-[#3a0c14] transition-colors
-              "
-                        >
-                            Search
-                        </button>
-                    </form>
-
-                    {/* Results summary + sort */}
-                    {q && !isLoading && meta && (
+            {q && !isLoading && meta && (
+                <div className="bg-white border-b border-gray-200">
+                    <div className="mx-auto max-w-[1400px] px-6 py-4">
+                        {/* Results summary + sort */}
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 max-w-[1400px]">
                             <p className="text-gray-600 text-sm">
                                 {meta.total_count > 0 ? (
@@ -189,9 +134,9 @@ function SearchPageContent() {
                                 </div>
                             )}
                         </div>
-                    )}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* ═══ Results Grid ═══ */}
             <div className="mx-auto max-w-[1400px] px-6 py-8">
