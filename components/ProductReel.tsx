@@ -78,7 +78,7 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
 
                 {viewAllLink && (
                     <div className="flex-shrink-0 hidden sm:block pb-1">
-                        <Link href={viewAllLink} className="group flex items-center gap-2 text-sm font-bold text-[#91CA35] hover:text-[#8B7A3D] transition-colors">
+                        <Link href={viewAllLink} className="group flex items-center gap-2 text-sm font-bold text-[#FF0000] hover:text-[#CC0000] transition-colors">
                             {viewAllText || 'Explore All'}
                             <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                         </Link>
@@ -89,7 +89,7 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
             {/* Mobile View All Link */}
             {viewAllLink && (
                 <div className="sm:hidden px-4 mb-6">
-                    <Link href={viewAllLink} className="group flex items-center gap-2 text-sm font-bold text-[#91CA35] hover:text-[#8B7A3D] transition-colors">
+                    <Link href={viewAllLink} className="group flex items-center gap-2 text-sm font-bold text-[#FF0000] hover:text-[#CC0000] transition-colors">
                         {viewAllText || 'Explore All'}
                         <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </Link>

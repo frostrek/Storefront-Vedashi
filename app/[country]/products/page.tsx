@@ -83,7 +83,7 @@ function ProductsContent() {
         setIsMounted(true);
         // Ensure page starts at top when hero is removed
         window.scrollTo(0, 0);
-        
+
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem('vedashi_view_mode') as 'grid' | 'list';
             if (saved === 'grid' || saved === 'list') {
@@ -226,7 +226,7 @@ function ProductsContent() {
                 item_category: item.category,
                 item_brand: item.brand
             }));
-            
+
             trackEcommerce('view_item_list', {
                 currency: 'INR',
                 value: gaItems.reduce((acc, curr) => acc + curr.price, 0),
@@ -289,9 +289,9 @@ function ProductsContent() {
         <div className="space-y-0">
             {categories.length > 0 && (
                 <FilterSection title="Category" defaultOpen={true}>
-                    <div className="space-y-4">
+                    <div className="space-y-3 pt-1">
                         <select
-                            className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-[#3d5c3a] focus:outline-none focus:ring-1 focus:ring-[#3d5c3a] text-gray-700"
+                            className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] font-medium focus:border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-colors cursor-pointer"
                             value={filters.category}
                             onChange={(e) => {
                                 setCategory(e.target.value);
@@ -306,7 +306,7 @@ function ProductsContent() {
                         {/* Subcategory */}
                         {filters.category && (categories.find((c: any) => c.slug === filters.category)?.children?.length ?? 0) > 0 && (
                             <select
-                                className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-[#3d5c3a] focus:outline-none focus:ring-1 focus:ring-[#3d5c3a] text-gray-700"
+                                className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] font-medium focus:border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-colors cursor-pointer"
                                 value={filters.sub_category}
                                 onChange={(e) => setSubCategory(e.target.value)}
                             >
@@ -342,8 +342,8 @@ function ProductsContent() {
                             key={p.label}
                             onClick={() => setPriceRange(p.range, priceMax)}
                             className={`rounded-full border px-3 py-1.5 transition-colors cursor-pointer ${(filters.priceRange[0] === p.range[0] && filters.priceRange[1] === p.range[1])
-                                ? 'bg-[#3d5c3a] text-white border-[#3d5c3a] shadow-sm'
-                                : 'border-gray-200 bg-white text-gray-500 hover:border-[#3d5c3a]/50 hover:text-gray-800'
+                                ? 'bg-gray-800 text-white border-gray-800 shadow-sm'
+                                : 'border-gray-200 bg-white text-gray-500 hover:border-gray-400 hover:text-gray-800'
                                 }`}
                         >
                             {p.label}
@@ -381,7 +381,7 @@ function ProductsContent() {
                             <input
                                 type="radio"
                                 name="discount"
-                                className="h-4 w-4 rounded border-gray-300 text-[#3d5c3a] focus:ring-[#3d5c3a]"
+                                className="h-[15px] w-[15px] rounded-full border-gray-300 text-gray-800 focus:ring-gray-800 cursor-pointer"
                                 checked={filters.discountMin === pct}
                                 onChange={() => {
                                     if (filters.discountMin === pct) {
@@ -451,7 +451,7 @@ function ProductsContent() {
                 <div className="pt-4 border-t border-gray-100">
                     <button
                         onClick={clearAll}
-                        className="w-full rounded-xl border border-[#3d5c3a]/20 py-2.5 text-sm font-semibold text-[#3d5c3a] hover:bg-[#3d5c3a]/5 transition-colors cursor-pointer"
+                        className="w-full rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors cursor-pointer shadow-sm"
                     >
                         Clear All Filters
                     </button>
@@ -465,7 +465,7 @@ function ProductsContent() {
 
 
             {/* ═══════ MAIN CONTENT ═══════ */}
-            <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-12 pt-16 sm:pt-20 relative z-10">
+            <div className="w-full px-4 sm:px-6 lg:pl-0 lg:pr-8 py-8 pt-2 sm:pt-4 relative z-10">
                 {/* Mobile Filter Button */}
                 <button
                     onClick={() => setMobileOpen(true)}
@@ -480,12 +480,12 @@ function ProductsContent() {
                     )}
                 </button>
 
-                <div className="lg:grid lg:grid-cols-[340px_1fr] lg:gap-12">
+                <div className="lg:grid lg:grid-cols-[280px_1fr] lg:gap-10">
                     {/* ─── Desktop Sidebar ─── */}
-                    <aside className="hidden lg:block">
-                        <div className="sticky top-28 h-[calc(100vh-120px)] rounded-2xl border border-[#3d5c3a]/5 bg-white/90 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
-                            <div className="h-full overflow-y-auto overscroll-contain px-6 py-6 custom-scrollbar">
-                                <h2 className="text-xl font-bold text-gray-900 mb-2">Filters</h2>
+                    <aside className="hidden lg:block relative">
+                        <div className="sticky top-32 h-[calc(100vh-120px)] rounded-none border border-gray-100 border-l-0 bg-white shadow-[8px_0_30px_rgba(0,0,0,0.03)] overflow-hidden">
+                            <div className="h-full overflow-y-auto overscroll-auto px-7 pt-6 no-scrollbar pb-24">
+                                <h2 className="text-2xl font-serif font-black text-gray-900 mb-3 tracking-wide pl-1">Filters</h2>
                                 {sidebarContent}
                             </div>
                         </div>
@@ -508,7 +508,7 @@ function ProductsContent() {
                                         <X className="h-5 w-5 text-gray-400" />
                                     </button>
                                 </div>
-                                <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 custom-scrollbar">
+                                <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 no-scrollbar">
                                     {sidebarContent}
                                 </div>
                             </div>
@@ -565,7 +565,7 @@ function ProductsContent() {
                             <SkeletonProductGrid count={8} />
                         ) : products.length > 0 ? (
                             <>
-                                <div ref={gridRef} className={viewMode === 'grid' ? 'grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-3' : 'flex flex-col gap-4'}>
+                                <div ref={gridRef} className={viewMode === 'grid' ? 'grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4' : 'flex flex-col gap-4'}>
                                     {products.map((product, i) => (
                                         <div
                                             key={`${product.product_id}-${i}`}

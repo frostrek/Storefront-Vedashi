@@ -69,7 +69,7 @@ export default function BestSellerShowcase({
           {viewAllLink && (
             <Link
               href={resolvedViewAllLink}
-              className="hidden sm:flex items-center gap-2 text-sm font-bold text-[#91CA35] hover:text-[#8B7A3D] transition-colors group pb-1"
+              className="hidden sm:flex items-center gap-2 text-sm font-bold text-[#FF0000] hover:text-[#CC0000] transition-colors group pb-1"
             >
               {viewAllText}
               <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -151,7 +151,7 @@ export default function BestSellerShowcase({
             <div className="sm:hidden mt-4">
               <Link
                 href={resolvedViewAllLink}
-                className="flex items-center gap-2 text-sm font-bold text-[#91CA35] transition-colors group"
+                className="flex items-center gap-2 text-sm font-bold text-[#FF0000] transition-colors group"
               >
                 {viewAllText}
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />

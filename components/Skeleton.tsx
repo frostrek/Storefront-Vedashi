@@ -18,7 +18,7 @@ export function SkeletonLine({ className = '' }: { className?: string }) {
 
 export function SkeletonProductGrid({ count = 6 }: { count?: number }) {
     return (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: count }).map((_, i) => (
                 <SkeletonCard key={i} />
             ))}
