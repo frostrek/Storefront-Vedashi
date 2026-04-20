@@ -496,7 +496,7 @@ function ProductDetailContent({ params }: Props) {
                                     <p className="text-2xl font-bold text-gray-900">
                                         {formatPrice(displayPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)} <span className="text-sm font-normal text-gray-500">/ set</span>
                                     </p>
-                                    {isOnSale && originalPrice && (
+                                    {isOnSale && originalPrice && originalPrice > displayPrice && (
                                         <>
                                             <p className="text-base text-gray-400 line-through mb-0.5">
                                                 {formatPrice(originalPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}

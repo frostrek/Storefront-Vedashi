@@ -602,7 +602,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                     {hasDiscount(v) ? (
                                                         <>
                                                             <span className={`text-[10px] line-through ${isSelected ? 'text-white/50' : 'text-gray-400'}`}>
-                                                                {formatPrice(v.discount_base_price ?? 0, v.country_prices || product.country_prices)}
+                                                                {formatPrice(v.discount_base_price ?? v.original_price ?? 0, v.country_prices || product.country_prices)}
                                                             </span>
                                                             <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isSelected ? 'bg-red-500/20 text-red-100' : 'text-red-500 bg-red-50'}`}>
                                                                 {getDiscountPercent(v)}% OFF
@@ -831,11 +831,11 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                     </div>
 
                                                     <div className="text-right flex-shrink-0">
-                                                        <p className={`text-sm font-bold transition-colors duration-300 ${isSelected ? 'text-[#3d5c3a]' : 'text-gray-900'}`}>{formatPrice(v.price, v.country_prices || product.country_prices)}</p>
+                                                        <p className={`text-sm font-bold transition-colors duration-300 ${isSelected ? 'text-[#3d5c3a]' : 'text-gray-900'}`}>{formatPrice(hasDiscount(v) ? (v.discount_base_price ?? 0) : (v.is_on_sale && v.original_price ? v.original_price : v.price), v.country_prices || product.country_prices)}</p>
                                                         {hasDiscount(v) ? (
                                                             <div className="flex items-center gap-1.5 mt-0.5">
                                                                 <p className="text-[10px] text-gray-400 line-through">
-                                                                    {formatPrice(v.discount_base_price ?? 0, v.country_prices || product.country_prices)}
+                                                                    {formatPrice(v.price, v.country_prices || product.country_prices)}
                                                                 </p>
                                                                 <span className="text-red-500 bg-red-50 text-[9px] font-bold px-1.5 py-0.5 rounded">
                                                                     {getDiscountPercent(v)}% OFF
@@ -843,7 +843,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                             </div>
                                                         ) : (
                                                             v.is_on_sale && v.original_price && (
-                                                                <p className="text-[10px] text-gray-400 line-through mt-0.5">{formatPrice(v.original_price, v.country_prices || product.country_prices)}</p>
+                                                                <p className="text-[10px] text-gray-400 line-through mt-0.5">{formatPrice(v.price, v.country_prices || product.country_prices)}</p>
                                                             )
                                                         )}
                                                     </div>
@@ -1156,10 +1156,10 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                     return (
                                         <div className="flex items-center gap-2 flex-wrap">
                                             <p className="text-xl font-black text-[#3d5c3a] font-ui tabular-nums tracking-tight">
-                                                {formatPrice(hasVariants && selectedVariant ? selectedVariant.price! : displayPrice, product.country_prices)}
+                                                {formatPrice(activeV.discount_base_price ?? 0, product.country_prices)}
                                             </p>
                                             <p className="text-xs text-gray-400 line-through">
-                                                {formatPrice(activeV.discount_base_price ?? 0, product.country_prices)}
+                                                {formatPrice(hasVariants && selectedVariant ? selectedVariant.price! : displayPrice, product.country_prices)}
                                             </p>
                                             <span className="bg-red-50 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded border border-red-100">
                                                 {getDiscountPercent(activeV)}% OFF
@@ -1170,12 +1170,12 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                 return (
                                     <div className="flex items-center gap-2 flex-wrap">
                                         <p className="text-xl font-black text-[#3d5c3a] font-ui tabular-nums tracking-tight">
-                                            {formatPrice(hasVariants && selectedVariant ? selectedVariant.price! : displayPrice, product.country_prices)}
+                                            {formatPrice(originalPrice, product.country_prices)}
                                         </p>
                                         {isOnSale && originalPrice && (
                                             <>
                                                 <p className="text-xs text-gray-400 line-through">
-                                                    {formatPrice(originalPrice, product.country_prices)}
+                                                    {formatPrice(hasVariants && selectedVariant ? selectedVariant.price! : displayPrice, product.country_prices)}
                                                 </p>
                                                 <span className="bg-red-50 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded border border-red-100">
                                                     {discountPercent}% OFF
