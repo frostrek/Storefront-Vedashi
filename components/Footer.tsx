@@ -76,7 +76,6 @@ const FALLBACK: FooterData = {
                 { label: 'Our Story', href: '/about' },
                 { label: 'Blogs', href: '/blog' },
                 { label: 'All Products', href: '/products' },
-                { label: 'Press & Media', href: '/press' },
                 { label: 'Contact Us', href: '/contact' },
             ],
         },
@@ -209,7 +208,7 @@ export default function Footer() {
                             </div>
 
                             {/* Follow Us moved here */}
-                            <div className="flex flex-col items-start pt-2">
+                            <div className="flex flex-col items-start pt-2 pl-4">
                                 <h4 className="text-[#91CA35] font-semibold text-[12px] tracking-widest uppercase mb-1">
                                     Follow Us
                                 </h4>
@@ -301,7 +300,7 @@ export default function Footer() {
                                 </div>
 
                                 <div className="relative z-10 py-2 px-3 sm:pr-4 flex flex-row items-center h-full w-full justify-end">
-                                    <div className="flex flex-col items-start max-w-[170px]">
+                                    <div className="flex flex-col items-start w-[140px]">
                                         <h5 className="text-[#91C935] text-sm sm:text-base font-bold mb-0.5 drop-shadow-md">Become a Partner</h5>
                                         <p className="text-gray-200 text-[9.5px] sm:text-[10px] leading-tight mb-1.5 drop-shadow-sm">
                                             Start selling with Vedashi<br />
@@ -318,7 +317,7 @@ export default function Footer() {
                             </div>
                             {/* Bulk Orders */}
                             <div className="relative rounded-xl overflow-hidden bg-[#181818] border border-[#2a2a2a] group flex flex-col justify-center shadow-lg min-h-[96px]">
-                                <div className="absolute inset-y-0 left-0 w-[60%] z-0 overflow-hidden">
+                                <div className="absolute inset-y-0 left-0 w-[50%] z-0 overflow-hidden">
                                     <Image
                                         src="/Footer-banners/bulk order.jpeg"
                                         alt="Bulk Orders"
@@ -330,11 +329,11 @@ export default function Footer() {
                                 </div>
 
                                 <div className="relative z-10 py-2 px-3 sm:pr-4 flex flex-row items-center h-full w-full justify-end">
-                                    <div className="flex flex-col items-start max-w-[170px]">
+                                    <div className="flex flex-col items-start w-[140px]">
                                         <h5 className="text-[#91C935] text-sm sm:text-base font-bold mb-0.5 drop-shadow-md">Bulk Orders</h5>
                                         <p className="text-gray-200 text-[9.5px] sm:text-[10px] leading-tight mb-1.5 drop-shadow-sm">
                                             Stock up on Vedashi<br />
-                                            products at special bulk prices.
+                                            products at special prices.
                                         </p>
                                         <Link
                                             href="/contact"
@@ -369,7 +368,7 @@ export default function Footer() {
                             </div>
                             <div>
                                 <p className="text-[11px] font-bold text-white uppercase tracking-wide">Free Shipping</p>
-                                <p className="text-[10px] text-gray-500">above ₹499</p>
+                                <p className="text-[10px] text-gray-500">Free Worldwide Shipping</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
@@ -377,8 +376,8 @@ export default function Footer() {
                                 <RotateCcw className="h-5 w-5 text-[#91CA35]" />
                             </div>
                             <div>
-                                <p className="text-[11px] font-bold text-white uppercase tracking-wide">Easy Returns</p>
-                                <p className="text-[10px] text-gray-500">within 7 days</p>
+                                <p className="text-[11px] font-bold text-white uppercase tracking-wide">Authentic Products</p>
+                                <p className="text-[10px] text-gray-500">Trusted sources and sellers</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">

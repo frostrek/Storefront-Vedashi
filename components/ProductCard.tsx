@@ -953,7 +953,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                     src={imageSrc}
                                     alt={product.product_name}
                                     fill
-                                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
                                     className="object-contain transition-transform duration-500 group-hover:scale-105"
                                     priority={priority}
                                     loading={priority ? undefined : 'lazy'}
@@ -966,7 +966,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                     alt={product.product_name}
                                     width={400}
                                     height={400}
-                                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
                                     className="object-contain w-full h-full transition-transform duration-500 group-hover:scale-105"
                                     priority={priority}
                                     loading={priority ? undefined : 'lazy'}
@@ -993,11 +993,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
 
                         {/* Product Badges (Top Left Stack) */}
                         <div className={`absolute ${isList ? 'left-2 top-2' : 'left-2 top-2'} flex flex-col gap-1 z-10`}>
-                            {product.category && (
-                                <span className="rounded-full bg-[#01CC00] px-2 py-0.5 text-[8px] tracking-[0.1em] text-white uppercase font-black font-ui shadow-sm w-fit mb-0.5">
-                                    {product.category}
-                                </span>
-                            )}
+
                             {isExpired && !isComingSoon && (
                                 <span className="rounded-full bg-red-600 px-2 py-0.5 text-[8px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
                                     Expired
@@ -1143,13 +1139,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             </Link>
                         )}
 
-                        {isList && product.category && (
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="rounded leading-none bg-[#3d5c3a]/10 px-1.5 sm:px-2 py-0.5 sm:py-1 text-[8px] sm:text-[9px] tracking-widest text-[#3d5c3a] uppercase font-bold border border-[#3d5c3a]/10">
-                                    {product.category}
-                                </span>
-                            </div>
-                        )}
+
 
                         {/* Rating */}
                         {avgRating > 0 && (

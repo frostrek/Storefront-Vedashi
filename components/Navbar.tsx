@@ -149,16 +149,16 @@ const MegaMenuContent = ({ parent, country, colors }: { parent: Category, countr
             <h5 className="text-xl font-serif font-bold text-gray-900 mb-2 leading-tight">Explore {parent.name}</h5>
             <p className="text-xs text-gray-600 leading-relaxed italic">
               Discover our ethically sourced, premium Ayurvedic essentials crafted with traditional wisdom.
-            </p>
+            </p>  
           </div>
 
           <div className="mt-8 space-y-3 relative z-10">
             <Link
               href={`/${country}/products?category=${parent.slug}`}
-              className="flex items-center justify-between w-full group/btn text-sm font-bold text-[#3B5D3B] hover:text-[#2D452D] transition-colors"
+              className="flex items-center justify-between w-full group/btn text-sm font-bold text-[#FF0000] hover:text-[#CC0000] transition-colors"
             >
               Shop All {parent.name}
-              <div className="h-8 w-8 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center transition-all group-hover/btn:bg-[#3B5D3B] group-hover/btn:text-white">
+              <div className="h-8 w-8 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center transition-all group-hover/btn:bg-[#FF0000] group-hover/btn:text-white">
                 <ArrowRight className="h-4 w-4" />
               </div>
             </Link>

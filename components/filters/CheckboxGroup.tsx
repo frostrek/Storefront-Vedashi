@@ -36,9 +36,9 @@ export default function CheckboxGroup({ options, selected, onChange, maxVisible 
                             onChange={() => toggle(option)}
                             className="peer sr-only"
                         />
-                        <div className="h-[18px] w-[18px] rounded border-[1.5px] border-warm-gray/40 bg-white transition-all duration-200 peer-checked:border-herbal-green peer-checked:bg-herbal-green group-hover:border-warm-gray/70" />
+                        <div className="h-[15px] w-[15px] rounded-[4px] border border-gray-300/80 bg-white transition-all duration-200 peer-checked:border-[#3d5c3a] peer-checked:bg-white group-hover:border-gray-400" />
                         <svg
-                            className="absolute top-[3px] left-[3px] h-3 w-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity duration-150 pointer-events-none"
+                            className="absolute top-[2px] left-[2px] h-[11px] w-[11px] text-[#3d5c3a] opacity-0 peer-checked:opacity-100 transition-opacity duration-150 pointer-events-none"
                             viewBox="0 0 12 12"
                             fill="none"
                             stroke="currentColor"
@@ -49,7 +49,7 @@ export default function CheckboxGroup({ options, selected, onChange, maxVisible 
                             <polyline points="2 6 5 9 10 3" />
                         </svg>
                     </div>
-                    <span className="text-sm text-charcoal/70 group-hover:text-charcoal transition-colors leading-none">
+                    <span className="text-[13px] font-medium text-gray-500 group-hover:text-gray-800 transition-colors leading-none tracking-wide pt-0.5">
                         {option}
                     </span>
                 </label>
@@ -57,9 +57,9 @@ export default function CheckboxGroup({ options, selected, onChange, maxVisible 
             {hasMore && (
                 <button
                     onClick={() => setShowAll(!showAll)}
-                    className="mt-1 text-xs font-medium text-herbal-green hover:text-herbal-green-dark transition-colors"
+                    className="mt-1.5 text-[11px] font-bold text-gray-500 hover:text-gray-800 transition-colors flex items-center"
                 >
-                    {showAll ? 'Show less' : `+ ${options.length - maxVisible} more`}
+                    {showAll ? '- show less' : `+ ${options.length - maxVisible} more`}
                 </button>
             )}
         </div>
