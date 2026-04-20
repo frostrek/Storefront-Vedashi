@@ -6,10 +6,18 @@ import { ChevronDown } from 'lucide-react';
 interface FilterSectionProps {
     title: string;
     defaultOpen?: boolean;
+    scrollable?: boolean;
+    scrollHeight?: string;
     children: React.ReactNode;
 }
 
-export default function FilterSection({ title, defaultOpen = true, children }: FilterSectionProps) {
+export default function FilterSection({
+    title,
+    defaultOpen = true,
+    scrollable = false,
+    scrollHeight = '220px',
+    children,
+}: FilterSectionProps) {
     const [isOpen, setIsOpen] = useState(defaultOpen);
 
     return (
@@ -26,9 +34,40 @@ export default function FilterSection({ title, defaultOpen = true, children }: F
                 />
             </button>
             <div
-                className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-[500px] opacity-100 pb-5' : 'max-h-0 opacity-0'}`}
+                className={`transition-all duration-300 ease-in-out ${isOpen ? 'opacity-100 pb-5' : 'max-h-0 opacity-0 overflow-hidden'}`}
             >
-                {children}
+                {scrollable ? (
+                    <>
+                        <style>{`
+                            .filter-brand-scroll::-webkit-scrollbar {
+                                width: 3px;
+                            }
+                            .filter-brand-scroll::-webkit-scrollbar-track {
+                                background: transparent;
+                                margin: 4px 0;
+                            }
+                            .filter-brand-scroll::-webkit-scrollbar-thumb {
+                                background: #e5e7eb;
+                                border-radius: 999px;
+                            }
+                            .filter-brand-scroll:hover::-webkit-scrollbar-thumb {
+                                background: #9ca3af;
+                            }
+                            .filter-brand-scroll {
+                                scrollbar-width: thin;
+                                scrollbar-color: #e5e7eb transparent;
+                            }
+                        `}</style>
+                        <div
+                            className="filter-brand-scroll overflow-y-auto pr-2"
+                            style={{ maxHeight: scrollHeight }}
+                        >
+                            {children}
+                        </div>
+                    </>
+                ) : (
+                    children
+                )}
             </div>
         </div>
     );

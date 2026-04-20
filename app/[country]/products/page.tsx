@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense, useCallback, useRef, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { getCategories, getFilterOptions, getBestSellers, getNewArrivals, getFilteredProducts, subscribeNewsletter } from '@/lib/api';
+import { getCategories, getFilterOptions, getBestSellers, getNewArrivals, getFilteredProducts, subscribeNewsletter, getFormEnumOptions, getSpecialityEnumOptions } from '@/lib/api';
 import { useCurrency } from '@/context/CurrencyContext';
 import { FilteredProduct, FilterMeta, Category } from '@/types';
 import ProductCard from '@/components/ProductCard';
@@ -99,6 +99,8 @@ function ProductsContent() {
     const [priceMax, setPriceMax] = useState<number>(5000);
     const [categories, setCategories] = useState<Category[]>([]);
     const [filterAttributes, setFilterAttributes] = useState<FilterAttribute[]>([]);
+    const [formFilterOptions, setFormFilterOptions] = useState<string[]>([]);
+    const [specialityFilterOptions, setSpecialityFilterOptions] = useState<string[]>([]);
 
     // Resolve slug values → real display names for category/sub_category chips
     const resolvedChips = useMemo(() =>
@@ -132,6 +134,9 @@ function ProductsContent() {
             if (opts.categories) setCategories(opts.categories);
             if (opts.attributes) setFilterAttributes(opts.attributes);
         });
+        // Fetch dynamic form & speciality filter options
+        getFormEnumOptions().then(setFormFilterOptions);
+        getSpecialityEnumOptions().then(setSpecialityFilterOptions);
     }, []);
 
     const buildParams = useCallback((page: number) => {
@@ -324,11 +329,12 @@ function ProductsContent() {
             )}
 
             {brandOptions.length > 0 && (
-                <FilterSection title="Brand">
+                <FilterSection title="Brand" scrollable scrollHeight="220px">
                     <CheckboxGroup
                         options={brandOptions}
                         selected={filters.brands}
                         onChange={setBrands}
+                        maxVisible={brandOptions.length}
                     />
                 </FilterSection>
             )}
@@ -402,7 +408,7 @@ function ProductsContent() {
 
             <FilterSection title="Form" defaultOpen={false}>
                 <CheckboxGroup
-                    options={['Capsules', 'Tablets', 'Powder', 'Syrup', 'Oil', 'Churna']}
+                    options={formFilterOptions}
                     selected={filters.form}
                     onChange={setForm}
                 />
@@ -410,7 +416,7 @@ function ProductsContent() {
 
             <FilterSection title="Specialities" defaultOpen={false}>
                 <CheckboxGroup
-                    options={['Drug Free', 'Allergen Free', '100% Natural', 'Vegan', 'Ayurvedic', 'No Added Sugar']}
+                    options={specialityFilterOptions}
                     selected={filters.specialities}
                     onChange={setSpecialities}
                 />
