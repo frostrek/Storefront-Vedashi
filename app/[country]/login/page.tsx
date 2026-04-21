@@ -283,9 +283,14 @@ function LoginContent() {
                         try {
                             const stored = localStorage.getItem('vedashi_user');
                             if (stored) {
-                                const userData = JSON.parse(stored);
-                                userName = userData.name || userName;
-                                userId = userData.id || '';
+                                try {
+                                    const userData = JSON.parse(stored);
+                                    userName = userData.name || userName;
+                                    userId = userData.id || '';
+                                } catch (e) {
+                                    console.error('Failed to parse vedashi_user in login:', e);
+                                    localStorage.removeItem('vedashi_user');
+                                }
                             }
                         } catch { /* noop */ }
                         // SECURITY: Do not pass raw JWT in URL params — use cookie-only auth

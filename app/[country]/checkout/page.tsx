@@ -224,7 +224,15 @@ function CheckoutContent() {
         if (isBuyNow) {
             try {
                 const stored = sessionStorage.getItem('ksp_buy_now_item');
-                if (stored) setBuyNowItem(JSON.parse(stored));
+                if (stored) {
+                    try {
+                        setBuyNowItem(JSON.parse(stored));
+                    } catch (e) {
+                        console.error('Failed to parse buy now item:', e);
+                        sessionStorage.removeItem('ksp_buy_now_item');
+                        router.replace('/checkout');
+                    }
+                }
                 else router.replace('/checkout');
             } catch {
                 router.replace('/checkout');
@@ -288,6 +296,7 @@ function CheckoutContent() {
                             }
                         } catch (e) {
                             console.error('Failed to restore checkout draft:', e);
+                            sessionStorage.removeItem(PERSIST_KEY);
                         }
                     } else setUseNewAddress(true);
                 })
