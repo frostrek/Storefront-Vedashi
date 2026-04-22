@@ -219,14 +219,19 @@ function CheckoutContent() {
                 width: "6px"
             },
             "::-webkit-scrollbar-track": {
-                background: "transparent"
+                background: "transparent",
+                border: "none"
             },
             "::-webkit-scrollbar-thumb": {
                 background: "#D4CFC0",
-                borderRadius: "3px"
+                borderRadius: "3px",
+                border: "none"
             },
             "::-webkit-scrollbar-thumb:hover": {
                 background: "#6B8F5E"
+            },
+            "::-webkit-scrollbar-button": {
+                display: "none"
             }
         }),
     };
@@ -1280,6 +1285,8 @@ function CheckoutContent() {
                                                         }}
                                                         classNamePrefix="react-select"
                                                         placeholder="Code"
+                                                        menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                                                        menuPosition="fixed"
                                                     />
                                                 </div>
                                                 <div className="flex-1">
@@ -1374,6 +1381,8 @@ function CheckoutContent() {
                                                                             styles={customSelectStyles}
                                                                             classNamePrefix="react-select"
                                                                             placeholder="Search..."
+                                                                            menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                                                                            menuPosition="fixed"
                                                                         />
                                                                         <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8B7A3D] z-10 pointer-events-none" />
                                                                     </div>
@@ -1459,6 +1468,8 @@ function CheckoutContent() {
                                                         styles={customSelectStyles}
                                                         classNamePrefix="react-select"
                                                         placeholder="Search country..."
+                                                        menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                                                        menuPosition="fixed"
                                                     />
                                                     <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8B7A3D] z-10 pointer-events-none" />
                                                 </div>
@@ -1675,6 +1686,8 @@ function CheckoutContent() {
                                                                     }}
                                                                     classNamePrefix="react-select"
                                                                     placeholder="Search..."
+                                                                    menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                                                                    menuPosition="fixed"
                                                                 />
                                                             </div>
                                                         </div>
