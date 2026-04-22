@@ -8,7 +8,7 @@ import { Suspense } from 'react';
 const PromoBanner = dynamic(() => import('@/components/PromoBanner'), { ssr: false });
 const CookieBanner = dynamic(() => import('@/components/CookieBanner'), { ssr: false });
 const LanguageSuggestionBanner = dynamic(() => import('@/components/LanguageSuggestionBanner'), { ssr: false });
-const ButterflyEffect = dynamic(() => import('@/components/animations/ButterflyEffect'), { ssr: false });
+
 const RouteTracker = dynamic(() => import('@/components/RouteTracker'), { ssr: false });
 const GlobalErrorTracker = dynamic(() => import('@/components/GlobalErrorTracker'), { ssr: false });
 
@@ -27,7 +27,7 @@ export default function DeferredComponents() {
         <RouteTracker />
       </Suspense>
       <GlobalErrorTracker />
-      <ButterflyEffect />
+
       <CookieBanner />
       <LanguageSuggestionBanner />
     </>

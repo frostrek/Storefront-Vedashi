@@ -15,6 +15,7 @@ import { CookieConsentProvider } from "@/context/CookieConsentContext";
 import DynamicScriptLoader from "@/components/DynamicScriptLoader";
 import MaintenancePage from "@/components/MaintenancePage";
 import { generateLocalBusinessJsonLd, generateOrganizationJsonLd, generateWebSiteJsonLd } from "@/lib/seo";
+
 import { API_URL } from "@/lib/api";
 
 const inter = Inter({

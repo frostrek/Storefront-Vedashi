@@ -1856,7 +1856,7 @@ export default function AccountPage() {
                                                     <p className="text-xl font-bold text-[#36453A]">No orders yet</p>
                                                     <p className="mt-2 text-sm text-warm-gray mb-6">{orderSearch || orderStatusFilter !== 'All' ? 'Try adjusting your filters.' : "You haven't placed any orders yet."}</p>
                                                     <button
-                                                        onClick={() => router.push(`/${country}/shop`)}
+                                                        onClick={() => router.push(`/${country}`)}
                                                         className="rounded-xl bg-[#36453A] px-10 py-3 text-sm font-bold text-white shadow-md hover:bg-[#2A362D] transition-all"
                                                     >
                                                         Browse Shop
@@ -2438,7 +2438,7 @@ export default function AccountPage() {
                                         <p className="text-2xl font-bold text-[#36453A]">Your sanctuary is empty</p>
                                         <p className="mt-2 text-warm-gray text-lg">{wishlistItems.length > 0 ? "No matches found for your current sort." : "Save your favorite organic rituals here."}</p>
                                         <button
-                                            onClick={() => router.push(`/${country}/shop`)}
+                                            onClick={() => router.push(`/${country}`)}
                                             className="mt-8 rounded-xl bg-[#36453A] px-10 py-3 text-sm font-bold text-white shadow-md hover:bg-[#2A362D] transition-all"
                                         >
                                             Browse Shop
@@ -2529,7 +2529,7 @@ export default function AccountPage() {
                                             <h3 className="text-xl font-bold text-[#36453A] mb-2">Find More Treasures</h3>
                                             <p className="text-xs text-warm-gray leading-relaxed mb-6 max-w-[200px]">Continue exploring our organic collections.</p>
                                             <button
-                                                onClick={() => router.push('/shop')}
+                                                onClick={() => router.push(`/${country}`)}
                                                 className="rounded-xl border border-[#E8E1D5] px-6 py-2.5 text-xs font-bold text-[#36453A] group-hover:bg-white group-hover:shadow-sm transition-all bg-white"
                                             >
                                                 Browse Shop

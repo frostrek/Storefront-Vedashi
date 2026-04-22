@@ -2,6 +2,8 @@ import React from 'react';
 import Link from 'next/link';
 import { getLegalDocument } from '@/lib/api';
 
+import LegalContentRenderer from '@/components/ui/LegalContentRenderer';
+
 export const metadata = {
     title: 'Shipping Policy | Vedashi',
     description: 'Learn about Vedashi shipping rates, delivery timelines, and our shipping policy.',
@@ -25,10 +27,7 @@ export default async function ShippingPolicyPage() {
                     )}
                 </div>
 
-                <div 
-                    className="legal-rich-text max-w-none text-gray-600"
-                    dangerouslySetInnerHTML={{ __html: doc?.content || '<p>Shipping Policy is currently being updated. Please check back later.</p>' }}
-                />
+                <LegalContentRenderer content={doc?.content || ''} />
             </div>
         </div>
     );
