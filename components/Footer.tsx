@@ -85,7 +85,8 @@ const FALLBACK: FooterData = {
             items: [
                 { label: 'Help Center', href: '/help-center' },
                 { label: 'Track Order', href: '/track-order' },
-                { label: 'Shipping & Returns', href: '/shipping' },
+                { label: 'Shipping Policy', href: '/shipping' },
+                { label: 'Return Policy', href: '/return-policy' },
                 { label: 'Terms of Service', href: '/terms' },
                 { label: 'Privacy Policy', href: '/privacy' },
             ],
@@ -142,6 +143,13 @@ export default function Footer() {
     const columns = (isDynamic && data?.links && data.links.length > 0) ? data.links : (FALLBACK.links ?? []);
     const social = (isDynamic && data?.social && data.social.length > 0) ? data.social : (FALLBACK.social ?? []);
     const bottomBar = (isDynamic && data?.bottom_bar) ? data.bottom_bar : FALLBACK.bottom_bar;
+
+    // Extract country from pathname (e.g., /in/products -> /in)
+    const countryPrefix = pathname?.split('/')[1];
+    const localizedHref = (href: string) => {
+        if (href.startsWith('http') || href.startsWith('mailto:') || href.startsWith('tel:')) return href;
+        return countryPrefix ? `/${countryPrefix}${href}` : href;
+    };
 
     return (
         <footer className="relative z-10 font-sans">
@@ -247,7 +255,7 @@ export default function Footer() {
                                 {columns[0]?.items.map((item, ii) => (
                                     <li key={ii}>
                                         <Link
-                                            href={item.href}
+                                            href={localizedHref(item.href)}
                                             className="text-[12px] text-gray-400 hover:text-white transition-colors duration-200"
                                         >
                                             {item.label}
@@ -267,7 +275,7 @@ export default function Footer() {
                                 {columns[1]?.items.map((item, ii) => (
                                     <li key={ii}>
                                         <Link
-                                            href={item.href}
+                                            href={localizedHref(item.href)}
                                             className="text-[12px] text-gray-400 hover:text-white transition-colors duration-200"
                                         >
                                             {item.label}
@@ -378,7 +386,7 @@ export default function Footer() {
                             </div>
                             <div>
                                 <p className="text-[11px] font-bold text-white uppercase tracking-wide">Easy Returns</p>
-                                <p className="text-[10px] text-gray-500">within 7 days</p>
+                                <p className="text-[10px] text-gray-500">within 14 days</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">

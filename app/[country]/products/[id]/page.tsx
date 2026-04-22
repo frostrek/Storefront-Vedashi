@@ -372,7 +372,8 @@ function ProductDetailContent({ params }: Props) {
                     __html: JSON.stringify(generateProductJsonLd({
                         ...product,
                         review_count: Number(product.review_count || 0)
-                    } as any, undefined, undefined, 'INR'))
+                    } as any, undefined, undefined,
+                    ({ in: 'INR', ru: 'RUB', kr: 'KRW', us: 'USD', gb: 'GBP', ae: 'AED' } as Record<string, string>)[country] || 'INR'))
                 }}
             />
             <script
