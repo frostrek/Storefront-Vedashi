@@ -4,15 +4,26 @@ export function getValidPrices(price1: any, price2: any): { displayPrice: number
     let p1 = Number(price1) || 0;
     let p2 = Number(price2) || 0;
     
-    // If a price is 0 or negative, it's invalid. Fallback to the other price.
-    if (p1 <= 0) p1 = p2;
-    if (p2 <= 0) p2 = p1;
-    if (p1 <= 0) p1 = 0; // Both are 0 or less
+    // If selling price is 0 or negative, fallback to MRP
+    if (p1 <= 0) {
+        p1 = p2 > 0 ? p2 : 0;
+    }
     
-    // Always map the lowest valid price to selling price, and highest to MRP
+    // If MRP is missing or negative, fallback to selling price
+    if (p2 <= 0) {
+        p2 = p1;
+    }
+    
+    // MRP should only be valid as a strikethrough if it's strictly greater than the selling price.
+    // If MRP <= Selling Price, then there is no valid discount, so MRP should match Selling Price
+    // to correctly indicate no discount.
+    if (p2 <= p1) {
+        p2 = p1;
+    }
+    
     return {
-        displayPrice: Math.min(p1, p2),
-        originalPrice: Math.max(p1, p2)
+        displayPrice: p1,
+        originalPrice: p2
     };
 }
 

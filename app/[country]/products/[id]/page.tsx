@@ -384,7 +384,7 @@ function ProductDetailContent({ params }: Props) {
                     __html: JSON.stringify(generateBreadcrumbJsonLd([
                         { name: 'Home', url: '/' },
                         { name: 'Shop', url: '/products' },
-                        { name: product.category || 'Category', url: `/categories/${encodeURIComponent((product.category || '').toLowerCase().replace(/\s+/g, '-'))}` },
+                        { name: product.category || 'Category', url: `/products?category=${encodeURIComponent((product.category || '').toLowerCase().replace(/\s+/g, '-'))}` },
                         { name: product.product_name, url: `/products/${product.slug || product.product_id}` },
                     ]))
                 }}
@@ -399,7 +399,7 @@ function ProductDetailContent({ params }: Props) {
                         <ChevronRight className="h-3 w-3" />
                         {product.category && (
                             <>
-                                <Link href={`/categories/${encodeURIComponent(product.category.toLowerCase().replace(/\s+/g, '-'))}`} className="hover:text-gray-900 transition-colors">
+                                <Link href={`/products?category=${encodeURIComponent(product.category.toLowerCase().replace(/\s+/g, '-'))}`} className="hover:text-gray-900 transition-colors">
                                     {product.category}
                                 </Link>
                                 <ChevronRight className="h-3 w-3" />

@@ -50,7 +50,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         // Category Pages
         categories.forEach((c: any) => {
             sitemapEntries.push({
-                url: `${SITE_URL}/${country}/categories/${c.slug}`,
+                url: `${SITE_URL}/${country}/products?category=${c.slug}`,
                 lastModified: lastMod,
                 changeFrequency: 'weekly',
                 priority: 0.7,
