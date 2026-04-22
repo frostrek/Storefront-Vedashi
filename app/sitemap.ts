@@ -39,31 +39,55 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         // Static Pages
         const staticPages = ['', '/shop', '/about', '/contact', '/blog'];
         staticPages.forEach(p => {
+            const languages: Record<string, string> = {};
+            countries.forEach(c => {
+                const locale = SUPPORTED_COUNTRIES[c as keyof typeof SUPPORTED_COUNTRIES].locale;
+                languages[locale] = `${SITE_URL}/${c}${p}`;
+            });
+            languages['x-default'] = `${SITE_URL}/in${p}`;
+
             sitemapEntries.push({
                 url: `${SITE_URL}/${country}${p}`,
                 lastModified: lastMod,
                 changeFrequency: p === '' ? 'daily' : 'weekly',
                 priority: p === '' ? 1.0 : 0.8,
+                alternates: { languages }
             });
         });
 
         // Category Pages
         categories.forEach((c: any) => {
+            const languages: Record<string, string> = {};
+            countries.forEach(cc => {
+                const locale = SUPPORTED_COUNTRIES[cc as keyof typeof SUPPORTED_COUNTRIES].locale;
+                languages[locale] = `${SITE_URL}/${cc}/products?category=${c.slug}`;
+            });
+            languages['x-default'] = `${SITE_URL}/in/products?category=${c.slug}`;
+
             sitemapEntries.push({
                 url: `${SITE_URL}/${country}/products?category=${c.slug}`,
                 lastModified: lastMod,
                 changeFrequency: 'weekly',
                 priority: 0.7,
+                alternates: { languages }
             });
         });
 
         // Product Pages
         products.forEach((p: any) => {
+            const languages: Record<string, string> = {};
+            countries.forEach(cc => {
+                const locale = SUPPORTED_COUNTRIES[cc as keyof typeof SUPPORTED_COUNTRIES].locale;
+                languages[locale] = `${SITE_URL}/${cc}/products/${p.slug}`;
+            });
+            languages['x-default'] = `${SITE_URL}/in/products/${p.slug}`;
+
             sitemapEntries.push({
                 url: `${SITE_URL}/${country}/products/${p.slug}`,
                 lastModified: p.updated_at ? new Date(p.updated_at) : lastMod,
                 changeFrequency: 'weekly',
                 priority: 0.9,
+                alternates: { languages }
             });
         });
     }
