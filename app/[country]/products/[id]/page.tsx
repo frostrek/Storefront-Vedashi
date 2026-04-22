@@ -372,7 +372,7 @@ function ProductDetailContent({ params }: Props) {
                     __html: JSON.stringify(generateProductJsonLd({
                         ...product,
                         review_count: Number(product.review_count || 0)
-                    } as any))
+                    } as any, undefined, undefined, 'INR'))
                 }}
             />
             <script

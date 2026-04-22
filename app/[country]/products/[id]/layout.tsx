@@ -113,6 +113,16 @@ async function ProductJsonLd({ paramsPromise }: { paramsPromise: Promise<any> })
 
     const siteConfigs = await fetchSiteConfig(['merchant_shipping', 'merchant_returns']);
 
+    const currencyMap: Record<string, string> = {
+        in: 'INR',
+        ru: 'RUB',
+        kr: 'KRW',
+        us: 'USD',
+        gb: 'GBP',
+        ae: 'AED',
+    };
+    const currency = currencyMap[currentCountry] || 'INR';
+
     const productJsonLd = generateProductJsonLd({
         product_id: product.product_id,
         product_name: product.product_name,
@@ -126,7 +136,7 @@ async function ProductJsonLd({ paramsPromise }: { paramsPromise: Promise<any> })
         rating_average: product.rating_average,
         review_count: product.review_count,
         variants: product.variants,
-    }, siteConfigs?.merchant_shipping, siteConfigs?.merchant_returns);
+    }, siteConfigs?.merchant_shipping, siteConfigs?.merchant_returns, currency);
 
     // Build breadcrumb from full category hierarchy (closure table)
     const breadcrumbItems = [

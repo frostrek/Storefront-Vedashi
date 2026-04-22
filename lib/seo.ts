@@ -237,7 +237,8 @@ export function buildPLPMeta(hasFilters = false, currentCountry: string = 'in'):
 export function generateProductJsonLd(
     product: ProductSeoInput,
     shippingConfig?: any,
-    returnConfig?: any
+    returnConfig?: any,
+    currency: string = 'INR'
 ): Record<string, unknown> {
     const defaultVariant = product.variants?.find((v: any) => v.is_default) || product.variants?.[0];
     const price = defaultVariant?.price || product.price || 0;
@@ -265,7 +266,7 @@ export function generateProductJsonLd(
         offers: {
             '@type': 'Offer',
             price: price,
-            priceCurrency: 'INR',
+            priceCurrency: currency,
             availability: inStock
                 ? 'https://schema.org/InStock'
                 : 'https://schema.org/OutOfStock',
