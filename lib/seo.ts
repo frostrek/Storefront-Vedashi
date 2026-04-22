@@ -62,7 +62,7 @@ export interface CategorySeoInput {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const SITE_NAME = 'Vedashi';
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.onrender.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.com';
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-default.jpg`;
 
 // ─── Sanitization ─────────────────────────────────────────────────────────────
@@ -357,6 +357,7 @@ export function generateLocalBusinessJsonLd(): Record<string, unknown> {
         image: `${SITE_URL}/og-default.jpg`,
         description: 'Premium Ayurvedic Wellness and Natural Herbal Remedies.',
         email: 'info@vedashi.com',
+        // telephone: '+91-XXXXXXXXXX', // TODO: Add real business phone number when available
         address: {
             '@type': 'PostalAddress',
             streetAddress: 'Plot No. E-56, Shop No. 2, Sector-09, Airoli',
@@ -384,7 +385,13 @@ export function generateLocalBusinessJsonLd(): Record<string, unknown> {
                 closes: '16:00'
             }
         ],
-        sameAs: []
+        sameAs: [
+            // TODO: Replace with actual Vedashi social media profile URLs
+            // 'https://www.instagram.com/vedashi_official',
+            // 'https://www.facebook.com/vedashi',
+            // 'https://www.linkedin.com/company/vedashi',
+            // 'https://twitter.com/vedashi',
+        ]
     };
 }
 
@@ -461,7 +468,13 @@ export function generateOrganizationJsonLd(): Record<string, unknown> {
         name: SITE_NAME,
         url: SITE_URL,
         logo: `${SITE_URL}/logo.png`,
-        sameAs: [],
+        sameAs: [
+            // TODO: Replace with actual Vedashi social media profile URLs
+            // 'https://www.instagram.com/vedashi_official',
+            // 'https://www.facebook.com/vedashi',
+            // 'https://www.linkedin.com/company/vedashi',
+            // 'https://twitter.com/vedashi',
+        ],
     };
 }
 
