@@ -112,6 +112,7 @@ export default function BestSellerShowcase({
                   onClick={() => setAdIndex(i)}
                   className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${i === adIndex ? 'bg-white w-4' : 'bg-white/50'}`}
                   aria-label={`Banner ${i + 1}`}
+                  suppressHydrationWarning
                 />
               ))}
             </div>

@@ -103,6 +103,7 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
                         onClick={() => scroll('left')}
                         className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-30 p-3 rounded-full bg-white/90 shadow-xl border border-gray-100 text-[#91CA35] hover:bg-[#91CA35] hover:text-white transition-all duration-300 backdrop-blur-sm group-hover/reel:scale-110"
                         aria-label="Scroll left"
+                        suppressHydrationWarning
                     >
                         <ChevronLeft className="h-6 w-6" />
                     </button>
@@ -112,6 +113,7 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
                         onClick={() => scroll('right')}
                         className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-30 p-3 rounded-full bg-white/90 shadow-xl border border-gray-100 text-[#91CA35] hover:bg-[#91CA35] hover:text-white transition-all duration-300 backdrop-blur-sm group-hover/reel:scale-110"
                         aria-label="Scroll right"
+                        suppressHydrationWarning
                     >
                         <ChevronRight className="h-6 w-6" />
                     </button>
