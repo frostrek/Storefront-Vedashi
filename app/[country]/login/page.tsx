@@ -14,6 +14,9 @@ import {
 import SocialLoginButtons from '@/components/SocialLoginButtons';
 import LegalModal from '@/components/ui/LegalModal';
 import LegalContentRenderer from '@/components/ui/LegalContentRenderer';
+import Select from 'react-select';
+import { COUNTRY_CODES } from '@/lib/country-codes';
+import { getDefaultCountry } from '@/lib/addressConfig';
 
 // API_URL imported from @/lib/api
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? 'YOUR_SITE_KEY';
@@ -80,6 +83,11 @@ function LoginContent() {
         fetchLegal();
     }, []);
 
+    const defaultDialCode = (() => {
+        const match = COUNTRY_CODES.find(c => c.code === getDefaultCountry());
+        return match ? match.dial_code : '+91';
+    })();
+    const [phoneDialCode, setPhoneDialCode] = useState(defaultDialCode);
     const [phoneNumber, setPhoneNumber] = useState('');
     const [otpSent, setOtpSent] = useState(false);
     const [otpCode, setOtpCode] = useState('');
@@ -188,7 +196,7 @@ function LoginContent() {
             const res = await authFetch(`${API_URL}/api/auth/phone-login/send-otp`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone: phoneNumber }),
+                body: JSON.stringify({ phone: `${phoneDialCode}${phoneNumber}` }),
             });
             const json = await res.json();
             if (res.ok && json.success) {
@@ -218,7 +226,7 @@ function LoginContent() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ phone: phoneNumber, otp_code: otpCode, full_name: phoneName || undefined }),
+                body: JSON.stringify({ phone: `${phoneDialCode}${phoneNumber}`, otp_code: otpCode, full_name: phoneName || undefined }),
             });
             const json = await res.json();
             if (res.ok && json.success && json.data?.customer) {
@@ -353,7 +361,7 @@ function LoginContent() {
                 </h2>
                 <p className="text-sm text-[#6b7b6b] mt-1">
                     {otpSent
-                        ? `Code sent to +91 ${phoneNumber}`
+                        ? `Code sent to ${phoneDialCode} ${phoneNumber}`
                         : "We'll send a verification code via SMS"}
                 </p>
             </div>
@@ -364,9 +372,58 @@ function LoginContent() {
                         Phone Number
                     </label>
                     <div className="flex gap-2 mb-5">
-                        <div className="flex items-center px-3 rounded-xl border border-[#d4e4d4] bg-[#f4f9f4] text-sm text-[#4a6b4a] font-semibold">
-                            +91
-                        </div>
+                        <Select
+                            options={COUNTRY_CODES.map(c => ({ value: c.dial_code, label: `${c.flag} ${c.dial_code}`, name: c.name }))}
+                            value={{ value: phoneDialCode, label: `${COUNTRY_CODES.find(c => c.dial_code === phoneDialCode)?.flag || ''} ${phoneDialCode}` }}
+                            onChange={(opt: any) => setPhoneDialCode(opt.value)}
+                            className="w-[130px]"
+                            styles={{
+                                control: (provided: any, state: any) => ({
+                                    ...provided,
+                                    borderRadius: '12px',
+                                    border: state.isFocused ? '1px solid #2d5a2d' : '1px solid #d4e4d4',
+                                    backgroundColor: '#f4f9f4',
+                                    minHeight: '44px',
+                                    boxShadow: 'none',
+                                    cursor: 'pointer',
+                                    '&:hover': {
+                                        borderColor: '#2d5a2d',
+                                    },
+                                }),
+                                menu: (provided: any) => ({
+                                    ...provided,
+                                    zIndex: 50,
+                                    borderRadius: '12px',
+                                    boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+                                    border: '1px solid #d4e4d4',
+                                    overflow: 'hidden',
+                                }),
+                                menuList: (provided: any) => ({
+                                    ...provided,
+                                    padding: '4px',
+                                    maxHeight: '200px',
+                                }),
+                                option: (provided: any, state: any) => ({
+                                    ...provided,
+                                    backgroundColor: state.isSelected ? '#1e3d1e' : state.isFocused ? '#f4f9f4' : 'white',
+                                    color: state.isSelected ? 'white' : '#1a1a1a',
+                                    cursor: 'pointer',
+                                    borderRadius: '8px',
+                                    fontSize: '13px',
+                                    padding: '8px 10px',
+                                    margin: '1px 0',
+                                }),
+                            }}
+                            isSearchable
+                            filterOption={(option: any, input: string) => {
+                                if (!input) return true;
+                                const q = input.toLowerCase();
+                                return option.data.name?.toLowerCase().includes(q) || option.value.includes(q);
+                            }}
+                            components={{ IndicatorSeparator: () => null }}
+                            menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                            menuPosition="fixed"
+                        />
                         <input
                             type="tel"
                             value={phoneNumber}
