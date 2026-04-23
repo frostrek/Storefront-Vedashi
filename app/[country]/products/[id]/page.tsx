@@ -13,7 +13,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useWishlist } from '@/context/WishlistContext';
 import ProductCard from '@/components/ProductCard';
 import { SkeletonLine, SkeletonReviewSection, SkeletonProductRow } from '@/components/Skeleton';
-import { Heart, ShoppingCart, Minus, Plus, Star, Truck, RotateCcw, ChevronRight, AlertTriangle, Sparkles, Info, Package, Award, BadgeCheck, Clock, Globe, Trash2 } from 'lucide-react';
+import { Heart, ShoppingCart, Minus, Plus, Star, Truck, RotateCcw, ChevronRight, AlertTriangle, Sparkles, Info, Package, Award, BadgeCheck, Clock, Globe, Trash2, Share2 } from 'lucide-react';
 import ProductImageGallery from '@/components/gallery/ProductImageGallery';
 import LazySection from '@/components/lazy/LazySection';
 import toast from 'react-hot-toast';
@@ -363,6 +363,23 @@ function ProductDetailContent({ params }: Props) {
         router.push('/checkout?buyNow=true');
     };
 
+    const handleShare = () => {
+        const shareData = {
+            title: product?.product_name || 'Vedashi Wellness',
+            text: `Check out ${product?.product_name} on Vedashi — Premium Ayurvedic Wellness.`,
+            url: window.location.href,
+        };
+
+        if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+            navigator.share(shareData).catch((err) => {
+                console.log('Share failed:', err);
+            });
+        } else {
+            navigator.clipboard.writeText(window.location.href);
+            toast.success('Link copied to clipboard!');
+        }
+    };
+
     return (
         <div className="min-h-screen bg-[#FDFCFB] pb-16">
             {/* Structured Data */}
@@ -428,9 +445,18 @@ function ProductDetailContent({ params }: Props) {
                         {/* Vedashi Badges */}
 
 
-                        <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 italic tracking-tight leading-[1.1]">
-                            {selectedVariant?.variant_name ?? variants?.[0]?.variant_name ?? product.product_name}
-                        </h1>
+                        <div className="flex justify-between items-start gap-4">
+                            <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 italic tracking-tight leading-[1.1] flex-1">
+                                {selectedVariant?.variant_name ?? variants?.[0]?.variant_name ?? product.product_name}
+                            </h1>
+                            <button 
+                                onClick={handleShare}
+                                className="p-3 rounded-full bg-white border border-gray-200 text-gray-600 hover:text-[#3d5c3a] hover:border-[#3d5c3a] hover:shadow-md transition-all group mt-1"
+                                title="Share product"
+                            >
+                                <Share2 size={20} className="group-hover:scale-110 transition-transform" />
+                            </button>
+                        </div>
 
                         {(product.review_count && Number(product.review_count) > 0) ? (
                             <div className="flex items-center gap-2 mt-2">
