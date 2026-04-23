@@ -445,6 +445,32 @@ export function generateBreadcrumbJsonLd(
     };
 }
 
+/** ItemList schema (JSON-LD) for product listings */
+export function generateItemListJsonLd(
+    items: Array<{ name: string; url: string; image?: string; price?: number }>
+): Record<string, unknown> {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        itemListElement: items.map((item, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            url: item.url,
+            item: {
+                '@type': 'Product',
+                name: item.name,
+                image: item.image || DEFAULT_OG_IMAGE,
+                url: item.url,
+                offers: item.price ? {
+                    '@type': 'Offer',
+                    price: item.price,
+                    priceCurrency: 'INR'
+                } : undefined
+            }
+        }))
+    };
+}
+
 /** Organization schema (JSON-LD) — used in layout */
 export function generateOrganizationJsonLd(): Record<string, unknown> {
     return {

@@ -143,7 +143,12 @@ export default async function RootLayout({
         />
 
 
-        <ClerkProvider>
+        <ClerkProvider
+          signInUrl="/in/login"
+          signUpUrl="/in/register"
+          signInFallbackRedirectUrl="/"
+          signUpFallbackRedirectUrl="/"
+        >
           <Script
             src="https://challenges.cloudflare.com/turnstile/v0/api.js"
             strategy="afterInteractive"

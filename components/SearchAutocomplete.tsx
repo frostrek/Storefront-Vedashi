@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Search, X, Loader2 } from 'lucide-react';
 import { searchAutocomplete, type SearchSuggestion } from '@/lib/api';
 import { useCurrency } from '@/context/CurrencyContext';
@@ -21,6 +21,7 @@ export default function SearchAutocomplete({
     className = '',
 }: SearchAutocompleteProps) {
     const router = useRouter();
+    const pathname = usePathname();
     const { formatPrice } = useCurrency();
     const [query, setQuery] = useState('');
     const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
@@ -173,10 +174,15 @@ export default function SearchAutocomplete({
                     type="text"
                     value={query}
                     onChange={e => {
-                        setQuery(e.target.value);
+                        const val = e.target.value;
+                        setQuery(val);
                         setActiveIndex(-1);
-                        if (e.target.value.trim().length >= 2 && !isOpen) {
+                        if (val.trim().length >= 2 && !isOpen) {
                             setIsOpen(true);
+                        }
+                        // If they clear the search string manually while on the search page, send them back to home
+                        if (val.trim().length === 0 && pathname.endsWith('/search')) {
+                            router.push('/');
                         }
                     }}
                     onFocus={() => {
@@ -201,6 +207,9 @@ export default function SearchAutocomplete({
                             setSuggestions([]);
                             setIsOpen(false);
                             inputRef.current?.focus();
+                            if (pathname.endsWith('/search')) {
+                                router.push('/');
+                            }
                         }}
                         className="absolute right-4 p-0.5 text-gray-400 hover:text-gray-600 transition-colors"
                     >

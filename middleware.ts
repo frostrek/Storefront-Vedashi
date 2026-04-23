@@ -1,3 +1,4 @@
+import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
@@ -164,7 +165,10 @@ function applyLanguageCookies(
 
 // ─── Middleware ──────────────────────────────────────────────────────
 
-export async function middleware(request: NextRequest) {
+export default clerkMiddleware(async (auth, request) => {
+  // NOTE: No auth.protect() — this is a public e-commerce storefront.
+  // Clerk is used ONLY for social OAuth login, not page protection.
+  // Our own backend handles auth via HttpOnly cookies.
   const { pathname } = request.nextUrl;
 
   // 0. SEO: Enforce non-www canonical domain (redirect www to non-www)
@@ -254,12 +258,13 @@ export async function middleware(request: NextRequest) {
   applyLanguageCookies(request, response, country);
 
   return response;
-}
+});
 
 // ─── Matcher ────────────────────────────────────────────────────────
 
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)',
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    "/(api|trpc)(.*)",
   ],
 };

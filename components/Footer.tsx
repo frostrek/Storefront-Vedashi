@@ -293,6 +293,7 @@ export default function Footer() {
                                         src="/Footer-banners/vendor regis.jpeg"
                                         alt="Become a Partner"
                                         fill
+                                        sizes="(max-width: 768px) 100vw, 50vw"
                                         className="object-cover object-center opacity-90 group-hover:opacity-100 transition-opacity duration-300"
                                     />
                                     {/* Fade out the right edge of the block to blend smoothly */}
@@ -322,6 +323,7 @@ export default function Footer() {
                                         src="/Footer-banners/bulk order.jpeg"
                                         alt="Bulk Orders"
                                         fill
+                                        sizes="(max-width: 768px) 100vw, 50vw"
                                         className="object-cover object-center opacity-90 group-hover:opacity-100 transition-opacity duration-300"
                                     />
                                     {/* Fade out the right edge of the block to blend smoothly */}

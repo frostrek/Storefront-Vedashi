@@ -15,7 +15,7 @@ import { createPortal } from 'react-dom';
 import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { trackEcommerce } from '@/lib/analytics/gtag';
-import { hasDiscount, getDiscountPercent } from '@/utils/discount';
+import { hasDiscount, getDiscountPercent, getValidPrices } from '@/utils/discount';
 
 
 const BLUR_DATA_URL =
@@ -185,11 +185,15 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
     // Determine if product has variants from the product data
     const hasVariants = (product.variant_count ?? 0) > 1 || (product.variants?.length ?? 0) > 1;
 
-    // Display values (default variant or product level)
-    const displayPrice = product.price ?? 0;
+    // Enforce that displayPrice (Selling Price) is always the lowest, and originalPrice (MRP) is the highest
+    // We use getValidPrices to defensively ignore any price/sale_price entries that are 0 or negative
+    const { displayPrice, originalPrice } = getValidPrices(
+        product.price,
+        product.original_price ?? product.price
+    );
+    
     const isOnSale = product.is_on_sale ?? false;
-    const originalPrice = product.original_price ?? displayPrice;
-    const discountPercent = product.discount_percentage ?? 0;
+    const discountPercent = (originalPrice > displayPrice) ? Math.round((1 - displayPrice / originalPrice) * 100) : 0;
 
     const imageSrc = product.thumbnail_url || product.images?.[0] || '/herbal_placeholder.png';
     const isExternal = imageSrc.startsWith('http');
@@ -542,6 +546,13 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                         ? optionsValList.join(' · ') 
                                         : (labelParts.join(' · ') || v.sku || 'Standard');
 
+                                    const { displayPrice: vDisplayPrice, originalPrice: vOriginalPrice } = getValidPrices(
+                                        v.price,
+                                        v.original_price ?? v.sale_price ?? v.price
+                                    );
+                                    
+                                    const vIsDiscounted = vOriginalPrice > vDisplayPrice;
+
                                     return (
                                         <button
                                             key={v.variant_id}
@@ -605,23 +616,17 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                             : 'bg-gray-100 text-gray-700 group-hover:bg-[#FF0000]/10 group-hover:text-[#FF0000]'
                                                         }
                                                     `}>
-                                                        {formatPrice(v.price, v.country_prices || product.country_prices)}
+                                                        {formatPrice(vDisplayPrice, v.country_prices || product.country_prices)}
                                                     </span>
-                                                    {hasDiscount(v) ? (
+                                                    {vIsDiscounted && (
                                                         <>
                                                             <span className={`text-[10px] line-through ${isSelected ? 'text-white/50' : 'text-gray-400'}`}>
-                                                                {formatPrice(v.discount_base_price ?? 0, v.country_prices || product.country_prices)}
+                                                                {formatPrice(vOriginalPrice, v.country_prices || product.country_prices)}
                                                             </span>
                                                             <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isSelected ? 'bg-red-500/20 text-red-100' : 'text-red-500 bg-red-50'}`}>
                                                                 {getDiscountPercent(v)}% OFF
                                                             </span>
                                                         </>
-                                                    ) : (
-                                                        v.is_on_sale && v.original_price && (
-                                                            <span className={`text-[10px] line-through ${isSelected ? 'text-white/50' : 'text-gray-400'}`}>
-                                                                {formatPrice(v.original_price, v.country_prices || product.country_prices)}
-                                                            </span>
-                                                        )
                                                     )}
                                                     {!isInactive && isOut && (
                                                         <span className="text-[9px] font-bold text-red-400 bg-red-50 px-1.5 py-0.5 rounded-full">
@@ -837,6 +842,12 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                     const variantCartItem = items.find(ci => ci.variant_id === v.variant_id);
                                     const variantInCart = !!variantCartItem;
 
+                                    const { displayPrice: vDisplayPrice, originalPrice: vOriginalPrice } = getValidPrices(
+                                        v.price,
+                                        v.original_price ?? v.sale_price ?? v.price
+                                    );
+                                    const vIsDiscounted = vOriginalPrice > vDisplayPrice;
+
                                     return (
                                         <div
                                             key={v.variant_id}
@@ -844,9 +855,9 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                         >
                                             {/* Variant thumbnail */}
                                             <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-50 flex-shrink-0 border border-gray-100 relative">
-                                                {v.is_on_sale && v.discount_percentage && (
+                                                {vIsDiscounted && (
                                                     <span className="absolute top-0 left-0 bg-blue-600 text-white text-[6px] font-bold px-1 py-[1px] rounded-br-md leading-none z-10">
-                                                        {Math.round(v.discount_percentage)}% OFF
+                                                        {getDiscountPercent(v)}% OFF
                                                     </span>
                                                 )}
                                                 <Image
@@ -863,12 +874,17 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                 <p className="text-[11px] font-semibold text-gray-800 leading-tight line-clamp-1">{label}</p>
                                                 <div className="flex items-center gap-1.5 mt-0.5">
                                                     <span className="text-[12px] font-bold text-gray-900">
-                                                        {formatPrice(v.price, v.country_prices || product.country_prices)}
+                                                        {formatPrice(vDisplayPrice, v.country_prices || product.country_prices)}
                                                     </span>
-                                                    {(v.is_on_sale || (v.original_price && v.price && v.original_price > v.price)) && (
-                                                        <span className="text-[10px] text-gray-400 line-through">
-                                                            {formatPrice(v.original_price!, v.country_prices || product.country_prices)}
-                                                        </span>
+                                                    {vIsDiscounted && (
+                                                        <>
+                                                            <span className="text-[10px] text-gray-400 line-through">
+                                                                {formatPrice(vOriginalPrice, v.country_prices || product.country_prices)}
+                                                            </span>
+                                                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full text-red-500 bg-red-50">
+                                                                {getDiscountPercent(v)}% OFF
+                                                            </span>
+                                                        </>
                                                     )}
                                                 </div>
                                                 {isOut && !isInactive && (
@@ -1101,10 +1117,15 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             <span className="font-black text-[15px] sm:text-[17px] leading-none py-0.5">
                                 {formatPrice(displayPrice, product.country_prices)}
                             </span>
-                            {(discountPercent > 0 || originalPrice > displayPrice) && (
-                                <span className="text-gray-400 line-through text-[11px] sm:text-xs font-bold font-ui">
-                                    {formatPrice(originalPrice, product.country_prices)}
-                                </span>
+                            {originalPrice > displayPrice && (
+                                <>
+                                    <span className="text-gray-400 line-through text-[11px] sm:text-xs font-bold font-ui mt-0.5">
+                                        {formatPrice(originalPrice, product.country_prices)}
+                                    </span>
+                                    <span className="text-[#FF0000] bg-red-50 text-[10px] font-bold px-1.5 py-0.5 rounded border border-red-100 whitespace-nowrap">
+                                        {Math.round((1 - displayPrice / originalPrice) * 100)}% OFF
+                                    </span>
+                                </>
                             )}
                         </div>
 
