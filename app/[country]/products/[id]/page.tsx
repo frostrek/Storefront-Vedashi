@@ -36,8 +36,16 @@ export async function generateMetadata({ params }: { params: Promise<{ country: 
     });
     languages['x-default'] = `${SITE_URL}/in/products/${product.slug || product.product_id}`;
 
-    // Get a default image
-    const ogImage = product.thumbnail_url || product.assets?.[0] || product.images?.[0];
+    // Get a default image string
+    let ogImage: string | undefined = product.thumbnail_url;
+    if (!ogImage && product.assets && product.assets.length > 0) {
+        const asset = product.assets[0];
+        ogImage = typeof asset === 'string' ? asset : (asset.cdn_url || asset.asset_url);
+    }
+    if (!ogImage && product.images && product.images.length > 0) {
+        const img = product.images[0];
+        ogImage = typeof img === 'string' ? img : (img as any).url;
+    }
 
     return {
         title: product.product_name,

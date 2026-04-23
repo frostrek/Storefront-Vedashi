@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { API_URL } from '@/lib/api';
 
@@ -39,10 +40,17 @@ interface HeroSettings {
     slideshow_type: 'fade' | 'slide_right_to_left' | 'slide_left_to_right';
 }
 
-export default function HeroCarousel() {
-    const [slides, setSlides] = useState<HeroSlide[]>([]);
-    const [settings, setSettings] = useState<HeroSettings>({ slider_speed: 3000, arrow_visibility: 'hover', loop: true, slideshow_type: 'fade' });
-    const [loading, setLoading] = useState(true);
+interface HeroCarouselProps {
+    initialSlides?: HeroSlide[];
+    initialSettings?: HeroSettings;
+}
+
+export default function HeroCarousel({ initialSlides = [], initialSettings = undefined }: HeroCarouselProps) {
+    const [slides, setSlides] = useState<HeroSlide[]>(initialSlides);
+    const [settings, setSettings] = useState<HeroSettings>(
+        initialSettings || { slider_speed: 3000, arrow_visibility: 'hover', loop: true, slideshow_type: 'fade' }
+    );
+    const [loading, setLoading] = useState(false);
     const [current, setCurrent] = useState(0);
     const [paused, setPaused] = useState(false);
     const [hovering, setHovering] = useState(false);
@@ -51,6 +59,10 @@ export default function HeroCarousel() {
     const directionRef = useRef<'next' | 'prev'>('next');
 
     useEffect(() => {
+        // If we received initial slides from SSR, don't fetch immediately
+        if (slides.length > 0) return;
+
+        setLoading(true);
         // Fetch active slides and settings in parallel
         Promise.all([
             fetch(`${API_URL}/api/media/hero/active`, { credentials: 'include' }).then(r => r.json()),
@@ -179,11 +191,14 @@ export default function HeroCarousel() {
                     key={s.id}
                     className={`absolute inset-0 transition-all duration-1000 ease-in-out ${getSlideClasses(i)}`}
                 >
-                    <div
-                        className="absolute inset-0 bg-cover bg-center"
-                        style={{
-                            backgroundImage: `url('${s.image_url}')`,
-                        }}
+                    <Image
+                        src={s.image_url}
+                        alt={s.headings?.[0]?.text || 'Hero banner'}
+                        fill
+                        sizes="100vw"
+                        className="object-cover object-center"
+                        priority={i === 0}
+                        loading={i === 0 ? 'eager' : 'lazy'}
                     />
                     <div
                         className="absolute inset-0 bg-gradient-to-b from-black/20 to-black/60"

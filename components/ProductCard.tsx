@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { gsap } from 'gsap';
 import Image from 'next/image';
 import { Heart, ShoppingCart, Eye, X, Check, AlertTriangle, Loader2, Plus, Minus, Trash2 } from 'lucide-react';
 import { Product, ProductVariant } from '@/types';
@@ -67,76 +66,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
         setShowInlineOptions(false);
     }, []);
 
-    // ─── Multi-layer GSAP timeline ────────────────────────────────────────────
-    useEffect(() => {
-        if (!inlineOptionsRef.current || !isList) return;
-
-        if (showInlineOptions) {
-            const tl = gsap.timeline();
-
-            // 1. Wrapper: width expand + clip-path wipe from left to right
-            tl.fromTo(
-                inlineOptionsRef.current,
-                { width: 0, clipPath: 'inset(0 100% 0 0 round 12px)', opacity: 1 },
-                { width: 344, clipPath: 'inset(0 0% 0 0 round 0px)', duration: 0.52, ease: 'expo.out' }
-            );
-
-            // 2. Top accent bar draws left → right
-            if (borderLineRef.current) {
-                tl.fromTo(
-                    borderLineRef.current,
-                    { scaleX: 0, transformOrigin: 'left center' },
-                    { scaleX: 1, duration: 0.4, ease: 'expo.out' },
-                    '<0.08'
-                );
-            }
-
-            // 3. Inner content arrives from right with parallax offset
-            if (inlineContentRef.current) {
-                tl.fromTo(
-                    inlineContentRef.current,
-                    { x: 32, opacity: 0 },
-                    { x: 0, opacity: 1, duration: 0.45, ease: 'expo.out' },
-                    '<0.06'
-                );
-            }
-
-            // 4. Variant buttons cascade up with stagger
-            if (variantButtonsRef.current) {
-                const btns = variantButtonsRef.current.querySelectorAll<HTMLElement>('[data-variant-btn]');
-                if (btns.length > 0) {
-                    tl.fromTo(
-                        btns,
-                        { y: 12, opacity: 0, scale: 0.97 },
-                        { y: 0, opacity: 1, scale: 1, stagger: 0.05, duration: 0.32, ease: 'back.out(1.4)' },
-                        '<0.08'
-                    );
-                }
-            }
-
-        } else {
-            // Collapse: content exits right, wrapper wipes back out
-            const tl = gsap.timeline();
-
-            if (inlineContentRef.current) {
-                tl.to(inlineContentRef.current, {
-                    x: 18, opacity: 0, duration: 0.18, ease: 'power2.in',
-                });
-            }
-            if (borderLineRef.current) {
-                tl.to(borderLineRef.current, {
-                    scaleX: 0, transformOrigin: 'right center', duration: 0.18, ease: 'power2.in',
-                }, '<');
-            }
-            tl.to(inlineOptionsRef.current, {
-                clipPath: 'inset(0 100% 0 0 round 12px)',
-                width: 0,
-                duration: 0.32,
-                ease: 'expo.in',
-            }, '<0.04');
-        }
-    }, [showInlineOptions, isList]);
-
+    
     const triggerAddedFeedback = useCallback(() => {
         setJustAdded(true);
         setTimeout(() => setJustAdded(false), 1000);
@@ -431,8 +361,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
             // ── Outer wrapper: GSAP drives clipPath wipe + width ─────────────
             <div
                 ref={inlineOptionsRef}
-                className="relative h-full flex-shrink-0 overflow-hidden"
-                style={{ width: 0, clipPath: 'inset(0 100% 0 0 round 12px)' }}
+                className={`relative h-full flex-shrink-0 overflow-hidden transition-all duration-500 ease-in-out ${showInlineOptions ? 'w-[344px] [clip-path:inset(0_0%_0_0_round_0px)] opacity-100' : 'w-0 [clip-path:inset(0_100%_0_0_round_12px)] opacity-0'}`}
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
             >
                 {/* ── Frosted panel background ────────────────────────────────── */}
@@ -441,15 +370,13 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                 {/* ── Top accent bar: draws left → right via GSAP scaleX ──────── */}
                 <div
                     ref={borderLineRef}
-                    className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#FF0000] via-[#ff4d4d] to-transparent rounded-b"
-                    style={{ transform: 'scaleX(0)', transformOrigin: 'left center' }}
+                    className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#FF0000] via-[#ff4d4d] to-transparent rounded-b transition-transform duration-500 origin-left delay-75 ${showInlineOptions ? 'scale-x-100' : 'scale-x-0'}`}
                 />
 
                 {/* ── Inner content: slides in from right (parallax) ─────────── */}
                 <div
                     ref={inlineContentRef}
-                    className="relative w-[320px] h-full flex flex-col py-3 px-4"
-                    style={{ opacity: 0 }}
+                    className={`relative w-[320px] h-full flex flex-col py-3 px-4 transition-all duration-500 delay-100 ${showInlineOptions ? 'translate-x-0 opacity-100' : 'translate-x-8 opacity-0'}`}
                 >
                     {/* ── Header ────────────────────────────────────────────────── */}
                     <div className="flex items-center justify-between mb-3">
@@ -489,7 +416,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             </div>
                         ) : variants.length > 0 ? (
                             <div ref={variantButtonsRef} className="flex flex-col gap-1">
-                                {variants.map((v: ProductVariant) => {
+                                {variants.map((v: ProductVariant, i: number) => {
                                     const isSelected = selectedVariant?.variant_id === v.variant_id;
                                     const isInactive = v.status === 'Inactive' || v.is_active === false;
                                     const isOut = v.stock_quantity !== null && v.stock_quantity !== undefined && v.stock_quantity <= 0;
@@ -539,6 +466,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                         <button
                                             key={v.variant_id}
                                             data-variant-btn
+                                            style={{ transitionDelay: showInlineOptions ? `${i * 50 + 150}ms` : '0ms' }}
                                             onClick={() => {
                                                 if (!isDisabled) {
                                                     setSelectedVariant(v);
@@ -553,6 +481,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                 transition-all duration-200 cursor-pointer
                                                 focus-visible:ring-2 focus-visible:ring-[#FF0000]/40
                                                 overflow-hidden group
+                                                ${showInlineOptions ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-3 opacity-0 scale-95'}
                                                 ${isSelected
                                                     ? 'bg-[#FF0000] shadow-[0_3px_12px_rgba(255,0,0,0.28)] scale-[1.01]'
                                                     : isDisabled
@@ -816,7 +745,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             </div>
                         ) : variants.length > 0 ? (
                             <div className="divide-y divide-gray-100">
-                                {variants.map((v: ProductVariant) => {
+                                {variants.map((v: ProductVariant, i: number) => {
                                     const isInactive = v.status === 'Inactive' || v.is_active === false;
                                     const isOut = v.stock_quantity !== null && v.stock_quantity !== undefined && (v.stock_quantity ?? 0) <= 0;
                                     const isDisabled = isOut || isInactive;

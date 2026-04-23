@@ -13,7 +13,6 @@
     "@clerk/types": "^4.101.20",
     "@tailwindcss/typography": "^0.5.19",
     "framer-motion": "^12.35.2",
-    "gsap": "^3.14.2",
     "jspdf": "^4.2.0",
     "jspdf-autotable": "^5.0.7",
     "libphonenumber-js": "^1.12.40",
