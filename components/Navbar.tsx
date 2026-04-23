@@ -56,7 +56,7 @@ const DEFAULT_CONFIG: HeaderConfig = {
     strip_bg: '#3B5D3B',
     strip_text: '#E8DCAF',
     strip_accent: '#C9B87A',
-    cart_badge_bg: '#3B5D3B',
+    cart_badge_bg: '#91C934',
   },
   nav_links: [],
   strip: {
@@ -444,7 +444,7 @@ export default function Navbar() {
                       <div className="p-4 space-y-2">
                         <Link
                           href={`/${currentCountry}/login`}
-                          className="flex items-center gap-3 w-full px-4 py-2.5 bg-[#3B5D3B] text-white rounded-xl text-[13px] font-bold transition-all hover:bg-[#2D452D] hover:shadow-md active:scale-[0.98]"
+                          className="flex items-center gap-3 w-full px-4 py-2.5 bg-[#91C934] text-white rounded-xl text-[13px] font-bold transition-all hover:bg-[#7AA82C] hover:shadow-md active:scale-[0.98]"
                         >
                           <LogIn className="h-4 w-4" />
                           Sign In

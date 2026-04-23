@@ -84,7 +84,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     const breadcrumbs = generateBreadcrumbJsonLd([
         { name: 'Home', url: `${SITE_URL}/${country}` },
         { name: 'Shop', url: `${SITE_URL}/${country}/products` },
-        { name: product.category || 'Category', url: `${SITE_URL}/${country}/products?category=${encodeURIComponent((product.category || '').toLowerCase().replace(/\\s+/g, '-'))}` },
+        { name: product.category || 'Category', url: `${SITE_URL}/${country}/products?category=${encodeURIComponent((product.category || '').toLowerCase().replace(/\s+/g, '-'))}` },
         { name: product.product_name, url: `${SITE_URL}/${country}/products/${product.slug || product.product_id}` },
     ]);
 

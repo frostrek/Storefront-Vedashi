@@ -59,11 +59,20 @@ export const metadata: Metadata = {
     siteName: "Vedashi",
     title: "Vedashi — Premium Ayurvedic Wellness",
     description: "Experience the healing power of authentic Ayurvedic remedies crafted from nature.",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Vedashi | Premium Ayurvedic Wellness",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Vedashi — Premium Ayurvedic Wellness",
     description: "Experience the healing power of authentic Ayurvedic remedies crafted from nature.",
+    images: ["/opengraph-image"],
   },
 };
 

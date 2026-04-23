@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Heart, ShoppingCart, Eye, X, Check, AlertTriangle, Loader2, Plus, Minus, Trash2 } from 'lucide-react';
+import { Heart, ShoppingCart, Eye, X, Check, AlertTriangle, Loader2, Plus, Minus, Trash2, Share2 } from 'lucide-react';
 import { Product, ProductVariant } from '@/types';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCart } from '@/context/CartContext';
@@ -92,6 +92,24 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
         e.preventDefault();
         e.stopPropagation();
         toggleItem(product);
+    };
+
+    const handleShare = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const shareData = {
+            title: product.product_name,
+            text: `Check out ${product.product_name} on Vedashi — Premium Ayurvedic Wellness.`,
+            url: `${window.location.origin}/products/${product.slug || product.product_id}`,
+        };
+
+        if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+            navigator.share(shareData).catch(() => {});
+        } else {
+            navigator.clipboard.writeText(shareData.url);
+            toast.success('Link copied to clipboard!');
+        }
     };
 
     // Determine if product has variants from the product data
@@ -905,19 +923,28 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             )}
                         </div>
 
-                        {/* Wishlist (Grid only) */}
+                        {/* Action Overlay (Grid only) */}
                         {!isList && (
-                            <button
-                                onClick={handleToggleWishlist}
-                                className="absolute top-2 right-2 rounded-full bg-white/90 backdrop-blur-sm p-1.5 shadow-sm transition-all hover:scale-110 hover:shadow-md z-20 cursor-pointer"
-                            >
-                                <Heart
-                                    className={`h-3.5 w-3.5 transition ${wishlisted
-                                        ? 'fill-[#3d5c3a] text-[#3d5c3a]'
-                                        : 'text-gray-400'
-                                        }`}
-                                />
-                            </button>
+                            <div className="absolute top-2 right-2 flex flex-col gap-1.5 z-20">
+                                <button
+                                    onClick={handleToggleWishlist}
+                                    className="rounded-full bg-white/90 backdrop-blur-sm p-1.5 shadow-sm transition-all hover:scale-110 hover:shadow-md cursor-pointer"
+                                >
+                                    <Heart
+                                        className={`h-3.5 w-3.5 transition ${wishlisted
+                                            ? 'fill-[#3d5c3a] text-[#3d5c3a]'
+                                            : 'text-gray-400'
+                                            }`}
+                                    />
+                                </button>
+                                <button
+                                    onClick={handleShare}
+                                    className="rounded-full bg-white/90 backdrop-blur-sm p-1.5 shadow-sm transition-all hover:scale-110 hover:shadow-md cursor-pointer text-gray-400 hover:text-[#3d5c3a]"
+                                    title="Share"
+                                >
+                                    <Share2 size={14} />
+                                </button>
+                            </div>
                         )}
 
                         {/* Product Badges (Top Left Stack) */}
@@ -1153,6 +1180,13 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                     className={`relative z-30 inline-flex flex-shrink-0 items-center justify-center p-2.5 sm:p-2.5 rounded-lg border transition-all cursor-pointer ${wishlisted ? 'border-red-500/30 bg-red-50' : 'border-gray-200 bg-white hover:border-red-500/30 hover:bg-gray-50'}`}
                                 >
                                     <Heart className={`h-4 w-4 sm:h-4 sm:w-4 ${wishlisted ? 'fill-[#FF0000] text-[#FF0000]' : 'text-gray-400'}`} />
+                                </button>
+                                <button
+                                    onClick={handleShare}
+                                    className="relative z-30 inline-flex flex-shrink-0 items-center justify-center p-2.5 sm:p-2.5 rounded-lg border border-gray-200 bg-white text-gray-400 hover:text-[#3d5c3a] hover:border-[#3d5c3a]/30 hover:bg-gray-50 transition-all cursor-pointer"
+                                    title="Share"
+                                >
+                                    <Share2 className="h-4 w-4 sm:h-4 sm:w-4" />
                                 </button>
                             </div>
                         )}
