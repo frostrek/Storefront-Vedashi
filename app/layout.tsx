@@ -27,14 +27,14 @@ const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
   display: "swap",
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "600"],
 });
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
   variable: "--font-serif",
   display: "swap",
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["600", "700"],
 });
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.com';
@@ -117,6 +117,13 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Preconnect to CDN & API origins — saves ~100-200ms per domain on mobile */}
+        <link rel="preconnect" href="https://d15o8yv09tizyc.cloudfront.net" />
+        <link rel="preconnect" href="https://vedashi-prod-assets.s3.ap-south-1.amazonaws.com" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="https://mc.yandex.ru" />
+      </head>
       <body className={`min-h-screen flex flex-col ${inter.className}`} suppressHydrationWarning>
         {/* GA4 — Set default consent BEFORE any gtag scripts load */}
         <Script id="ga4-default-consent" strategy="beforeInteractive">
@@ -151,7 +158,7 @@ export default async function RootLayout({
         >
           <Script
             src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-            strategy="afterInteractive"
+            strategy="lazyOnload"
           />
           <Script
             src="https://checkout.razorpay.com/v1/checkout.js"

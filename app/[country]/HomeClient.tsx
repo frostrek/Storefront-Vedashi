@@ -19,7 +19,7 @@ import {
   Zap,
   Plus
 } from 'lucide-react';
-import HeroCarousel from '@/components/HeroCarousel';
+import HeroCarousel, { HeroSlide, HeroSettings } from '@/components/HeroCarousel';
 import { Product } from '@/types';
 import { getBestSellers, getNewArrivals, getCategories } from '@/lib/api';
 import ProductCard from '@/components/ProductCard';
@@ -33,17 +33,35 @@ import { useRouter, useParams } from 'next/navigation';
 import NeedHelpSection from '@/components/NeedHelpSection';
 import BrandReel from '@/components/BrandReel';
 
-export default function HomeClientPage() {
+export interface HomeClientProps {
+  initialBestSellers?: Product[];
+  initialNewArrivals?: Product[];
+  initialCategories?: any[];
+  initialHeroSlides?: HeroSlide[];
+  initialHeroSettings?: HeroSettings;
+}
+
+export default function HomeClientPage({
+  initialBestSellers = [],
+  initialNewArrivals = [],
+  initialCategories = [],
+  initialHeroSlides = [],
+  initialHeroSettings = undefined,
+}: HomeClientProps) {
   const router = useRouter();
   const params = useParams();
   const country = params?.country as string || 'in';
 
-  const [bestSellers, setBestSellers] = useState<Product[]>([]);
-  const [newArrivals, setNewArrivals] = useState<Product[]>([]);
-  const [allCategories, setAllCategories] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [bestSellers, setBestSellers] = useState<Product[]>(initialBestSellers);
+  const [newArrivals, setNewArrivals] = useState<Product[]>(initialNewArrivals);
+  const [allCategories, setAllCategories] = useState<any[]>(initialCategories);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    // If we didn't get initial data, fetch it
+    if (bestSellers.length > 0) return;
+    
+    setLoading(true);
     async function loadData() {
       try {
         const [bestRes, newRes, catRes] = await Promise.all([
@@ -132,7 +150,7 @@ export default function HomeClientPage() {
     <div className="bg-white min-h-screen relative overflow-hidden">
       {/* 1. BANNER REEL */}
       <div className="relative z-10 max-w-[1600px] mx-auto px-0 sm:px-6 lg:px-8 pt-0 sm:pt-8">
-        <HeroCarousel />
+        <HeroCarousel initialSlides={initialHeroSlides} initialSettings={initialHeroSettings} />
       </div>
 
       <div className="relative z-10 pt-0 pb-0">
@@ -226,7 +244,7 @@ export default function HomeClientPage() {
             </div>
           </section>
 
-          <section className="relative pt-0 pb-0 overflow-hidden bg-white">
+          <section className="relative pt-0 pb-0 overflow-hidden bg-white content-lazy">
             <div className="max-w-[1500px] mx-auto relative z-10">
               <BestSellerShowcase
                 products={bestSellers}
@@ -243,17 +261,17 @@ export default function HomeClientPage() {
         </div>
 
         {/* 3.5 BRAND REEL */}
-        <div className="w-full">
+        <div className="w-full content-lazy">
           <BrandReel />
         </div>
 
         {/* 3.6 NEED HELP CHOOSING */}
-        <div className="w-full">
+        <div className="w-full content-lazy">
           <NeedHelpSection />
         </div>
 
         {/* 5. NEW ARRIVALS - CLEAN & RADIANT */}
-        <section className="relative py-0 overflow-hidden bg-white">
+        <section className="relative py-0 overflow-hidden bg-white content-lazy">
 
 
           <div className="max-w-[1500px] mx-auto relative z-10">
