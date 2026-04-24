@@ -205,7 +205,7 @@ export default function HomeClientPage({
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.4, ease: "easeOut" }}
-                    className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 sm:gap-4 lg:gap-5"
+                    className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 sm:gap-4 lg:gap-5"
                   >
                     {allCategories.slice(0, 8).map((cat: any, i: number) => {
                       return (

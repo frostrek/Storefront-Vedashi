@@ -70,8 +70,8 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
 
     return (
         <div className="relative group/reel py-8">
-            <div className="flex flex-row items-end justify-between mb-8 px-4 sm:px-6 lg:px-8 relative">
-                <div className="text-left">
+            <div className="flex flex-row items-center justify-center sm:justify-between mb-8 px-4 sm:px-6 lg:px-8 relative">
+                <div className="text-center sm:text-left">
                     {title && <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2">{title}</h2>}
                     {subtitle && <p className="hidden sm:block text-gray-500 font-medium italic">{subtitle}</p>}
                 </div>
@@ -89,65 +89,65 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
 
 
             <div className="relative px-4 sm:px-6 lg:px-8">
-            {/* Navigation Arrows */}
-            {showLeftArrow && (
-                <button
-                    onClick={() => scroll('left')}
-                    className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-30 p-3 rounded-full bg-white/90 shadow-xl border border-gray-100 text-[#91CA35] hover:bg-[#91CA35] hover:text-white transition-all duration-300 backdrop-blur-sm group-hover/reel:scale-110"
-                    aria-label="Scroll left"
-                    suppressHydrationWarning
-                >
-                    <ChevronLeft className="h-6 w-6" />
-                </button>
-            )}
-            {showRightArrow && (
-                <button
-                    onClick={() => scroll('right')}
-                    className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-30 p-3 rounded-full bg-white/90 shadow-xl border border-gray-100 text-[#91CA35] hover:bg-[#91CA35] hover:text-white transition-all duration-300 backdrop-blur-sm group-hover/reel:scale-110"
-                    aria-label="Scroll right"
-                    suppressHydrationWarning
-                >
-                    <ChevronRight className="h-6 w-6" />
-                </button>
-            )}
-
-            {/* The Reel Container */}
-            <div
-                ref={scrollRef}
-                className="flex overflow-x-auto hide-scrollbar gap-6 pb-0 sm:pb-8 snap-x snap-mandatory"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
-                {loading ? (
-                    Array.from({ length: 4 }).map((_, i) => (
-                        <div key={i} className="min-w-[200px] sm:min-w-[240px] aspect-[3/4] bg-gray-100 animate-pulse rounded-2xl" />
-                    ))
-                ) : (
-                    products.map((product, i) => (
-                        <div
-                            key={product.product_id}
-                            className="min-w-[150px] sm:min-w-[240px] snap-center"
-                        >
-                            <ProductCard
-                                product={product}
-                                listName={title || 'Product Reel'}
-                                listIndex={i + 1}
-                            />
-                        </div>
-                    ))
+                {/* Navigation Arrows */}
+                {showLeftArrow && (
+                    <button
+                        onClick={() => scroll('left')}
+                        className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-30 p-3 rounded-full bg-white/90 shadow-xl border border-gray-100 text-[#91CA35] hover:bg-[#91CA35] hover:text-white transition-all duration-300 backdrop-blur-sm group-hover/reel:scale-110"
+                        aria-label="Scroll left"
+                        suppressHydrationWarning
+                    >
+                        <ChevronLeft className="h-6 w-6" />
+                    </button>
                 )}
-                {/* Spacer for right padding in scroll */}
-                <div className="min-w-[20px] h-full" />
-            </div>
+                {showRightArrow && (
+                    <button
+                        onClick={() => scroll('right')}
+                        className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-30 p-3 rounded-full bg-white/90 shadow-xl border border-gray-100 text-[#91CA35] hover:bg-[#91CA35] hover:text-white transition-all duration-300 backdrop-blur-sm group-hover/reel:scale-110"
+                        aria-label="Scroll right"
+                        suppressHydrationWarning
+                    >
+                        <ChevronRight className="h-6 w-6" />
+                    </button>
+                )}
 
-            {/* Mobile View All Link - Moved below the reel */}
-            {viewAllLink && (
-                <div className="sm:hidden flex justify-end mt-1">
-                    <Link href={viewAllLink} className="group flex items-center gap-2 text-[10px] font-medium text-[#FF0000] hover:text-[#CC0000] transition-colors underline decoration-[#FF0000]/30 underline-offset-2">
-                        {viewAllText || 'Explore All'}
-                    </Link>
+                {/* The Reel Container */}
+                <div
+                    ref={scrollRef}
+                    className="flex overflow-x-auto hide-scrollbar gap-6 pb-0 sm:pb-8 snap-x snap-mandatory"
+                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
+                    {loading ? (
+                        Array.from({ length: 4 }).map((_, i) => (
+                            <div key={i} className="min-w-[200px] sm:min-w-[240px] aspect-[3/4] bg-gray-100 animate-pulse rounded-2xl" />
+                        ))
+                    ) : (
+                        products.map((product, i) => (
+                            <div
+                                key={product.product_id}
+                                className="min-w-[150px] sm:min-w-[240px] snap-center"
+                            >
+                                <ProductCard
+                                    product={product}
+                                    listName={title || 'Product Reel'}
+                                    listIndex={i + 1}
+                                />
+                            </div>
+                        ))
+                    )}
+                    {/* Spacer for right padding in scroll */}
+                    <div className="min-w-[20px] h-full" />
                 </div>
-            )}
+
+                {/* Mobile View All Link - Moved below the reel */}
+                {viewAllLink && (
+                    <div className="sm:hidden flex justify-end mt-1">
+                        <Link href={viewAllLink} className="group flex items-center gap-2 text-[10px] font-medium text-[#FF0000] hover:text-[#CC0000] transition-colors underline decoration-[#FF0000]/30 underline-offset-2">
+                            {viewAllText || 'Explore All'}
+                        </Link>
+                    </div>
+                )}
+            </div>
         </div>
-    </div>
     );
 }

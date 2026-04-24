@@ -24,7 +24,7 @@ export default function NeedHelpSection() {
 
       <div className="relative z-10 mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8">
         {/* Heading */}
-        <div className="mb-4 sm:mb-7">
+        <div className="mb-4 sm:mb-7 text-center sm:text-left">
           <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2">
             Need Help Choosing? Start Here!
           </h2>

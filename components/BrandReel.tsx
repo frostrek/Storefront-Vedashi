@@ -32,8 +32,8 @@ export default function BrandReel() {
     <div className="flex flex-col w-full pt-2 pb-6">
       {/* Section Header */}
       <div className="mx-auto max-w-[1500px] w-full px-4 sm:px-6 lg:px-8">
-        <div className="flex items-end justify-between">
-          <div>
+        <div className="flex items-center justify-center sm:justify-start">
+          <div className="text-center sm:text-left">
             <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-1">Brands People Like</h2>
           </div>
         </div>
