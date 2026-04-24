@@ -73,7 +73,7 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
             <div className="flex flex-row items-end justify-between mb-8 px-4 sm:px-6 lg:px-8 relative">
                 <div className="text-left">
                     {title && <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">{title}</h2>}
-                    {subtitle && <p className="text-gray-500 font-medium italic">{subtitle}</p>}
+                    {subtitle && <p className="hidden sm:block text-gray-500 font-medium italic">{subtitle}</p>}
                 </div>
 
                 {viewAllLink && (

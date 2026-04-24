@@ -205,7 +205,7 @@ export default function HomeClientPage({
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.4, ease: "easeOut" }}
-                    className="grid grid-cols-4 md:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-4 lg:gap-5"
+                    className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 sm:gap-4 lg:gap-5"
                   >
                     {allCategories.slice(0, 8).map((cat: any, i: number) => {
                       return (
@@ -231,7 +231,7 @@ export default function HomeClientPage({
                           </div>
 
                           <div className="text-center px-1">
-                            <span className="text-[10px] sm:text-base font-bold text-gray-800 group-hover:text-[#3B5D3B] transition-colors leading-tight block line-clamp-2 min-h-[1.5em]">
+                            <span className="text-[12px] sm:text-base font-bold text-gray-800 group-hover:text-[#3B5D3B] transition-colors leading-tight block line-clamp-2 min-h-[1.5em]">
                               {cat.name}
                             </span>
                           </div>

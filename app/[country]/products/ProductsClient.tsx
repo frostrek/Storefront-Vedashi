@@ -474,20 +474,68 @@ function ProductsContent() {
 
 
             {/* ═══════ MAIN CONTENT ═══════ */}
-            <div className="w-full px-4 sm:px-6 lg:pl-0 lg:pr-8 py-8 pt-2 sm:pt-4 relative z-10">
-                {/* Mobile Filter Button */}
-                <button
-                    onClick={() => setMobileOpen(true)}
-                    className="mb-8 flex items-center gap-2 rounded-xl border border-gray-200 bg-white/80 backdrop-blur-sm px-5 py-3 text-sm font-semibold text-gray-700 shadow-sm hover:shadow-md transition-all lg:hidden cursor-pointer"
-                >
-                    <SlidersHorizontal className="h-4 w-4 text-[#3d5c3a]" />
-                    Filters
-                    {activeChips.length > 0 && (
-                        <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#3d5c3a] text-[10px] font-bold text-white">
-                            {activeChips.length}
-                        </span>
+            <div className="w-full max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-2 sm:pt-4 relative z-10">
+                {/* ── Mobile Sticky Controls (Filters, Sort, View) ── */}
+                <div className="sticky top-[60px] z-[40] bg-white/95 backdrop-blur-md pb-3 pt-3 lg:hidden border-b border-gray-100 mb-5 -mx-4 px-4 sm:-mx-6 sm:px-6 shadow-sm">
+                    <div className="flex items-center justify-between gap-3">
+                        <button
+                            onClick={() => setMobileOpen(true)}
+                            className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-[13px] font-bold text-gray-700 shadow-sm hover:shadow-md transition-all cursor-pointer flex-1"
+                        >
+                            <SlidersHorizontal className="h-4 w-4 text-[#3d5c3a]" />
+                            Filters
+                            {activeChips.length > 0 && (
+                                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#3d5c3a] text-[10px] font-bold text-white">
+                                    {activeChips.length}
+                                </span>
+                            )}
+                        </button>
+
+                        <div className="flex-1">
+                            <SortDropdown
+                                value={filters.sort || SORT_OPTIONS[0].value}
+                                onChange={setSort}
+                                options={SORT_OPTIONS}
+                            />
+                        </div>
+
+                        <div className="flex items-center rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden flex-shrink-0">
+                            <button
+                                onClick={() => { setViewMode('grid'); localStorage.setItem('vedashi_view_mode', 'grid'); }}
+                                className={`p-2.5 transition-colors cursor-pointer ${viewMode === 'grid' ? 'bg-[#3d5c3a] text-white' : 'text-gray-400 hover:text-gray-600'}`}
+                            >
+                                <LayoutGrid className="h-4 w-4" />
+                            </button>
+                            <button
+                                onClick={() => { setViewMode('list'); localStorage.setItem('vedashi_view_mode', 'list'); }}
+                                className={`p-2.5 transition-colors cursor-pointer ${viewMode === 'list' ? 'bg-[#3d5c3a] text-white' : 'text-gray-400 hover:text-gray-600'}`}
+                            >
+                                <List className="h-4 w-4" />
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {/* Quick Category Pills for Mobile */}
+                    {categories.length > 0 && (
+                        <div className="mt-3.5 flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                            <button 
+                                onClick={() => setCategory('')}
+                                className={`flex-shrink-0 px-4 py-1.5 rounded-full text-[12px] font-bold transition-colors border ${!filters.category ? 'bg-gray-900 text-white border-gray-900 shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'}`}
+                            >
+                                All
+                            </button>
+                            {categories.map(c => (
+                                <button 
+                                    key={c.category_id}
+                                    onClick={() => setCategory(c.slug)}
+                                    className={`flex-shrink-0 px-4 py-1.5 rounded-full text-[12px] font-bold transition-colors border ${filters.category === c.slug ? 'bg-gray-900 text-white border-gray-900 shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'}`}
+                                >
+                                    {c.name}
+                                </button>
+                            ))}
+                        </div>
                     )}
-                </button>
+                </div>
 
                 <div className="lg:grid lg:grid-cols-[280px_1fr] lg:gap-10">
                     {/* ─── Desktop Sidebar ─── */}
@@ -526,8 +574,8 @@ function ProductsContent() {
 
                     {/* ─── Product Grid ─── */}
                     <div className="min-w-0">
-                        {/* Sort bar + count */}
-                        <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        {/* Sort bar + count (Desktop only) */}
+                        <div className="mb-4 hidden lg:flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <p className="text-sm text-gray-500 flex items-center gap-2">
                                 <span className={`transition-opacity ${loading ? 'opacity-50' : 'opacity-100'}`}>
                                     {totalCount === 0 ? 'No products' : (
@@ -562,6 +610,18 @@ function ProductsContent() {
                                     options={SORT_OPTIONS}
                                 />
                             </div>
+                        </div>
+
+                        {/* Mobile Count */}
+                        <div className="lg:hidden mb-4 flex items-center justify-between">
+                            <p className="text-[13px] text-gray-500 flex items-center gap-2">
+                                <span className={`transition-opacity ${loading ? 'opacity-50' : 'opacity-100'}`}>
+                                    {totalCount === 0 ? 'No products' : (
+                                        <>Showing <span className="font-bold text-gray-900">{startItem}–{endItem}</span> of <span className="font-bold text-gray-900">{totalCount}</span></>
+                                    )}
+                                </span>
+                                {loading && <Loader2 className="h-3.5 w-3.5 animate-spin text-[#3d5c3a]" />}
+                            </p>
                         </div>
 
                         <ActiveFilterChips
