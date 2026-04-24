@@ -61,16 +61,16 @@ export default function BestSellerShowcase({
   return (
     <div className="relative pt-6 sm:pt-8 pb-0">
       {/* Section Header */}
-      <div className="mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8 mb-2">
-        <div className="flex items-end justify-between">
+      <div className="mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8 mb-4">
+        <div className="flex flex-col sm:flex-row items-center sm:items-end justify-center sm:justify-between text-center sm:text-left gap-1">
           <div>
-            {title && <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-1">{title}</h2>}
+            {title && <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-1">{title}</h2>}
             {subtitle && <p className="hidden sm:block text-gray-500 font-medium italic text-sm">{subtitle}</p>}
           </div>
           {viewAllLink && (
             <Link
               href={resolvedViewAllLink}
-              className="hidden sm:flex items-center gap-2 text-sm font-bold text-[#FF0000] hover:text-[#CC0000] transition-colors group pb-1"
+              className="hidden sm:flex items-center gap-2 text-[13px] font-medium text-[#FF0000] hover:text-[#CC0000] transition-colors group pb-1 underline decoration-[#FF0000]/30 underline-offset-2 hover:decoration-[#FF0000]"
             >
               {viewAllText}
               <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -84,7 +84,7 @@ export default function BestSellerShowcase({
 
         {/* LEFT/TOP: Rotating Ad Banner */}
         <div className="flex flex-col flex-shrink-0 w-full px-4 sm:px-0 lg:px-0 lg:w-[350px] xl:w-[450px]">
-          <div className="relative aspect-[4/5] sm:aspect-[16/9] lg:aspect-auto lg:h-full w-full overflow-hidden cursor-pointer rounded-2xl shadow-md border border-gray-100/50">
+          <div className="relative aspect-[4/5] sm:aspect-[16/9] lg:aspect-auto lg:h-full w-[85%] sm:w-full mx-auto overflow-hidden cursor-pointer rounded-2xl shadow-md border border-gray-100/50">
             <AnimatePresence initial={false} custom={direction}>
               <motion.div
                 key={adIndex}
@@ -151,7 +151,7 @@ export default function BestSellerShowcase({
               ))}
             </div>
           ) : (
-            <div className="flex overflow-x-auto hide-scrollbar snap-x snap-mandatory md:grid md:grid-cols-3 lg:grid-cols-4 gap-3 lg:gap-2 px-4 sm:px-0 pb-4 md:pb-0" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <div className="flex overflow-x-auto hide-scrollbar snap-x snap-mandatory md:grid md:grid-cols-3 lg:grid-cols-4 gap-3 lg:gap-2 px-4 sm:px-0 pb-0 md:pb-0" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               {displayProducts.map((product, i) => (
                 <motion.div
                   key={product.product_id}
@@ -159,7 +159,7 @@ export default function BestSellerShowcase({
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: '-40px' }}
                   transition={{ duration: 0.35, delay: i * 0.04, ease: 'easeOut' }}
-                  className="w-[200px] min-w-[200px] sm:w-[240px] md:w-auto md:min-w-0 snap-center flex-shrink-0 md:snap-align-none"
+                  className="w-[160px] min-w-[160px] sm:w-[240px] md:w-auto md:min-w-0 snap-center flex-shrink-0 md:snap-align-none"
                 >
                   <ProductCard
                     product={product}
@@ -175,13 +175,12 @@ export default function BestSellerShowcase({
 
           {/* Mobile View All */}
           {viewAllLink && (
-            <div className="sm:hidden mt-4">
+            <div className="sm:hidden flex justify-end px-2">
               <Link
                 href={resolvedViewAllLink}
-                className="flex items-center gap-2 text-sm font-bold text-[#FF0000] transition-colors group"
+                className="flex items-center gap-2 text-[10px] font-medium text-[#FF0000] transition-colors group underline decoration-[#FF0000]/30 underline-offset-2"
               >
                 {viewAllText}
-                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
           )}

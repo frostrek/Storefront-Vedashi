@@ -24,14 +24,14 @@ export default function NeedHelpSection() {
 
       <div className="relative z-10 mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8">
         {/* Heading */}
-        <div className="mb-7">
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+        <div className="mb-4 sm:mb-7">
+          <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2">
             Need Help Choosing? Start Here!
           </h2>
         </div>
 
         {/* Grid Cards Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 lg:gap-4 pb-3">
+        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 lg:gap-4 pb-3">
           {smallBanners.map((banner, index) => (
             <div key={index}>
               <div

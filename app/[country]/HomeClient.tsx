@@ -60,7 +60,7 @@ export default function HomeClientPage({
   useEffect(() => {
     // If we didn't get initial data, fetch it
     if (bestSellers.length > 0) return;
-    
+
     setLoading(true);
     async function loadData() {
       try {
@@ -174,7 +174,7 @@ export default function HomeClientPage({
                 <div className="absolute right-6 top-3 hidden lg:block">
                   <Link
                     href={`/${country}/products`}
-                    className="group flex items-center gap-2 text-[15px] font-bold text-[#FF0000] hover:text-[#CC0000] transition-all"
+                    className="group flex items-center gap-2 text-[13px] font-medium text-[#FF0000] hover:text-[#CC0000] transition-all underline decoration-[#FF0000]/30 underline-offset-2 hover:decoration-[#FF0000]"
                   >
                     Explore all products
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -241,6 +241,16 @@ export default function HomeClientPage({
                   </motion.div>
                 </AnimatePresence>
               </div>
+
+              {/* Mobile View All - Shop all products */}
+              <div className="sm:hidden flex justify-end mt-4">
+                <Link
+                  href={`/${country}/products`}
+                  className="text-[10px] font-medium text-[#FF0000] hover:text-[#CC0000] transition-colors underline decoration-[#FF0000]/30 underline-offset-2"
+                >
+                  Explore all products
+                </Link>
+              </div>
             </div>
           </section>
 
@@ -252,7 +262,7 @@ export default function HomeClientPage({
                 title="Best Sellers"
                 subtitle="Our most-loved natural wellness essentials, chosen by you."
                 viewAllLink={`/${country}/products?bestSeller=true`}
-                viewAllText="Explore our Best Sellers"
+                viewAllText="Shop all Best Sellers"
               />
             </div>
           </section>
