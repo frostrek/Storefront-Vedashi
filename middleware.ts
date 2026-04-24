@@ -165,17 +165,18 @@ function applyLanguageCookies(
 
 // ─── Middleware ──────────────────────────────────────────────────────
 
-export default clerkMiddleware(async (auth, request) => {
-  // NOTE: No auth.protect() — this is a public e-commerce storefront.
-  // Clerk is used ONLY for social OAuth login, not page protection.
-  // Our own backend handles auth via HttpOnly cookies.
-  const { pathname } = request.nextUrl;
+export default clerkMiddleware(async (auth, req) => {
+  // NOTE: To test region detection locally, visit:
+  // http://localhost:3000/?test_ip=8.8.8.8 (USA)
+  // http://localhost:3000/?test_ip=1.1.1.1 (Australia)
 
-  // 0. SEO: Enforce non-www canonical domain (redirect www to non-www)
-  const host = request.headers.get('host') || request.nextUrl.hostname || '';
-  if (host === 'www.vedashi.com' || host === 'www.vedashi.onrender.com') {
-    const targetUrl = request.nextUrl.clone();
-    targetUrl.host = 'vedashi.com';
+  const { pathname } = req.nextUrl;
+
+  // 0. SEO: Enforce non-www canonical domain
+  const host = req.headers.get('host') || req.nextUrl.hostname || '';
+  if (host.startsWith('www.')) {
+    const targetUrl = req.nextUrl.clone();
+    targetUrl.host = host.replace('www.', '');
     return NextResponse.redirect(targetUrl, 301);
   }
 
@@ -184,63 +185,60 @@ export default clerkMiddleware(async (auth, request) => {
     return NextResponse.next();
   }
 
-  // 2. URL already has a valid country prefix → pass through, sync cookies
+  // 2. URL already has a valid country prefix
   const existingCountry = pathHasCountryPrefix(pathname);
   if (existingCountry) {
-    // ─── Legacy /shop redirect: shop content now lives at root ───
-    const restOfPath = pathname.slice(existingCountry.length + 1); // e.g., "/in/shop" → "/shop"
-    if (restOfPath === '/shop' || restOfPath === '/shop/') {
-      const url = request.nextUrl.clone();
-      url.pathname = `/${existingCountry}`;
-      return NextResponse.redirect(url, 301);
-    }
-
     const response = NextResponse.next();
     const currency = getCurrency(existingCountry);
 
-    if (request.cookies.get('geo_country')?.value !== existingCountry) {
+    // Sync cookies to URL prefix
+    if (req.cookies.get('geo_country')?.value !== existingCountry) {
       response.cookies.set('geo_country', existingCountry, GEO_COOKIE_OPTIONS);
     }
-    if (request.cookies.get('geo_currency')?.value !== currency) {
+    if (req.cookies.get('geo_currency')?.value !== currency) {
       response.cookies.set('geo_currency', currency, GEO_COOKIE_OPTIONS);
     }
 
-    // Language suggestion (non-intrusive)
-    applyLanguageCookies(request, response, existingCountry);
-
+    applyLanguageCookies(req, response, existingCountry);
     return response;
   }
 
   // 3. Resolve country — tiered strategy
   let country: SupportedCountry | null = null;
 
-  // Tier 1: Cookie (fastest — zero I/O)
-  country = normalizeCountry(request.cookies.get('geo_country')?.value);
-
-  // Tier 2: Platform headers (Vercel / Cloudflare — zero I/O)
-  if (!country) {
-    country = detectCountryFromHeaders(request);
+  // Tier 1: User Manual Preference (Lock)
+  const isManual = req.cookies.get('geo_manual')?.value === 'true';
+  if (isManual) {
+    country = normalizeCountry(req.cookies.get('geo_country')?.value);
   }
 
-  // Tier 3: IPinfo.io fallback (async, max 800ms)
+  // Tier 2: Platform headers (Vercel / Cloudflare)
   if (!country) {
-    const clientIp = extractClientIp(request);
+    country = detectCountryFromHeaders(req);
+  }
+
+  // Tier 3: IPinfo.io fallback
+  if (!country) {
+    const clientIp = extractClientIp(req);
     if (clientIp) {
       country = await fetchCountryFromIPinfo(clientIp);
     }
   }
 
-  // Tier 4: Default fallback
+  // Tier 4: Previous Auto-detected Cookie
+  if (!country) {
+    country = normalizeCountry(req.cookies.get('geo_country')?.value);
+  }
+
+  // Tier 5: Default fallback
   if (!country) {
     country = DEFAULT_COUNTRY;
   }
 
   // 4. Build redirect to /{country}{pathname}
   const currency = getCurrency(country);
-  const url = request.nextUrl.clone();
+  const url = req.nextUrl.clone();
   
-  // Ensure we don't create a double-redirect by adding a trailing slash 
-  // that Next.js will just remove anyway.
   let targetPath = `/${country}${pathname}`;
   if (targetPath.endsWith('/') && targetPath.length > 3) {
     targetPath = targetPath.slice(0, -1);
@@ -249,13 +247,10 @@ export default clerkMiddleware(async (auth, request) => {
   url.pathname = targetPath;
 
   const response = NextResponse.redirect(url);
-
-  // 5. Set geo cookies
   response.cookies.set('geo_country', country, GEO_COOKIE_OPTIONS);
   response.cookies.set('geo_currency', currency, GEO_COOKIE_OPTIONS);
 
-  // 6. Language suggestion (non-intrusive — never auto-redirects)
-  applyLanguageCookies(request, response, country);
+  applyLanguageCookies(req, response, country);
 
   return response;
 });

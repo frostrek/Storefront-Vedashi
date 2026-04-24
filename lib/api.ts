@@ -1099,6 +1099,7 @@ export async function directCheckout(data: {
     redeem_points?: number;
     ga_client_id?: string;
     attribution?: TrafficSource | null;
+    currency?: string;
 }) {
     try {
         const res = await authFetch(`${API_URL}/api/orders/direct`, {
@@ -1194,6 +1195,7 @@ export async function checkoutOrder(data: {
     order_notes?: string;
     payment_method?: string;
     redeem_points?: number;
+    currency?: string;
 }) {
     try {
         const res = await authFetch(`${API_URL}/api/orders/checkout`, {

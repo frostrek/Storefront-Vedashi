@@ -35,6 +35,7 @@ export default function RegionSwitcher({ upward = false }: { upward?: boolean })
 
     // Set cookies (7 days)
     document.cookie = `geo_country=${newCountry}; max-age=${7 * 24 * 60 * 60}; path=/`;
+    document.cookie = `geo_manual=true; max-age=${7 * 24 * 60 * 60}; path=/`;
     const currencyMap: Record<string, string> = { in: 'INR', us: 'USD', gb: 'GBP', ae: 'AED', ca: 'CAD', au: 'AUD', ru: 'RUB', kr: 'KRW' };
     document.cookie = `geo_currency=${currencyMap[newCountry] || 'USD'}; max-age=${7 * 24 * 60 * 60}; path=/`;
 

@@ -96,7 +96,9 @@ function StepIndicator({
 }
 
 function CheckoutContent() {
-    const { formatPrice } = useCurrency();
+    const { formatPrice, countryConfig, currencyConfigs } = useCurrency();
+    const currentConfig = currencyConfigs.find(c => c.country_code === countryConfig.code.toUpperCase());
+    const exchangeRate = currentConfig?.exchange_rate || 1;
     const router = useRouter();
     const searchParams = useSearchParams();
     const isBuyNow = searchParams.get('buyNow') === 'true';
@@ -298,6 +300,7 @@ function CheckoutContent() {
     
     // Assuming 1 point = 1 INR — enforce minimum payable of ₹1
     const grandTotal = Math.max(minPayable, prePointsTotal - pointsToRedeem);
+    const localTotal = Number((grandTotal * exchangeRate).toFixed(2));
 
     // Load addresses
     useEffect(() => {
@@ -723,8 +726,8 @@ function CheckoutContent() {
                                 quantity: item.quantity,
                             }));
                             trackPurchase({
-                                currency: 'INR',
-                                value: grandTotal,
+                                currency: countryConfig.currency,
+                                value: countryConfig.currency === 'INR' ? grandTotal : localTotal,
                                 transaction_id: platformOrderId || undefined,
                                 items: purchaseItems,
                                 coupon: couponCode || undefined,
@@ -871,7 +874,7 @@ function CheckoutContent() {
                         order_notes: orderNotes.trim() || undefined,
                         redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
                         final_total: grandTotal,
-                        currency: 'INR',
+                        currency: countryConfig.currency,
                         ga_client_id: getGAClientId() || undefined,
                         attribution: getAttribution() || undefined,
                     };
@@ -888,7 +891,7 @@ function CheckoutContent() {
                         order_notes: orderNotes.trim() || undefined,
                         redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
                         final_total: grandTotal,
-                        currency: 'INR',
+                        currency: countryConfig.currency,
                         ga_client_id: getGAClientId() || undefined,
                         attribution: getAttribution() || undefined,
                     };
@@ -905,7 +908,7 @@ function CheckoutContent() {
                         order_notes: orderNotes.trim() || undefined,
                         redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
                         final_total: grandTotal,
-                        currency: 'INR',
+                        currency: countryConfig.currency,
                         ga_client_id: getGAClientId() || undefined,
                         attribution: getAttribution() || undefined,
                     };
@@ -932,6 +935,7 @@ function CheckoutContent() {
                     redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
                     ga_client_id: getGAClientId() || undefined,
                     attribution: getAttribution() || undefined,
+                    currency: countryConfig.currency,
                 });
             } else if (isAuthenticated && cartId && user?.id) {
                 result = await checkoutOrder({
@@ -948,6 +952,7 @@ function CheckoutContent() {
                     redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
                     ga_client_id: getGAClientId() || undefined,
                     attribution: getAttribution() || undefined,
+                    currency: countryConfig.currency,
                 } as any);
             } else {
                 result = await directCheckout({
@@ -964,6 +969,7 @@ function CheckoutContent() {
                     redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
                     ga_client_id: getGAClientId() || undefined,
                     attribution: getAttribution() || undefined,
+                    currency: countryConfig.currency,
                 });
             }
 
@@ -979,8 +985,8 @@ function CheckoutContent() {
                     quantity: item.quantity,
                 }));
                 trackPurchase({
-                    currency: 'INR',
-                    value: grandTotal,
+                    currency: countryConfig.currency,
+                    value: countryConfig.currency === 'INR' ? grandTotal : localTotal,
                     transaction_id: createdOrderId || undefined,
                     items: purchaseItems,
                     coupon: couponCode || undefined,
@@ -1100,8 +1106,8 @@ function CheckoutContent() {
             quantity: item.quantity,
         }));
         trackCheckoutStep('add_shipping_info', 2, {
-            currency: 'INR',
-            value: grandTotal,
+            currency: countryConfig.currency,
+            value: countryConfig.currency === 'INR' ? grandTotal : localTotal,
             items: shippingItems,
             coupon: couponCode || undefined,
         });
@@ -1133,8 +1139,8 @@ function CheckoutContent() {
             quantity: item.quantity,
         }));
         trackCheckoutStep('add_payment_info', 3, {
-            currency: 'INR',
-            value: grandTotal,
+            currency: countryConfig.currency,
+            value: countryConfig.currency === 'INR' ? grandTotal : localTotal,
             items: paymentInfoItems,
             coupon: couponCode || undefined,
             payment_type: paymentMethod,
