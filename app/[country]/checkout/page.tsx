@@ -421,7 +421,7 @@ function CheckoutContent() {
         }));
 
         trackCheckoutStep('begin_checkout', 1, {
-            currency: 'INR',
+            currency: countryConfig.currency,
             value: baseSubtotal,
             items: ga4Items,
             coupon: couponCode || undefined,
@@ -692,7 +692,7 @@ function CheckoutContent() {
                 prefill: {
                     name: user?.name || '',
                     email: user?.email || contactEmail,
-                    contact: contactPhone,
+                    contact: getFullContactPhone(),
                 },
                 theme: { color: '#6B8F5E', backdrop_color: 'rgba(0,0,0,0.6)' },
                 modal: {
