@@ -313,7 +313,7 @@ export default function Navbar() {
       {/* ═══════════════ STRIP BAR (PROMOTION BANNER) ═══════════════ */}
       {strip.enabled && (
         <div className="hidden md:block font-sans" style={{ backgroundColor: colors.strip_bg }}>
-          <div className="mx-auto max-w-[2000px] w-full px-4 lg:px-6">
+          <div className="mx-auto max-w-[2000px] w-full px-2 lg:px-6">
             <div className="flex items-center justify-between h-8 text-[12px] tracking-wide">
               <div className="flex items-center gap-5">
                 {strip.show_track_orders && (
@@ -352,12 +352,12 @@ export default function Navbar() {
           }`}
         style={{ backgroundColor: scrolled ? '#FFFFFFCC' : '#FFFFFF' }}
       >
-        <div className="mx-auto max-w-[1500px] w-full px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1500px] w-full px-2 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 relative">
 
             {/* Logo Section */}
             <div className="flex-none flex items-center justify-start">
-              <Link href={`/${currentCountry}`} className="flex items-center gap-2 p-2 relative overflow-visible">
+              <Link href={`/${currentCountry}`} className="flex items-center gap-2 p-0 sm:p-2 relative overflow-visible">
                 {branding.logo_url ? (
                   <img src={branding.logo_url} alt={branding.logo_alt} className="h-8 sm:h-10 md:h-12 lg:h-14 w-auto transition-all" />
                 ) : (
@@ -388,13 +388,15 @@ export default function Navbar() {
             </nav>
 
             {/* Search Bar Section (Center) */}
-            <div className="hidden md:flex flex-1 justify-center max-w-none px-2 lg:px-4">
+            <div className="flex flex-1 justify-center max-w-none px-2 lg:px-4">
               <SearchAutocomplete className="w-full" />
             </div>
 
             {/* Actions Section */}
-            <div className="flex-none flex items-center justify-end gap-3 sm:gap-4 md:gap-2 lg:gap-3 relative">
-              <NotificationCenter colors={colors} />
+            <div className="flex-none flex items-center justify-end gap-0 sm:gap-4 md:gap-2 lg:gap-3 relative">
+              <div className="hidden md:block">
+                <NotificationCenter colors={colors} />
+              </div>
 
               <button onClick={handleWishlistClick} className="relative p-2 group">
                 <Heart className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
@@ -481,11 +483,15 @@ export default function Navbar() {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setMobileOpen(false)} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000]" />
             <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} className="fixed right-0 top-0 h-full w-[320px] bg-white z-[2001] flex flex-col">
               <div className="p-4 border-b flex justify-between items-center">
-                <img src="/vedashi-logo.png" alt="Vedashi" className="h-10 w-auto" />
+                <div className="flex items-center gap-4">
+                  <img src="/vedashi-logo.png" alt="Vedashi" className="h-10 w-auto" />
+                  <NotificationCenter colors={colors} />
+                </div>
                 <button onClick={() => setMobileOpen(false)}><X className="h-6 w-6" /></button>
               </div>
               <div className="flex-1 overflow-y-auto p-5">
-                <div className="mb-6"><SearchAutocomplete className="w-full" onClose={() => setMobileOpen(false)} /></div>
+                {/* Search bar is now in the main navbar, but keeping it here as secondary if needed or removing it */}
+                {/* <div className="mb-6 md:hidden"><SearchAutocomplete className="w-full" onClose={() => setMobileOpen(false)} /></div> */}
                 <div className="space-y-1 mb-8">
                   {visibleLinks.map(link => (
                     <Link key={link.label} href={link.url} onClick={() => setMobileOpen(false)} className="block py-3 px-4 font-bold text-sm uppercase text-gray-600 hover:bg-gray-50 rounded-xl">{link.label}</Link>

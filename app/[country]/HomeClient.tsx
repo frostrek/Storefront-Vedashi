@@ -216,7 +216,7 @@ export default function HomeClientPage({
                           }}
                           className="group flex flex-col items-center gap-3 transition-all duration-500 hover:-translate-y-2 cursor-pointer"
                         >
-                          <div className={`relative w-full aspect-[4/3] rounded-xl sm:rounded-2xl ${categoryColors[cat.slug] || 'bg-[#F2F4F2]'} flex items-center justify-center shadow-sm group-hover:shadow-[0_20px_50px_rgba(59,93,59,0.12)] group-hover:bg-[#E2F0E2] transition-all duration-700 overflow-hidden isolate`}>
+                          <div className={`relative w-[85%] sm:w-full mx-auto aspect-[4/3] rounded-xl sm:rounded-2xl ${categoryColors[cat.slug] || 'bg-[#F2F4F2]'} flex items-center justify-center shadow-sm group-hover:shadow-[0_20px_50px_rgba(59,93,59,0.12)] group-hover:bg-[#E2F0E2] transition-all duration-700 overflow-hidden isolate`}>
                             <img
                               src={cat.image_url || categoryImages[cat.slug?.toLowerCase() || ''] || `/icons/shop/${cat.slug}.png`}
                               alt={cat.name}

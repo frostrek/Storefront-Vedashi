@@ -100,7 +100,7 @@ export default function PromoBanner() {
             style={{ backgroundColor: banner.background_color || '#EAE4D3', color: banner.text_color || '#4F1A24' }}
             className="text-[12px] overflow-hidden py-0.5"
         >
-            <div className="relative w-full px-4 sm:px-6 lg:px-8 mx-auto max-w-[1500px]">
+            <div className="relative w-full px-2 sm:px-6 lg:px-8 mx-auto max-w-[1500px]">
                 <div className={`flex whitespace-nowrap font-bold tracking-[0.2em] font-accent text-[14px] ${count > 1 ? 'justify-between' : 'justify-center'} w-full ${getEffectClass()}`}>
                     {messageArray.map((msg, index) => (
                         <span key={index}>{msg}</span>
