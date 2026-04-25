@@ -1491,3 +1491,9 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
     --similar-card-width: 70%;
   }
 }
+
+/* Below-fold sections — skip layout/paint until visible */
+.content-lazy {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 500px;
+}

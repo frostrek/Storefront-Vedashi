@@ -2,19 +2,20 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { API_URL } from '@/lib/api';
 
 // API_URL imported from @/lib/api
 
-interface TextElement {
+export interface TextElement {
     id: string;
     text: string;
     color: string;
     fontSize: string;
 }
 
-interface ButtonElement {
+export interface ButtonElement {
     id: string;
     label: string;
     url: string;
@@ -23,7 +24,7 @@ interface ButtonElement {
     size: string;
 }
 
-interface HeroSlide {
+export interface HeroSlide {
     id: string;
     image_url: string;
     headings: TextElement[];
@@ -32,25 +33,56 @@ interface HeroSlide {
     overlay_opacity: number;
 }
 
-interface HeroSettings {
+export interface HeroSettings {
     slider_speed: number;
     arrow_visibility: 'visible' | 'hover' | 'hidden';
     loop: boolean;
     slideshow_type: 'fade' | 'slide_right_to_left' | 'slide_left_to_right';
 }
 
-export default function HeroCarousel() {
-    const [slides, setSlides] = useState<HeroSlide[]>([]);
-    const [settings, setSettings] = useState<HeroSettings>({ slider_speed: 3000, arrow_visibility: 'hover', loop: true, slideshow_type: 'fade' });
-    const [loading, setLoading] = useState(true);
+export interface HeroCarouselProps {
+    initialSlides?: HeroSlide[];
+    initialSettings?: HeroSettings;
+}
+
+export default function HeroCarousel({ initialSlides = [], initialSettings = undefined }: HeroCarouselProps) {
+    const [slides, setSlides] = useState<HeroSlide[]>(initialSlides);
+    const [settings, setSettings] = useState<HeroSettings>(
+        initialSettings || { slider_speed: 3000, arrow_visibility: 'hover', loop: true, slideshow_type: 'fade' }
+    );
+    const [loading, setLoading] = useState(false);
     const [current, setCurrent] = useState(0);
     const [paused, setPaused] = useState(false);
     const [hovering, setHovering] = useState(false);
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const prevIndexRef = useRef<number>(0);
     const directionRef = useRef<'next' | 'prev'>('next');
+    const [touchStart, setTouchStart] = useState<number | null>(null);
+    const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+    const minSwipeDistance = 50;
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+        setTouchEnd(null);
+        setTouchStart(e.targetTouches[0].clientX);
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => setTouchEnd(e.targetTouches[0].clientX);
+
+    const handleTouchEnd = () => {
+        if (!touchStart || !touchEnd) return;
+        const distance = touchStart - touchEnd;
+        const isLeftSwipe = distance > minSwipeDistance;
+        const isRightSwipe = distance < -minSwipeDistance;
+        if (isLeftSwipe) next();
+        if (isRightSwipe) prev();
+    };
 
     useEffect(() => {
+        // If we received initial slides from SSR, don't fetch immediately
+        if (slides.length > 0) return;
+
+        setLoading(true);
         // Fetch active slides and settings in parallel
         Promise.all([
             fetch(`${API_URL}/api/media/hero/active`, { credentials: 'include' }).then(r => r.json()),
@@ -129,7 +161,7 @@ export default function HeroCarousel() {
 
     if (loading) {
         return (
-            <section className="relative overflow-hidden bg-neutral-200/50 animate-pulse h-[350px] sm:h-[450px] lg:h-auto lg:aspect-[1920/500] max-h-[500px] rounded-3xl">
+            <section className="relative overflow-hidden bg-neutral-200/50 animate-pulse aspect-[1920/550] w-full rounded-none sm:rounded-2xl lg:rounded-3xl">
                 <div className="relative z-20 mx-auto max-w-7xl px-4 h-full flex items-center justify-center"></div>
             </section>
         );
@@ -169,9 +201,12 @@ export default function HeroCarousel() {
 
     return (
         <section
-            className="relative overflow-hidden group h-[350px] sm:h-[450px] lg:h-auto lg:aspect-[1920/500] max-h-[500px] w-full flex items-center justify-center rounded-3xl"
+            className="relative overflow-hidden group aspect-[1920/550] w-full flex items-center justify-center rounded-none sm:rounded-2xl lg:rounded-3xl shadow-none sm:shadow-md touch-pan-y"
             onMouseEnter={() => { setPaused(true); setHovering(true); }}
             onMouseLeave={() => { setPaused(false); setHovering(false); }}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
         >
             {/* ── Slides ── */}
             {displaySlides.map((s, i) => (
@@ -179,11 +214,14 @@ export default function HeroCarousel() {
                     key={s.id}
                     className={`absolute inset-0 transition-all duration-1000 ease-in-out ${getSlideClasses(i)}`}
                 >
-                    <div
-                        className="absolute inset-0 bg-cover bg-center"
-                        style={{
-                            backgroundImage: `url('${s.image_url}')`,
-                        }}
+                    <Image
+                        src={s.image_url}
+                        alt={s.headings?.[0]?.text || 'Hero banner'}
+                        fill
+                        sizes="100vw"
+                        className="object-cover object-center"
+                        priority={i === 0}
+                        loading={i === 0 ? 'eager' : 'lazy'}
                     />
                     <div
                         className="absolute inset-0 bg-gradient-to-b from-black/20 to-black/60"
@@ -193,9 +231,9 @@ export default function HeroCarousel() {
             ))}
 
             {/* ── Content ── */}
-            <div className="relative z-20 mx-auto max-w-7xl px-6 py-8 sm:py-12 md:py-14 lg:py-16 text-center w-full">
+            <div className="relative z-20 mx-auto max-w-7xl px-4 py-2 sm:py-8 md:py-10 lg:py-12 text-center w-full h-full flex flex-col justify-center">
                 {/* Dynamic Headings */}
-                <div className="animate-fade-in-up space-y-2 mb-6 shadow-black/20 drop-shadow-2xl">
+                <div className="animate-fade-in-up space-y-1 sm:space-y-2 mb-2 sm:mb-6 shadow-black/20 drop-shadow-2xl">
                     {slide.headings?.map(h => {
                         const isNum = !isNaN(Number(h.fontSize)) && h.fontSize !== '';
                         return (
@@ -203,9 +241,9 @@ export default function HeroCarousel() {
                                 key={h.id} 
                                 style={{ 
                                     color: h.color, 
-                                    fontSize: isNum ? `clamp(1.75rem, 7vw, ${h.fontSize}px)` : undefined 
+                                    fontSize: isNum ? `clamp(1.125rem, 5vw, ${h.fontSize}px)` : undefined 
                                 }} 
-                                className={`font-bold leading-[1.1] ${!isNum ? `text-${h.fontSize}` : ''}`}
+                                className={`font-bold leading-tight ${!isNum ? `text-${h.fontSize}` : ''}`}
                             >
                                 {h.text}
                             </h1>
@@ -233,7 +271,7 @@ export default function HeroCarousel() {
                 </div>
 
                 {/* Dynamic Buttons */}
-                <div className="animate-fade-in-up mt-10 flex flex-wrap justify-center gap-4" style={{ animationDelay: '0.4s' }}>
+                <div className="animate-fade-in-up mt-3 sm:mt-10 flex flex-wrap justify-center gap-2 sm:gap-4" style={{ animationDelay: '0.4s' }}>
                     {slide.buttons?.map(b => (
                         <Link
                             key={b.id}
@@ -244,10 +282,10 @@ export default function HeroCarousel() {
                                 borderColor: b.bgColor === 'transparent' ? 'rgba(255,255,255,0.3)' : 'transparent',
                                 borderWidth: b.bgColor === 'transparent' ? '2px' : '0px'
                             }}
-                            className={`inline-flex items-center gap-2 rounded-lg px-8 py-3.5 text-sm font-semibold shadow-lg transition-all hover:brightness-110 hover:-translate-y-0.5 hover:shadow-xl ${b.bgColor === 'transparent' ? 'hover:bg-white/10' : ''}`}
+                            className={`inline-flex items-center gap-2 rounded-lg px-5 py-2 sm:px-8 sm:py-3.5 text-[12px] sm:text-sm font-semibold shadow-lg transition-all hover:brightness-110 hover:-translate-y-0.5 hover:shadow-xl ${b.bgColor === 'transparent' ? 'hover:bg-white/10' : ''}`}
                         >
                             {b.label}
-                            {b.bgColor !== 'transparent' && <ArrowRight className="h-4 w-4" />}
+                            {b.bgColor !== 'transparent' && <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" />}
                         </Link>
                     ))}
                 </div>
@@ -259,17 +297,17 @@ export default function HeroCarousel() {
                     {(!(!settings.loop && current === 0)) && (
                         <button
                             onClick={prev}
-                            className={`absolute left-4 top-1/2 -translate-y-1/2 z-30 flex items-center justify-center w-10 h-10 rounded-full bg-black/30 hover:bg-black/50 text-white backdrop-blur-sm transition-all duration-300 ${showArrows ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 pointer-events-none'}`}
+                            className={`absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/30 hover:bg-black/50 text-white backdrop-blur-sm transition-all duration-300 ${showArrows ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 pointer-events-none'}`}
                         >
-                            <ChevronLeft className="h-5 w-5" />
+                            <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
                         </button>
                     )}
                     {(!(!settings.loop && current === displaySlides.length - 1)) && (
                         <button
                             onClick={next}
-                            className={`absolute right-4 top-1/2 -translate-y-1/2 z-30 flex items-center justify-center w-10 h-10 rounded-full bg-black/30 hover:bg-black/50 text-white backdrop-blur-sm transition-all duration-300 ${showArrows ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 pointer-events-none'}`}
+                            className={`absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/30 hover:bg-black/50 text-white backdrop-blur-sm transition-all duration-300 ${showArrows ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 pointer-events-none'}`}
                         >
-                            <ChevronRight className="h-5 w-5" />
+                            <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
                         </button>
                     )}
                 </>
@@ -277,7 +315,7 @@ export default function HeroCarousel() {
 
             {/* ── Dot indicators ── */}
             {slides.length > 1 && (
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex gap-2">
+                <div className="absolute bottom-2 sm:bottom-6 left-1/2 -translate-x-1/2 z-30 flex gap-1.5 sm:gap-2">
                     {slides.map((_, i) => {
                         const isActive = (current % slides.length) === i;
                         return (
@@ -296,8 +334,8 @@ export default function HeroCarousel() {
                                     goTo(targetIndex);
                                 }}
                                 className={`rounded-full transition-all duration-300 ${isActive
-                                    ? 'bg-vedic-gold w-6 h-2'
-                                    : 'bg-white/40 hover:bg-white/70 w-2 h-2'
+                                    ? 'bg-vedic-gold w-4 h-1 sm:w-6 sm:h-2'
+                                    : 'bg-white/40 hover:bg-white/70 w-1.5 h-1.5 sm:w-2 sm:h-2'
                                     }`}
                             />
                         );

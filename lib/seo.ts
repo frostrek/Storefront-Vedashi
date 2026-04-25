@@ -130,7 +130,7 @@ export function buildProductMeta(product: ProductSeoInput, currentCountry: strin
     const pathStrategy = `products/${product.slug || product.product_id}`;
     const canonical = seo?.canonical_url || `${SITE_URL}/${currentCountry}/${pathStrategy}`;
     
-    const ogImage = seo?.og_image || product.thumbnail_url || DEFAULT_OG_IMAGE;
+    const ogImage = seo?.og_image || `${SITE_URL}/${currentCountry}/products/${product.slug || product.product_id}/opengraph-image`;
     const keywords = seo?.meta_keywords || [product.product_name, product.brand, product.category, SITE_NAME].filter(Boolean).join(', ');
 
     const robotsValue = seo?.robots || 'index, follow';

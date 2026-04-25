@@ -70,15 +70,15 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
 
     return (
         <div className="relative group/reel py-8">
-            <div className="flex flex-row items-end justify-between mb-8 px-4 sm:px-6 lg:px-8 relative">
-                <div className="text-left">
-                    {title && <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">{title}</h2>}
-                    {subtitle && <p className="text-gray-500 font-medium italic">{subtitle}</p>}
+            <div className="flex flex-row items-center justify-center sm:justify-between mb-2 sm:mb-8 px-4 sm:px-6 lg:px-8 relative">
+                <div className="text-center sm:text-left">
+                    {title && <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2">{title}</h2>}
+                    {subtitle && <p className="hidden sm:block text-gray-500 font-medium italic">{subtitle}</p>}
                 </div>
 
                 {viewAllLink && (
                     <div className="flex-shrink-0 hidden sm:block pb-1">
-                        <Link href={viewAllLink} className="group flex items-center gap-2 text-sm font-bold text-[#FF0000] hover:text-[#CC0000] transition-colors">
+                        <Link href={viewAllLink} className="group flex items-center gap-2 text-[13px] font-medium text-[#FF0000] hover:text-[#CC0000] transition-colors underline decoration-[#FF0000]/30 underline-offset-2 hover:decoration-[#FF0000]">
                             {viewAllText || 'Explore All'}
                             <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                         </Link>
@@ -86,15 +86,7 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
                 )}
             </div>
 
-            {/* Mobile View All Link */}
-            {viewAllLink && (
-                <div className="sm:hidden px-4 mb-6">
-                    <Link href={viewAllLink} className="group flex items-center gap-2 text-sm font-bold text-[#FF0000] hover:text-[#CC0000] transition-colors">
-                        {viewAllText || 'Explore All'}
-                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                    </Link>
-                </div>
-            )}
+
 
             <div className="relative px-4 sm:px-6 lg:px-8">
                 {/* Navigation Arrows */}
@@ -122,7 +114,7 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
                 {/* The Reel Container */}
                 <div
                     ref={scrollRef}
-                    className="flex overflow-x-auto hide-scrollbar gap-6 pb-8 snap-x snap-mandatory"
+                    className="flex overflow-x-auto no-scrollbar gap-6 pb-2 sm:pb-8 snap-x snap-mandatory overflow-y-hidden"
                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                     {loading ? (
@@ -133,7 +125,7 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
                         products.map((product, i) => (
                             <div
                                 key={product.product_id}
-                                className="min-w-[200px] sm:min-w-[240px] snap-center"
+                                className="min-w-[150px] sm:min-w-[240px] snap-center"
                             >
                                 <ProductCard
                                     product={product}
@@ -146,6 +138,15 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
                     {/* Spacer for right padding in scroll */}
                     <div className="min-w-[20px] h-full" />
                 </div>
+
+                {/* Mobile View All Link - Moved below the reel */}
+                {viewAllLink && (
+                    <div className="sm:hidden flex justify-end mt-1">
+                        <Link href={viewAllLink} className="group flex items-center gap-2 text-[10px] font-medium text-[#FF0000] hover:text-[#CC0000] transition-colors underline decoration-[#FF0000]/30 underline-offset-2">
+                            {viewAllText || 'Explore All'}
+                        </Link>
+                    </div>
+                )}
             </div>
         </div>
     );

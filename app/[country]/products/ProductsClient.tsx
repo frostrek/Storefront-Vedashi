@@ -11,7 +11,7 @@ import { SkeletonProductGrid } from '@/components/Skeleton';
 import SearchBar from '@/components/SearchBar';
 import {
     SlidersHorizontal, X, Leaf, Loader2,
-    Sparkles, ChevronLeft, ChevronRight, LayoutGrid, List
+    LayoutGrid, List
 } from 'lucide-react';
 import { useFilters } from '@/hooks/useFilters';
 import { FILTER_CONFIGS, SORT_OPTIONS } from '@/lib/filterConfig';
@@ -66,12 +66,18 @@ function ProductsContent() {
     const searchParams = useSearchParams();
 
     const gridRef = useRef<HTMLDivElement>(null);
+    // Sentinel ref for IntersectionObserver (infinite scroll trigger)
+    const sentinelRef = useRef<HTMLDivElement>(null);
 
-    // Pagination state
+    // Lazy-load / infinite scroll state
     const [products, setProducts] = useState<FilteredProduct[]>([]);
     const [meta, setMeta] = useState<FilterMeta | null>(null);
+    // loading = true during the FIRST page fetch (shows full skeleton)
     const [loading, setLoading] = useState(true);
+    // loadingMore = true while fetching subsequent pages (shows bottom spinner)
+    const [loadingMore, setLoadingMore] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
     const [mobileOpen, setMobileOpen] = useState(false);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [isMounted, setIsMounted] = useState(false);
@@ -167,21 +173,35 @@ function ProductsContent() {
         return params;
     }, [filters]);
 
-    // Fetch page (used for both initial load and page changes)
-    const fetchPage = useCallback(async (page: number, cancelled: { value: boolean }) => {
-        setLoading(true);
-        setProducts([]);
+    // Fetch page — appends to list for page > 1, resets for page 1
+    const fetchPage = useCallback(async (
+        page: number,
+        cancelled: { value: boolean },
+        isFirstPage: boolean
+    ) => {
+        if (isFirstPage) {
+            setLoading(true);
+            setProducts([]);
+        } else {
+            setLoadingMore(true);
+        }
 
-        // All cases go through filter endpoint to support combining any filter with Best Sellers/New Arrivals
         const params = buildParams(page);
         const result = await getFilteredProducts(params);
 
         if (!cancelled.value) {
-            setProducts(result.data);
+            const incoming = result.data ?? [];
+            const totalCount = result.meta?.total_count ?? incoming.length;
+            const loadedSoFar = isFirstPage ? incoming.length : (currentPage - 1) * ITEMS_PER_PAGE + incoming.length;
+
+            setProducts(prev => isFirstPage ? incoming : [...prev, ...incoming]);
             setMeta(result.meta);
-            setLoading(false);
+            setHasMore(incoming.length === ITEMS_PER_PAGE && loadedSoFar < totalCount);
+
+            if (isFirstPage) setLoading(false);
+            else setLoadingMore(false);
         }
-    }, [buildParams]);
+    }, [buildParams, currentPage]);
 
     const handleSubscribe = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -209,8 +229,10 @@ function ProductsContent() {
     useEffect(() => {
         const cancelled = { value: false };
         setCurrentPage(1);
-        fetchPage(1, cancelled);
+        setHasMore(true);
+        fetchPage(1, cancelled, true);
         return () => { cancelled.value = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [filtersKey]);
 
     // GA4: view_item_list
@@ -243,38 +265,28 @@ function ProductsContent() {
         }
     }, [products]);
 
-    // Handle manual page change
-    const handlePageChange = (page: number) => {
-        const cancelled = { value: false };
-        setCurrentPage(page);
-        fetchPage(page, cancelled);
-        // Scroll product grid into view
-        setTimeout(() => {
-            gridRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 50);
-    };
+    // Infinite scroll: load next page when sentinel enters viewport
+    useEffect(() => {
+        if (!sentinelRef.current) return;
+        const observer = new IntersectionObserver(
+            (entries) => {
+                const entry = entries[0];
+                if (entry.isIntersecting && hasMore && !loadingMore && !loading) {
+                    const nextPage = currentPage + 1;
+                    const cancelled = { value: false };
+                    setCurrentPage(nextPage);
+                    fetchPage(nextPage, cancelled, false);
+                }
+            },
+            // Trigger 300 px before the sentinel actually enters the screen
+            { rootMargin: '300px' }
+        );
+        observer.observe(sentinelRef.current);
+        return () => observer.disconnect();
+    }, [hasMore, loadingMore, loading, currentPage, fetchPage]);
 
     const totalCount = meta?.total_count ?? products.length;
-    const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
-    const startItem = totalCount === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
-    const endItem = Math.min(currentPage * ITEMS_PER_PAGE, totalCount);
-
-    // Pagination page numbers with ellipsis
-    const getPageNumbers = () => {
-        const pages: (number | '...')[] = [];
-        if (totalPages <= 7) {
-            for (let i = 1; i <= totalPages; i++) pages.push(i);
-        } else {
-            pages.push(1);
-            if (currentPage > 3) pages.push('...');
-            const start = Math.max(2, currentPage - 1);
-            const end = Math.min(totalPages - 1, currentPage + 1);
-            for (let i = start; i <= end; i++) pages.push(i);
-            if (currentPage < totalPages - 2) pages.push('...');
-            pages.push(totalPages);
-        }
-        return pages;
-    };
+    const loadedCount = products.length;
 
     useEffect(() => {
         const handleEsc = (e: KeyboardEvent) => {
@@ -474,20 +486,68 @@ function ProductsContent() {
 
 
             {/* ═══════ MAIN CONTENT ═══════ */}
-            <div className="w-full px-4 sm:px-6 lg:pl-0 lg:pr-8 py-8 pt-2 sm:pt-4 relative z-10">
-                {/* Mobile Filter Button */}
-                <button
-                    onClick={() => setMobileOpen(true)}
-                    className="mb-8 flex items-center gap-2 rounded-xl border border-gray-200 bg-white/80 backdrop-blur-sm px-5 py-3 text-sm font-semibold text-gray-700 shadow-sm hover:shadow-md transition-all lg:hidden cursor-pointer"
-                >
-                    <SlidersHorizontal className="h-4 w-4 text-[#3d5c3a]" />
-                    Filters
-                    {activeChips.length > 0 && (
-                        <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#3d5c3a] text-[10px] font-bold text-white">
-                            {activeChips.length}
-                        </span>
+            <div className="w-full max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-2 sm:pt-4 relative z-10">
+                {/* ── Mobile Sticky Controls (Filters, Sort, View) ── */}
+                <div className="sticky top-[60px] z-[40] bg-white/95 backdrop-blur-md pb-3 pt-3 lg:hidden border-b border-gray-100 mb-5 -mx-4 px-4 sm:-mx-6 sm:px-6 shadow-sm">
+                    <div className="flex items-center justify-between gap-3">
+                        <button
+                            onClick={() => setMobileOpen(true)}
+                            className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-[13px] font-bold text-gray-700 shadow-sm hover:shadow-md transition-all cursor-pointer flex-1"
+                        >
+                            <SlidersHorizontal className="h-4 w-4 text-[#3d5c3a]" />
+                            Filters
+                            {activeChips.length > 0 && (
+                                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#3d5c3a] text-[10px] font-bold text-white">
+                                    {activeChips.length}
+                                </span>
+                            )}
+                        </button>
+
+                        <div className="flex-1">
+                            <SortDropdown
+                                value={filters.sort || SORT_OPTIONS[0].value}
+                                onChange={setSort}
+                                options={SORT_OPTIONS}
+                            />
+                        </div>
+
+                        <div className="flex items-center rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden flex-shrink-0">
+                            <button
+                                onClick={() => { setViewMode('grid'); localStorage.setItem('vedashi_view_mode', 'grid'); }}
+                                className={`p-2.5 transition-colors cursor-pointer ${viewMode === 'grid' ? 'bg-[#3d5c3a] text-white' : 'text-gray-400 hover:text-gray-600'}`}
+                            >
+                                <LayoutGrid className="h-4 w-4" />
+                            </button>
+                            <button
+                                onClick={() => { setViewMode('list'); localStorage.setItem('vedashi_view_mode', 'list'); }}
+                                className={`p-2.5 transition-colors cursor-pointer ${viewMode === 'list' ? 'bg-[#3d5c3a] text-white' : 'text-gray-400 hover:text-gray-600'}`}
+                            >
+                                <List className="h-4 w-4" />
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {/* Quick Category Pills for Mobile */}
+                    {categories.length > 0 && (
+                        <div className="mt-3.5 flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                            <button 
+                                onClick={() => setCategory('')}
+                                className={`flex-shrink-0 px-4 py-1.5 rounded-full text-[12px] font-bold transition-colors border ${!filters.category ? 'bg-gray-900 text-white border-gray-900 shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'}`}
+                            >
+                                All
+                            </button>
+                            {categories.map(c => (
+                                <button 
+                                    key={c.category_id}
+                                    onClick={() => setCategory(c.slug)}
+                                    className={`flex-shrink-0 px-4 py-1.5 rounded-full text-[12px] font-bold transition-colors border ${filters.category === c.slug ? 'bg-gray-900 text-white border-gray-900 shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'}`}
+                                >
+                                    {c.name}
+                                </button>
+                            ))}
+                        </div>
                     )}
-                </button>
+                </div>
 
                 <div className="lg:grid lg:grid-cols-[280px_1fr] lg:gap-10">
                     {/* ─── Desktop Sidebar ─── */}
@@ -526,16 +586,16 @@ function ProductsContent() {
 
                     {/* ─── Product Grid ─── */}
                     <div className="min-w-0">
-                        {/* Sort bar + count */}
-                        <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        {/* Sort bar + count (Desktop only) */}
+                        <div className="mb-4 hidden lg:flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <p className="text-sm text-gray-500 flex items-center gap-2">
                                 <span className={`transition-opacity ${loading ? 'opacity-50' : 'opacity-100'}`}>
                                     {totalCount === 0 ? 'No products' : (
-                                        <>Showing <span className="font-semibold text-gray-900">{startItem}–{endItem}</span> of{' '}
+                                        <>Showing <span className="font-semibold text-gray-900">{loadedCount}</span> of{' '}
                                             <span className="font-semibold text-gray-900">{totalCount}</span> products</>
                                     )}
                                 </span>
-                                {loading && <Loader2 className="h-4 w-4 animate-spin text-[#3d5c3a]" />}
+                                {(loading || loadingMore) && <Loader2 className="h-4 w-4 animate-spin text-[#3d5c3a]" />}
                             </p>
                             <div className="flex items-center gap-3">
                                 <div className="flex items-center rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
@@ -564,6 +624,18 @@ function ProductsContent() {
                             </div>
                         </div>
 
+                        {/* Mobile Count */}
+                        <div className="lg:hidden mb-4 flex items-center justify-between">
+                            <p className="text-[13px] text-gray-500 flex items-center gap-2">
+                                <span className={`transition-opacity ${loading ? 'opacity-50' : 'opacity-100'}`}>
+                                    {totalCount === 0 ? 'No products' : (
+                                        <>Showing <span className="font-bold text-gray-900">{loadedCount}</span> of <span className="font-bold text-gray-900">{totalCount}</span></>
+                                    )}
+                                </span>
+                                {(loading || loadingMore) && <Loader2 className="h-3.5 w-3.5 animate-spin text-[#3d5c3a]" />}
+                            </p>
+                        </div>
+
                         <ActiveFilterChips
                             chips={resolvedChips}
                             onRemove={removeFilter}
@@ -579,7 +651,7 @@ function ProductsContent() {
                                         <div
                                             key={`${product.product_id}-${i}`}
                                             className="animate-fade-in-up"
-                                            style={{ animationDelay: `${Math.min(i, 7) * 50}ms`, animationFillMode: 'both' }}
+                                            style={{ animationDelay: `${Math.min(i % 24, 7) * 50}ms`, animationFillMode: 'both' }}
                                         >
                                             <ProductCard
                                                 product={product}
@@ -592,59 +664,27 @@ function ProductsContent() {
                                     ))}
                                 </div>
 
-                                {/* ── Pagination Controls ── */}
-                                {totalPages > 1 && (
-                                    <div className="mt-10 flex flex-col items-center gap-4">
-                                        <div className="flex items-center gap-1.5">
-                                            {/* Prev */}
-                                            <button
-                                                onClick={() => handlePageChange(currentPage - 1)}
-                                                disabled={currentPage === 1}
-                                                className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 transition-all hover:border-[#3d5c3a] hover:text-[#3d5c3a] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer shadow-sm"
-                                                aria-label="Previous page"
-                                            >
-                                                <ChevronLeft className="h-4 w-4" />
-                                            </button>
-
-                                            {/* Page numbers */}
-                                            {getPageNumbers().map((page, idx) =>
-                                                page === '...' ? (
-                                                    <span key={`ellipsis-${idx}`} className="flex h-9 w-9 items-center justify-center text-sm text-gray-400">
-                                                        …
-                                                    </span>
-                                                ) : (
-                                                    <button
-                                                        key={page}
-                                                        onClick={() => handlePageChange(page as number)}
-                                                        className={`flex h-9 w-9 items-center justify-center rounded-xl border text-sm font-semibold transition-all cursor-pointer shadow-sm ${currentPage === page
-                                                            ? 'bg-[#3d5c3a] border-[#3d5c3a] text-white shadow-md'
-                                                            : 'border-gray-200 bg-white text-gray-600 hover:border-[#3d5c3a] hover:text-[#3d5c3a]'
-                                                            }`}
-                                                        aria-label={`Page ${page}`}
-                                                        aria-current={currentPage === page ? 'page' : undefined}
-                                                    >
-                                                        {page}
-                                                    </button>
-                                                )
-                                            )}
-
-                                            {/* Next */}
-                                            <button
-                                                onClick={() => handlePageChange(currentPage + 1)}
-                                                disabled={currentPage === totalPages}
-                                                className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 transition-all hover:border-[#3d5c3a] hover:text-[#3d5c3a] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer shadow-sm"
-                                                aria-label="Next page"
-                                            >
-                                                <ChevronRight className="h-4 w-4" />
-                                            </button>
+                                {/* ── Infinite Scroll Sentinel + Loading State ── */}
+                                <div ref={sentinelRef} className="mt-10 flex flex-col items-center gap-3 pb-6">
+                                    {loadingMore && (
+                                        <div className="flex flex-col items-center gap-2">
+                                            <Loader2 className="h-6 w-6 animate-spin text-[#3d5c3a]" />
+                                            <p className="text-xs text-gray-400 font-medium">Loading more products…</p>
                                         </div>
-
-                                        {/* Page info */}
-                                        <p className="text-xs text-gray-400">
-                                            Page {currentPage} of {totalPages}
-                                        </p>
-                                    </div>
-                                )}
+                                    )}
+                                    {!hasMore && !loadingMore && (
+                                        <div className="flex flex-col items-center gap-1.5">
+                                            <div className="flex items-center gap-3 w-full max-w-xs">
+                                                <div className="flex-1 h-px bg-gray-100" />
+                                                <span className="text-[11px] font-semibold text-gray-300 uppercase tracking-widest whitespace-nowrap">All caught up</span>
+                                                <div className="flex-1 h-px bg-gray-100" />
+                                            </div>
+                                            <p className="text-xs text-gray-400">
+                                                Showing all <span className="font-bold text-gray-600">{loadedCount}</span> products
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
                             </>
                         ) : (
                             <div className="rounded-2xl border border-gray-100 bg-white py-20 text-center shadow-sm">

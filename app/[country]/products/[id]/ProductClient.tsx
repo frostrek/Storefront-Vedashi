@@ -13,7 +13,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useWishlist } from '@/context/WishlistContext';
 import ProductCard from '@/components/ProductCard';
 import { SkeletonLine, SkeletonReviewSection, SkeletonProductRow } from '@/components/Skeleton';
-import { Heart, ShoppingCart, Minus, Plus, Star, Truck, RotateCcw, ChevronRight, AlertTriangle, Sparkles, Info, Package, Award, BadgeCheck, Clock, Globe, Trash2 } from 'lucide-react';
+import { Heart, ShoppingCart, Minus, Plus, Star, Truck, RotateCcw, ChevronRight, AlertTriangle, Sparkles, Info, Package, Award, BadgeCheck, Clock, Globe, Trash2, Share2 } from 'lucide-react';
 import ProductImageGallery from '@/components/gallery/ProductImageGallery';
 import LazySection from '@/components/lazy/LazySection';
 import toast from 'react-hot-toast';
@@ -144,6 +144,23 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
         }
     };
 
+    const handleShare = () => {
+        const shareData = {
+            title: product?.product_name || 'Vedashi Wellness',
+            text: `Check out ${product?.product_name} on Vedashi — Premium Ayurvedic Wellness.`,
+            url: window.location.href,
+        };
+
+        if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+            navigator.share(shareData).catch((err) => {
+                console.log('Share failed:', err);
+            });
+        } else {
+            navigator.clipboard.writeText(window.location.href);
+            toast.success('Link copied to clipboard!');
+        }
+    };
+
     // Only fetch product details and variants (above-fold data)
     // Related products and reviews are deferred to their lazy sections
     useEffect(() => {
@@ -171,7 +188,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                 const vs = data.variants.map((v: any) => {
                     let opts: any = {};
                     if (typeof v.options === 'string') {
-                        try { opts = JSON.parse(v.options); } catch (e) {}
+                        try { opts = JSON.parse(v.options); } catch (e) { }
                     } else if (typeof v.options === 'object' && v.options !== null) {
                         opts = v.options;
                     }
@@ -418,9 +435,18 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                         {/* Vedashi Badges */}
 
 
-                        <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 italic tracking-tight leading-[1.1]">
-                            {selectedVariant?.variant_name ?? variants?.[0]?.variant_name ?? product.product_name}
-                        </h1>
+                        <div className="flex justify-between items-start gap-4">
+                            <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 italic tracking-tight leading-[1.1] flex-1">
+                                {selectedVariant?.variant_name ?? variants?.[0]?.variant_name ?? product.product_name}
+                            </h1>
+                            <button
+                                onClick={handleShare}
+                                className="p-3 rounded-full bg-white border border-gray-200 text-gray-600 hover:text-[#3d5c3a] hover:border-[#3d5c3a] hover:shadow-md transition-all group mt-1"
+                                title="Share product"
+                            >
+                                <Share2 size={20} className="group-hover:scale-110 transition-transform" />
+                            </button>
+                        </div>
 
                         {(product.review_count && Number(product.review_count) > 0) ? (
                             <div className="flex items-center gap-2 mt-2">
@@ -887,7 +913,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                             ) : existingCartItem ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div className="flex items-center justify-between border border-[#3d5c3a] shadow-[0px_0px_0px_2px_rgba(61,92,58,0.1)] rounded-xl py-1 px-2 bg-white h-[56px] animate-in fade-in">
-                                        <button 
+                                        <button
                                             onClick={async () => {
                                                 const newQty = existingCartQty - 1;
                                                 if (newQty <= 0) {
@@ -906,7 +932,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                             <span className="text-base font-black text-[#3d5c3a] leading-none mb-0.5">{existingCartQty}</span>
                                             <span className="text-[9px] font-bold uppercase tracking-widest text-warm-gray leading-none">In Cart</span>
                                         </div>
-                                        <button 
+                                        <button
                                             onClick={async () => {
                                                 const maxStock = stockQty ?? 99;
                                                 if (existingCartQty >= maxStock) {
@@ -921,7 +947,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                             <Plus size={18} />
                                         </button>
                                     </div>
-                                    <button 
+                                    <button
                                         onClick={() => router.push(`/${country || 'in'}/cart`)}
                                         className="w-full bg-[#f8f5f0] border border-[#e8e1d5] hover:bg-white hover:border-[#3d5c3a] hover:text-[#3d5c3a] text-[#36453A] font-bold rounded-xl h-[56px] transition-colors flex items-center justify-center gap-2 group shadow-sm"
                                     >
@@ -1018,68 +1044,6 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                         </div>
                     </div>
                 </div>
-
-                {/* ═══ BELOW THE FOLD — lazy loaded ═══ */}
-
-                {/* NEW: ANCIENT ROOTS SECTION */}
-                <LazySection
-                    minHeight="500px"
-                    rootMargin="200px"
-                    skeleton={<div className="h-[500px] w-full rounded-2xl bg-gray-100 animate-pulse mt-6" />}
-                >
-                    <section className="mt-6 bg-[#3d5c3a] rounded-3xl overflow-hidden text-[#FAF7F2]">
-                        <div className="grid lg:grid-cols-2">
-                            {/* Left Content */}
-                            <div className="p-8 lg:p-16 flex flex-col justify-center">
-                                <span className="inline-block px-3 py-1 rounded-full bg-white/10 text-xs font-bold tracking-wider mb-8 w-max">
-                                    Clinical Transparency
-                                </span>
-                                <h2 className="text-4xl lg:text-5xl font-bold mb-6">
-                                    Ancient Roots.<br />Proven Science.
-                                </h2>
-                                <p className="text-white/80 text-[15px] leading-relaxed mb-8 max-w-md">
-                                    We utilize chromatographic fingerprinting to ensure every drop of our Rejuvenating Elixir contains the precise concentration of bioactive alkaloids described in the Charaka Samhita.
-                                </p>
-
-                                <ul className="space-y-4 mb-10">
-                                    <li className="flex items-center gap-3">
-                                        <div className="h-5 w-5 rounded-full border border-white/30 flex items-center justify-center flex-shrink-0">
-                                            <CheckCircle2 strokeWidth={3} className="h-3 w-3 text-white" />
-                                        </div>
-                                        <span className="text-sm font-semibold tracking-wide">Heavy Metal Tested & Free</span>
-                                    </li>
-                                    <li className="flex items-center gap-3">
-                                        <div className="h-5 w-5 rounded-full border border-white/30 flex items-center justify-center flex-shrink-0">
-                                            <CheckCircle2 strokeWidth={3} className="h-3 w-3 text-white" />
-                                        </div>
-                                        <span className="text-sm font-semibold tracking-wide">Standardized 5% WithanolIDES</span>
-                                    </li>
-                                    <li className="flex items-center gap-3">
-                                        <div className="h-5 w-5 rounded-full border border-white/30 flex items-center justify-center flex-shrink-0">
-                                            <CheckCircle2 strokeWidth={3} className="h-3 w-3 text-white" />
-                                        </div>
-                                        <span className="text-sm font-semibold tracking-wide">Ethically Wild-Harvested Ingredients</span>
-                                    </li>
-                                </ul>
-                            </div>
-
-                            {/* Right Grid Collage */}
-                            <div className="p-8 lg:p-12 lg:pl-0 grid grid-cols-2 gap-4 h-[500px] lg:h-auto">
-                                <div className="space-y-4 h-full flex flex-col">
-                                    <div className="bg-black/20 rounded-2xl h-[55%] bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1611078519632-132d7515dbbf?q=80&w=800&auto=format&fit=crop')" }} />
-                                    <div className="bg-black/20 rounded-2xl h-[45%] bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1532094349884-543bc11b234d?q=80&w=800&auto=format&fit=crop')" }} />
-                                </div>
-                                <div className="space-y-4 flex flex-col pt-12">
-                                    <div className="bg-black/20 rounded-2xl h-[45%] bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1563241527-310ca0fa8f12?q=80&w=800&auto=format&fit=crop')" }} />
-                                    <div className="bg-[#8b997c] rounded-2xl h-[40%] flex flex-col justify-center p-6 text-[#1a2e18]">
-                                        <div className="text-5xl font-bold mb-2">24+</div>
-                                        <div className="text-xs font-bold uppercase tracking-wider leading-relaxed">CLINICAL TRIALS<br />COMPLETED IN 2022</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                </LazySection>
 
                 {/* ════ TABBED PRODUCT DESCRIPTION — Nykaa-style ════ */}
                 {(product.description || product.intended_use || product.specifications) && (

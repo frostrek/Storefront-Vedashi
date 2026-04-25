@@ -19,7 +19,7 @@ import {
   Zap,
   Plus
 } from 'lucide-react';
-import HeroCarousel from '@/components/HeroCarousel';
+import HeroCarousel, { HeroSlide, HeroSettings } from '@/components/HeroCarousel';
 import { Product } from '@/types';
 import { getBestSellers, getNewArrivals, getCategories } from '@/lib/api';
 import ProductCard from '@/components/ProductCard';
@@ -33,17 +33,35 @@ import { useRouter, useParams } from 'next/navigation';
 import NeedHelpSection from '@/components/NeedHelpSection';
 import BrandReel from '@/components/BrandReel';
 
-export default function HomeClientPage() {
+export interface HomeClientProps {
+  initialBestSellers?: Product[];
+  initialNewArrivals?: Product[];
+  initialCategories?: any[];
+  initialHeroSlides?: HeroSlide[];
+  initialHeroSettings?: HeroSettings;
+}
+
+export default function HomeClientPage({
+  initialBestSellers = [],
+  initialNewArrivals = [],
+  initialCategories = [],
+  initialHeroSlides = [],
+  initialHeroSettings = undefined,
+}: HomeClientProps) {
   const router = useRouter();
   const params = useParams();
   const country = params?.country as string || 'in';
 
-  const [bestSellers, setBestSellers] = useState<Product[]>([]);
-  const [newArrivals, setNewArrivals] = useState<Product[]>([]);
-  const [allCategories, setAllCategories] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [bestSellers, setBestSellers] = useState<Product[]>(initialBestSellers);
+  const [newArrivals, setNewArrivals] = useState<Product[]>(initialNewArrivals);
+  const [allCategories, setAllCategories] = useState<any[]>(initialCategories);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    // If we didn't get initial data, fetch it
+    if (bestSellers.length > 0) return;
+
+    setLoading(true);
     async function loadData() {
       try {
         const [bestRes, newRes, catRes] = await Promise.all([
@@ -131,8 +149,8 @@ export default function HomeClientPage() {
   return (
     <div className="bg-white min-h-screen relative overflow-hidden">
       {/* 1. BANNER REEL */}
-      <div className="relative z-10 max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-        <HeroCarousel />
+      <div className="relative z-10 max-w-[1600px] mx-auto px-0 sm:px-6 lg:px-8 pt-0 sm:pt-8">
+        <HeroCarousel initialSlides={initialHeroSlides} initialSettings={initialHeroSettings} />
       </div>
 
       <div className="relative z-10 pt-0 pb-0">
@@ -140,7 +158,7 @@ export default function HomeClientPage() {
         {/* 2 & 3 COMBINED TO REMOVE GAP */}
         <div className="flex flex-col">
           {/* 2. SHOP BY CATEGORY - FULL WIDTH GRID */}
-          <section className="relative pt-8 pb-0 overflow-hidden bg-white">
+          <section className="relative pt-4 sm:pt-8 pb-0 overflow-hidden bg-white">
             <div
               className="absolute inset-0 opacity-[0.07] pointer-events-none"
             // style={{
@@ -156,7 +174,7 @@ export default function HomeClientPage() {
                 <div className="absolute right-6 top-3 hidden lg:block">
                   <Link
                     href={`/${country}/products`}
-                    className="group flex items-center gap-2 text-[15px] font-bold text-[#FF0000] hover:text-[#CC0000] transition-all"
+                    className="group flex items-center gap-2 text-[13px] font-medium text-[#FF0000] hover:text-[#CC0000] transition-all underline decoration-[#FF0000]/30 underline-offset-2 hover:decoration-[#FF0000]"
                   >
                     Explore all products
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -170,10 +188,10 @@ export default function HomeClientPage() {
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <h2 className="text-4xl font-bold text-gray-900 tracking-tight mb-4">
+                    <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 tracking-tight mb-4">
                       Categories
                     </h2>
-                    <p className="text-gray-500 font-medium italic mb-4 max-w-xl mx-auto">
+                    <p className="hidden sm:block text-gray-500 font-medium italic mb-4 max-w-xl mx-auto">
                       Explore our curated collections of traditional wisdom for modern living
                     </p>
                   </motion.div>
@@ -187,7 +205,7 @@ export default function HomeClientPage() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.4, ease: "easeOut" }}
-                    className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 lg:gap-5"
+                    className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 sm:gap-4 lg:gap-5"
                   >
                     {allCategories.slice(0, 8).map((cat: any, i: number) => {
                       return (
@@ -198,7 +216,7 @@ export default function HomeClientPage() {
                           }}
                           className="group flex flex-col items-center gap-3 transition-all duration-500 hover:-translate-y-2 cursor-pointer"
                         >
-                          <div className={`relative w-full aspect-[4/3] rounded-2xl ${categoryColors[cat.slug] || 'bg-[#F2F4F2]'} flex items-center justify-center shadow-sm group-hover:shadow-[0_20px_50px_rgba(59,93,59,0.12)] group-hover:bg-[#E2F0E2] transition-all duration-700 overflow-hidden isolate`}>
+                          <div className={`relative w-[85%] sm:w-full mx-auto aspect-[4/3] rounded-xl sm:rounded-2xl ${categoryColors[cat.slug] || 'bg-[#F2F4F2]'} flex items-center justify-center shadow-sm group-hover:shadow-[0_20px_50px_rgba(59,93,59,0.12)] group-hover:bg-[#E2F0E2] transition-all duration-700 overflow-hidden isolate`}>
                             <img
                               src={cat.image_url || categoryImages[cat.slug?.toLowerCase() || ''] || `/icons/shop/${cat.slug}.png`}
                               alt={cat.name}
@@ -209,11 +227,11 @@ export default function HomeClientPage() {
                             />
 
                             {/* Hover Pulse Effect */}
-                            <div className="absolute inset-0 rounded-2xl border border-[#3B5D3B]/20 scale-100 opacity-0 group-hover:scale-105 group-hover:opacity-100 transition-all duration-700 pointer-events-none" />
+                            <div className="absolute inset-0 rounded-xl sm:rounded-2xl border border-[#3B5D3B]/20 scale-100 opacity-0 group-hover:scale-105 group-hover:opacity-100 transition-all duration-700 pointer-events-none" />
                           </div>
 
-                          <div className="text-center">
-                            <span className="text-base font-bold text-gray-800 group-hover:text-[#3B5D3B] transition-colors leading-tight block">
+                          <div className="text-center px-1">
+                            <span className="text-[12px] sm:text-base font-bold text-gray-800 group-hover:text-[#3B5D3B] transition-colors leading-tight block line-clamp-2 min-h-[1.5em]">
                               {cat.name}
                             </span>
                           </div>
@@ -223,10 +241,20 @@ export default function HomeClientPage() {
                   </motion.div>
                 </AnimatePresence>
               </div>
+
+              {/* Mobile View All - Shop all products */}
+              <div className="sm:hidden flex justify-end mt-4">
+                <Link
+                  href={`/${country}/products`}
+                  className="text-[10px] font-medium text-[#FF0000] hover:text-[#CC0000] transition-colors underline decoration-[#FF0000]/30 underline-offset-2"
+                >
+                  Explore all products
+                </Link>
+              </div>
             </div>
           </section>
 
-          <section className="relative pt-0 pb-0 overflow-hidden bg-white">
+          <section className="relative pt-0 pb-0 overflow-hidden bg-white content-lazy">
             <div className="max-w-[1500px] mx-auto relative z-10">
               <BestSellerShowcase
                 products={bestSellers}
@@ -234,7 +262,7 @@ export default function HomeClientPage() {
                 title="Best Sellers"
                 subtitle="Our most-loved natural wellness essentials, chosen by you."
                 viewAllLink={`/${country}/products?bestSeller=true`}
-                viewAllText="Explore our Best Sellers"
+                viewAllText="Shop all Best Sellers"
               />
             </div>
           </section>
@@ -243,17 +271,17 @@ export default function HomeClientPage() {
         </div>
 
         {/* 3.5 BRAND REEL */}
-        <div className="w-full">
+        <div className="w-full content-lazy">
           <BrandReel />
         </div>
 
         {/* 3.6 NEED HELP CHOOSING */}
-        <div className="w-full">
+        <div className="w-full content-lazy">
           <NeedHelpSection />
         </div>
 
         {/* 5. NEW ARRIVALS - CLEAN & RADIANT */}
-        <section className="relative py-0 overflow-hidden bg-white">
+        <section className="relative py-0 overflow-hidden bg-white content-lazy">
 
 
           <div className="max-w-[1500px] mx-auto relative z-10">
