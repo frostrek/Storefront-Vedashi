@@ -87,6 +87,18 @@ export default function SearchAutocomplete({
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+ 
+    // ── Scroll lock when open (mobile) ────────────────────────
+    useEffect(() => {
+        if (isOpen && window.innerWidth < 768) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [isOpen]);
 
     // ── Static Storefront Pages ──
     const storePages = [
@@ -225,9 +237,10 @@ export default function SearchAutocomplete({
             {/* ─── Dropdown Panel ─── */}
             {isOpen && query.trim().length >= 2 && (
                 <div className="
-          absolute top-full left-0 right-0 mt-1.5 z-[300]
-          bg-white rounded-xl shadow-2xl border border-gray-100
-          max-h-[420px] overflow-y-auto
+          fixed md:absolute top-[56px] md:top-full left-1/2 -translate-x-1/2 md:left-0 md:translate-x-0 
+          w-[96vw] md:w-full z-[300]
+          bg-white rounded-b-2xl shadow-[0_25px_70px_rgba(0,0,0,0.2)] border border-gray-100
+          max-h-[55vh] md:max-h-[420px] overflow-y-auto
           animate-in fade-in slide-in-from-top-1 duration-200
         ">
                     {/* Pages Section */}
@@ -276,13 +289,13 @@ export default function SearchAutocomplete({
                                         onClick={() => goToProduct(item.product_id)}
                                         onMouseEnter={() => setActiveIndex(globalIndex)}
                                         className={`
-                      w-full flex items-center gap-3 px-4 py-3 text-left
+                      w-full flex items-center gap-3 px-3 py-2 sm:px-4 sm:py-3 text-left
                       transition-colors duration-100 border-b border-gray-50 last:border-b-0
                       ${activeIndex === globalIndex ? 'bg-[#fdf6ee]' : 'hover:bg-gray-50'}
                     `}
                                     >
                                         {/* Thumbnail */}
-                                        <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gray-100 overflow-hidden">
+                                        <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gray-100 overflow-hidden">
                                             {item.thumbnail_url ? (
                                                 <img
                                                     src={item.thumbnail_url}
@@ -298,18 +311,18 @@ export default function SearchAutocomplete({
                                         </div>
 
                                         {/* Text */}
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium text-gray-900 truncate">
+                                        <div className="flex-1 min-w-0 py-0.5">
+                                            <p className="text-[13px] sm:text-sm font-bold text-gray-900 leading-tight mb-0.5">
                                                 {item.product_name}
                                             </p>
-                                            <p className="text-xs text-gray-500 truncate">
+                                            <p className="text-[10px] sm:text-xs text-gray-500 truncate uppercase tracking-wider font-medium">
                                                 {[item.brand, item.category].filter(Boolean).join(' · ')}
                                             </p>
                                         </div>
-
+ 
                                         {/* Price */}
                                         {item.price != null && (
-                                            <span className="flex-shrink-0 text-sm font-semibold text-[#4b0f1a]">
+                                            <span className="flex-shrink-0 text-[13px] sm:text-sm font-black text-[#4b0f1a] bg-gray-50 px-1.5 py-0.5 rounded-md">
                                                 {formatPrice(item.price)}
                                             </span>
                                         )}
