@@ -70,7 +70,7 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
 
     return (
         <div className="relative group/reel py-8">
-            <div className="flex flex-row items-center justify-center sm:justify-between mb-8 px-4 sm:px-6 lg:px-8 relative">
+            <div className="flex flex-row items-center justify-center sm:justify-between mb-2 sm:mb-8 px-4 sm:px-6 lg:px-8 relative">
                 <div className="text-center sm:text-left">
                     {title && <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2">{title}</h2>}
                     {subtitle && <p className="hidden sm:block text-gray-500 font-medium italic">{subtitle}</p>}
@@ -114,7 +114,7 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
                 {/* The Reel Container */}
                 <div
                     ref={scrollRef}
-                    className="flex overflow-x-auto hide-scrollbar gap-6 pb-0 sm:pb-8 snap-x snap-mandatory"
+                    className="flex overflow-x-auto no-scrollbar gap-6 pb-2 sm:pb-8 snap-x snap-mandatory overflow-y-hidden"
                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                     {loading ? (

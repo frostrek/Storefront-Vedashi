@@ -61,7 +61,7 @@ export default function BestSellerShowcase({
   return (
     <div className="relative pt-6 sm:pt-8 pb-0">
       {/* Section Header */}
-      <div className="mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8 mb-4">
+      <div className="mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8 mb-2 sm:mb-4">
         <div className="flex flex-col sm:flex-row items-center sm:items-end justify-center sm:justify-between text-center sm:text-left gap-1">
           <div>
             {title && <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-1">{title}</h2>}
@@ -80,11 +80,17 @@ export default function BestSellerShowcase({
       </div>
 
       {/* Main Layout: Ad Banner | Product Grid */}
-      <div className="flex flex-col lg:flex-row items-stretch gap-5 lg:gap-2 px-0 sm:px-6 lg:px-8 pb-2">
+      <div className="flex flex-col lg:flex-row items-stretch gap-2 lg:gap-2 px-0 sm:px-6 lg:px-8 pb-2">
 
         {/* LEFT/TOP: Rotating Ad Banner */}
         <div className="flex flex-col flex-shrink-0 w-full px-4 sm:px-0 lg:px-0 lg:w-[350px] xl:w-[450px]">
           <div className="relative aspect-[4/5] sm:aspect-[16/9] lg:aspect-auto lg:h-full w-[85%] sm:w-full mx-auto overflow-hidden cursor-pointer rounded-2xl shadow-md border border-gray-100/50">
+            {/* Preload all banner images immediately so carousel rotations are instant */}
+            <div className="hidden" aria-hidden="true">
+              {adBanners.map((banner, i) => (
+                <img key={i} src={banner.src} alt="" loading="eager" fetchPriority="high" />
+              ))}
+            </div>
             <AnimatePresence initial={false} custom={direction}>
               <motion.div
                 key={adIndex}
@@ -120,6 +126,8 @@ export default function BestSellerShowcase({
                   src={adBanners[adIndex].src}
                   alt="Promotional Banner"
                   className="w-full h-full object-cover"
+                  loading="eager"
+                  fetchPriority="high"
                 />
               </motion.div>
             </AnimatePresence>
@@ -151,7 +159,7 @@ export default function BestSellerShowcase({
               ))}
             </div>
           ) : (
-            <div className="flex overflow-x-auto hide-scrollbar snap-x snap-mandatory md:grid md:grid-cols-3 lg:grid-cols-4 gap-3 lg:gap-2 px-4 sm:px-0 pb-0 md:pb-0" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <div className="flex overflow-x-auto no-scrollbar snap-x snap-mandatory md:grid md:grid-cols-3 lg:grid-cols-4 gap-3 lg:gap-2 px-4 sm:px-0 pb-2 md:pb-0 overflow-y-hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               {displayProducts.map((product, i) => (
                 <motion.div
                   key={product.product_id}
