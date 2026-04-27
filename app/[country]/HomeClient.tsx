@@ -148,6 +148,7 @@ export default function HomeClientPage({
 
   return (
     <div className="bg-white min-h-screen relative overflow-hidden">
+      <h1 className="sr-only">Vedashi — Premium Wellness & Natural Products</h1>
       {/* 1. BANNER REEL */}
       <div className="relative z-10 max-w-[1600px] mx-auto px-0 sm:px-6 lg:px-8 pt-0 sm:pt-8">
         <HeroCarousel initialSlides={initialHeroSlides} initialSettings={initialHeroSettings} />

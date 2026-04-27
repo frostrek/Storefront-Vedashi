@@ -791,7 +791,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                 )}
                                                 <Image
                                                     src={imageSrc}
-                                                    alt={label}
+                                                    alt={`${product.product_name} ${label} - Premium ${product.category || 'Wellness'} by ${product.brand || 'Vedashi'}`}
                                                     width={40}
                                                     height={40}
                                                     className="object-contain w-full h-full"
@@ -890,7 +890,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             {isBase64 ? (
                                 <img
                                     src={imageSrc}
-                                    alt={product.product_name}
+                                    alt={`${product.product_name} - Premium ${product.category || 'Wellness Product'} by ${product.brand || 'Vedashi'}`}
                                     className="object-contain w-full h-full transition-transform duration-500 group-hover:scale-105"
                                     loading={priority ? 'eager' : 'lazy'}
                                     decoding="async"
@@ -898,7 +898,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             ) : isExternal ? (
                                 <Image
                                     src={imageSrc}
-                                    alt={product.product_name}
+                                    alt={`${product.product_name} - Premium ${product.category || 'Wellness Product'} by ${product.brand || 'Vedashi'}`}
                                     fill
                                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
                                     className="object-contain transition-transform duration-500 group-hover:scale-105"
@@ -910,7 +910,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             ) : (
                                 <Image
                                     src={imageSrc}
-                                    alt={product.product_name}
+                                    alt={`${product.product_name} - Premium ${product.category || 'Wellness Product'} by ${product.brand || 'Vedashi'}`}
                                     width={400}
                                     height={400}
                                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
