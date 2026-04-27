@@ -42,7 +42,12 @@ export const metadata: Metadata = {
   },
   description:
     "Experience the healing power of authentic Ayurvedic remedies crafted from nature. Discover clinically tested herbal formulations for holistic wellness.",
-  keywords: ["ayurveda", "ayurvedic wellness", "herbal remedies", "Vedashi", "natural healing", "dosha", "panchakarma"],
+  keywords: [
+    "ayurveda", "ayurvedic wellness", "herbal remedies", "Vedashi", "natural healing", 
+    "dosha", "panchakarma", "ayurvedic skincare", "natural hair care", 
+    "herbal supplements", "organic wellness products", "traditional indian medicine", 
+    "ayurvedic beauty", "holistic health", "ayurvedic oils", "natural immunity boosters"
+  ],
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },

@@ -25,7 +25,8 @@ export async function generateMetadata({ params }: { params: Promise<{ country: 
         };
     }
 
-    const title = `${product.product_name} | Vedashi`;
+    const categoryTitle = product.category ? `${product.category} | ` : '';
+    const title = `${product.product_name} | Buy Authentic Ayurvedic ${categoryTitle}Vedashi`;
     const description = product.short_description || `Buy ${product.product_name} directly from India. Authentic Ayurvedic wellness and natural remedies.`;
     const productUrl = `${SITE_URL}/${country}/products/${product.slug || product.product_id}`;
 

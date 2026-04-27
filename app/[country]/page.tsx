@@ -15,8 +15,8 @@ export async function generateMetadata({ params }: { params: Promise<{ country: 
     languages['x-default'] = `${SITE_URL}/in`;
 
     return {
-        title: { absolute: "Vedashi — Premium Ayurvedic Wellness & Natural Products" },
-        description: "Experience the healing power of authentic Ayurvedic remedies crafted from nature. Discover clinically tested herbal formulations for holistic wellness.",
+        title: { absolute: "Vedashi — Authentic Ayurvedic Wellness & Natural Herbal Products" },
+        description: "Explore Vedashi's premium collection of authentic Ayurvedic remedies, natural skincare, and herbal wellness products. Clinically tested formulations for holistic health and radiant living.",
         alternates: {
             canonical: `${SITE_URL}/${country}`,
             languages: languages

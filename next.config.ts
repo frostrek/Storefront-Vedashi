@@ -64,6 +64,11 @@ const nextConfig: NextConfig = {
         destination: 'https://vedashi.com/:path*',
         permanent: true,
       },
+      {
+        source: '/:country/categories/:slug',
+        destination: '/:country/products?category=:slug',
+        permanent: true,
+      },
     ];
   },
   webpack: (config, { dev, isServer }) => {

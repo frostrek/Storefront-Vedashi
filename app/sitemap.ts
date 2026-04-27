@@ -17,8 +17,12 @@ async function fetchSitemapData() {
             products: pRes.ok ? await pRes.json() : [],
             categories: cRes.ok ? await cRes.json() : []
         };
-    } catch (e) {
-        console.error('[Sitemap] Fetch error:', e);
+    } catch (e: any) {
+        if (e.code === 'ECONNREFUSED' || e.message?.includes('fetch failed')) {
+            console.warn('[Sitemap] Fetch failed: API is unreachable. Sitemap will be empty.');
+        } else {
+            console.error('[Sitemap] Fetch error:', e);
+        }
         return { products: [], categories: [] };
     }
 }
