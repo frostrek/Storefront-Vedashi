@@ -185,20 +185,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 2. URL already has a valid country prefix → pass through, sync cookies
+  // 2. URL already has a valid country prefix
   const existingCountry = pathHasCountryPrefix(pathname);
   if (existingCountry) {
-    // ─── Legacy /shop redirect: shop content now lives at root ───
-    const restOfPath = pathname.slice(existingCountry.length + 1); // e.g., "/in/shop" → "/shop"
-    if (restOfPath === '/shop' || restOfPath === '/shop/') {
-      const url = request.nextUrl.clone();
-      url.pathname = `/${existingCountry}`;
-      return NextResponse.redirect(url, 301);
-    }
-
     const response = NextResponse.next();
     const currency = getCurrency(existingCountry);
 
+    // Sync cookies to URL prefix
     if (request.cookies.get('geo_country')?.value !== existingCountry) {
       response.cookies.set('geo_country', existingCountry, GEO_COOKIE_OPTIONS);
     }
@@ -206,24 +199,25 @@ export async function proxy(request: NextRequest) {
       response.cookies.set('geo_currency', currency, GEO_COOKIE_OPTIONS);
     }
 
-    // Language suggestion (non-intrusive)
     applyLanguageCookies(request, response, existingCountry);
-
     return response;
   }
 
   // 3. Resolve country — tiered strategy
   let country: SupportedCountry | null = null;
 
-  // Tier 1: Cookie (fastest — zero I/O)
-  country = normalizeCountry(request.cookies.get('geo_country')?.value);
+  // Tier 1: User Manual Preference (Lock)
+  const isManual = request.cookies.get('geo_manual')?.value === 'true';
+  if (isManual) {
+    country = normalizeCountry(request.cookies.get('geo_country')?.value);
+  }
 
-  // Tier 2: Platform headers (Vercel / Cloudflare — zero I/O)
+  // Tier 2: Platform headers (Vercel / Cloudflare)
   if (!country) {
     country = detectCountryFromHeaders(request);
   }
 
-  // Tier 3: IPinfo.io fallback (async, max 800ms)
+  // Tier 3: IPinfo.io fallback
   if (!country) {
     const clientIp = extractClientIp(request);
     if (clientIp) {
@@ -231,7 +225,12 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Tier 4: Default fallback
+  // Tier 4: Previous Auto-detected Cookie
+  if (!country) {
+    country = normalizeCountry(request.cookies.get('geo_country')?.value);
+  }
+
+  // Tier 5: Default fallback
   if (!country) {
     country = DEFAULT_COUNTRY;
   }
@@ -239,8 +238,6 @@ export async function proxy(request: NextRequest) {
   // 4. Build redirect to /{country}{pathname}
   const currency = getCurrency(country);
   
-  // Ensure we don't create a double-redirect by adding a trailing slash 
-  // that Next.js will just remove anyway.
   let targetPath = `/${country}${pathname}`;
   if (targetPath.endsWith('/') && targetPath.length > 3) {
     targetPath = targetPath.slice(0, -1);
@@ -255,7 +252,6 @@ export async function proxy(request: NextRequest) {
   response.cookies.set('geo_country', country, GEO_COOKIE_OPTIONS);
   response.cookies.set('geo_currency', currency, GEO_COOKIE_OPTIONS);
 
-  // 6. Language suggestion (non-intrusive — never auto-redirects)
   applyLanguageCookies(request, response, country);
 
   return response;

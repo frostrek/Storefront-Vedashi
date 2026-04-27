@@ -10,6 +10,7 @@ import { getCart, clearCart as clearCartApi, checkoutOrder, getAddresses, update
 import { useCurrency } from '@/context/CurrencyContext';
 import { Address } from '@/types';
 import { COUNTRIES } from '@/lib/countries';
+import { COUNTRY_CODES } from '@/lib/country-codes';
 import { getAddressConfig, getDefaultCountry } from '@/lib/addressConfig';
 import Select from 'react-select';
 import { CheckCircle, Loader2, MapPin, CreditCard, Banknote, ShieldCheck, AlertTriangle, ArrowLeft, Leaf, ChevronRight, Lock, Ticket, Globe, Info, Pencil, Trash } from 'lucide-react';
@@ -95,7 +96,9 @@ function StepIndicator({
 }
 
 function CheckoutContent() {
-    const { formatPrice } = useCurrency();
+    const { formatPrice, countryConfig, currencyConfigs } = useCurrency();
+    const currentConfig = currencyConfigs.find(c => c.country_code === countryConfig.code.toUpperCase());
+    const exchangeRate = currentConfig?.exchange_rate || 1;
     const router = useRouter();
     const searchParams = useSearchParams();
     const isBuyNow = searchParams.get('buyNow') === 'true';
@@ -120,6 +123,19 @@ function CheckoutContent() {
     // Extra form fields for dummy display
     const [contactEmail, setContactEmail] = useState(user?.email || '');
     const [contactPhone, setContactPhone] = useState(user?.phone || '');
+
+    // Country code selector for contact phone
+    const defaultDialCode = (() => {
+        const match = COUNTRY_CODES.find(c => c.code === getDefaultCountry());
+        return match ? match.dial_code : '+1';
+    })();
+    const [contactPhoneDialCode, setContactPhoneDialCode] = useState(defaultDialCode);
+
+    // Helper: combine dial code + local number for backend
+    const getFullContactPhone = () => {
+        const local = contactPhone.replace(/^\+\d+/, '').replace(/[^\d]/g, '').trim();
+        return local ? `${contactPhoneDialCode}${local}` : '';
+    };
     const [billingSameAsShipping, setBillingSameAsShipping] = useState(true);
 
     // Saved addresses
@@ -140,7 +156,7 @@ function CheckoutContent() {
 
     // New address form fields
     const defaultCountryCode = getDefaultCountry();
-    const defaultCountryName = COUNTRIES.find(c => c.code === defaultCountryCode)?.name || 'India';
+    const defaultCountryName = COUNTRIES.find(c => c.code === defaultCountryCode)?.name || '';
 
     const [newAddress, setNewAddress] = useState({
         address_line1: '', address_line2: '', city: '', state: '', pincode: '', phone: '', country: defaultCountryName, country_code: defaultCountryCode
@@ -199,6 +215,27 @@ function CheckoutContent() {
             },
             fontSize: '14px',
         }),
+        menuList: (provided: any) => ({
+            ...provided,
+            "::-webkit-scrollbar": {
+                width: "6px"
+            },
+            "::-webkit-scrollbar-track": {
+                background: "transparent",
+                border: "none"
+            },
+            "::-webkit-scrollbar-thumb": {
+                background: "#D4CFC0",
+                borderRadius: "3px",
+                border: "none"
+            },
+            "::-webkit-scrollbar-thumb:hover": {
+                background: "#6B8F5E"
+            },
+            "::-webkit-scrollbar-button": {
+                display: "none"
+            }
+        }),
     };
 
     // Buy Now
@@ -224,7 +261,15 @@ function CheckoutContent() {
         if (isBuyNow) {
             try {
                 const stored = sessionStorage.getItem('ksp_buy_now_item');
-                if (stored) setBuyNowItem(JSON.parse(stored));
+                if (stored) {
+                    try {
+                        setBuyNowItem(JSON.parse(stored));
+                    } catch (e) {
+                        console.error('Failed to parse buy now item:', e);
+                        sessionStorage.removeItem('ksp_buy_now_item');
+                        router.replace('/checkout');
+                    }
+                }
                 else router.replace('/checkout');
             } catch {
                 router.replace('/checkout');
@@ -255,6 +300,7 @@ function CheckoutContent() {
     
     // Assuming 1 point = 1 INR — enforce minimum payable of ₹1
     const grandTotal = Math.max(minPayable, prePointsTotal - pointsToRedeem);
+    const localTotal = Number((grandTotal * exchangeRate).toFixed(2));
 
     // Load addresses
     useEffect(() => {
@@ -276,7 +322,16 @@ function CheckoutContent() {
                                 // Intentionally omitted parsed.step to enforce starting at step 1
                                 if (parsed.paymentMethod) setPaymentMethod(parsed.paymentMethod);
                                 if (parsed.contactEmail) setContactEmail(parsed.contactEmail);
-                                if (parsed.contactPhone) setContactPhone(parsed.contactPhone);
+                                if (parsed.contactPhone) {
+                                    const pp = parsed.contactPhone;
+                                    const dialMatch = COUNTRY_CODES.find(c => pp.startsWith(c.dial_code));
+                                    if (dialMatch) {
+                                        setContactPhoneDialCode(dialMatch.dial_code);
+                                        setContactPhone(pp.substring(dialMatch.dial_code.length).trim());
+                                    } else {
+                                        setContactPhone(pp);
+                                    }
+                                }
                                 if (parsed.billingSameAsShipping !== undefined) setBillingSameAsShipping(parsed.billingSameAsShipping);
                                 if (parsed.selectedAddressId) setSelectedAddressId(parsed.selectedAddressId);
                                 if (parsed.useNewAddress !== undefined) setUseNewAddress(parsed.useNewAddress);
@@ -288,6 +343,7 @@ function CheckoutContent() {
                             }
                         } catch (e) {
                             console.error('Failed to restore checkout draft:', e);
+                            sessionStorage.removeItem(PERSIST_KEY);
                         }
                     } else setUseNewAddress(true);
                 })
@@ -299,7 +355,16 @@ function CheckoutContent() {
             }).catch(() => {});
             
             if (user.email) setContactEmail(user.email);
-            if (user.phone) setContactPhone(user.phone);
+            if (user.phone) {
+                const ph = user.phone;
+                const dialMatch = COUNTRY_CODES.sort((a, b) => b.dial_code.length - a.dial_code.length).find(c => ph.startsWith(c.dial_code));
+                if (dialMatch) {
+                    setContactPhoneDialCode(dialMatch.dial_code);
+                    setContactPhone(ph.substring(dialMatch.dial_code.length).trim());
+                } else {
+                    setContactPhone(ph);
+                }
+            }
         } else {
             setUseNewAddress(true);
         }
@@ -314,7 +379,16 @@ function CheckoutContent() {
                     // Intentionally omitted parsed.step to enforce starting at step 1
                     if (parsed.paymentMethod) setPaymentMethod(parsed.paymentMethod);
                     if (parsed.contactEmail) setContactEmail(parsed.contactEmail);
-                    if (parsed.contactPhone) setContactPhone(parsed.contactPhone);
+                    if (parsed.contactPhone) {
+                        const pp = parsed.contactPhone;
+                        const dialMatch = COUNTRY_CODES.find(c => pp.startsWith(c.dial_code));
+                        if (dialMatch) {
+                            setContactPhoneDialCode(dialMatch.dial_code);
+                            setContactPhone(pp.substring(dialMatch.dial_code.length).trim());
+                        } else {
+                            setContactPhone(pp);
+                        }
+                    }
                     if (parsed.billingSameAsShipping !== undefined) setBillingSameAsShipping(parsed.billingSameAsShipping);
                     if (parsed.selectedAddressId) setSelectedAddressId(parsed.selectedAddressId);
                     if (parsed.useNewAddress !== undefined) setUseNewAddress(parsed.useNewAddress);
@@ -347,7 +421,7 @@ function CheckoutContent() {
         }));
 
         trackCheckoutStep('begin_checkout', 1, {
-            currency: 'INR',
+            currency: countryConfig.currency,
             value: baseSubtotal,
             items: ga4Items,
             coupon: couponCode || undefined,
@@ -384,7 +458,7 @@ function CheckoutContent() {
                 // Not saving step to enforce step-based routing on page load
                 paymentMethod,
                 contactEmail,
-                contactPhone,
+                contactPhone: getFullContactPhone(),
                 billingSameAsShipping,
                 selectedAddressId,
                 useNewAddress,
@@ -544,7 +618,7 @@ function CheckoutContent() {
             state: address.state || '',
             pincode: address.pincode || '',
             phone: phoneToEdit,
-            country: address.country || 'India',
+            country: address.country || defaultCountryName,
             country_code: currentCountryCode,
         });
         setFormErrors({});
@@ -618,7 +692,7 @@ function CheckoutContent() {
                 prefill: {
                     name: user?.name || '',
                     email: user?.email || contactEmail,
-                    contact: contactPhone,
+                    contact: getFullContactPhone(),
                 },
                 theme: { color: '#6B8F5E', backdrop_color: 'rgba(0,0,0,0.6)' },
                 modal: {
@@ -652,8 +726,8 @@ function CheckoutContent() {
                                 quantity: item.quantity,
                             }));
                             trackPurchase({
-                                currency: 'INR',
-                                value: grandTotal,
+                                currency: countryConfig.currency,
+                                value: countryConfig.currency === 'INR' ? grandTotal : localTotal,
                                 transaction_id: platformOrderId || undefined,
                                 items: purchaseItems,
                                 coupon: couponCode || undefined,
@@ -752,8 +826,9 @@ function CheckoutContent() {
             const currentShippingCountryCode = ((useNewAddress ? newAddress.country_code : (savedAddresses.find(a => a.address_id === selectedAddressId) as any)?.country_code) || 'IN') as CountryCode;
 
             // Ensure numbers are properly normalized before sending to backend
-            const contactPhoneResult = validatePhoneNumber(contactPhone, currentShippingCountryCode);
-            const finalContactPhone = contactPhoneResult.isValid ? contactPhoneResult.normalized || contactPhone : contactPhone;
+            const fullContactPhone = getFullContactPhone();
+            const contactPhoneResult = validatePhoneNumber(fullContactPhone, currentShippingCountryCode);
+            const finalContactPhone = contactPhoneResult.isValid ? contactPhoneResult.normalized || fullContactPhone : fullContactPhone;
             
             let finalNewAddress = newAddress;
             if (useNewAddress || (billingSameAsShipping && useNewAddress) || (!billingSameAsShipping && useNewAddress)) {
@@ -799,7 +874,7 @@ function CheckoutContent() {
                         order_notes: orderNotes.trim() || undefined,
                         redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
                         final_total: grandTotal,
-                        currency: 'INR',
+                        currency: countryConfig.currency,
                         ga_client_id: getGAClientId() || undefined,
                         attribution: getAttribution() || undefined,
                     };
@@ -816,7 +891,7 @@ function CheckoutContent() {
                         order_notes: orderNotes.trim() || undefined,
                         redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
                         final_total: grandTotal,
-                        currency: 'INR',
+                        currency: countryConfig.currency,
                         ga_client_id: getGAClientId() || undefined,
                         attribution: getAttribution() || undefined,
                     };
@@ -833,7 +908,7 @@ function CheckoutContent() {
                         order_notes: orderNotes.trim() || undefined,
                         redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
                         final_total: grandTotal,
-                        currency: 'INR',
+                        currency: countryConfig.currency,
                         ga_client_id: getGAClientId() || undefined,
                         attribution: getAttribution() || undefined,
                     };
@@ -860,6 +935,7 @@ function CheckoutContent() {
                     redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
                     ga_client_id: getGAClientId() || undefined,
                     attribution: getAttribution() || undefined,
+                    currency: countryConfig.currency,
                 });
             } else if (isAuthenticated && cartId && user?.id) {
                 result = await checkoutOrder({
@@ -876,6 +952,7 @@ function CheckoutContent() {
                     redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
                     ga_client_id: getGAClientId() || undefined,
                     attribution: getAttribution() || undefined,
+                    currency: countryConfig.currency,
                 } as any);
             } else {
                 result = await directCheckout({
@@ -892,6 +969,7 @@ function CheckoutContent() {
                     redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
                     ga_client_id: getGAClientId() || undefined,
                     attribution: getAttribution() || undefined,
+                    currency: countryConfig.currency,
                 });
             }
 
@@ -907,8 +985,8 @@ function CheckoutContent() {
                     quantity: item.quantity,
                 }));
                 trackPurchase({
-                    currency: 'INR',
-                    value: grandTotal,
+                    currency: countryConfig.currency,
+                    value: countryConfig.currency === 'INR' ? grandTotal : localTotal,
                     transaction_id: createdOrderId || undefined,
                     items: purchaseItems,
                     coupon: couponCode || undefined,
@@ -982,8 +1060,9 @@ function CheckoutContent() {
 
         const currentShippingCountryCode = ((useNewAddress ? newAddress.country_code : (savedAddresses.find(a => a.address_id === selectedAddressId) as any)?.country_code) || 'IN') as CountryCode;
 
-        // Validate Contact Phone
-        const contactPhoneResult = validatePhoneNumber(contactPhone, currentShippingCountryCode);
+        // Validate Contact Phone (combine dial code + local number)
+        const fullContactPhone = getFullContactPhone();
+        const contactPhoneResult = validatePhoneNumber(fullContactPhone, currentShippingCountryCode);
         if (!contactPhoneResult.isValid) {
             setContactPhoneError(contactPhoneResult.error || 'Invalid mobile number');
             toast.error('Please fix contact phone validation error');
@@ -993,7 +1072,11 @@ function CheckoutContent() {
         
         // Normalize Contact Phone
         if (contactPhoneResult.normalized) {
-            setContactPhone(contactPhoneResult.normalized);
+            // Keep the local number for display, the full number is assembled on submit
+            const normalized = contactPhoneResult.normalized;
+            if (normalized.startsWith(contactPhoneDialCode)) {
+                setContactPhone(normalized.substring(contactPhoneDialCode.length).trim());
+            }
         }
         
         if (useNewAddress) {
@@ -1023,8 +1106,8 @@ function CheckoutContent() {
             quantity: item.quantity,
         }));
         trackCheckoutStep('add_shipping_info', 2, {
-            currency: 'INR',
-            value: grandTotal,
+            currency: countryConfig.currency,
+            value: countryConfig.currency === 'INR' ? grandTotal : localTotal,
             items: shippingItems,
             coupon: couponCode || undefined,
         });
@@ -1056,8 +1139,8 @@ function CheckoutContent() {
             quantity: item.quantity,
         }));
         trackCheckoutStep('add_payment_info', 3, {
-            currency: 'INR',
-            value: grandTotal,
+            currency: countryConfig.currency,
+            value: countryConfig.currency === 'INR' ? grandTotal : localTotal,
             items: paymentInfoItems,
             coupon: couponCode || undefined,
             payment_type: paymentMethod,
@@ -1176,31 +1259,72 @@ function CheckoutContent() {
                                         </div>
                                         <div>
                                             <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Mobile Phone *</label>
-                                            <input 
-                                                type="tel" 
-                                                value={contactPhone} 
-                                                onChange={e => {
-                                                    const currentShippingCountryCode = ((useNewAddress ? newAddress.country_code : (savedAddresses.find(a => a.address_id === selectedAddressId) as any)?.country_code) || 'IN') as CountryCode;
-                                                    const sanitized = sanitizePhoneInput(e.target.value);
-                                                    setContactPhone(sanitized);
-                                                    if (sanitized) {
-                                                        const res = validatePhoneNumber(sanitized, currentShippingCountryCode);
-                                                        setContactPhoneError(res.isValid ? '' : res.error || '');
-                                                    } else {
-                                                        setContactPhoneError('');
-                                                    }
-                                                }}
-                                                onBlur={e => {
-                                                    const currentShippingCountryCode = ((useNewAddress ? newAddress.country_code : (savedAddresses.find(a => a.address_id === selectedAddressId) as any)?.country_code) || 'IN') as CountryCode;
-                                                    const res = validatePhoneNumber(e.target.value, currentShippingCountryCode);
-                                                    setContactPhoneError(res.isValid ? '' : res.error || '');
-                                                    if (res.isValid && res.normalized) {
-                                                        setContactPhone(formatPhoneDisplay(res.normalized, currentShippingCountryCode));
-                                                    }
-                                                }}
-                                                className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-[#F5F4F0] ${contactPhoneError ? 'border-red-400' : 'border-[#D4CFC0]'}`} 
-                                                placeholder="Enter mobile number" 
-                                            />
+                                            <div className="flex gap-2">
+                                                <div className="w-[130px] flex-shrink-0">
+                                                    <Select
+                                                        options={COUNTRY_CODES.map(c => ({
+                                                            value: c.dial_code,
+                                                            label: `${c.flag} ${c.dial_code}`,
+                                                            name: c.name
+                                                        }))}
+                                                        value={{
+                                                            value: contactPhoneDialCode,
+                                                            label: `${COUNTRY_CODES.find(c => c.dial_code === contactPhoneDialCode)?.flag || ''} ${contactPhoneDialCode}`
+                                                        }}
+                                                        onChange={(val: any) => {
+                                                            if (val) setContactPhoneDialCode(val.value);
+                                                        }}
+                                                        styles={{
+                                                            ...customSelectStyles,
+                                                            control: (base: any, state: any) => ({
+                                                                ...customSelectStyles.control(base, state),
+                                                                paddingLeft: '8px',
+                                                                backgroundColor: '#F5F4F0',
+                                                                minHeight: '42px',
+                                                            }),
+                                                        }}
+                                                        isSearchable
+                                                        filterOption={(option: any, input: string) => {
+                                                            if (!input) return true;
+                                                            const q = input.toLowerCase();
+                                                            return option.data.name?.toLowerCase().includes(q) || option.value.includes(q);
+                                                        }}
+                                                        classNamePrefix="react-select"
+                                                        placeholder="Code"
+                                                        menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                                                        menuPosition="fixed"
+                                                    />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <input 
+                                                        type="tel" 
+                                                        value={contactPhone} 
+                                                        onChange={e => {
+                                                            const sanitized = sanitizePhoneInput(e.target.value);
+                                                            setContactPhone(sanitized);
+                                                            if (sanitized) {
+                                                                const full = `${contactPhoneDialCode}${sanitized.replace(/[^\d]/g, '')}`;
+                                                                const currentShippingCountryCode = ((useNewAddress ? newAddress.country_code : (savedAddresses.find(a => a.address_id === selectedAddressId) as any)?.country_code) || 'IN') as CountryCode;
+                                                                const res = validatePhoneNumber(full, currentShippingCountryCode);
+                                                                setContactPhoneError(res.isValid ? '' : res.error || '');
+                                                            } else {
+                                                                setContactPhoneError('');
+                                                            }
+                                                        }}
+                                                        onBlur={() => {
+                                                            if (contactPhone) {
+                                                                const full = `${contactPhoneDialCode}${contactPhone.replace(/[^\d]/g, '')}`;
+                                                                const currentShippingCountryCode = ((useNewAddress ? newAddress.country_code : (savedAddresses.find(a => a.address_id === selectedAddressId) as any)?.country_code) || 'IN') as CountryCode;
+                                                                const res = validatePhoneNumber(full, currentShippingCountryCode);
+                                                                setContactPhoneError(res.isValid ? '' : res.error || '');
+                                                            }
+                                                        }}
+                                                        className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-[#F5F4F0] ${contactPhoneError ? 'border-red-400' : 'border-[#D4CFC0]'}`} 
+                                                        placeholder="Enter mobile number" 
+                                                        maxLength={15}
+                                                    />
+                                                </div>
+                                            </div>
                                             {contactPhoneError && <p className="text-[10px] text-red-500 mt-1 font-bold">{contactPhoneError}</p>}
                                         </div>
                                     </div>
@@ -1263,6 +1387,8 @@ function CheckoutContent() {
                                                                             styles={customSelectStyles}
                                                                             classNamePrefix="react-select"
                                                                             placeholder="Search..."
+                                                                            menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                                                                            menuPosition="fixed"
                                                                         />
                                                                         <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8B7A3D] z-10 pointer-events-none" />
                                                                     </div>
@@ -1348,6 +1474,8 @@ function CheckoutContent() {
                                                         styles={customSelectStyles}
                                                         classNamePrefix="react-select"
                                                         placeholder="Search country..."
+                                                        menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                                                        menuPosition="fixed"
                                                     />
                                                     <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8B7A3D] z-10 pointer-events-none" />
                                                 </div>
@@ -1564,6 +1692,8 @@ function CheckoutContent() {
                                                                     }}
                                                                     classNamePrefix="react-select"
                                                                     placeholder="Search..."
+                                                                    menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                                                                    menuPosition="fixed"
                                                                 />
                                                             </div>
                                                         </div>

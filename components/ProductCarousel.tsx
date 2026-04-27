@@ -63,7 +63,7 @@ export default function ProductCarousel({ title, icon, products, loading = false
     return (
         <div className="mt-16 border-t border-gray-100 pt-16" id={`${idPrefix}-section`}>
             {/* Header */}
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-2 sm:mb-8">
                 <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-3" id={`${idPrefix}-heading`}>
                     {icon}
                     {title}

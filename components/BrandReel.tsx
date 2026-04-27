@@ -32,14 +32,14 @@ export default function BrandReel() {
     <div className="flex flex-col w-full pt-2 pb-6">
       {/* Section Header */}
       <div className="mx-auto max-w-[1500px] w-full px-4 sm:px-6 lg:px-8">
-        <div className="flex items-end justify-between">
-          <div>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-1">Brands People Like</h2>
+        <div className="flex items-center justify-center sm:justify-start">
+          <div className="text-center sm:text-left">
+            <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-1">Brands People Like</h2>
           </div>
         </div>
       </div>
 
-      <section className="relative py-4 overflow-hidden max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative py-2 sm:py-4 overflow-hidden max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Marquee container with entrance animation */}
         <motion.div
           initial={{ opacity: 0, x: 100 }}
@@ -50,10 +50,10 @@ export default function BrandReel() {
           style={{ willChange: "transform, opacity" }}
         >
           {/* Gradient fades on edges */}
-          <div className="absolute left-0 top-0 bottom-0 w-20 z-10 pointer-events-none"
+          <div className="absolute left-0 top-0 bottom-0 w-12 sm:w-20 z-10 pointer-events-none"
             style={{ background: 'linear-gradient(to right, white, transparent)' }}
           />
-          <div className="absolute right-0 top-0 bottom-0 w-20 z-10 pointer-events-none"
+          <div className="absolute right-0 top-0 bottom-0 w-12 sm:w-20 z-10 pointer-events-none"
             style={{ background: 'linear-gradient(to left, white, transparent)' }}
           />
 
@@ -65,11 +65,11 @@ export default function BrandReel() {
                 href={`/${country}/products?brand=${encodeURIComponent(brand.slug)}`}
                 className="flex-shrink-0 group"
               >
-                <div className="flex items-center justify-center px-4 h-[80px] w-[160px] transition-all duration-300 group-hover:scale-110">
+                <div className="flex items-center justify-center px-2 sm:px-4 h-[60px] w-[120px] sm:h-[80px] sm:w-[160px] transition-all duration-300 group-hover:scale-110">
                   <img
                     src={brand.logo}
                     alt={brand.name}
-                    className="max-h-[65px] max-w-[140px] object-contain transition-all duration-300 grayscale-[20%] group-hover:grayscale-0"
+                    className="max-h-[45px] max-w-[100px] sm:max-h-[65px] sm:max-w-[140px] object-contain transition-all duration-300 grayscale-[20%] group-hover:grayscale-0"
                     onError={(e) => {
                       // Fallback: show brand name as text if logo is missing
                       const target = e.target as HTMLImageElement;

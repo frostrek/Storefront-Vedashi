@@ -83,8 +83,8 @@ export default function SocialLoginButtons({ onLoadingChange, disabled }: Social
             // This avoids Clerk's hosted sign-up form entirely
             await signUp.authenticateWithRedirect({
                 strategy,
-                redirectUrl: baseUrl + currentPath + '/sso-callback',
-                redirectUrlComplete: baseUrl + currentPath + '/sso-complete',
+                redirectUrl: `/${country}/login/sso-callback`,
+                redirectUrlComplete: `/${country}/login/sso-complete`,
             });
         } catch (err: any) {
             // If already signed in, just try to go to the callback page
@@ -100,8 +100,8 @@ export default function SocialLoginButtons({ onLoadingChange, disabled }: Social
                 try {
                     await signIn.authenticateWithRedirect({
                         strategy,
-                        redirectUrl: baseUrl + currentPath + '/sso-callback',
-                        redirectUrlComplete: baseUrl + currentPath + '/sso-complete',
+                        redirectUrl: `/${country}/login/sso-callback`,
+                        redirectUrlComplete: `/${country}/login/sso-complete`,
                     });
                     return;
                 } catch (signInErr: any) {

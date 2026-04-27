@@ -18,7 +18,7 @@ export function SkeletonLine({ className = '' }: { className?: string }) {
 
 export function SkeletonProductGrid({ count = 6 }: { count?: number }) {
     return (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: count }).map((_, i) => (
                 <SkeletonCard key={i} />
             ))}
@@ -36,7 +36,7 @@ export function SkeletonHero() {
 export function SkeletonReviewSection() {
     return (
         <section className="mt-16 border-t border-neutral-100 pt-10">
-            <div className="flex items-center gap-3 mb-8">
+            <div className="flex items-center gap-3 mb-2 sm:mb-8">
                 <div className="h-6 w-6 rounded animate-shimmer" />
                 <div className="h-7 w-48 rounded animate-shimmer" />
             </div>
@@ -76,7 +76,7 @@ export function SkeletonProductRow({ title }: { title?: string }) {
     return (
         <div className="mt-16 border-t border-light-border pt-16">
             {title && (
-                <div className="flex items-center gap-3 mb-8">
+                <div className="flex items-center gap-3 mb-2 sm:mb-8">
                     <div className="h-6 w-6 rounded animate-shimmer" />
                     <div className="h-8 w-56 rounded animate-shimmer" />
                 </div>

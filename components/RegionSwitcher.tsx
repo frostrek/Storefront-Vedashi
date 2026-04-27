@@ -35,6 +35,7 @@ export default function RegionSwitcher({ upward = false }: { upward?: boolean })
 
     // Set cookies (7 days)
     document.cookie = `geo_country=${newCountry}; max-age=${7 * 24 * 60 * 60}; path=/`;
+    document.cookie = `geo_manual=true; max-age=${7 * 24 * 60 * 60}; path=/`;
     const currencyMap: Record<string, string> = { in: 'INR', us: 'USD', gb: 'GBP', ae: 'AED', ca: 'CAD', au: 'AUD', ru: 'RUB', kr: 'KRW' };
     document.cookie = `geo_currency=${currencyMap[newCountry] || 'USD'}; max-age=${7 * 24 * 60 * 60}; path=/`;
 
@@ -68,12 +69,18 @@ export default function RegionSwitcher({ upward = false }: { upward?: boolean })
         suppressHydrationWarning
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/20 hover:border-white/40 transition-all duration-200 group"
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all duration-200 group ${
+          upward 
+            ? 'border-white/20 hover:border-white/40' 
+            : 'border-gray-200 hover:border-gray-300 shadow-sm'
+        }`}
         aria-expanded={isOpen}
       >
-        <img src={`https://flagcdn.com/w40/${country}.png`} alt={currentCountryConfig.name} className="h-4 w-6 object-cover rounded-sm border border-white/10" />
-        <span className="text-xs font-bold text-white uppercase tracking-wide">{currentCountryConfig.currency} {currentCountryConfig.symbol}</span>
-        <ChevronDown className={`h-3.5 w-3.5 text-gray-300 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <img src={`https://flagcdn.com/w40/${country}.png`} alt={currentCountryConfig.name} className={`h-4 w-6 object-cover rounded-sm border ${upward ? 'border-white/10' : 'border-gray-100'}`} />
+        <span className={`text-xs font-bold uppercase tracking-wide ${upward ? 'text-white' : 'text-gray-900'}`}>
+          {currentCountryConfig.currency} {currentCountryConfig.symbol}
+        </span>
+        <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isOpen ? 'rotate-180' : ''} ${upward ? 'text-gray-300' : 'text-gray-500'}`} />
       </button>
 
       {isOpen && (

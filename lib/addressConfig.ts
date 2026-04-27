@@ -49,10 +49,21 @@ export const ADDRESS_CONFIG: Record<string, AddressFieldConfig> = {
       error: 'Postal code must be 5 digits',
     },
   },
+  DEFAULT: {
+    labels: {
+      state: 'State / Region',
+      city: 'City',
+      postalCode: 'Postal / ZIP Code',
+    },
+    postalCode: {
+      regex: /^[a-zA-Z0-9\s\-]{3,10}$/,
+      error: 'Postal/ZIP code must be 3-10 alphanumeric characters',
+    },
+  },
 };
 
 export const getAddressConfig = (countryCode: string): AddressFieldConfig => {
-  return ADDRESS_CONFIG[countryCode?.toUpperCase()] || ADDRESS_CONFIG['IN'];
+  return ADDRESS_CONFIG[countryCode?.toUpperCase()] || ADDRESS_CONFIG['DEFAULT'];
 };
 
 export const getDefaultCountry = () => {

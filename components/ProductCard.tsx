@@ -1,9 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { gsap } from 'gsap';
 import Image from 'next/image';
-import { Heart, ShoppingCart, Eye, X, Check, AlertTriangle, Loader2, Plus, Minus, Trash2 } from 'lucide-react';
+import { Heart, ShoppingCart, Eye, X, Check, AlertTriangle, Loader2, Plus, Minus, Trash2, Share2 } from 'lucide-react';
 import { Product, ProductVariant } from '@/types';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCart } from '@/context/CartContext';
@@ -15,7 +14,7 @@ import { createPortal } from 'react-dom';
 import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { trackEcommerce } from '@/lib/analytics/gtag';
-import { hasDiscount, getDiscountPercent } from '@/utils/discount';
+import { hasDiscount, getDiscountPercent, getValidPrices } from '@/utils/discount';
 
 
 const BLUR_DATA_URL =
@@ -67,76 +66,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
         setShowInlineOptions(false);
     }, []);
 
-    // ─── Multi-layer GSAP timeline ────────────────────────────────────────────
-    useEffect(() => {
-        if (!inlineOptionsRef.current || !isList) return;
-
-        if (showInlineOptions) {
-            const tl = gsap.timeline();
-
-            // 1. Wrapper: width expand + clip-path wipe from left to right
-            tl.fromTo(
-                inlineOptionsRef.current,
-                { width: 0, clipPath: 'inset(0 100% 0 0 round 12px)', opacity: 1 },
-                { width: 344, clipPath: 'inset(0 0% 0 0 round 0px)', duration: 0.52, ease: 'expo.out' }
-            );
-
-            // 2. Top accent bar draws left → right
-            if (borderLineRef.current) {
-                tl.fromTo(
-                    borderLineRef.current,
-                    { scaleX: 0, transformOrigin: 'left center' },
-                    { scaleX: 1, duration: 0.4, ease: 'expo.out' },
-                    '<0.08'
-                );
-            }
-
-            // 3. Inner content arrives from right with parallax offset
-            if (inlineContentRef.current) {
-                tl.fromTo(
-                    inlineContentRef.current,
-                    { x: 32, opacity: 0 },
-                    { x: 0, opacity: 1, duration: 0.45, ease: 'expo.out' },
-                    '<0.06'
-                );
-            }
-
-            // 4. Variant buttons cascade up with stagger
-            if (variantButtonsRef.current) {
-                const btns = variantButtonsRef.current.querySelectorAll<HTMLElement>('[data-variant-btn]');
-                if (btns.length > 0) {
-                    tl.fromTo(
-                        btns,
-                        { y: 12, opacity: 0, scale: 0.97 },
-                        { y: 0, opacity: 1, scale: 1, stagger: 0.05, duration: 0.32, ease: 'back.out(1.4)' },
-                        '<0.08'
-                    );
-                }
-            }
-
-        } else {
-            // Collapse: content exits right, wrapper wipes back out
-            const tl = gsap.timeline();
-
-            if (inlineContentRef.current) {
-                tl.to(inlineContentRef.current, {
-                    x: 18, opacity: 0, duration: 0.18, ease: 'power2.in',
-                });
-            }
-            if (borderLineRef.current) {
-                tl.to(borderLineRef.current, {
-                    scaleX: 0, transformOrigin: 'right center', duration: 0.18, ease: 'power2.in',
-                }, '<');
-            }
-            tl.to(inlineOptionsRef.current, {
-                clipPath: 'inset(0 100% 0 0 round 12px)',
-                width: 0,
-                duration: 0.32,
-                ease: 'expo.in',
-            }, '<0.04');
-        }
-    }, [showInlineOptions, isList]);
-
+    
     const triggerAddedFeedback = useCallback(() => {
         setJustAdded(true);
         setTimeout(() => setJustAdded(false), 1000);
@@ -164,14 +94,36 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
         toggleItem(product);
     };
 
+    const handleShare = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const shareData = {
+            title: product.product_name,
+            text: `Check out ${product.product_name} on Vedashi — Premium Ayurvedic Wellness.`,
+            url: `${window.location.origin}/products/${product.slug || product.product_id}`,
+        };
+
+        if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+            navigator.share(shareData).catch(() => {});
+        } else {
+            navigator.clipboard.writeText(shareData.url);
+            toast.success('Link copied to clipboard!');
+        }
+    };
+
     // Determine if product has variants from the product data
     const hasVariants = (product.variant_count ?? 0) > 1 || (product.variants?.length ?? 0) > 1;
 
-    // Display values (default variant or product level)
-    const displayPrice = product.price ?? 0;
+    // Enforce that displayPrice (Selling Price) is always the lowest, and originalPrice (MRP) is the highest
+    // We use getValidPrices to defensively ignore any price/sale_price entries that are 0 or negative
+    const { displayPrice, originalPrice } = getValidPrices(
+        product.price,
+        product.original_price ?? product.price
+    );
+    
     const isOnSale = product.is_on_sale ?? false;
-    const originalPrice = product.original_price ?? displayPrice;
-    const discountPercent = product.discount_percentage ?? 0;
+    const discountPercent = (originalPrice > displayPrice) ? Math.round((1 - displayPrice / originalPrice) * 100) : 0;
 
     const imageSrc = product.thumbnail_url || product.images?.[0] || '/herbal_placeholder.png';
     const isExternal = imageSrc.startsWith('http');
@@ -427,8 +379,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
             // ── Outer wrapper: GSAP drives clipPath wipe + width ─────────────
             <div
                 ref={inlineOptionsRef}
-                className="relative h-full flex-shrink-0 overflow-hidden"
-                style={{ width: 0, clipPath: 'inset(0 100% 0 0 round 12px)' }}
+                className={`relative h-full flex-shrink-0 overflow-hidden transition-all duration-500 ease-in-out ${showInlineOptions ? 'w-[344px] [clip-path:inset(0_0%_0_0_round_0px)] opacity-100' : 'w-0 [clip-path:inset(0_100%_0_0_round_12px)] opacity-0'}`}
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
             >
                 {/* ── Frosted panel background ────────────────────────────────── */}
@@ -437,15 +388,13 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                 {/* ── Top accent bar: draws left → right via GSAP scaleX ──────── */}
                 <div
                     ref={borderLineRef}
-                    className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#FF0000] via-[#ff4d4d] to-transparent rounded-b"
-                    style={{ transform: 'scaleX(0)', transformOrigin: 'left center' }}
+                    className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#FF0000] via-[#ff4d4d] to-transparent rounded-b transition-transform duration-500 origin-left delay-75 ${showInlineOptions ? 'scale-x-100' : 'scale-x-0'}`}
                 />
 
                 {/* ── Inner content: slides in from right (parallax) ─────────── */}
                 <div
                     ref={inlineContentRef}
-                    className="relative w-[320px] h-full flex flex-col py-3 px-4"
-                    style={{ opacity: 0 }}
+                    className={`relative w-[320px] h-full flex flex-col py-3 px-4 transition-all duration-500 delay-100 ${showInlineOptions ? 'translate-x-0 opacity-100' : 'translate-x-8 opacity-0'}`}
                 >
                     {/* ── Header ────────────────────────────────────────────────── */}
                     <div className="flex items-center justify-between mb-3">
@@ -485,7 +434,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             </div>
                         ) : variants.length > 0 ? (
                             <div ref={variantButtonsRef} className="flex flex-col gap-1">
-                                {variants.map((v: ProductVariant) => {
+                                {variants.map((v: ProductVariant, i: number) => {
                                     const isSelected = selectedVariant?.variant_id === v.variant_id;
                                     const isInactive = v.status === 'Inactive' || v.is_active === false;
                                     const isOut = v.stock_quantity !== null && v.stock_quantity !== undefined && v.stock_quantity <= 0;
@@ -524,10 +473,18 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                         ? optionsValList.join(' · ') 
                                         : (labelParts.join(' · ') || v.sku || 'Standard');
 
+                                    const { displayPrice: vDisplayPrice, originalPrice: vOriginalPrice } = getValidPrices(
+                                        v.price,
+                                        v.original_price ?? v.sale_price ?? v.price
+                                    );
+                                    
+                                    const vIsDiscounted = vOriginalPrice > vDisplayPrice;
+
                                     return (
                                         <button
                                             key={v.variant_id}
                                             data-variant-btn
+                                            style={{ transitionDelay: showInlineOptions ? `${i * 50 + 150}ms` : '0ms' }}
                                             onClick={() => {
                                                 if (!isDisabled) {
                                                     setSelectedVariant(v);
@@ -542,6 +499,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                 transition-all duration-200 cursor-pointer
                                                 focus-visible:ring-2 focus-visible:ring-[#FF0000]/40
                                                 overflow-hidden group
+                                                ${showInlineOptions ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-3 opacity-0 scale-95'}
                                                 ${isSelected
                                                     ? 'bg-[#FF0000] shadow-[0_3px_12px_rgba(255,0,0,0.28)] scale-[1.01]'
                                                     : isDisabled
@@ -587,23 +545,17 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                             : 'bg-gray-100 text-gray-700 group-hover:bg-[#FF0000]/10 group-hover:text-[#FF0000]'
                                                         }
                                                     `}>
-                                                        {formatPrice(v.price, v.country_prices || product.country_prices)}
+                                                        {formatPrice(vDisplayPrice, v.country_prices || product.country_prices)}
                                                     </span>
-                                                    {hasDiscount(v) ? (
+                                                    {vIsDiscounted && (
                                                         <>
                                                             <span className={`text-[10px] line-through ${isSelected ? 'text-white/50' : 'text-gray-400'}`}>
-                                                                {formatPrice(v.discount_base_price ?? 0, v.country_prices || product.country_prices)}
+                                                                {formatPrice(vOriginalPrice, v.country_prices || product.country_prices)}
                                                             </span>
                                                             <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isSelected ? 'bg-red-500/20 text-red-100' : 'text-red-500 bg-red-50'}`}>
                                                                 {getDiscountPercent(v)}% OFF
                                                             </span>
                                                         </>
-                                                    ) : (
-                                                        v.is_on_sale && v.original_price && (
-                                                            <span className={`text-[10px] line-through ${isSelected ? 'text-white/50' : 'text-gray-400'}`}>
-                                                                {formatPrice(v.original_price, v.country_prices || product.country_prices)}
-                                                            </span>
-                                                        )
                                                     )}
                                                     {!isInactive && isOut && (
                                                         <span className="text-[9px] font-bold text-red-400 bg-red-50 px-1.5 py-0.5 rounded-full">
@@ -811,13 +763,19 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             </div>
                         ) : variants.length > 0 ? (
                             <div className="divide-y divide-gray-100">
-                                {variants.map((v: ProductVariant) => {
+                                {variants.map((v: ProductVariant, i: number) => {
                                     const isInactive = v.status === 'Inactive' || v.is_active === false;
                                     const isOut = v.stock_quantity !== null && v.stock_quantity !== undefined && (v.stock_quantity ?? 0) <= 0;
                                     const isDisabled = isOut || isInactive;
                                     const label = buildVariantLabel(v);
                                     const variantCartItem = items.find(ci => ci.variant_id === v.variant_id);
                                     const variantInCart = !!variantCartItem;
+
+                                    const { displayPrice: vDisplayPrice, originalPrice: vOriginalPrice } = getValidPrices(
+                                        v.price,
+                                        v.original_price ?? v.sale_price ?? v.price
+                                    );
+                                    const vIsDiscounted = vOriginalPrice > vDisplayPrice;
 
                                     return (
                                         <div
@@ -826,9 +784,9 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                         >
                                             {/* Variant thumbnail */}
                                             <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-50 flex-shrink-0 border border-gray-100 relative">
-                                                {v.is_on_sale && v.discount_percentage && (
+                                                {vIsDiscounted && (
                                                     <span className="absolute top-0 left-0 bg-blue-600 text-white text-[6px] font-bold px-1 py-[1px] rounded-br-md leading-none z-10">
-                                                        {Math.round(v.discount_percentage)}% OFF
+                                                        {getDiscountPercent(v)}% OFF
                                                     </span>
                                                 )}
                                                 <Image
@@ -845,12 +803,17 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                 <p className="text-[11px] font-semibold text-gray-800 leading-tight line-clamp-1">{label}</p>
                                                 <div className="flex items-center gap-1.5 mt-0.5">
                                                     <span className="text-[12px] font-bold text-gray-900">
-                                                        {formatPrice(v.price, v.country_prices || product.country_prices)}
+                                                        {formatPrice(vDisplayPrice, v.country_prices || product.country_prices)}
                                                     </span>
-                                                    {(v.is_on_sale || (v.original_price && v.price && v.original_price > v.price)) && (
-                                                        <span className="text-[10px] text-gray-400 line-through">
-                                                            {formatPrice(v.original_price!, v.country_prices || product.country_prices)}
-                                                        </span>
+                                                    {vIsDiscounted && (
+                                                        <>
+                                                            <span className="text-[10px] text-gray-400 line-through">
+                                                                {formatPrice(vOriginalPrice, v.country_prices || product.country_prices)}
+                                                            </span>
+                                                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full text-red-500 bg-red-50">
+                                                                {getDiscountPercent(v)}% OFF
+                                                            </span>
+                                                        </>
                                                     )}
                                                 </div>
                                                 {isOut && !isInactive && (
@@ -937,7 +900,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                     src={imageSrc}
                                     alt={product.product_name}
                                     fill
-                                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
                                     className="object-contain transition-transform duration-500 group-hover:scale-105"
                                     priority={priority}
                                     loading={priority ? undefined : 'lazy'}
@@ -950,7 +913,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                     alt={product.product_name}
                                     width={400}
                                     height={400}
-                                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
                                     className="object-contain w-full h-full transition-transform duration-500 group-hover:scale-105"
                                     priority={priority}
                                     loading={priority ? undefined : 'lazy'}
@@ -960,28 +923,33 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             )}
                         </div>
 
-                        {/* Wishlist (Grid only) */}
+                        {/* Action Overlay (Grid only) */}
                         {!isList && (
-                            <button
-                                onClick={handleToggleWishlist}
-                                className="absolute top-2 right-2 rounded-full bg-white/90 backdrop-blur-sm p-1.5 shadow-sm transition-all hover:scale-110 hover:shadow-md z-20 cursor-pointer"
-                            >
-                                <Heart
-                                    className={`h-3.5 w-3.5 transition ${wishlisted
-                                        ? 'fill-[#3d5c3a] text-[#3d5c3a]'
-                                        : 'text-gray-400'
-                                        }`}
-                                />
-                            </button>
+                            <div className="absolute top-2 right-2 flex flex-col gap-1.5 z-20">
+                                <button
+                                    onClick={handleToggleWishlist}
+                                    className="rounded-full bg-white/90 backdrop-blur-sm p-1.5 shadow-sm transition-all hover:scale-110 hover:shadow-md cursor-pointer"
+                                >
+                                    <Heart
+                                        className={`h-3.5 w-3.5 transition ${wishlisted
+                                            ? 'fill-[#3d5c3a] text-[#3d5c3a]'
+                                            : 'text-gray-400'
+                                            }`}
+                                    />
+                                </button>
+                                <button
+                                    onClick={handleShare}
+                                    className="rounded-full bg-white/90 backdrop-blur-sm p-1.5 shadow-sm transition-all hover:scale-110 hover:shadow-md cursor-pointer text-gray-400 hover:text-[#3d5c3a]"
+                                    title="Share"
+                                >
+                                    <Share2 size={14} />
+                                </button>
+                            </div>
                         )}
 
                         {/* Product Badges (Top Left Stack) */}
                         <div className={`absolute ${isList ? 'left-2 top-2' : 'left-2 top-2'} flex flex-col gap-1 z-10`}>
-                            {product.category && (
-                                <span className="rounded-full bg-[#01CC00] px-2 py-0.5 text-[8px] tracking-[0.1em] text-white uppercase font-black font-ui shadow-sm w-fit mb-0.5">
-                                    {product.category}
-                                </span>
-                            )}
+
                             {isExpired && !isComingSoon && (
                                 <span className="rounded-full bg-red-600 px-2 py-0.5 text-[8px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
                                     Expired
@@ -1078,10 +1046,15 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             <span className="font-black text-[15px] sm:text-[17px] leading-none py-0.5">
                                 {formatPrice(displayPrice, product.country_prices)}
                             </span>
-                            {(discountPercent > 0 || originalPrice > displayPrice) && (
-                                <span className="text-gray-400 line-through text-[11px] sm:text-xs font-bold font-ui">
-                                    {formatPrice(originalPrice, product.country_prices)}
-                                </span>
+                            {originalPrice > displayPrice && (
+                                <>
+                                    <span className="text-gray-400 line-through text-[11px] sm:text-xs font-bold font-ui mt-0.5">
+                                        {formatPrice(originalPrice, product.country_prices)}
+                                    </span>
+                                    <span className="text-[#FF0000] bg-red-50 text-[10px] font-bold px-1.5 py-0.5 rounded border border-red-100 whitespace-nowrap">
+                                        {Math.round((1 - displayPrice / originalPrice) * 100)}% OFF
+                                    </span>
+                                </>
                             )}
                         </div>
 
@@ -1122,13 +1095,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             </Link>
                         )}
 
-                        {isList && product.category && (
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="rounded leading-none bg-[#3d5c3a]/10 px-1.5 sm:px-2 py-0.5 sm:py-1 text-[8px] sm:text-[9px] tracking-widest text-[#3d5c3a] uppercase font-bold border border-[#3d5c3a]/10">
-                                    {product.category}
-                                </span>
-                            </div>
-                        )}
+
 
                         {/* Rating */}
                         {avgRating > 0 && (
@@ -1213,6 +1180,13 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                     className={`relative z-30 inline-flex flex-shrink-0 items-center justify-center p-2.5 sm:p-2.5 rounded-lg border transition-all cursor-pointer ${wishlisted ? 'border-red-500/30 bg-red-50' : 'border-gray-200 bg-white hover:border-red-500/30 hover:bg-gray-50'}`}
                                 >
                                     <Heart className={`h-4 w-4 sm:h-4 sm:w-4 ${wishlisted ? 'fill-[#FF0000] text-[#FF0000]' : 'text-gray-400'}`} />
+                                </button>
+                                <button
+                                    onClick={handleShare}
+                                    className="relative z-30 inline-flex flex-shrink-0 items-center justify-center p-2.5 sm:p-2.5 rounded-lg border border-gray-200 bg-white text-gray-400 hover:text-[#3d5c3a] hover:border-[#3d5c3a]/30 hover:bg-gray-50 transition-all cursor-pointer"
+                                    title="Share"
+                                >
+                                    <Share2 className="h-4 w-4 sm:h-4 sm:w-4" />
                                 </button>
                             </div>
                         )}

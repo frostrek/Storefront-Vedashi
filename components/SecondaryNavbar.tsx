@@ -134,7 +134,7 @@ export default function SecondaryNavbar() {
 
                             {/* "View All" link positioned at the bottom right */}
                             <div className="flex justify-end mt-auto pt-4 border-t border-gray-50/50">
-                              <Link href={`/${country}/products?category=${parent.slug}`} className="text-[#3B5D3B] hover:text-[#91CA35] flex items-center gap-1 font-bold text-[13px] group/view-all">
+                              <Link href={`/${country}/products?category=${parent.slug}`} className="text-[#FF0000] hover:text-[#CC0000] flex items-center gap-1 font-bold text-[13px] group/view-all">
                                 Explore All {parent.name} <span className="transition-transform group-hover/view-all:translate-x-1">→</span>
                               </Link>
                             </div>

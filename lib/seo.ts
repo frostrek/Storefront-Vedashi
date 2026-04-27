@@ -130,7 +130,7 @@ export function buildProductMeta(product: ProductSeoInput, currentCountry: strin
     const pathStrategy = `products/${product.slug || product.product_id}`;
     const canonical = seo?.canonical_url || `${SITE_URL}/${currentCountry}/${pathStrategy}`;
     
-    const ogImage = seo?.og_image || product.thumbnail_url || DEFAULT_OG_IMAGE;
+    const ogImage = seo?.og_image || `${SITE_URL}/${currentCountry}/products/${product.slug || product.product_id}/opengraph-image`;
     const keywords = seo?.meta_keywords || [product.product_name, product.brand, product.category, SITE_NAME].filter(Boolean).join(', ');
 
     const robotsValue = seo?.robots || 'index, follow';
@@ -458,6 +458,32 @@ export function generateBreadcrumbJsonLd(
                 name: item.name
             }
         })),
+    };
+}
+
+/** ItemList schema (JSON-LD) for product listings */
+export function generateItemListJsonLd(
+    items: Array<{ name: string; url: string; image?: string; price?: number }>
+): Record<string, unknown> {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        itemListElement: items.map((item, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            url: item.url,
+            item: {
+                '@type': 'Product',
+                name: item.name,
+                image: item.image || DEFAULT_OG_IMAGE,
+                url: item.url,
+                offers: item.price ? {
+                    '@type': 'Offer',
+                    price: item.price,
+                    priceCurrency: 'INR'
+                } : undefined
+            }
+        }))
     };
 }
 

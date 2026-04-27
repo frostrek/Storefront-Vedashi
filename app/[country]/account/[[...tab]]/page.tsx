@@ -144,7 +144,7 @@ export default function AccountPage() {
 
     // Addresses state
     const defaultCountryCode = getDefaultCountry();
-    const defaultCountryName = COUNTRIES.find(c => c.code === defaultCountryCode)?.name || 'India';
+    const defaultCountryName = COUNTRIES.find(c => c.code === defaultCountryCode)?.name || '';
 
     const [addresses, setAddresses] = useState<Address[]>([]);
     const [addressesLoading, setAddressesLoading] = useState(false);
@@ -158,8 +158,9 @@ export default function AccountPage() {
     const addressConfig = getAddressConfig(addressForm.country_code || 'IN');
     const addressDialCode = useMemo(() => {
         const match = Array.isArray(COUNTRY_CODES) ? COUNTRY_CODES.find(c => c.code === addressForm.country_code) : null;
-        return match ? match.dial_code : '+91';
-    }, [addressForm.country_code]);
+        const fallbackMatch = COUNTRY_CODES.find(c => c.code === defaultCountryCode);
+        return match ? match.dial_code : (fallbackMatch?.dial_code || '+1');
+    }, [addressForm.country_code, defaultCountryCode]);
 
     const [isLookupLoading, setIsLookupLoading] = useState(false);
     const [manualEdits, setManualEdits] = useState({
@@ -196,6 +197,22 @@ export default function AccountPage() {
             },
             fontSize: '14px',
         }),
+        menuList: (provided: any) => ({
+            ...provided,
+            "::-webkit-scrollbar": {
+                width: "6px"
+            },
+            "::-webkit-scrollbar-track": {
+                background: "transparent"
+            },
+            "::-webkit-scrollbar-thumb": {
+                background: "#D4CFC0",
+                borderRadius: "3px"
+            },
+            "::-webkit-scrollbar-thumb:hover": {
+                background: "#6B8F5E"
+            }
+        }),
     };
 
     // Global Postal Code Auto-Fill
@@ -230,7 +247,11 @@ export default function AccountPage() {
     });
     const [originalEmail, setOriginalEmail] = useState('');
     const [originalPhone, setOriginalPhone] = useState('');
-    const [selectedCountryCode, setSelectedCountryCode] = useState('+91');
+    const defaultDialCode = useMemo(() => {
+        const match = COUNTRY_CODES.find(c => c.code === defaultCountryCode);
+        return match ? match.dial_code : '+1';
+    }, [defaultCountryCode]);
+    const [selectedCountryCode, setSelectedCountryCode] = useState(defaultDialCode);
 
     // Email OTP modal state
     const [showEmailOtpModal, setShowEmailOtpModal] = useState(false);
@@ -489,7 +510,7 @@ export default function AccountPage() {
                 const hasPassword = Boolean(res.data.has_password);
                 
                 const phone = res.data.phone || '';
-                let countryCode = '+91';
+                let countryCode = defaultDialCode;
                 let localNumber = phone;
 
                 if (phone.startsWith('+')) {
@@ -1187,7 +1208,8 @@ export default function AccountPage() {
     const startEditAddress = (addr: Address) => {
         const cCode = (addr as any).country_code || 'IN';
         const match = Array.isArray(COUNTRY_CODES) ? COUNTRY_CODES.find(c => c.code === cCode) : null;
-        const dCode = match ? match.dial_code : '+91';
+        const fallbackMatch = COUNTRY_CODES.find(c => c.code === defaultCountryCode);
+        const dCode = match ? match.dial_code : (fallbackMatch?.dial_code || '+1');
         let phoneVal = addr.phone || '';
         if (phoneVal.startsWith(dCode)) {
             phoneVal = phoneVal.substring(dCode.length).trim();
@@ -1200,7 +1222,7 @@ export default function AccountPage() {
             city: addr.city || '',
             state: addr.state || '',
             pincode: addr.pincode || '',
-            country: addr.country || 'India',
+            country: addr.country || defaultCountryName,
             country_code: cCode,
             phone: phoneVal,
             label: addr.label || '',
@@ -1215,7 +1237,7 @@ export default function AccountPage() {
         setEditingAddress(null);
         setAddressForm({
             address_line1: '', address_line2: '', city: '', state: '', pincode: '',
-            country: 'India', country_code: 'IN', phone: '', label: '', is_default: false,
+            country: defaultCountryName, country_code: defaultCountryCode, phone: '', label: '', is_default: false,
         });
         setManualEdits({ city: false, state: false });
     };
@@ -2856,7 +2878,7 @@ export default function AccountPage() {
                                                             <p className="text-sm text-warm-gray font-medium tracking-wide">
                                                                 {addr.city}, {addr.state} {addr.pincode}
                                                             </p>
-                                                            {addr.country && addr.country !== 'India' && (
+                                                            {addr.country && (
                                                                 <p className="text-sm text-warm-gray font-medium">{addr.country}</p>
                                                             )}
                                                         </div>

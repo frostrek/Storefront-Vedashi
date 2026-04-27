@@ -508,6 +508,28 @@ export async function getNewArrivals(params?: {
     }
 }
 
+/* ─── Dynamic Product Enums (Form & Speciality) ─── */
+
+export async function getFormEnumOptions(): Promise<string[]> {
+    try {
+        const res = await fetch(`${API_URL}/api/products/enums/forms`, { credentials: 'include' });
+        const json = await res.json();
+        return json.success && Array.isArray(json.data) ? json.data : [];
+    } catch {
+        return [];
+    }
+}
+
+export async function getSpecialityEnumOptions(): Promise<string[]> {
+    try {
+        const res = await fetch(`${API_URL}/api/products/enums/specialities`, { credentials: 'include' });
+        const json = await res.json();
+        return json.success && Array.isArray(json.data) ? json.data : [];
+    } catch {
+        return [];
+    }
+}
+
 /** Fetch all products once and extract unique brands & countries for filter options */
 export async function getFilterOptions(): Promise<{ brands: string[]; countries: string[]; maxPrice: number; categories: any[]; attributes: any[] }> {
     try {
@@ -1077,6 +1099,7 @@ export async function directCheckout(data: {
     redeem_points?: number;
     ga_client_id?: string;
     attribution?: TrafficSource | null;
+    currency?: string;
 }) {
     try {
         const res = await authFetch(`${API_URL}/api/orders/direct`, {
@@ -1172,6 +1195,7 @@ export async function checkoutOrder(data: {
     order_notes?: string;
     payment_method?: string;
     redeem_points?: number;
+    currency?: string;
 }) {
     try {
         const res = await authFetch(`${API_URL}/api/orders/checkout`, {
