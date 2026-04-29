@@ -537,7 +537,7 @@ function LoginContent() {
             <div className="absolute inset-0 bg-gradient-to-br from-[#0a1a0a]/80 via-[#0d2010]/70 to-[#0a1a0a]/80" />
 
             {/* ── Left Column ── */}
-            <div className="relative z-10 flex-1 flex flex-col h-full lg:pr-8">
+            <div className="relative z-10 flex-none lg:flex-1 flex flex-col lg:h-full lg:pr-8">
                 {/* ── Top Navbar ── */}
                 <nav className="flex items-center justify-between px-6 py-2 flex-shrink-0">
                     <a href="/">
@@ -594,7 +594,7 @@ function LoginContent() {
             </div>
 
             {/* ── Right Card ── */}
-            <div className="relative z-20 w-full lg:w-[480px] xl:w-[540px] flex-shrink-0 h-full flex flex-col justify-center lg:py-8 lg:pr-8">
+            <div className="relative z-20 w-full lg:w-[480px] xl:w-[540px] flex-1 lg:flex-none lg:flex-shrink-0 lg:h-full flex flex-col justify-start pt-4 lg:pt-0 lg:justify-center lg:py-8 lg:pr-8">
                 <div className="w-full max-w-md mx-auto overflow-y-auto max-h-full px-6 py-6 lg:bg-white/95 lg:backdrop-blur-md lg:rounded-[2rem] lg:shadow-2xl [&::-webkit-scrollbar]:hidden" 
                      style={{ 
                         scrollbarWidth: 'none', 
