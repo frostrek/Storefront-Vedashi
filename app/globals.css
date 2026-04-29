@@ -896,7 +896,7 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background-image: radial-gradient(#6B8F5E 1px, transparent 1px);
+  background-image: radial-gradient(#91C934 1px, transparent 1px);
   background-size: 20px 20px;
   opacity: 0.05;
   z-index: 0;
@@ -945,16 +945,16 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
 }
 
 .cart-step-circle.active {
-  background: #2D3B2D;
+  background: #91C934;
   color: white;
-  border-color: #2D3B2D;
-  box-shadow: 0 4px 12px rgba(45, 59, 45, 0.2);
+  border-color: #91C934;
+  box-shadow: 0 4px 12px rgba(145, 201, 52, 0.3);
 }
 
 .cart-step-circle.completed {
-  background: #2D3B2D;
+  background: #91C934;
   color: white;
-  border-color: #2D3B2D;
+  border-color: #91C934;
 }
 
 .cart-step-label {
@@ -991,7 +991,7 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
 }
 
 .cart-step-line.completed {
-  background: #2D3B2D;
+  background: #91C934;
   height: 2px;
 }
 
@@ -1067,7 +1067,7 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #6B8F5E;
+  background: #91C934;
   color: #FFFFFF;
   border-radius: 50%;
   border: none;
@@ -1076,7 +1076,7 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
 }
 
 .cart-qty-btn:hover {
-  background: #5A7A4E;
+  background: #7AB52A;
 }
 
 .cart-qty-btn:disabled {
@@ -1116,13 +1116,13 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
 
 /* --- Ritual Summary Sidebar (Stays Dark) --- */
 .ritual-summary {
-  background: #2D3B2D;
+  background: linear-gradient(145deg, #2A3D1A 0%, #1E3010 50%, #243A14 100%);
   border-radius: 20px;
   padding: 32px 28px;
   color: white;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 12px 32px rgba(45, 59, 45, 0.15);
+  box-shadow: 0 12px 32px rgba(145, 201, 52, 0.12);
 }
 
 .ritual-summary::before {
@@ -1132,7 +1132,7 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
   right: 0;
   bottom: 0;
   left: 0;
-  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 0l.83.83v58.34h-58.34l-.83-.83L54.627 0zM27 0l27 27v33H21L-6 33V0h33zM0 0l27 27v33H0V0z' fill='%233B4A3B' fill-opacity='0.2' fill-rule='evenodd'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 0l.83.83v58.34h-58.34l-.83-.83L54.627 0zM27 0l27 27v33H21L-6 33V0h33zM0 0l27 27v33H0V0z' fill='%2391C934' fill-opacity='0.08' fill-rule='evenodd'/%3E%3C/svg%3E");
   opacity: 0.5;
   pointer-events: none;
 }
@@ -1256,7 +1256,7 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
   padding: 16px 24px;
   border-radius: 12px;
   border: none;
-  background: #6B8F5E;
+  background: #91C934;
   color: white;
   font-size: 16px;
   font-weight: 600;
@@ -1266,7 +1266,7 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
 }
 
 .cart-checkout-btn:hover {
-  background: #5A7A4E;
+  background: #7AB52A;
   transform: translateY(-1px);
 }
 
@@ -1277,11 +1277,11 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
 }
 
 .cart-checkout-btn-secondary {
-  background: #2D3B2D;
+  background: #2A3D1A;
 }
 
 .cart-checkout-btn-secondary:hover {
-  background: #1F291F;
+  background: #1E3010;
 }
 
 /* --- Coupon Input --- */

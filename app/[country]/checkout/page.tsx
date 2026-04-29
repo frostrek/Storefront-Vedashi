@@ -1179,7 +1179,7 @@ function CheckoutContent() {
                     <div className="text-center max-w-lg p-10 bg-white rounded-2xl border border-[#E8E4DC] shadow-sm relative overflow-hidden">
                         <div className="absolute top-0 left-0 w-full h-2 bg-[#6B8F5E]" />
                         <CheckCircle className="mx-auto h-24 w-24 text-[#6B8F5E] mb-6" />
-                        <h1 className="text-3xl font-bold text-[#1A1A1A]">Ritual Initialized</h1>
+                        <h1 className="text-3xl font-bold text-[#1A1A1A]">Checkout Completed</h1>
                         {orderId && (
                             <p className="mt-2 text-sm font-mono text-[#6B6B60]">Order ID: {orderId}</p>
                         )}
