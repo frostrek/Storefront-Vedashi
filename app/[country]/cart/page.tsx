@@ -11,7 +11,7 @@ import { useCurrency } from '@/context/CurrencyContext';
 import toast from 'react-hot-toast';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 
-/* ─── Step Indicator ─────────────────────────────────────────── */
+/* ─── Step Indicators ─────────────────────────────────────────── */
 
 const STEPS = ['BAG', 'SHIPPING', 'PAYMENT', 'REVIEW'] as const;
 
@@ -230,7 +230,7 @@ export default function CartPage() {
 
                             {outOfStockItems.length > 0 && (
                                 <div className="mb-4 rounded-xl p-4 text-sm flex items-start gap-3 bg-[#FFF3CD] border border-[#FFEEBA] text-[#856404]">
-                                    <span className="mt-0.5">⚠️</span> 
+                                    <span className="mt-0.5">⚠️</span>
                                     <div>
                                         <p className="font-bold">Inventory Update</p>
                                         <p>Some items in your cart are out of stock. They won&apos;t be included in your order and will be saved for later when you checkout.</p>
@@ -239,7 +239,7 @@ export default function CartPage() {
                             )}
                             {hasInsufficientStock && (
                                 <div className="mb-4 rounded-xl p-4 text-sm flex items-start gap-3 bg-[#FFF3CD] border border-[#FFEEBA] text-[#856404]">
-                                    <span className="mt-0.5">⚠️</span> 
+                                    <span className="mt-0.5">⚠️</span>
                                     <div>
                                         <p className="font-bold">Stock Limited</p>
                                         <p>One or more items exceed available stock. Please adjust the quantity to proceed.</p>
@@ -258,7 +258,7 @@ export default function CartPage() {
                                     const isOutOfStock = (item.stock_quantity ?? 0) === 0;
                                     const hasInsufficientStock = !isOutOfStock && item.quantity > (item.stock_quantity ?? 0);
                                     const isAtStockLimit = !isOutOfStock && item.quantity >= (item.stock_quantity ?? Infinity);
-                                    
+
                                     return (
                                         <div key={item.cart_item_id} className="cart-item-card flex flex-col sm:flex-row gap-6">
                                             {/* Image */}
@@ -380,80 +380,80 @@ export default function CartPage() {
                                 </div>
 
                                 <div className="grid sm:grid-cols-2 gap-4">
-                                <div className="cart-item-card p-6 border-t-4 border-t-[#8B7A3D]">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <Ticket className="h-5 w-5 text-[#8B7A3D]" />
-                                        <h4 className="text-lg font-bold text-[#1A1A1A]">Promo Offering</h4>
-                                    </div>
-                                    <p className="text-[13px] text-[#6B6B60] mb-4">Have a sacred promo code? Enter it below.</p>
-                                    {couponCode ? (
-                                        <div className="ritual-coupon-applied">
-                                            <div className="coupon-info text-[#1A1A1A] font-semibold text-sm">
-                                                {couponCode} <span className="text-[#6B8F5E]">(-{formatPrice(couponDiscount)})</span>
+                                    <div className="cart-item-card p-6 border-t-4 border-t-[#8B7A3D]">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <Ticket className="h-5 w-5 text-[#8B7A3D]" />
+                                            <h4 className="text-lg font-bold text-[#1A1A1A]">Promo Offering</h4>
+                                        </div>
+                                        <p className="text-[13px] text-[#6B6B60] mb-4">Have a sacred promo code? Enter it below.</p>
+                                        {couponCode ? (
+                                            <div className="ritual-coupon-applied">
+                                                <div className="coupon-info text-[#1A1A1A] font-semibold text-sm">
+                                                    {couponCode} <span className="text-[#6B8F5E]">(-{formatPrice(couponDiscount)})</span>
+                                                </div>
+                                                <button onClick={() => { removeCoupon(); toast.success('Coupon removed'); }} className="text-[#C0392B] text-xs font-semibold uppercase hover:underline">Remove</button>
                                             </div>
-                                            <button onClick={() => { removeCoupon(); toast.success('Coupon removed'); }} className="text-[#C0392B] text-xs font-semibold uppercase hover:underline">Remove</button>
-                                        </div>
-                                    ) : (
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                placeholder="Enter code"
-                                                value={couponInput}
-                                                onChange={e => setCouponInput(e.target.value.toUpperCase())}
-                                                className="flex-1 rounded-lg border border-[#D4CFC0] px-4 py-2 text-sm focus:border-[#8B7A3D] focus:outline-none bg-[#F5F4F0] font-mono uppercase"
-                                            />
-                                            <button
-                                                onClick={async () => {
-                                                    if (!couponInput.trim()) return;
-                                                    setApplyingCoupon(true);
-                                                    const ok = await applyCoupon(couponInput.trim());
-                                                    if (ok) { toast.success('Coupon applied!'); setCouponInput(''); }
-                                                    setApplyingCoupon(false);
-                                                }}
-                                                disabled={applyingCoupon || !couponInput.trim()}
-                                                className="bg-[#2D3B2D] text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-[#1F291F] transition-colors disabled:opacity-50 tracking-wide"
-                                            >
-                                                {applyingCoupon ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Apply'}
-                                            </button>
-                                        </div>
-                                    )}
-                                    {couponError && <p className="mt-2 text-xs text-[#C0392B]">{couponError}</p>}
-                                </div>
+                                        ) : (
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Enter code"
+                                                    value={couponInput}
+                                                    onChange={e => setCouponInput(e.target.value.toUpperCase())}
+                                                    className="flex-1 rounded-lg border border-[#D4CFC0] px-4 py-2 text-sm focus:border-[#8B7A3D] focus:outline-none bg-[#F5F4F0] font-mono uppercase"
+                                                />
+                                                <button
+                                                    onClick={async () => {
+                                                        if (!couponInput.trim()) return;
+                                                        setApplyingCoupon(true);
+                                                        const ok = await applyCoupon(couponInput.trim());
+                                                        if (ok) { toast.success('Coupon applied!'); setCouponInput(''); }
+                                                        setApplyingCoupon(false);
+                                                    }}
+                                                    disabled={applyingCoupon || !couponInput.trim()}
+                                                    className="bg-[#2D3B2D] text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-[#1F291F] transition-colors disabled:opacity-50 tracking-wide"
+                                                >
+                                                    {applyingCoupon ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Apply'}
+                                                </button>
+                                            </div>
+                                        )}
+                                        {couponError && <p className="mt-2 text-xs text-[#C0392B]">{couponError}</p>}
+                                    </div>
 
-                                <div className="cart-item-card p-6 border-t-4 border-t-[#6B8F5E]">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <MapPin className="h-5 w-5 text-[#6B8F5E]" />
-                                        <h4 className="text-lg font-bold text-[#1A1A1A]">Shipping Sanctuary</h4>
-                                    </div>
-                                    <p className="text-[13px] text-[#6B6B60] mb-4">Estimate delivery to your location.</p>
-                                    <div className="space-y-3">
-                                        <select
-                                            value={shippingCountry}
-                                            onChange={(e) => setShippingCountry(e.target.value)}
-                                            className="w-full rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-[#F5F4F0]"
-                                        >
-                                            <option value="India">India</option>
-                                            <option value="USA">United States</option>
-                                            <option value="UK">United Kingdom</option>
-                                        </select>
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                placeholder="Zip / Postal Code"
-                                                value={shippingZip}
-                                                onChange={(e) => setShippingZip(e.target.value)}
-                                                className="flex-1 rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-[#F5F4F0]"
-                                            />
-                                            <button className="bg-[#E8E4DC] text-[#1A1A1A] px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-[#D4CFC0] transition-colors tracking-wide">
-                                                Update
-                                            </button>
+                                    <div className="cart-item-card p-6 border-t-4 border-t-[#6B8F5E]">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <MapPin className="h-5 w-5 text-[#6B8F5E]" />
+                                            <h4 className="text-lg font-bold text-[#1A1A1A]">Shipping Sanctuary</h4>
+                                        </div>
+                                        <p className="text-[13px] text-[#6B6B60] mb-4">Estimate delivery to your location.</p>
+                                        <div className="space-y-3">
+                                            <select
+                                                value={shippingCountry}
+                                                onChange={(e) => setShippingCountry(e.target.value)}
+                                                className="w-full rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-[#F5F4F0]"
+                                            >
+                                                <option value="India">India</option>
+                                                <option value="USA">United States</option>
+                                                <option value="UK">United Kingdom</option>
+                                            </select>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Zip / Postal Code"
+                                                    value={shippingZip}
+                                                    onChange={(e) => setShippingZip(e.target.value)}
+                                                    className="flex-1 rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-[#F5F4F0]"
+                                                />
+                                                <button className="bg-[#E8E4DC] text-[#1A1A1A] px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-[#D4CFC0] transition-colors tracking-wide">
+                                                    Update
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
                                 </div>
                             </div>
                         )}
-                        
+
                     </div>
 
                     {/* ─── Ritual Summary Sidebar ─── */}
@@ -556,7 +556,7 @@ export default function CartPage() {
                                 >
                                     {isAuthenticated ? 'Confirm & Complete Ritual' : 'Sign In to Checkout'}
                                 </button>
-                                
+
                                 <div className="mt-5 flex items-center justify-center gap-4 text-[9px] text-[rgba(255,255,255,0.5)] font-bold tracking-[1.5px] uppercase">
                                     <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full border border-[rgba(255,255,255,0.5)] flex items-center justify-center"><div className="w-0.5 h-0.5 bg-white rounded-full"></div></div> Secure Transaction</span>
                                     <span>•</span>
