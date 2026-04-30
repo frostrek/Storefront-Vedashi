@@ -229,6 +229,7 @@ function ProductsContent() {
 
     // Reset to page 1 whenever filters change
     useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         const cancelled = { value: false };
         setCurrentPage(1);
         setHasMore(true);

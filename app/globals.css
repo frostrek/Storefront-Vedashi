@@ -21,7 +21,7 @@
 }
 
 :root {
-  --background: #FAF8F0;
+  --background: #FFFFFF;
   --foreground: #2C2C2C;
 }
 
@@ -126,7 +126,6 @@ div.skiptranslate,
   cursor: pointer !important;
   transition: all 0.2s ease !important;
   outline: none !important;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
   background-repeat: no-repeat !important;
   background-position: right 10px center !important;
   background-size: 12px !important;
@@ -343,6 +342,7 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
   height: 0 !important;
   background: transparent !important;
 }
+
 .no-scrollbar::-webkit-scrollbar-track,
 .no-scrollbar::-webkit-scrollbar-thumb,
 .no-scrollbar::-webkit-scrollbar-thumb:hover {
@@ -350,20 +350,18 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
   background-color: transparent !important;
   border: none !important;
 }
+
 .no-scrollbar {
-  -ms-overflow-style: none !important;  /* IE and Edge */
-  scrollbar-width: none !important;  /* Firefox */
+  -ms-overflow-style: none !important;
+  /* IE and Edge */
+  scrollbar-width: none !important;
+  /* Firefox */
 }
 
 /* Focus */
 *:focus-visible {
   outline: 2px solid var(--color-herbal-green);
   outline-offset: 2px;
-}
-
-::selection {
-  background-color: #3B5D3B;
-  color: white;
 }
 
 /* Animations */
@@ -854,6 +852,7 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
   0% {
     transform: translateX(0);
   }
+
   100% {
     transform: translateX(-50%);
   }
@@ -875,31 +874,17 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
 .cart-leaf-bg {
   position: relative;
   min-height: 100vh;
-  background-color: #F5F4F0;
+  background-color: #FFFFFF;
   color: #4A4A4A;
   overflow: hidden;
 }
 
 .cart-noise-overlay {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.06;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  mix-blend-mode: multiply;
+  display: none;
 }
 
 .cart-leaf-bg::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image: radial-gradient(#91C934 1px, transparent 1px);
-  background-size: 20px 20px;
-  opacity: 0.05;
-  z-index: 0;
+  display: none;
 }
 
 .cart-leaf-bg>* {
@@ -1116,48 +1101,40 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
 
 /* --- Ritual Summary Sidebar (Stays Dark) --- */
 .ritual-summary {
-  background: linear-gradient(145deg, #2A3D1A 0%, #1E3010 50%, #243A14 100%);
+  background: #FFFFFF;
   border-radius: 20px;
   padding: 32px 28px;
-  color: white;
+  color: #1A1A1A;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 12px 32px rgba(145, 201, 52, 0.12);
+  border: 1px solid #E8E4DC;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
 }
 
-.ritual-summary::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 0l.83.83v58.34h-58.34l-.83-.83L54.627 0zM27 0l27 27v33H21L-6 33V0h33zM0 0l27 27v33H0V0z' fill='%2391C934' fill-opacity='0.08' fill-rule='evenodd'/%3E%3C/svg%3E");
-  opacity: 0.5;
-  pointer-events: none;
-}
+
 
 .ritual-summary-title {
   font-family: 'Playfair Display', Georgia, serif;
   font-size: 20px;
   font-weight: 700;
-  color: white;
+  color: #1A1A1A;
   display: flex;
   align-items: center;
   gap: 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid #E8E4DC;
   padding-bottom: 16px;
   margin-bottom: 20px;
 }
 
 .ritual-summary-badge {
-  background: rgba(255, 255, 255, 0.1);
+  background: #F5F4F0;
   border-radius: 12px;
   padding: 4px 10px;
   font-size: 11px;
   font-weight: 600;
-  color: white;
+  color: #8B7A3D;
   margin-left: auto;
+  border: 1px solid #E8E4DC;
 }
 
 .ritual-summary-item {
@@ -1186,19 +1163,19 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
   flex: 1;
   font-size: 13px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
+  color: #1A1A1A;
   line-height: 1.4;
 }
 
 .ritual-summary-item-qty {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.6);
+  color: #6B6B60;
 }
 
 .ritual-summary-item-price {
   font-size: 14px;
   font-weight: 600;
-  color: white;
+  color: #1A1A1A;
 }
 
 .ritual-summary-row {
@@ -1210,17 +1187,17 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
 }
 
 .ritual-summary-row .label {
-  color: rgba(255, 255, 255, 0.7);
+  color: #4A4A4A;
 }
 
 .ritual-summary-row .value {
-  color: white;
-  font-weight: 500;
+  color: #1A1A1A;
+  font-weight: 600;
 }
 
 .ritual-summary-divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.1);
+  background: #E8E4DC;
   margin: 16px 0;
 }
 
@@ -1233,17 +1210,17 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
 
 .ritual-summary-total-label {
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 1px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.7);
+  color: #8B7A3D;
 }
 
 .ritual-summary-total-value {
   font-family: 'Playfair Display', Georgia, serif;
   font-size: 32px;
   font-weight: 700;
-  color: white;
+  color: #1A1A1A;
 }
 
 /* --- Checkout CTA --- */
@@ -1494,6 +1471,27 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
 
 /* Below-fold sections — skip layout/paint until visible */
 .content-lazy {
-    content-visibility: auto;
-    contain-intrinsic-size: auto 500px;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
+}
+
+/* Global Text Selection Color Override */
+::selection {
+  background-color: #91C934 !important;
+  color: #FFFFFF !important;
+}
+
+::-moz-selection {
+  background-color: #91C934 !important;
+  color: #FFFFFF !important;
+}
+
+*::selection {
+  background-color: #91C934 !important;
+  color: #FFFFFF !important;
+}
+
+*::-moz-selection {
+  background-color: #91C934 !important;
+  color: #FFFFFF !important;
 }

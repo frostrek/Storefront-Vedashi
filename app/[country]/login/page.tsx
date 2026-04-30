@@ -34,7 +34,7 @@ function LoginContent() {
         if (searchParams.get('logout') === 'true') {
             logout(); // local Vedashi logout
             // Sign out of Clerk as well to prevent "already signed in" errors
-            clerkSignOut().catch(() => {}).finally(() => {
+            clerkSignOut().catch(() => { }).finally(() => {
                 router.replace('/login');
             });
         }
@@ -168,16 +168,16 @@ function LoginContent() {
         return (
             <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0d1f0d]/90 backdrop-blur-md">
                 <div className="relative flex h-24 w-24 items-center justify-center">
-                    <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#4a7c4a] border-r-[#4a7c4a]/50 animate-spin" />
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#4a7c4a]/20 animate-pulse">
-                        <Leaf className="h-8 w-8 text-[#8dbf8d]" />
+                    <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#91C934] border-r-[#91C934]/50 animate-spin" />
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#91C934]/20 animate-pulse">
+                        <Leaf className="h-8 w-8 text-[#91C934]" />
                     </div>
                 </div>
                 <div className="mt-8 flex flex-col items-center space-y-2">
                     <h2 className="text-2xl font-bold text-white tracking-tight">
                         Securing your session
                     </h2>
-                    <p className="text-sm font-medium text-[#8dbf8d] animate-pulse">
+                    <p className="text-sm font-medium text-[#91C934] animate-pulse">
                         Please wait while we prepare your account...
                     </p>
                 </div>
@@ -353,7 +353,7 @@ function LoginContent() {
     const PhoneOTPCard = () => (
         <div className="bg-white/95 lg:bg-transparent backdrop-blur-sm lg:backdrop-blur-none rounded-2xl lg:rounded-none shadow-2xl lg:shadow-none p-6 lg:p-0 w-full">
             <div className="flex flex-col items-center mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-[#1e3d1e] flex items-center justify-center mb-4 shadow-lg">
+                <div className="w-12 h-12 rounded-2xl bg-[#91C934] flex items-center justify-center mb-4 shadow-lg">
                     <Smartphone className="w-6 h-6 text-white" />
                 </div>
                 <h2 className="text-2xl font-bold text-[#1a1a1a] tracking-tight">
@@ -381,13 +381,13 @@ function LoginContent() {
                                 control: (provided: any, state: any) => ({
                                     ...provided,
                                     borderRadius: '12px',
-                                    border: state.isFocused ? '1px solid #2d5a2d' : '1px solid #d4e4d4',
+                                    border: state.isFocused ? '1px solid #91C934' : '1px solid #d4e4d4',
                                     backgroundColor: '#f4f9f4',
                                     minHeight: '44px',
                                     boxShadow: 'none',
                                     cursor: 'pointer',
                                     '&:hover': {
-                                        borderColor: '#2d5a2d',
+                                        borderColor: '#91C934',
                                     },
                                 }),
                                 menu: (provided: any) => ({
@@ -428,7 +428,7 @@ function LoginContent() {
                             type="tel"
                             value={phoneNumber}
                             onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                            className="flex-1 rounded-xl border border-[#d4e4d4] bg-[#f8fdf8] px-4 py-3 text-sm text-[#1a2a1a] placeholder-[#9ab09a] focus:border-[#2d5a2d] focus:ring-2 focus:ring-[#2d5a2d]/10 focus:outline-none transition-all"
+                            className="flex-1 rounded-xl border border-[#d4e4d4] bg-[#f8fdf8] px-4 py-3 text-sm text-[#1a2a1a] placeholder-[#9ab09a] focus:border-[#91C934] focus:ring-2 focus:ring-[#91C934]/10 focus:outline-none transition-all"
                             placeholder="Enter 10-digit mobile number"
                             maxLength={10}
                             autoFocus
@@ -438,7 +438,7 @@ function LoginContent() {
                         type="button"
                         onClick={handleSendPhoneOTP}
                         disabled={loading || phoneNumber.length < 10}
-                        className="w-full rounded-xl py-3.5 text-sm font-semibold text-white bg-[#1e3d1e] hover:bg-[#2d5a2d] transition-all disabled:opacity-50 shadow-lg shadow-[#1e3d1e]/20 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+                        className="w-full rounded-xl py-3.5 text-sm font-semibold text-white bg-[#91C934] hover:bg-[#82B52F] transition-all disabled:opacity-50 shadow-lg shadow-[#91C934]/20 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
                     >
                         {loading ? (
                             <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Sending...</>
@@ -454,7 +454,7 @@ function LoginContent() {
                                 type="text"
                                 value={phoneName}
                                 onChange={e => setPhoneName(e.target.value)}
-                                className="w-full rounded-xl border border-[#d4e4d4] bg-[#f8fdf8] px-4 py-3 text-sm text-[#1a2a1a] placeholder-[#9ab09a] focus:border-[#2d5a2d] focus:outline-none transition-all"
+                                className="w-full rounded-xl border border-[#d4e4d4] bg-[#f8fdf8] px-4 py-3 text-sm text-[#1a2a1a] placeholder-[#9ab09a] focus:border-[#91C934] focus:outline-none transition-all"
                                 placeholder="Enter your name"
                             />
                             <p className="text-xs text-[#6b7b6b] mt-1">We&apos;ll create an account for you</p>
@@ -466,7 +466,7 @@ function LoginContent() {
                         inputMode="numeric"
                         value={otpCode}
                         onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                        className="w-full rounded-xl border border-[#d4e4d4] bg-[#f8fdf8] px-4 py-3 text-center text-xl tracking-[0.6em] font-mono text-[#1a2a1a] focus:border-[#2d5a2d] focus:ring-2 focus:ring-[#2d5a2d]/10 focus:outline-none transition-all mb-5"
+                        className="w-full rounded-xl border border-[#d4e4d4] bg-[#f8fdf8] px-4 py-3 text-center text-xl tracking-[0.6em] font-mono text-[#1a2a1a] focus:border-[#91C934] focus:ring-2 focus:ring-[#91C934]/10 focus:outline-none transition-all mb-5"
                         placeholder="● ● ● ● ● ●"
                         maxLength={6}
                         autoFocus
@@ -474,7 +474,7 @@ function LoginContent() {
                     <button
                         type="submit"
                         disabled={loading || otpCode.length < 4}
-                        className="w-full rounded-xl py-3.5 text-sm font-semibold text-white bg-[#1e3d1e] hover:bg-[#2d5a2d] transition-all disabled:opacity-50 shadow-lg shadow-[#1e3d1e]/20 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+                        className="w-full rounded-xl py-3.5 text-sm font-semibold text-white bg-[#91C934] hover:bg-[#82B52F] transition-all disabled:opacity-50 shadow-lg shadow-[#91C934]/20 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
                     >
                         {loading ? (
                             <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Verifying...</>
@@ -482,14 +482,14 @@ function LoginContent() {
                     </button>
                     <div className="mt-4 text-center space-y-2">
                         {cooldown > 0 ? (
-                            <p className="text-xs text-[#6b7b6b]">Resend OTP in <span className="font-semibold text-[#1e3d1e]">{cooldown}s</span></p>
+                            <p className="text-xs text-[#6b7b6b]">Resend OTP in <span className="font-semibold text-[#91C934]">{cooldown}s</span></p>
                         ) : (
-                            <button type="button" onClick={handleSendPhoneOTP} disabled={loading} className="text-xs font-semibold text-[#2d5a2d] hover:underline cursor-pointer disabled:cursor-not-allowed">
+                            <button type="button" onClick={handleSendPhoneOTP} disabled={loading} className="text-xs font-semibold text-[#91C934] hover:underline cursor-pointer disabled:cursor-not-allowed">
                                 Resend OTP
                             </button>
                         )}
                         <div>
-                            <button type="button" onClick={() => { setOtpSent(false); setOtpCode(''); }} className="text-xs text-[#6b7b6b] hover:text-[#1e3d1e] hover:underline cursor-pointer">
+                            <button type="button" onClick={() => { setOtpSent(false); setOtpCode(''); }} className="text-xs text-[#6b7b6b] hover:text-[#91C934] hover:underline cursor-pointer">
                                 Change phone number
                             </button>
                         </div>
@@ -501,7 +501,7 @@ function LoginContent() {
                 <button
                     type="button"
                     onClick={() => { setAuthMethod('email'); setOtpSent(false); setOtpCode(''); setCaptchaRequired(false); setTurnstileToken(null); }}
-                    className="flex items-center gap-1.5 text-xs font-semibold text-[#4a6b4a] hover:text-[#1e3d1e] transition-colors cursor-pointer"
+                    className="flex items-center gap-1.5 text-xs font-semibold text-[#91C934] hover:text-[#82B52F] transition-colors cursor-pointer"
                 >
                     <ArrowLeft className="w-3.5 h-3.5" />
                     Back to email login
@@ -509,419 +509,382 @@ function LoginContent() {
                 <p className="text-sm text-[#6b7b6b]">
                     Don&apos;t have an account?{' '}
                     <button type="button" onClick={() => { setIsRegister(true); setAuthMethod('email'); setCaptchaRequired(false); setTurnstileToken(null); }}
-                        className="font-semibold text-[#2d5a2d] hover:underline cursor-pointer">Create Account</button>
+                        className="font-semibold text-[#91C934] hover:underline cursor-pointer">Create Account</button>
                 </p>
-                <Link href="/" className="text-sm font-semibold text-[#2d5a2d] hover:underline cursor-pointer">Continue as Guest</Link>
+                <Link href="/" className="text-sm font-semibold text-[#91C934] hover:underline cursor-pointer">Continue as Guest</Link>
             </div>
         </div>
     );
 
     const cardTitle = isRegister
-        ? 'Create Account'
-        : 'Welcome Back!';
+        ? 'CREATE ACCOUNT'
+        : 'WELCOME BACK!';
 
     const cardSubtitle = isRegister
         ? 'Join the Vedashi family'
         : 'Sign in to your account';
 
     return (
-        <div
-            className="h-screen overflow-hidden relative flex flex-col lg:flex-row"
-            style={{
-                backgroundImage: `url('https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=1920&q=80')`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-            }}
-        >
-            {/* Dark overlay */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#0a1a0a]/80 via-[#0d2010]/70 to-[#0a1a0a]/80" />
+        <div className="h-screen overflow-hidden flex flex-col lg:flex-row bg-[#FAF8F0]">
+            {/* ── Left Section: Brand Showcase ── */}
+            <div className="relative hidden lg:flex lg:w-1/2 h-full flex-col overflow-hidden">
+                {/* Background Image with Overlay */}
+                {/* Solid Brand Background */}
+                <div className="absolute inset-0 z-0 bg-[#91C934]" />
 
-            {/* ── Left Column ── */}
-            <div className="relative z-10 flex-none lg:flex-1 flex flex-col lg:h-full lg:pr-8">
-                {/* ── Top Navbar ── */}
-                <nav className="flex items-center justify-between px-6 py-2 flex-shrink-0">
-                    <a href="/">
-                        <img src="/vedashi-logo.png" alt="Vedashi" className="h-14 sm:h-16 md:h-20 w-auto object-contain brightness-0 invert" />
-                    </a>
-                    <div className="flex items-center gap-4">
-                        {/* Intentionally removed the 'Don't have an account' text and 'Sign Up' button */}
-                    </div>
-                </nav>
-
-                {/* ── Left Hero ── */}
-                <div className="hidden lg:flex flex-col justify-center flex-1 max-w-xxl px-12 xl:px-24 mx-auto w-full">
-                    <h1 className="text-5xl xl:text-6xl font-bold text-white leading-tight mb-3">
-                        Your Path to<br />
-                        <em className="italic text-[#8dbf8d] not-italic font-bold" style={{ fontStyle: 'italic' }}>Prakriti</em> Awaits.
-                    </h1>
-                    <p className="text-white/70 text-base leading-relaxed mb-5 max-w-xl">
-                        Reconnect with nature through modern science and ancient Vedic principles. Every choice you make today defines your balance tomorrow.
-                    </p>
-
-                    <ul className="space-y-3 mb-6">
-                        {features.map((feature, i) => (
-                            <li key={i} className="flex items-center gap-3">
-                                <div className="w-6 h-6 rounded-full border-2 border-white/30 flex items-center justify-center flex-shrink-0">
-                                    <Check className="w-3 h-3 text-white/80" />
-                                </div>
-                                <span className="text-white/80 text-sm font-medium">{feature}</span>
-                            </li>
-                        ))}
-                    </ul>
-
-                    {/* Social proof */}
-                    <div className="flex items-center gap-3 absolute bottom-12">
-                        <div className="flex -space-x-2">
-                            {avatarColors.map((color, i) => (
-                                <div
-                                    key={i}
-                                    className="w-8 h-8 rounded-full border-2 border-[#0d2010] flex items-center justify-center text-white text-xs font-bold"
-                                    style={{ backgroundColor: color }}
-                                >
-                                    {['R', 'S', 'A', 'M'][i]}
-                                </div>
-                            ))}
-                            <div className="w-8 h-8 rounded-full border-2 border-[#0d2010] bg-[#4a7c4a] flex items-center justify-center text-white text-[9px] font-bold">
-                                12K
-                            </div>
-                        </div>
-                        <p className="text-white/60 text-sm italic">
-                            Join 12,000+ others already practicing mindfulness.
-                        </p>
-                    </div>
-
+                {/* Content over background */}
+                <div className="relative z-20 h-full flex flex-col p-5 lg:p-5">
+                    <nav>
+                        <a href="/">
+                            <img src="/vedashi-logo.png" alt="Vedashi" className="h-14 lg:h-16 w-auto object-contain brightness-0 invert" />
+                        </a>
+                    </nav>
                 </div>
             </div>
 
-            {/* ── Right Card ── */}
-            <div className="relative z-20 w-full lg:w-[480px] xl:w-[540px] flex-1 lg:flex-none lg:flex-shrink-0 lg:h-full flex flex-col justify-start pt-4 lg:pt-0 lg:justify-center lg:py-8 lg:pr-8">
-                <div className="w-full max-w-md mx-auto overflow-y-auto max-h-full px-6 py-6 lg:bg-white/95 lg:backdrop-blur-md lg:rounded-[2rem] lg:shadow-2xl [&::-webkit-scrollbar]:hidden" 
-                     style={{ 
-                        scrollbarWidth: 'none', 
-                        msOverflowStyle: 'none',
-                        WebkitOverflowScrolling: 'touch'
-                     }}>
+            {/* ── Right Section: Auth Forms ── */}
+            <div className="w-full lg:w-1/2 h-full flex flex-col bg-white lg:bg-[#FAF8F0] overflow-y-auto">
+                {/* Mobile Header (Visible only on mobile) */}
+                <div className="lg:hidden relative h-32 flex flex-col overflow-hidden">
+                    <div className="absolute inset-0 z-0 bg-[#91C934]" />
+                    <div className="relative z-20 p-8">
+                        <a href="/">
+                            <img src="/vedashi-logo.png" alt="Vedashi" className="h-10 w-auto object-contain brightness-0 invert" />
+                        </a>
+                    </div>
+                </div>
 
-                    {/* Phone OTP View */}
-                    {authMethod === 'phone' && !isRegister ? (
-                        <PhoneOTPCard />
-                    ) : (
-                        /* Main Login / Register Form */
-                        <div className="bg-white/95 lg:bg-transparent backdrop-blur-sm lg:backdrop-blur-none rounded-2xl lg:rounded-none shadow-2xl lg:shadow-none p-6 lg:p-0">
+                <div className="flex-1 flex flex-col justify-center py-12 px-6 sm:px-12 lg:px-24 xl:px-32 relative">
+                    {/* Back Button */}
+                    <button
+                        onClick={() => router.back()}
+                        className="absolute top-6 right-6 lg:top-10 lg:right-10 flex items-center gap-2 text-[13px] font-bold text-[#91C934] hover:text-[#82B52F] transition-all cursor-pointer group"
+                    >
+                        Back
+                    </button>
 
-                            {/* Card header */}
-                            <div className="flex flex-col items-center mb-4">
-                                <h2 className="text-2xl font-bold text-[#1a1a1a] tracking-tight">{cardTitle}</h2>
-                                <div className="w-12 h-0.5 bg-gradient-to-r from-transparent via-[#2d5a2d]/40 to-transparent mt-2" />
-                                <p className="text-sm text-[#6b7b6b] mt-2">{cardSubtitle}</p>
-                            </div>
+                    <div className="w-full max-w-md mx-auto">
 
-                            {/* Session expired banner */}
-                            {searchParams.get('session_expired') === '1' && (
-                                <div id="session-expired-banner" className="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 flex items-start gap-3">
-                                    <ShieldCheck className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                                    <div className="flex-1">
-                                        <p className="text-sm font-semibold text-amber-800">Session expired</p>
-                                        <p className="text-xs text-amber-700 mt-0.5">Your session expired due to inactivity. Please log in again.</p>
-                                    </div>
+                        {/* Phone OTP View */}
+                        {authMethod === 'phone' && !isRegister ? (
+                            <PhoneOTPCard />
+                        ) : (
+                            /* Main Login / Register Form */
+                            <div className="bg-white/95 lg:bg-transparent backdrop-blur-sm lg:backdrop-blur-none rounded-2xl lg:rounded-none shadow-2xl lg:shadow-none p-6 lg:p-0">
+
+                                {/* Card header */}
+                                <div className="flex flex-col items-center mb-4">
+                                    <h2 className="text-2xl font-bold text-[#1a1a1a] tracking-tight">{cardTitle}</h2>
+                                    <div className="w-12 h-0.5 bg-gradient-to-r from-transparent via-[#2d5a2d]/40 to-transparent mt-2" />
+                                    <p className="text-sm text-[#6b7b6b] mt-2">{cardSubtitle}</p>
                                 </div>
-                            )}
-                            <form onSubmit={handleSubmit} className="space-y-0 mt-6">
 
-                                {/* Name field (register) */}
-                                {isRegister && (
-                                    <div className="mb-4">
-                                        <label className="block text-xs font-semibold text-[#3d3d3d] uppercase tracking-wider mb-2">
-                                            Full Name
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={form.name}
-                                            onChange={e => setForm({ ...form, name: e.target.value })}
-                                            className="w-full rounded-xl border border-[#d4e4d4] bg-[#f8fdf8] px-4 py-3 text-sm text-[#1a2a1a] placeholder-[#9ab09a] focus:border-[#2d5a2d] focus:ring-2 focus:ring-[#2d5a2d]/10 focus:outline-none transition-all"
-                                            placeholder="Your full name"
-                                            required
-                                        />
+                                {/* Session expired banner */}
+                                {searchParams.get('session_expired') === '1' && (
+                                    <div id="session-expired-banner" className="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 flex items-start gap-3">
+                                        <ShieldCheck className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                                        <div className="flex-1">
+                                            <p className="text-sm font-semibold text-amber-800">Session expired</p>
+                                            <p className="text-xs text-amber-700 mt-0.5">Your session expired due to inactivity. Please log in again.</p>
+                                        </div>
                                     </div>
                                 )}
+                                <form onSubmit={handleSubmit} className="space-y-0 mt-6">
 
-
-
-                                {/* Email */}
-                                <div className="mb-3">
-                                    <label className="block text-xs font-semibold text-[#3d3d3d] uppercase tracking-wider mb-2">
-                                        Email Address
-                                    </label>
-                                    <div className="relative">
-                                        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ab09a]" />
-                                        <input
-                                            type="email"
-                                            value={form.email}
-                                            onChange={e => setForm({ ...form, email: e.target.value })}
-                                            className="w-full rounded-xl border border-[#d4e4d4] bg-[#f8fdf8] pl-10 pr-4 py-2.5 text-sm text-[#1a2a1a] placeholder-[#9ab09a] focus:border-[#2d5a2d] focus:ring-2 focus:ring-[#2d5a2d]/10 focus:outline-none transition-all"
-                                            placeholder="you@example.com"
-                                            required
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Password */}
-                                <div className="mb-3">
-                                    <div className="mb-2">
-                                        <label className="block text-xs font-semibold text-[#3d3d3d] uppercase tracking-wider">
-                                            Password
-                                        </label>
-                                    </div>
-                                    <div className="relative">
-                                        <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ab09a]" />
-                                        <input
-                                            type={showPassword ? 'text' : 'password'}
-                                            value={form.password}
-                                            onChange={e => setForm({ ...form, password: e.target.value })}
-                                            onKeyDown={handleKeyEvent}
-                                            onKeyUp={handleKeyEvent}
-                                            className="w-full rounded-xl border border-[#d4e4d4] bg-[#f8fdf8] pl-10 pr-11 py-2.5 text-sm text-[#1a2a1a] placeholder-[#9ab09a] focus:border-[#2d5a2d] focus:ring-2 focus:ring-[#2d5a2d]/10 focus:outline-none transition-all"
-                                            placeholder="••••••••"
-                                            required
-                                            minLength={3}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9ab09a] hover:text-[#4a6b4a] transition-colors cursor-pointer"
-                                            tabIndex={-1}
-                                        >
-                                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                        </button>
-                                    </div>
-                                    {capsLockOn && <p className="text-xs text-[#d45547] mt-1.5 font-medium animate-pulse">Caps Lock is ON</p>}
-                                    {!isRegister && (
-                                        <div className="flex justify-between items-center mt-3 mb-1">
-                                            <label className="flex items-center gap-2 cursor-pointer group">
-                                                <div className={`w-4 h-4 rounded border transition-colors flex items-center justify-center ${rememberMe ? 'bg-[#1e3d1e] border-[#1e3d1e]' : 'border-[#9ab09a] group-hover:border-[#4a6b4a]'}`}>
-                                                    {rememberMe && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
-                                                </div>
-                                                <span className="text-sm font-medium text-[#4a6b4a] group-hover:text-[#2d5a2d] transition-colors select-none">Remember Me</span>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={rememberMe}
-                                                    onChange={e => setRememberMe(e.target.checked)}
-                                                    className="hidden"
-                                                />
+                                    {/* Name field (register) */}
+                                    {isRegister && (
+                                        <div className="mb-4">
+                                            <label className="block text-xs font-semibold text-[#3d3d3d] uppercase tracking-wider mb-2">
+                                                Full Name
                                             </label>
-                                            <Link href="/forgot-password" className="text-xs font-semibold text-[#2d5a2d] hover:underline transition-colors cursor-pointer">
-                                                Forgot Password?
-                                            </Link>
+                                            <input
+                                                type="text"
+                                                value={form.name}
+                                                onChange={e => setForm({ ...form, name: e.target.value })}
+                                                className="w-full rounded-xl border border-[#d4e4d4] bg-[#f8fdf8] px-4 py-3 text-sm text-[#1a2a1a] placeholder-[#9ab09a] focus:border-[#91C934] focus:ring-2 focus:ring-[#91C934]/10 focus:outline-none transition-all"
+                                                placeholder="Your full name"
+                                                required
+                                            />
                                         </div>
                                     )}
-                                </div>
 
-                                {/* Confirm Password */}
-                                {isRegister && (
+
+
+                                    {/* Email */}
+                                    <div className="mb-3">
+                                        <label className="block text-xs font-semibold text-[#3d3d3d] uppercase tracking-wider mb-2">
+                                            Email Address
+                                        </label>
+                                        <div className="relative">
+                                            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ab09a]" />
+                                            <input
+                                                type="email"
+                                                value={form.email}
+                                                onChange={e => setForm({ ...form, email: e.target.value })}
+                                                className="w-full rounded-xl border border-[#d4e4d4] bg-[#f8fdf8] pl-10 pr-4 py-2.5 text-sm text-[#1a2a1a] placeholder-[#9ab09a] focus:border-[#91C934] focus:ring-2 focus:ring-[#91C934]/10 focus:outline-none transition-all"
+                                                placeholder="you@example.com"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Password */}
                                     <div className="mb-3">
                                         <div className="mb-2">
                                             <label className="block text-xs font-semibold text-[#3d3d3d] uppercase tracking-wider">
-                                                Confirm Password
+                                                Password
                                             </label>
                                         </div>
                                         <div className="relative">
                                             <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ab09a]" />
                                             <input
-                                                type={showConfirmPassword ? 'text' : 'password'}
-                                                value={form.confirmPassword}
-                                                onChange={e => setForm({ ...form, confirmPassword: e.target.value })}
+                                                type={showPassword ? 'text' : 'password'}
+                                                value={form.password}
+                                                onChange={e => setForm({ ...form, password: e.target.value })}
                                                 onKeyDown={handleKeyEvent}
                                                 onKeyUp={handleKeyEvent}
-                                                className="w-full rounded-xl border border-[#d4e4d4] bg-[#f8fdf8] pl-10 pr-11 py-2.5 text-sm text-[#1a2a1a] placeholder-[#9ab09a] focus:border-[#2d5a2d] focus:ring-2 focus:ring-[#2d5a2d]/10 focus:outline-none transition-all"
+                                                className="w-full rounded-xl border border-[#d4e4d4] bg-[#f8fdf8] pl-10 pr-11 py-2.5 text-sm text-[#1a2a1a] placeholder-[#9ab09a] focus:border-[#91C934] focus:ring-2 focus:ring-[#91C934]/10 focus:outline-none transition-all"
                                                 placeholder="••••••••"
                                                 required
                                                 minLength={3}
                                             />
                                             <button
                                                 type="button"
-                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                onClick={() => setShowPassword(!showPassword)}
                                                 className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9ab09a] hover:text-[#4a6b4a] transition-colors cursor-pointer"
                                                 tabIndex={-1}
                                             >
-                                                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                             </button>
                                         </div>
-                                    </div>
-                                )}
-
-                                {/* Terms checkbox */}
-                                {isRegister && (
-                                    <div className="flex items-start gap-2.5 mb-3">
-                                        <button
-                                            type="button"
-                                            onClick={() => setAgreeTerms(!agreeTerms)}
-                                            className={`w-4 h-4 mt-0.5 rounded flex items-center justify-center flex-shrink-0 border transition-all cursor-pointer ${agreeTerms
-                                                ? 'bg-[#1e3d1e] border-[#1e3d1e]'
-                                                : 'bg-white border-[#d4e4d4] hover:border-[#2d5a2d]'
-                                                }`}
-                                        >
-                                            {agreeTerms && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
-                                        </button>
-                                        <p className="text-xs text-[#6b7b6b] leading-relaxed">
-                                            I agree to the{' '}
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowTermsModal(true)}
-                                                className="text-[#2d5a2d] font-semibold hover:underline cursor-pointer bg-transparent border-none p-0 inline"
-                                            >
-                                                Terms of Service
-                                            </button>
-                                            {' '}and{' '}
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowPrivacyModal(true)}
-                                                className="text-[#2d5a2d] font-semibold hover:underline cursor-pointer bg-transparent border-none p-0 inline"
-                                            >
-                                                Privacy Policy
-                                            </button>.
-                                        </p>
-                                    </div>
-                                )}
-
-                                <LegalModal
-                                    isOpen={showTermsModal}
-                                    onClose={() => setShowTermsModal(false)}
-                                    title={legalContent['terms-of-service']?.title || "Terms of Service"}
-                                >
-                                    <LegalContentRenderer content={legalContent['terms-of-service']?.content || ''} />
-                                </LegalModal>
-
-                                <LegalModal
-                                    isOpen={showPrivacyModal}
-                                    onClose={() => setShowPrivacyModal(false)}
-                                    title={legalContent['privacy-policy']?.title || "Privacy Policy"}
-                                >
-                                    <LegalContentRenderer content={legalContent['privacy-policy']?.content || ''} />
-                                </LegalModal>
-
-                                {/* Cloudflare Turnstile */}
-                                {/* Always render Turnstile so token is ready before first submit */}
-                                {(
-                                    <div className="mb-4 flex flex-col items-center min-h-[65px]">
-                                        <div 
-                                            key={`turnstile-${isRegister ? 'reg' : 'login'}-${captchaRequired}`}
-                                            ref={turnstileRef} 
-                                            className="flex justify-center" 
-                                        />
-                                        {!turnstileToken && (
-                                            <p className="text-xs text-[#9ab09a] mt-1 animate-pulse">
-                                                Loading security verification...
-                                            </p>
+                                        {capsLockOn && <p className="text-xs text-[#d45547] mt-1.5 font-medium animate-pulse">Caps Lock is ON</p>}
+                                        {!isRegister && (
+                                            <div className="flex justify-between items-center mt-3 mb-1">
+                                                <label className="flex items-center gap-2 cursor-pointer group">
+                                                    <div className={`w-4 h-4 rounded border transition-colors flex items-center justify-center ${rememberMe ? 'bg-[#91C934] border-[#91C934]' : 'border-[#9ab09a] group-hover:border-[#91C934]'}`}>
+                                                        {rememberMe && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                                                    </div>
+                                                    <span className="text-sm font-medium text-[#91C934] group-hover:text-[#82B52F] transition-colors select-none">Remember Me</span>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={rememberMe}
+                                                        onChange={e => setRememberMe(e.target.checked)}
+                                                        className="hidden"
+                                                    />
+                                                </label>
+                                                <Link href="/forgot-password" className="text-xs font-semibold text-[#91C934] hover:underline transition-colors cursor-pointer">
+                                                    Forgot Password?
+                                                </Link>
+                                            </div>
                                         )}
                                     </div>
-                                )}
 
-                                {/* CTA Button */}
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="w-full rounded-xl py-3 text-sm font-semibold text-white transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg cursor-pointer disabled:cursor-not-allowed bg-[#1e3d1e] hover:bg-[#2d5a2d] shadow-[#1e3d1e]/25"
-                                >
-                                    {loading ? (
-                                        <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Please wait...</>
-                                    ) : isRegister ? (
-                                        'Create Account →'
-                                    ) : (
-                                        'Login →'
-                                    )}
-                                </button>
-
-                                {/* Footer links + Social icon circles */}
-                                <div className="mt-1 pt-5 border-t border-[#e8f0e8]">
-                                    {!isRegister && (
-                                        <div className="text-center mb-4">
-                                            <span className="text-xs font-semibold text-[#6b7b6b] uppercase tracking-wider">Or Continue With</span>
+                                    {/* Confirm Password */}
+                                    {isRegister && (
+                                        <div className="mb-3">
+                                            <div className="mb-2">
+                                                <label className="block text-xs font-semibold text-[#3d3d3d] uppercase tracking-wider">
+                                                    Confirm Password
+                                                </label>
+                                            </div>
+                                            <div className="relative">
+                                                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ab09a]" />
+                                                <input
+                                                    type={showConfirmPassword ? 'text' : 'password'}
+                                                    value={form.confirmPassword}
+                                                    onChange={e => setForm({ ...form, confirmPassword: e.target.value })}
+                                                    onKeyDown={handleKeyEvent}
+                                                    onKeyUp={handleKeyEvent}
+                                                    className="w-full rounded-xl border border-[#d4e4d4] bg-[#f8fdf8] pl-10 pr-11 py-2.5 text-sm text-[#1a2a1a] placeholder-[#9ab09a] focus:border-[#91C934] focus:ring-2 focus:ring-[#91C934]/10 focus:outline-none transition-all"
+                                                    placeholder="••••••••"
+                                                    required
+                                                    minLength={3}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9ab09a] hover:text-[#4a6b4a] transition-colors cursor-pointer"
+                                                    tabIndex={-1}
+                                                >
+                                                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                </button>
+                                            </div>
                                         </div>
                                     )}
 
-                                    {/* Circle social buttons */}
-                                    {!isRegister && (
-                                        <div className="flex items-center justify-center gap-3 mb-5">
-                                            {/* Google */}
+                                    {/* Terms checkbox */}
+                                    {isRegister && (
+                                        <div className="flex items-start gap-2.5 mb-3">
                                             <button
                                                 type="button"
-                                                onClick={() => (document.querySelector('[data-social="google"]') as HTMLElement)?.click()}
-                                                disabled={loading}
-                                                title="Continue with Google"
-                                                className="w-10 h-10 rounded-full bg-white border border-[#e0e0e0] flex items-center justify-center shadow-sm hover:shadow-md hover:scale-105 transition-all disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+                                                onClick={() => setAgreeTerms(!agreeTerms)}
+                                                className={`w-4 h-4 mt-0.5 rounded flex items-center justify-center flex-shrink-0 border transition-all cursor-pointer ${agreeTerms
+                                                    ? 'bg-[#91C934] border-[#91C934]'
+                                                    : 'bg-white border-[#d4e4d4] hover:border-[#91C934]'
+                                                    }`}
                                             >
-                                                <svg viewBox="0 0 24 24" className="w-5 h-5">
-                                                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                                                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                                                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
-                                                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                                                </svg>
+                                                {agreeTerms && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
                                             </button>
-
-                                            {/* Facebook */}
-                                            <button
-                                                type="button"
-                                                onClick={() => (document.querySelector('[data-social="facebook"]') as HTMLElement)?.click()}
-                                                disabled={loading}
-                                                title="Continue with Facebook"
-                                                className="w-10 h-10 rounded-full bg-[#1877F2] flex items-center justify-center shadow-sm hover:shadow-md hover:scale-105 transition-all disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
-                                            >
-                                                <svg viewBox="0 0 24 24" className="w-5 h-5" fill="white">
-                                                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                                                </svg>
-                                            </button>
-
-                                            {/* Apple */}
-                                            <button
-                                                type="button"
-                                                onClick={() => (document.querySelector('[data-social="apple"]') as HTMLElement)?.click()}
-                                                disabled={loading}
-                                                title="Continue with Apple"
-                                                className="w-10 h-10 rounded-full bg-[#000000] flex items-center justify-center shadow-sm hover:shadow-md hover:scale-105 transition-all disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
-                                            >
-                                                <svg viewBox="0 0 24 24" className="w-5 h-5" fill="white">
-                                                    <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.54 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701z" />
-                                                </svg>
-                                            </button>
-
-                                            {/* Phone */}
-                                            <button
-                                                type="button"
-                                                onClick={() => setAuthMethod('phone')}
-                                                disabled={loading}
-                                                title="Continue with Phone"
-                                                className="w-10 h-10 rounded-full bg-[#1e3d1e] flex items-center justify-center shadow-sm hover:shadow-md hover:scale-105 transition-all disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
-                                            >
-                                                <Smartphone className="w-4.5 h-4.5 text-white" />
-                                            </button>
+                                            <p className="text-xs text-[#6b7b6b] leading-relaxed">
+                                                I agree to the{' '}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowTermsModal(true)}
+                                                    className="text-[#91C934] font-semibold hover:underline cursor-pointer bg-transparent border-none p-0 inline"
+                                                >
+                                                    Terms of Service
+                                                </button>
+                                                {' '}and{' '}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPrivacyModal(true)}
+                                                    className="text-[#91C934] font-semibold hover:underline cursor-pointer bg-transparent border-none p-0 inline"
+                                                >
+                                                    Privacy Policy
+                                                </button>.
+                                            </p>
                                         </div>
                                     )}
 
-                                    <div className="hidden">
-                                        <SocialLoginButtons disabled={loading} />
-                                    </div>
+                                    <LegalModal
+                                        isOpen={showTermsModal}
+                                        onClose={() => setShowTermsModal(false)}
+                                        title={legalContent['terms-of-service']?.title || "Terms of Service"}
+                                    >
+                                        <LegalContentRenderer content={legalContent['terms-of-service']?.content || ''} />
+                                    </LegalModal>
 
-                                    <div className="text-center space-y-1">
-                                        <p className="text-sm text-[#6b7b6b]">
-                                            {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
-                                            <button type="button" onClick={() => { setIsRegister(!isRegister); setCaptchaRequired(false); setTurnstileToken(null); }}
-                                                className="font-semibold text-[#2d5a2d] hover:underline cursor-pointer">
-                                                {isRegister ? 'Sign In' : 'Create Account'}
-                                            </button>
-                                        </p>
-                                        <p className="text-sm text-[#6b7b6b]">
-                                            <Link href="/" className="font-semibold text-[#2d5a2d] hover:underline cursor-pointer">
-                                                Continue as Guest
-                                            </Link>
-                                        </p>
+                                    <LegalModal
+                                        isOpen={showPrivacyModal}
+                                        onClose={() => setShowPrivacyModal(false)}
+                                        title={legalContent['privacy-policy']?.title || "Privacy Policy"}
+                                    >
+                                        <LegalContentRenderer content={legalContent['privacy-policy']?.content || ''} />
+                                    </LegalModal>
+
+                                    {/* Cloudflare Turnstile */}
+                                    {/* Always render Turnstile so token is ready before first submit */}
+                                    {(
+                                        <div className="mb-4 flex flex-col items-center min-h-[65px]">
+                                            <div
+                                                key={`turnstile-${isRegister ? 'reg' : 'login'}-${captchaRequired}`}
+                                                ref={turnstileRef}
+                                                className="flex justify-center"
+                                            />
+                                            {!turnstileToken && (
+                                                <p className="text-xs text-[#9ab09a] mt-1 animate-pulse">
+                                                    Loading security verification...
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* CTA Button */}
+                                    <button
+                                        type="submit"
+                                        disabled={loading}
+                                        className="w-full rounded-xl py-3 text-sm font-semibold text-white transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg cursor-pointer disabled:cursor-not-allowed bg-[#91C934] hover:bg-[#82B52F] shadow-[#91C934]/25"
+                                    >
+                                        {loading ? (
+                                            <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Please wait...</>
+                                        ) : isRegister ? (
+                                            'Create Account →'
+                                        ) : (
+                                            'Login →'
+                                        )}
+                                    </button>
+
+                                    {/* Footer links + Social icon circles */}
+                                    <div className="mt-1 pt-5 border-t border-[#e8f0e8]">
+                                        {!isRegister && (
+                                            <div className="text-center mb-4">
+                                                <span className="text-xs font-semibold text-[#6b7b6b] uppercase tracking-wider">Or Continue With</span>
+                                            </div>
+                                        )}
+
+                                        {/* Circle social buttons */}
+                                        {!isRegister && (
+                                            <div className="flex items-center justify-center gap-3 mb-5">
+                                                {/* Google */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => (document.querySelector('[data-social="google"]') as HTMLElement)?.click()}
+                                                    disabled={loading}
+                                                    title="Continue with Google"
+                                                    className="w-10 h-10 rounded-full bg-white border border-[#e0e0e0] flex items-center justify-center shadow-sm hover:shadow-md hover:scale-105 transition-all disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+                                                >
+                                                    <svg viewBox="0 0 24 24" className="w-5 h-5">
+                                                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                                                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                                                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
+                                                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                                                    </svg>
+                                                </button>
+
+                                                {/* Facebook */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => (document.querySelector('[data-social="facebook"]') as HTMLElement)?.click()}
+                                                    disabled={loading}
+                                                    title="Continue with Facebook"
+                                                    className="w-10 h-10 rounded-full bg-[#1877F2] flex items-center justify-center shadow-sm hover:shadow-md hover:scale-105 transition-all disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+                                                >
+                                                    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="white">
+                                                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                                                    </svg>
+                                                </button>
+
+                                                {/* Apple */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => (document.querySelector('[data-social="apple"]') as HTMLElement)?.click()}
+                                                    disabled={loading}
+                                                    title="Continue with Apple"
+                                                    className="w-10 h-10 rounded-full bg-[#000000] flex items-center justify-center shadow-sm hover:shadow-md hover:scale-105 transition-all disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+                                                >
+                                                    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="white">
+                                                        <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.54 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701z" />
+                                                    </svg>
+                                                </button>
+
+                                                {/* Phone */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setAuthMethod('phone')}
+                                                    disabled={loading}
+                                                    title="Continue with Phone"
+                                                    className="w-10 h-10 rounded-full bg-[#91C934] flex items-center justify-center shadow-sm hover:shadow-md hover:scale-105 transition-all disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+                                                >
+                                                    <Smartphone className="w-4.5 h-4.5 text-white" />
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        <div className="hidden">
+                                            <SocialLoginButtons disabled={loading} />
+                                        </div>
+
+                                        <div className="text-center space-y-1">
+                                            <p className="text-sm text-[#6b7b6b]">
+                                                {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
+                                                <button type="button" onClick={() => { setIsRegister(!isRegister); setCaptchaRequired(false); setTurnstileToken(null); }}
+                                                    className="font-semibold text-[#91C934] hover:underline cursor-pointer">
+                                                    {isRegister ? 'Sign In' : 'Create Account'}
+                                                </button>
+                                            </p>
+                                            <p className="text-sm text-[#6b7b6b]">
+                                                <Link href="/" className="font-semibold text-[#91C934] hover:underline cursor-pointer">
+                                                    Continue as Guest
+                                                </Link>
+                                            </p>
+                                        </div>
                                     </div>
-                                </div>
-                            </form>
-                        </div>
-                    )}
+                                </form>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
-
         </div>
     );
 }

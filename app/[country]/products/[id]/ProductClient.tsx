@@ -165,6 +165,9 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
     // Only fetch product details and variants (above-fold data)
     // Related products and reviews are deferred to their lazy sections
     useEffect(() => {
+        window.scrollTo(0, 0);
+        // Also scroll on next tick just in case
+        setTimeout(() => window.scrollTo(0, 0), 0);
         const load = async () => {
             if (!initialProduct) {
                 setLoading(true);
@@ -426,7 +429,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                 </div>
             </div>
 
-            <div className="mx-auto max-w-[1450px] px-4 py-4">
+            <div className="mx-auto max-w-[1420px] px-4 py-4">
                 {/* ═══ ABOVE THE FOLD — loads immediately ═══ */}
                 <div className="grid gap-2 lg:grid-cols-[50%_1fr] items-start">
                     {/* IMAGE GALLERY */}
