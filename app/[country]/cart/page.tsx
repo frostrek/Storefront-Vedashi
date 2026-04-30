@@ -83,7 +83,7 @@ export default function CartPage() {
     if (loading && items.length === 0) {
         return (
             <div className="cart-leaf-bg flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-[#6B8F5E]" />
+                <Loader2 className="h-8 w-8 animate-spin text-[#91C934]" />
             </div>
         );
     }
@@ -124,13 +124,13 @@ export default function CartPage() {
                     </div>
                 </div>
                 <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12 relative z-10">
-                    <Link href="/products" className="inline-flex items-center gap-2 text-sm font-semibold text-[#6B8F5E] hover:text-[#5A7A4E] mb-6 transition-colors uppercase tracking-wider">
+                    <Link href="/products" className="inline-flex items-center gap-2 text-sm font-semibold text-[#91C934] hover:text-[#7AB52A] mb-6 transition-colors uppercase tracking-wider">
                         <ArrowLeft className="h-4 w-4" /> Continue Shopping
                     </Link>
                     <div className="cart-item-card text-center py-10 mb-6">
                         <ShoppingCart className="h-8 w-8 text-[#8B7A3D] mx-auto mb-3" />
                         <p className="text-[#4A4A4A] font-medium">Your active cart is empty.</p>
-                        <Link href="/products" className="text-sm text-[#6B8F5E] font-semibold hover:underline mt-2 inline-block">Browse Products</Link>
+                        <Link href="/products" className="text-sm text-[#91C934] font-semibold hover:underline mt-2 inline-block">Browse Products</Link>
                     </div>
                     <div>
                         <h3 className="cart-saved-section-title">
@@ -147,12 +147,12 @@ export default function CartPage() {
                                         </Link>
                                         <div className="flex-1">
                                             <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
-                                                <h3 className="text-sm font-bold text-[#1A1A1A] hover:text-[#3d5c3a] transition-colors">{item.product_name || 'Product'}</h3>
+                                                <h3 className="text-sm font-bold text-[#1A1A1A] hover:text-[#91C934] transition-colors">{item.product_name || 'Product'}</h3>
                                             </Link>
                                             <p className="text-[#4A4A4A] mt-1">{formatPrice(price)}</p>
                                         </div>
                                         <div className="flex flex-col items-end gap-2">
-                                            <button onClick={() => { moveToCart(item.cart_item_id); toast.success('Moved to cart'); }} disabled={loading} className="bg-[#6B8F5E] text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-[#5A7A4E]">
+                                            <button onClick={() => { moveToCart(item.cart_item_id); toast.success('Moved to cart'); }} disabled={loading} className="bg-[#91C934] text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-[#7AB52A]">
                                                 Move to Bag
                                             </button>
                                             <button onClick={() => setItemToRemove(item.cart_item_id)} disabled={loading} className="text-[#C0392B] text-[11px] uppercase tracking-wider font-semibold hover:underline">
@@ -213,7 +213,7 @@ export default function CartPage() {
             {/* Main Content */}
             <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12 relative z-10">
                 {/* Back Link */}
-                <Link href="/products" className="inline-flex items-center gap-2 text-sm font-semibold text-[#6B8F5E] hover:text-[#5A7A4E] mb-6 transition-colors uppercase tracking-wider">
+                <Link href="/products" className="inline-flex items-center gap-2 text-sm font-semibold text-[#91C934] hover:text-[#7AB52A] mb-6 transition-colors uppercase tracking-wider">
                     <ArrowLeft className="h-4 w-4" /> Continue Shopping
                 </Link>
 
@@ -344,7 +344,7 @@ export default function CartPage() {
                                                     <p className="text-[#4A4A4A] mt-1">{formatPrice(price)}</p>
                                                 </div>
                                                 <div className="flex flex-col items-end gap-2">
-                                                    <button onClick={() => { moveToCart(item.cart_item_id); toast.success('Moved to cart'); }} disabled={loading} className="bg-[#6B8F5E] text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-[#5A7A4E]">
+                                                    <button onClick={() => { moveToCart(item.cart_item_id); toast.success('Moved to cart'); }} disabled={loading} className="bg-[#91C934] text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-[#7AB52A]">
                                                         Move to Bag
                                                     </button>
                                                     <button onClick={() => setItemToRemove(item.cart_item_id)} disabled={loading} className="text-[#C0392B] text-[11px] uppercase tracking-wider font-semibold hover:underline">
@@ -362,9 +362,9 @@ export default function CartPage() {
                         {items.length > 0 && (
                             <div className="flex flex-col gap-4">
                                 {/* Ayurvedic Practitioner Notes */}
-                                <div className="cart-item-card p-6 border-l-4 border-l-[#2D3B2D]">
+                                <div className="cart-item-card p-6 border-l-4 border-l-[#91C934]">
                                     <div className="flex items-center gap-2 mb-3">
-                                        <FileText className="h-5 w-5 text-[#2D3B2D]" />
+                                        <FileText className="h-5 w-5 text-[#91C934]" />
                                         <h4 className="text-lg font-bold text-[#1A1A1A]">Order Notes <span className="text-[#8B7A3D] font-normal text-xs">(optional)</span></h4>
                                     </div>
                                     <p className="text-[13px] text-[#6B6B60] mb-4">Add any specific allergies, preferences, or delivery instructions for our practitioners.</p>
@@ -374,7 +374,7 @@ export default function CartPage() {
                                         maxLength={200}
                                         rows={3}
                                         placeholder="Type your notes here..."
-                                        className="w-full rounded-lg border border-[#D4CFC0] bg-[#F5F4F0] px-4 py-3 text-sm focus:border-[#2D3B2D] focus:outline-none resize-none font-medium"
+                                        className="w-full rounded-lg border border-[#D4CFC0] bg-[#F5F4F0] px-4 py-3 text-sm focus:border-[#91C934] focus:outline-none resize-none font-medium"
                                     />
                                     <p className="mt-1 text-[10px] text-[#6B6B60] text-right font-bold tracking-wider">{orderNotes.length}/200</p>
                                 </div>
@@ -411,7 +411,7 @@ export default function CartPage() {
                                                     setApplyingCoupon(false);
                                                 }}
                                                 disabled={applyingCoupon || !couponInput.trim()}
-                                                className="bg-[#2D3B2D] text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-[#1F291F] transition-colors disabled:opacity-50 tracking-wide"
+                                                className="bg-[#91C934] text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-[#7AB52A] transition-colors disabled:opacity-50 tracking-wide"
                                             >
                                                 {applyingCoupon ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Apply'}
                                             </button>
@@ -420,9 +420,9 @@ export default function CartPage() {
                                     {couponError && <p className="mt-2 text-xs text-[#C0392B]">{couponError}</p>}
                                 </div>
 
-                                <div className="cart-item-card p-6 border-t-4 border-t-[#6B8F5E]">
+                                <div className="cart-item-card p-6 border-t-4 border-t-[#91C934]">
                                     <div className="flex items-center gap-2 mb-3">
-                                        <MapPin className="h-5 w-5 text-[#6B8F5E]" />
+                                        <MapPin className="h-5 w-5 text-[#91C934]" />
                                         <h4 className="text-lg font-bold text-[#1A1A1A]">Shipping Sanctuary</h4>
                                     </div>
                                     <p className="text-[13px] text-[#6B6B60] mb-4">Estimate delivery to your location.</p>
@@ -430,7 +430,7 @@ export default function CartPage() {
                                         <select
                                             value={shippingCountry}
                                             onChange={(e) => setShippingCountry(e.target.value)}
-                                            className="w-full rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-[#F5F4F0]"
+                                            className="w-full rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#91C934] focus:outline-none bg-[#F5F4F0]"
                                         >
                                             <option value="India">India</option>
                                             <option value="USA">United States</option>
@@ -442,7 +442,7 @@ export default function CartPage() {
                                                 placeholder="Zip / Postal Code"
                                                 value={shippingZip}
                                                 onChange={(e) => setShippingZip(e.target.value)}
-                                                className="flex-1 rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-[#F5F4F0]"
+                                                className="flex-1 rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#91C934] focus:outline-none bg-[#F5F4F0]"
                                             />
                                             <button className="bg-[#E8E4DC] text-[#1A1A1A] px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-[#D4CFC0] transition-colors tracking-wide">
                                                 Update
@@ -552,7 +552,7 @@ export default function CartPage() {
                                         router.push('/checkout');
                                     }}
                                     disabled={hasInsufficientStock || loading || inStockItems.length === 0}
-                                    className="cart-checkout-btn block w-full text-center hover:bg-[#8B7A3D] disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="cart-checkout-btn block w-full text-center hover:bg-[#7AB52A] disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {isAuthenticated ? 'Confirm & Complete Ritual' : 'Sign In to Checkout'}
                                 </button>
