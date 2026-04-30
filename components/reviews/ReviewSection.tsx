@@ -127,7 +127,7 @@ export default function ReviewSection({ productId, product, selectedVariant, onA
                                 <select
                                     value={sort}
                                     onChange={e => setSort(e.target.value)}
-                                    className="rounded-full border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 focus:outline-none focus:border-[#1d351d] focus:ring-1 focus:ring-[#1d351d] bg-white cursor-pointer hover:bg-gray-50 transition-colors"
+                                    className="rounded-full border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 focus:outline-none focus:border-[#91C934] focus:ring-1 focus:ring-[#91C934] bg-white cursor-pointer hover:bg-gray-50 transition-colors"
                                 >
                                     {SORT_OPTIONS.map(o => (
                                         <option key={o.value} value={o.value}>{o.label}</option>
@@ -195,7 +195,7 @@ export default function ReviewSection({ productId, product, selectedVariant, onA
                                                     <StarRating value={star} size="sm" className="flex-shrink-0" />
                                                     <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                                                         <div
-                                                            className="h-full rounded-full bg-[#1d351d] transition-all duration-500"
+                                                            className="h-full rounded-full bg-[#91C934] transition-all duration-500"
                                                             style={{ width: `${pct}%` }}
                                                         />
                                                     </div>
@@ -242,7 +242,7 @@ export default function ReviewSection({ productId, product, selectedVariant, onA
                                                 onClick={() => {
                                                     window.scrollTo({ top: 0, behavior: 'smooth' });
                                                 }}
-                                                className="w-full bg-[#1d351d] py-3.5 text-[11px] font-bold text-white transition-colors hover:bg-[#152a15] flex items-center justify-center gap-2 uppercase tracking-[0.2em]"
+                                                className="w-full bg-[#91C934] py-3.5 text-[11px] font-bold text-white transition-colors hover:bg-[#7ab52a] flex items-center justify-center gap-2 uppercase tracking-[0.2em]"
                                             >
                                                 <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-2">
                                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
@@ -253,7 +253,7 @@ export default function ReviewSection({ productId, product, selectedVariant, onA
                                         ) : (
                                             <button
                                                 onClick={onAddToCart}
-                                                className="w-full bg-[#1d351d] py-4 text-[11px] font-bold text-white transition-colors hover:bg-[#152a15] flex items-center justify-center gap-2 uppercase tracking-[0.2em]"
+                                                className="w-full bg-[#91C934] py-4 text-[11px] font-bold text-white transition-colors hover:bg-[#7ab52a] flex items-center justify-center gap-2 uppercase tracking-[0.2em]"
                                             >
                                                 Add to Bag
                                             </button>

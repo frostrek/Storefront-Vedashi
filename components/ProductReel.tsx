@@ -119,13 +119,13 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
                 >
                     {loading ? (
                         Array.from({ length: 4 }).map((_, i) => (
-                            <div key={i} className="min-w-[200px] sm:min-w-[240px] aspect-[3/4] bg-gray-100 animate-pulse rounded-2xl" />
+                            <div key={i} className="w-[160px] sm:w-[240px] flex-shrink-0 aspect-[3/4] bg-gray-100 animate-pulse rounded-2xl" />
                         ))
                     ) : (
                         products.map((product, i) => (
                             <div
                                 key={product.product_id}
-                                className="min-w-[150px] sm:min-w-[240px] snap-center"
+                                className="w-[160px] sm:w-[240px] flex-shrink-0 snap-center flex flex-col"
                             >
                                 <ProductCard
                                     product={product}

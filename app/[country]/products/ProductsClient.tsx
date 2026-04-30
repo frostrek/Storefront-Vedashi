@@ -349,6 +349,8 @@ function ProductsContent() {
                         selected={filters.brands}
                         onChange={setBrands}
                         maxVisible={brandOptions.length}
+                        searchable={true}
+                        placeholder="Search brands..."
                     />
                 </FilterSection>
             )}
@@ -540,8 +542,8 @@ function ProductsContent() {
                                                 key={tab}
                                                 onClick={() => setActiveFilterTab(tab)}
                                                 className={`w-full px-4 py-4 text-left text-[13px] font-bold transition-all border-l-4 ${activeFilterTab === tab
-                                                        ? 'bg-white text-[#91C934] border-[#91C934]'
-                                                        : 'text-gray-500 border-transparent hover:bg-gray-100'
+                                                    ? 'bg-white text-[#91C934] border-[#91C934]'
+                                                    : 'text-gray-500 border-transparent hover:bg-gray-100'
                                                     }`}
                                             >
                                                 {tab}
@@ -588,6 +590,8 @@ function ProductsContent() {
                                                     selected={filters.brands}
                                                     onChange={setBrands}
                                                     maxVisible={brandOptions.length}
+                                                    searchable={true}
+                                                    placeholder="Search brands..."
                                                 />
                                             </div>
                                         )}
@@ -766,7 +770,7 @@ function ProductsContent() {
                                 <div className="flex items-center rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
                                     <button
                                         onClick={() => { setViewMode('grid'); localStorage.setItem('vedashi_view_mode', 'grid'); }}
-                                        className={`p-2 transition-colors cursor-pointer ${viewMode === 'grid' ? 'bg-[#3d5c3a] text-white' : 'text-gray-400 hover:text-gray-600'}`}
+                                        className={`p-2 transition-colors cursor-pointer ${viewMode === 'grid' ? 'bg-[#91C934] text-white' : 'text-gray-400 hover:text-gray-600'}`}
                                         aria-label="Grid view"
                                         title="Grid view"
                                     >
@@ -774,7 +778,7 @@ function ProductsContent() {
                                     </button>
                                     <button
                                         onClick={() => { setViewMode('list'); localStorage.setItem('vedashi_view_mode', 'list'); }}
-                                        className={`p-2 transition-colors cursor-pointer ${viewMode === 'list' ? 'bg-[#3d5c3a] text-white' : 'text-gray-400 hover:text-gray-600'}`}
+                                        className={`p-2 transition-colors cursor-pointer ${viewMode === 'list' ? 'bg-[#91C934] text-white' : 'text-gray-400 hover:text-gray-600'}`}
                                         aria-label="List view"
                                         title="List view"
                                     >
@@ -937,8 +941,8 @@ function ProductsContent() {
                                             setSortOpen(false);
                                         }}
                                         className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl text-[15px] font-bold transition-all ${isSelected
-                                                ? 'bg-[#91C934]/5 text-[#91C934]'
-                                                : 'text-gray-600 hover:bg-gray-50'
+                                            ? 'bg-[#91C934]/5 text-[#91C934]'
+                                            : 'text-gray-600 hover:bg-gray-50'
                                             }`}
                                     >
                                         {option.label}
