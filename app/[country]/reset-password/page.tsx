@@ -59,8 +59,8 @@ function ResetPasswordContent() {
         return (
             <div className="min-h-screen bg-white flex flex-col items-center justify-center px-4 py-12">
                 <div className="w-full max-w-md text-center">
-                    <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-red-100 flex items-center justify-center">
-                        <KeyRound className="w-8 h-8 text-red-600" />
+                    <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-[#91C934]/10 flex items-center justify-center">
+                        <KeyRound className="w-8 h-8 text-[#91C934]" />
                     </div>
                     <h1 className="text-3xl font-bold text-charcoal mb-4">
                         Invalid Link
@@ -70,7 +70,7 @@ function ResetPasswordContent() {
                     </p>
                     <Link
                         href="/forgot-password"
-                        className="inline-flex items-center justify-center w-full rounded-lg bg-burgundy py-3 text-sm font-semibold text-white transition-all hover:bg-burgundy-dark"
+                        className="inline-flex items-center justify-center w-full rounded-lg bg-[#91C934] py-3 text-sm font-semibold text-white transition-all hover:bg-[#91C934]/60"
                     >
                         Request New Link
                     </Link>
@@ -84,8 +84,8 @@ function ResetPasswordContent() {
             <div className="w-full max-w-md">
 
                 <div className="text-center mb-8">
-                    <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-burgundy/10 flex items-center justify-center">
-                        <KeyRound className="w-8 h-8 text-burgundy" />
+                    <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-[#91C934]/10 flex items-center justify-center">
+                        <KeyRound className="w-8 h-8 text-[#91C934]" />
                     </div>
                     <h1 className="text-3xl font-bold text-charcoal">
                         Set New Password
@@ -101,7 +101,7 @@ function ResetPasswordContent() {
                     <div className="rounded-2xl border border-light-border bg-white p-8 shadow-sm text-center">
                         <button
                             onClick={() => router.push('/login')}
-                            className="w-full rounded-lg bg-burgundy py-3 text-sm font-semibold text-white transition-all hover:bg-burgundy-dark"
+                            className="w-full rounded-lg bg-[#91C934] py-3 text-sm font-semibold text-white transition-all hover:bg-[#91C934]/60"
                         >
                             Sign In to Your Account
                         </button>
@@ -119,7 +119,7 @@ function ResetPasswordContent() {
                                 type="password"
                                 value={passwords.new_password}
                                 onChange={e => setPasswords({ ...passwords, new_password: e.target.value })}
-                                className="w-full rounded-lg border border-light-border px-4 py-2.5 text-sm focus:border-burgundy focus:outline-none focus:ring-1 focus:ring-burgundy"
+                                className="w-full rounded-lg border border-light-border px-4 py-2.5 text-sm focus:border-[#91C934] focus:outline-none focus:ring-1 focus:ring-[#91C934]"
                                 placeholder="••••••••"
                                 required
                                 minLength={8}
@@ -134,7 +134,7 @@ function ResetPasswordContent() {
                                 type="password"
                                 value={passwords.confirm_password}
                                 onChange={e => setPasswords({ ...passwords, confirm_password: e.target.value })}
-                                className="w-full rounded-lg border border-light-border px-4 py-2.5 text-sm focus:border-burgundy focus:outline-none focus:ring-1 focus:ring-burgundy"
+                                className="w-full rounded-lg border border-light-border px-4 py-2.5 text-sm focus:border-[#91C934] focus:outline-none focus:ring-1 focus:ring-[#91C934]"
                                 placeholder="••••••••"
                                 required
                                 minLength={8}
@@ -144,13 +144,13 @@ function ResetPasswordContent() {
                         <button
                             type="submit"
                             disabled={loading || !passwords.new_password || !passwords.confirm_password}
-                            className="w-full rounded-lg bg-burgundy py-3 text-sm font-semibold text-white transition-all hover:bg-burgundy-dark disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full rounded-lg bg-[#91C934] py-3 text-sm font-semibold text-white transition-all hover:bg-[#91C934]/60 disabled:opacity-70 disabled:cursor-not-allowed"
                         >
                             {loading ? 'Resetting...' : 'Reset Password'}
                         </button>
 
                         <div className="mt-6 text-center">
-                            <Link href="/login" className="inline-flex items-center gap-2 text-sm font-medium text-warm-gray hover:text-burgundy transition-colors">
+                            <Link href="/login" className="inline-flex items-center gap-2 text-sm font-medium text-warm-gray hover:text-[#91C934] transition-colors">
                                 <ArrowLeft className="w-4 h-4" />
                                 Back to login
                             </Link>
@@ -166,7 +166,7 @@ export default function ResetPasswordPage() {
     return (
         <Suspense fallback={
             <div className="min-h-screen bg-white flex items-center justify-center px-4">
-                <div className="w-8 h-8 border-2 border-burgundy/30 border-t-burgundy rounded-full animate-spin" />
+                <div className="w-8 h-8 border-2 border-[#91C934]/30 border-t-[#91C934] rounded-full animate-spin" />
             </div>
         }>
             <ResetPasswordContent />

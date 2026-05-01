@@ -26,9 +26,6 @@ function VerifyEmailContent() {
     const [otpSent, setOtpSent] = useState(isFromRegistration);
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-    // Removed: Redirect if not authenticated because during registration flow, 
-    // the user is purposefully NOT authenticated until they verify and log in.
-
     // Cooldown timer
     useEffect(() => {
         if (cooldown <= 0) return;
@@ -36,7 +33,7 @@ function VerifyEmailContent() {
         return () => clearInterval(timer);
     }, [cooldown]);
 
-    // Auto-send OTP on mount
+    // Send OTP
     const handleSendOtp = useCallback(async () => {
         if (sending || cooldown > 0) return;
         setSending(true);
@@ -57,11 +54,9 @@ function VerifyEmailContent() {
         } finally {
             setSending(false);
         }
-    }, [sending, cooldown]);
+    }, [sending, cooldown, emailToUse]);
 
     useEffect(() => {
-        // If they just landed here and haven't had an OTP sent yet, and are authenticated 
-        // OR we have their email from the URL, try to send one.
         if (!otpSent && status !== 'success' && emailToUse) {
             handleSendOtp();
         }
@@ -98,7 +93,7 @@ function VerifyEmailContent() {
     };
 
     // Submit OTP
-    const handleVerify = async () => {
+    const handleVerify = useCallback(async () => {
         const code = otp.join('');
         if (code.length !== 6) {
             setErrorMessage('Please enter the complete 6-digit code');
@@ -112,23 +107,16 @@ function VerifyEmailContent() {
             if (res.success) {
                 setStatus('success');
 
-                // Check if this was a new account creation (deferred registration)
                 if (res.data?.account_created && res.data?.customer) {
-                    // Log in the user via AuthContext
                     loginFromVerification(res.data.customer);
-
-                    // Create cart for the new user
                     try {
                         await createCart(res.data.customer.customer_id);
-                        console.log('✅ Cart created for:', res.data.customer.customer_id);
                     } catch (cartErr) {
                         console.warn('⚠️ Cart creation failed:', cartErr);
                     }
-
                     toast.success('Account created & verified! Welcome!');
                     setTimeout(() => router.push('/account'), 2000);
                 } else {
-                    // Existing user just verifying email
                     toast.success('Email verified successfully!');
                     setTimeout(() => router.push('/account'), 2000);
                 }
@@ -142,9 +130,9 @@ function VerifyEmailContent() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [otp, emailToUse, loginFromVerification, router]);
 
-    // Retry OTP — clear inputs and refocus
+    // Retry OTP
     const handleRetry = () => {
         setOtp(['', '', '', '', '', '']);
         setStatus('idle');
@@ -152,18 +140,17 @@ function VerifyEmailContent() {
         inputRefs.current[0]?.focus();
     };
 
-    // Auto-submit when all 6 digits are entered
+    // Auto-submit
     useEffect(() => {
         if (otp.every(d => d !== '') && status === 'idle' && !loading) {
             handleVerify();
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [otp]);
+    }, [otp, status, loading, handleVerify]);
 
     if (authLoading) {
         return (
-            <div className="min-h-screen bg-cream flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-burgundy" />
+            <div className="min-h-screen bg-white flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-[#91C934]" />
             </div>
         );
     }
@@ -180,10 +167,10 @@ function VerifyEmailContent() {
                 </button>
 
                 <div className="rounded-2xl border border-light-border bg-white overflow-hidden shadow-sm">
-                    {/* Header gradient */}
+                    {/* Header gradient - Green theme */}
                     <div
                         className="py-8 px-6 text-center"
-                        style={{ background: 'linear-gradient(135deg, #6B2737 0%, #8B3A4A 40%, #D4A847 100%)' }}
+                        style={{ background: 'linear-gradient(135deg, #91C934 0%, #15803d 50%, #166534 100%)' }}
                     >
                         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm">
                             {status === 'success' ? (
@@ -208,7 +195,7 @@ function VerifyEmailContent() {
                         {status === 'success' ? (
                             <div className="text-center py-4">
                                 <p className="text-sm text-warm-gray mb-4">Redirecting to login...</p>
-                                <Loader2 className="h-5 w-5 animate-spin text-burgundy mx-auto" />
+                                <Loader2 className="h-5 w-5 animate-spin text-[#91C934] mx-auto" />
                             </div>
                         ) : (
                             <>
@@ -228,8 +215,8 @@ function VerifyEmailContent() {
                                                 ${status === 'error'
                                                     ? 'border-red-300 bg-red-50 text-red-700 focus:border-red-500'
                                                     : digit
-                                                        ? 'border-burgundy/40 bg-burgundy/5 text-charcoal focus:border-burgundy'
-                                                        : 'border-light-border bg-white text-charcoal focus:border-burgundy'
+                                                        ? 'border-[#91C934]/40 bg-[#91C934]/5 text-charcoal focus:border-[#91C934]'
+                                                        : 'border-light-border bg-white text-charcoal focus:border-[#91C934]'
                                                 }`}
                                             autoFocus={i === 0}
                                         />
@@ -247,14 +234,14 @@ function VerifyEmailContent() {
                                             <button
                                                 onClick={handleRetry}
                                                 className="flex-1 rounded-xl py-2.5 text-sm font-semibold text-white transition-all hover:shadow-md"
-                                                style={{ backgroundColor: '#6B2737' }}
+                                                style={{ backgroundColor: '#91C934' }}
                                             >
                                                 <RefreshCw className="inline h-3.5 w-3.5 mr-1.5 -mt-0.5" />
                                                 Retry OTP
                                             </button>
                                             <button
                                                 onClick={() => { router.push('/'); }}
-                                                className="flex-1 rounded-xl py-2.5 text-sm font-semibold border border-light-border text-charcoal hover:bg-cream transition-colors"
+                                                className="flex-1 rounded-xl py-2.5 text-sm font-semibold border border-light-border text-charcoal hover:bg-gray-50 transition-colors"
                                             >
                                                 <Eye className="inline h-3.5 w-3.5 mr-1.5 -mt-0.5" />
                                                 Continue as Guest
@@ -269,7 +256,7 @@ function VerifyEmailContent() {
                                         onClick={handleVerify}
                                         disabled={loading || otp.some(d => d === '')}
                                         className="w-full rounded-xl py-3 text-sm font-semibold text-white transition-all hover:shadow-md disabled:opacity-50"
-                                        style={{ backgroundColor: '#6B2737' }}
+                                        style={{ backgroundColor: '#91C934' }}
                                     >
                                         {loading ? (
                                             <span className="flex items-center justify-center gap-2">
@@ -287,7 +274,7 @@ function VerifyEmailContent() {
                                     <button
                                         onClick={handleSendOtp}
                                         disabled={sending || cooldown > 0}
-                                        className="inline-flex items-center gap-1.5 text-sm font-medium text-burgundy hover:text-burgundy-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="inline-flex items-center gap-1.5 text-sm font-medium text-[#91C934] hover:text-[#7ab128] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <RefreshCw className={`h-3.5 w-3.5 ${sending ? 'animate-spin' : ''}`} />
                                         {cooldown > 0
@@ -320,7 +307,7 @@ export default function VerifyEmailPage() {
     return (
         <Suspense fallback={
             <div className="min-h-screen bg-white flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-burgundy" />
+                <Loader2 className="h-8 w-8 animate-spin text-[#91C934]" />
             </div>
         }>
             <VerifyEmailContent />

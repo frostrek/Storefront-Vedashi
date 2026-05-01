@@ -49,15 +49,15 @@ function ForgotPasswordContent() {
         <div className="bg-white flex flex-col items-center pt-10 md:pt-16 px-4 pb-25 min-h-screen">
             <div className="w-full max-w-md">
 
-                <Link href="/login" className="inline-flex items-center gap-2 mb-6 text-sm font-medium text-warm-gray hover:text-[#91cA34] transition-colors">
+                <Link href="/login" className="inline-flex items-center gap-2 mb-6 text-sm font-medium text-warm-gray hover:text-[#91C934] transition-colors">
                     <ArrowLeft className="w-4 h-4" />
                     Back to login
                 </Link>
 
                 <div className="rounded-2xl border border-light-border bg-white p-8 md:p-10 shadow-sm">
                     <div className="text-center mb-8">
-                        <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-[#91cA34]/10 flex items-center justify-center">
-                            <Mail className="w-8 h-8 text-[#91cA34]" />
+                        <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-[#91C934]/10 flex items-center justify-center">
+                            <Mail className="w-8 h-8 text-[#91C934]" />
                         </div>
                         <h1 className="text-3xl font-bold text-charcoal">
                             Forgot Password
@@ -76,7 +76,7 @@ function ForgotPasswordContent() {
                             </p>
                             <button
                                 onClick={() => router.push('/login')}
-                                className="w-full rounded-lg bg-[#91cA34] py-3 text-sm font-semibold text-charcoal transition-all hover:opacity-90"
+                                className="w-full rounded-lg bg-[#91cA34] py-3 text-sm font-semibold text-white transition-all hover:opacity-90"
                             >
                                 Return to Login
                             </button>
@@ -93,7 +93,7 @@ function ForgotPasswordContent() {
                                     type="email"
                                     value={email}
                                     onChange={e => setEmail(e.target.value)}
-                                    className="w-full rounded-lg border border-light-border px-4 py-2.5 text-sm focus:border-[#91cA34] focus:outline-none focus:ring-1 focus:ring-[#91cA34]"
+                                    className="w-full rounded-lg border border-light-border px-4 py-2.5 text-sm focus:border-[#91C934] focus:outline-none focus:ring-1 focus:ring-[#91C934]"
                                     placeholder="you@example.com"
                                     required
                                 />
@@ -118,7 +118,7 @@ export default function ForgotPasswordPage() {
     return (
         <Suspense fallback={
             <div className="min-h-screen bg-white flex items-center justify-center px-4">
-                <div className="w-8 h-8 border-2 border-[#91cA34]/30 border-t-[#91cA34] rounded-full animate-spin" />
+                <div className="w-8 h-8 border-2 border-[#91C934]/30 border-t-[#91C934] rounded-full animate-spin" />
             </div>
         }>
             <ForgotPasswordContent />
