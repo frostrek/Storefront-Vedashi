@@ -277,7 +277,7 @@ export default function CartPage() {
                                                             <h3 className="cart-item-title text-lg font-bold">{item.product_name || 'Product'}</h3>
                                                         </Link>
                                                         {item.size_label && (
-                                                            <p className="text-xs mt-1 text-[#6B6B60] uppercase tracking-wider font-semibold">{item.size_label}</p>
+                                                            <p className="text-xs mt-1 text-gray-600 uppercase tracking-wider font-semibold">{item.size_label}</p>
                                                         )}
                                                         {isOutOfStock && (
                                                             <p className="text-[10px] mt-2 text-[#C0392B] font-bold uppercase tracking-wider py-1 px-2 border border-[#C0392B] bg-red-50 inline-block rounded max-w-fit">Out of Stock</p>
@@ -290,7 +290,7 @@ export default function CartPage() {
                                                         <div className="text-lg font-bold text-[#1A1A1A]">
                                                             {formatPrice(price * item.quantity)}
                                                         </div>
-                                                        <div className="text-xs text-[#8B7A3D] mt-1">{formatPrice(price)} each</div>
+                                                        <div className="text-xs text-gray-600 mt-1">{formatPrice(price)} each</div>
                                                     </div>
                                                 </div>
 
@@ -307,7 +307,7 @@ export default function CartPage() {
                                                     </div>
 
                                                     <div className="flex items-center gap-2">
-                                                        <button onClick={() => { saveForLater(item.cart_item_id); toast.success('Saved for later'); }} disabled={loading} className="text-[#8B7A3D] text-[13px] font-semibold hover:underline px-2">
+                                                        <button onClick={() => { saveForLater(item.cart_item_id); toast.success('Saved for later'); }} disabled={loading} className="text-black text-[13px] font-semibold hover:underline px-2">
                                                             Save for Later
                                                         </button>
                                                         <button onClick={() => setItemToRemove(item.cart_item_id)} disabled={loading} className="cart-remove-btn">
@@ -365,7 +365,7 @@ export default function CartPage() {
                                 <div className="cart-item-card p-6 border-l-4 border-l-[#91C934]">
                                     <div className="flex items-center gap-2 mb-3">
                                         <FileText className="h-5 w-5 text-[#91C934]" />
-                                        <h4 className="text-lg font-bold text-[#1A1A1A]">Order Notes <span className="text-[#8B7A3D] font-normal text-xs">(optional)</span></h4>
+                                        <h4 className="text-lg font-bold text-[#1A1A1A]">Order Notes <span className="text-gray-600 font-normal text-xs">(optional)</span></h4>
                                     </div>
                                     <p className="text-[13px] text-[#6B6B60] mb-4">Add any specific allergies, preferences, or delivery instructions for our practitioners.</p>
                                     <textarea
@@ -382,7 +382,7 @@ export default function CartPage() {
                                 <div className="grid sm:grid-cols-2 gap-4">
                                     <div className="cart-item-card p-6 border-t-4 border-t-[#8B7A3D]">
                                         <div className="flex items-center gap-2 mb-3">
-                                            <Ticket className="h-5 w-5 text-[#8B7A3D]" />
+                                            <Ticket className="h-5 w-5 text-[#91C934]" />
                                             <h4 className="text-lg font-bold text-[#1A1A1A]">Promo Offering</h4>
                                         </div>
                                         <p className="text-[13px] text-[#6B6B60] mb-4">Have a sacred promo code? Enter it below.</p>
@@ -418,37 +418,6 @@ export default function CartPage() {
                                             </div>
                                         )}
                                         {couponError && <p className="mt-2 text-xs text-[#C0392B]">{couponError}</p>}
-                                    </div>
-
-                                    <div className="cart-item-card p-6 border-t-4 border-t-[#91C934]">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <MapPin className="h-5 w-5 text-[#91C934]" />
-                                            <h4 className="text-lg font-bold text-[#1A1A1A]">Shipping Sanctuary</h4>
-                                        </div>
-                                        <p className="text-[13px] text-[#6B6B60] mb-4">Estimate delivery to your location.</p>
-                                        <div className="space-y-3">
-                                            <select
-                                                value={shippingCountry}
-                                                onChange={(e) => setShippingCountry(e.target.value)}
-                                                className="w-full rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#91C934] focus:outline-none bg-[#F5F4F0]"
-                                            >
-                                                <option value="India">India</option>
-                                                <option value="USA">United States</option>
-                                                <option value="UK">United Kingdom</option>
-                                            </select>
-                                            <div className="flex gap-2">
-                                                <input
-                                                    type="text"
-                                                    placeholder="Zip / Postal Code"
-                                                    value={shippingZip}
-                                                    onChange={(e) => setShippingZip(e.target.value)}
-                                                    className="flex-1 rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#91C934] focus:outline-none bg-[#F5F4F0]"
-                                                />
-                                                <button className="bg-[#E8E4DC] text-[#1A1A1A] px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-[#D4CFC0] transition-colors tracking-wide">
-                                                    Update
-                                                </button>
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -522,11 +491,8 @@ export default function CartPage() {
 
                                 <div className="ritual-summary-total">
                                     <div>
-                                        <div className="ritual-summary-total-label">Total Investment</div>
+                                        <div className="ritual-summary-total-label font-bold ">Total Investment</div>
                                         <div className="ritual-summary-total-value mt-1">{formatPrice(grandTotal)}</div>
-                                    </div>
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#E8E4DC] bg-[#F5F4F0]">
-                                        <Leaf className="h-5 w-5 text-[#91C934]" />
                                     </div>
                                 </div>
 
@@ -557,10 +523,10 @@ export default function CartPage() {
                                     {isAuthenticated ? 'Proceed to Checkout' : 'Sign In to Checkout'}
                                 </button>
 
-                                <div className="mt-5 flex items-center justify-center gap-4 text-[9px] text-[#6B6B60] font-bold tracking-[1.5px] uppercase">
-                                    <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full border border-[#D4CFC0] flex items-center justify-center"><div className="w-0.5 h-0.5 bg-[#91C934] rounded-full"></div></div> Secure Transaction</span>
+                                <div className="mt-5 flex items-center justify-center gap-4 text-[9px] text-gray-600 font-bold tracking-[1.5px] uppercase">
+                                    <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full border border-gray-600 flex items-center justify-center"><div className="w-0.5 h-0.5 bg-gray-600 rounded-full"></div></div> Secure Transaction</span>
                                     <span>•</span>
-                                    <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full border border-[#D4CFC0] flex items-center justify-center"><div className="w-0.5 h-0.5 bg-[#91C934] rounded-full"></div></div> Fast Processing</span>
+                                    <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full border border-gray-600 flex items-center justify-center"><div className="w-0.5 h-0.5 bg-gray-600 rounded-full"></div></div> Fast Processing</span>
                                 </div>
                             </div>
 

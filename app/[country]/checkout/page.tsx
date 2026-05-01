@@ -1325,7 +1325,7 @@ function CheckoutContent() {
                                             {contactPhoneError && <p className="text-[10px] text-red-500 mt-1 font-bold">{contactPhoneError}</p>}
                                         </div>
                                     </div>
-                                    <p className="mt-3 text-xs text-[#8B7A3D]">We will send order updates and Ayurvedic guidelines to these contacts.</p>
+                                    <p className="mt-3 text-xs text-gray-700">We will send order updates and Ayurvedic guidelines to these contacts.</p>
                                 </div>
 
                                 {/* Delivery Details Form */}
