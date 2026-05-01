@@ -141,7 +141,7 @@ export default function CartPage() {
                             {savedItems.map(item => {
                                 const price = item.price ?? 0;
                                 return (
-                                    <div key={item.cart_item_id} className="cart-item-card flex items-center gap-4 bg-[#FAFAFA]">
+                                    <div key={item.cart_item_id} className="cart-item-card flex items-center gap-4 bg-white">
                                         <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img w-16 h-16 rounded-lg flex-shrink-0">
                                             {item.image_url ? <img src={item.image_url} alt="" /> : <span className="text-xl">🌿</span>}
                                         </Link>
@@ -230,7 +230,7 @@ export default function CartPage() {
 
                             {outOfStockItems.length > 0 && (
                                 <div className="mb-4 rounded-xl p-4 text-sm flex items-start gap-3 bg-[#FFF3CD] border border-[#FFEEBA] text-[#856404]">
-                                    <span className="mt-0.5">⚠️</span> 
+                                    <span className="mt-0.5">⚠️</span>
                                     <div>
                                         <p className="font-bold">Inventory Update</p>
                                         <p>Some items in your cart are out of stock. They won&apos;t be included in your order and will be saved for later when you checkout.</p>
@@ -239,7 +239,7 @@ export default function CartPage() {
                             )}
                             {hasInsufficientStock && (
                                 <div className="mb-4 rounded-xl p-4 text-sm flex items-start gap-3 bg-[#FFF3CD] border border-[#FFEEBA] text-[#856404]">
-                                    <span className="mt-0.5">⚠️</span> 
+                                    <span className="mt-0.5">⚠️</span>
                                     <div>
                                         <p className="font-bold">Stock Limited</p>
                                         <p>One or more items exceed available stock. Please adjust the quantity to proceed.</p>
@@ -258,7 +258,7 @@ export default function CartPage() {
                                     const isOutOfStock = (item.stock_quantity ?? 0) === 0;
                                     const hasInsufficientStock = !isOutOfStock && item.quantity > (item.stock_quantity ?? 0);
                                     const isAtStockLimit = !isOutOfStock && item.quantity >= (item.stock_quantity ?? Infinity);
-                                    
+
                                     return (
                                         <div key={item.cart_item_id} className="cart-item-card flex flex-col sm:flex-row gap-6">
                                             {/* Image */}
@@ -277,7 +277,7 @@ export default function CartPage() {
                                                             <h3 className="cart-item-title text-lg font-bold">{item.product_name || 'Product'}</h3>
                                                         </Link>
                                                         {item.size_label && (
-                                                            <p className="text-xs mt-1 text-[#6B6B60] uppercase tracking-wider font-semibold">{item.size_label}</p>
+                                                            <p className="text-xs mt-1 text-gray-600 uppercase tracking-wider font-semibold">{item.size_label}</p>
                                                         )}
                                                         {isOutOfStock && (
                                                             <p className="text-[10px] mt-2 text-[#C0392B] font-bold uppercase tracking-wider py-1 px-2 border border-[#C0392B] bg-red-50 inline-block rounded max-w-fit">Out of Stock</p>
@@ -290,7 +290,7 @@ export default function CartPage() {
                                                         <div className="text-lg font-bold text-[#1A1A1A]">
                                                             {formatPrice(price * item.quantity)}
                                                         </div>
-                                                        <div className="text-xs text-[#8B7A3D] mt-1">{formatPrice(price)} each</div>
+                                                        <div className="text-xs text-gray-600 mt-1">{formatPrice(price)} each</div>
                                                     </div>
                                                 </div>
 
@@ -307,7 +307,7 @@ export default function CartPage() {
                                                     </div>
 
                                                     <div className="flex items-center gap-2">
-                                                        <button onClick={() => { saveForLater(item.cart_item_id); toast.success('Saved for later'); }} disabled={loading} className="text-[#8B7A3D] text-[13px] font-semibold hover:underline px-2">
+                                                        <button onClick={() => { saveForLater(item.cart_item_id); toast.success('Saved for later'); }} disabled={loading} className="text-gray-500 text-[13px] hover:underline hover:text-gray-600 px-2">
                                                             Save for Later
                                                         </button>
                                                         <button onClick={() => setItemToRemove(item.cart_item_id)} disabled={loading} className="cart-remove-btn">
@@ -333,7 +333,7 @@ export default function CartPage() {
                                     {savedItems.map(item => {
                                         const price = item.price ?? 0;
                                         return (
-                                            <div key={item.cart_item_id} className="cart-item-card flex items-center gap-4 bg-[#FAFAFA]">
+                                            <div key={item.cart_item_id} className="cart-item-card flex items-center gap-4 bg-white">
                                                 <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img w-16 h-16 rounded-lg flex-shrink-0">
                                                     {item.image_url ? <img src={item.image_url} alt="" /> : <span className="text-xl">🌿</span>}
                                                 </Link>
@@ -365,7 +365,7 @@ export default function CartPage() {
                                 <div className="cart-item-card p-6 border-l-4 border-l-[#91C934]">
                                     <div className="flex items-center gap-2 mb-3">
                                         <FileText className="h-5 w-5 text-[#91C934]" />
-                                        <h4 className="text-lg font-bold text-[#1A1A1A]">Order Notes <span className="text-[#8B7A3D] font-normal text-xs">(optional)</span></h4>
+                                        <h4 className="text-lg font-bold text-[#1A1A1A]">Order Notes <span className="text-gray-600 font-normal text-xs">(optional)</span></h4>
                                     </div>
                                     <p className="text-[13px] text-[#6B6B60] mb-4">Add any specific allergies, preferences, or delivery instructions for our practitioners.</p>
                                     <textarea
@@ -380,103 +380,72 @@ export default function CartPage() {
                                 </div>
 
                                 <div className="grid sm:grid-cols-2 gap-4">
-                                <div className="cart-item-card p-6 border-t-4 border-t-[#8B7A3D]">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <Ticket className="h-5 w-5 text-[#8B7A3D]" />
-                                        <h4 className="text-lg font-bold text-[#1A1A1A]">Promo Offering</h4>
-                                    </div>
-                                    <p className="text-[13px] text-[#6B6B60] mb-4">Have a sacred promo code? Enter it below.</p>
-                                    {couponCode ? (
-                                        <div className="ritual-coupon-applied">
-                                            <div className="coupon-info text-[#1A1A1A] font-semibold text-sm">
-                                                {couponCode} <span className="text-[#6B8F5E]">(-{formatPrice(couponDiscount)})</span>
+                                    <div className="cart-item-card p-6 border-t-4 border-t-[#8B7A3D]">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <Ticket className="h-5 w-5 text-[#91C934]" />
+                                            <h4 className="text-lg font-bold text-[#1A1A1A]">Promo Offering</h4>
+                                        </div>
+                                        <p className="text-[13px] text-[#6B6B60] mb-4">Have a sacred promo code? Enter it below.</p>
+                                        {couponCode ? (
+                                            <div className="ritual-coupon-applied">
+                                                <div className="coupon-info text-[#1A1A1A] font-semibold text-sm">
+                                                    {couponCode} <span className="text-[#6B8F5E]">(-{formatPrice(couponDiscount)})</span>
+                                                </div>
+                                                <button onClick={() => { removeCoupon(); toast.success('Coupon removed'); }} className="text-[#C0392B] text-xs font-semibold uppercase hover:underline">Remove</button>
                                             </div>
-                                            <button onClick={() => { removeCoupon(); toast.success('Coupon removed'); }} className="text-[#C0392B] text-xs font-semibold uppercase hover:underline">Remove</button>
-                                        </div>
-                                    ) : (
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                placeholder="Enter code"
-                                                value={couponInput}
-                                                onChange={e => setCouponInput(e.target.value.toUpperCase())}
-                                                className="flex-1 rounded-lg border border-[#D4CFC0] px-4 py-2 text-sm focus:border-[#8B7A3D] focus:outline-none bg-[#F5F4F0] font-mono uppercase"
-                                            />
-                                            <button
-                                                onClick={async () => {
-                                                    if (!couponInput.trim()) return;
-                                                    setApplyingCoupon(true);
-                                                    const ok = await applyCoupon(couponInput.trim());
-                                                    if (ok) { toast.success('Coupon applied!'); setCouponInput(''); }
-                                                    setApplyingCoupon(false);
-                                                }}
-                                                disabled={applyingCoupon || !couponInput.trim()}
-                                                className="bg-[#91C934] text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-[#7AB52A] transition-colors disabled:opacity-50 tracking-wide"
-                                            >
-                                                {applyingCoupon ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Apply'}
-                                            </button>
-                                        </div>
-                                    )}
-                                    {couponError && <p className="mt-2 text-xs text-[#C0392B]">{couponError}</p>}
-                                </div>
-
-                                <div className="cart-item-card p-6 border-t-4 border-t-[#91C934]">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <MapPin className="h-5 w-5 text-[#91C934]" />
-                                        <h4 className="text-lg font-bold text-[#1A1A1A]">Shipping Sanctuary</h4>
+                                        ) : (
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Enter code"
+                                                    value={couponInput}
+                                                    onChange={e => setCouponInput(e.target.value.toUpperCase())}
+                                                    className="flex-1 rounded-lg border border-[#D4CFC0] px-4 py-2 text-sm focus:border-[#8B7A3D] focus:outline-none bg-[#F5F4F0] font-mono uppercase"
+                                                />
+                                                <button
+                                                    onClick={async () => {
+                                                        if (!couponInput.trim()) return;
+                                                        setApplyingCoupon(true);
+                                                        const ok = await applyCoupon(couponInput.trim());
+                                                        if (ok) { toast.success('Coupon applied!'); setCouponInput(''); }
+                                                        setApplyingCoupon(false);
+                                                    }}
+                                                    disabled={applyingCoupon || !couponInput.trim()}
+                                                    className="bg-[#91C934] text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-[#7AB52A] transition-colors disabled:opacity-50 tracking-wide"
+                                                >
+                                                    {applyingCoupon ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Apply'}
+                                                </button>
+                                            </div>
+                                        )}
+                                        {couponError && <p className="mt-2 text-xs text-[#C0392B]">{couponError}</p>}
                                     </div>
-                                    <p className="text-[13px] text-[#6B6B60] mb-4">Estimate delivery to your location.</p>
-                                    <div className="space-y-3">
-                                        <select
-                                            value={shippingCountry}
-                                            onChange={(e) => setShippingCountry(e.target.value)}
-                                            className="w-full rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#91C934] focus:outline-none bg-[#F5F4F0]"
-                                        >
-                                            <option value="India">India</option>
-                                            <option value="USA">United States</option>
-                                            <option value="UK">United Kingdom</option>
-                                        </select>
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                placeholder="Zip / Postal Code"
-                                                value={shippingZip}
-                                                onChange={(e) => setShippingZip(e.target.value)}
-                                                className="flex-1 rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#91C934] focus:outline-none bg-[#F5F4F0]"
-                                            />
-                                            <button className="bg-[#E8E4DC] text-[#1A1A1A] px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-[#D4CFC0] transition-colors tracking-wide">
-                                                Update
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
                                 </div>
                             </div>
                         )}
-                        
+
                     </div>
 
                     {/* ─── Ritual Summary Sidebar ─── */}
                     <div className="mt-8 lg:mt-0">
                         <div className="sticky top-28">
-                            <div className="ritual-summary">
+                            <div className="ritual-summary  ">
                                 <div className="ritual-summary-title">
-                                    <div className="w-8 h-8 rounded-full bg-[rgba(255,255,255,0.1)] flex items-center justify-center mr-2">
-                                        <Leaf className="w-4 h-4 text-white" />
+                                    <div className="w-8 h-8 rounded-full bg-[#F5F4F0] flex items-center justify-center mr-2 border border-[#E8E4DC]">
+                                        <Leaf className="w-4 h-4 text-[#91C934]" />
                                     </div>
                                     Investment Summary
                                     <span className="ritual-summary-badge">{inStockItemCount} Item{inStockItemCount !== 1 ? 's' : ''}</span>
                                 </div>
-                                <p className="text-[10px] uppercase tracking-[2px] text-[rgba(255,255,255,0.5)] mb-4 -mt-2">Preparing your path to healing</p>
+                                <p className="text-[10px] uppercase tracking-[2px] text-[#6B6B60] mb-4 -mt-2">Preparing your path to healing</p>
 
                                 <div className="space-y-1 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                                     {inStockItems.length === 0 ? (
-                                        <p className="text-[rgba(255,255,255,0.5)] text-xs text-center py-4">No in-stock items in your cart</p>
+                                        <p className="text-[#6B6B60] text-xs text-center py-4">No in-stock items in your cart</p>
                                     ) : inStockItems.map(item => {
                                         const price = item.price ?? 0;
                                         const lineTotal = price * item.quantity;
                                         return (
-                                            <div key={item.cart_item_id} className="ritual-summary-item pb-3 border-b border-[rgba(255,255,255,0.1)] last:border-0 last:pb-0">
+                                            <div key={item.cart_item_id} className="ritual-summary-item pb-3 border-b border-[#E8E4DC] last:border-0 last:pb-0">
                                                 <div className="ritual-summary-item-img">
                                                     {item.image_url ? (
                                                         <img src={item.image_url} alt="" />
@@ -504,17 +473,17 @@ export default function CartPage() {
                                     {saleDiscount > 0 && (
                                         <div className="ritual-summary-row">
                                             <span className="label">Vedic Discount</span>
-                                            <span className="value !text-[#86EFAC]">- {formatPrice(saleDiscount)}</span>
+                                            <span className="value !text-[#2D3B2D]">- {formatPrice(saleDiscount)}</span>
                                         </div>
                                     )}
                                     {couponDiscount > 0 && (
                                         <div className="ritual-summary-row">
                                             <span className="label">Promo Discount</span>
-                                            <span className="value !text-[#86EFAC]">- {formatPrice(couponDiscount)}</span>
+                                            <span className="value !text-[#2D3B2D]">- {formatPrice(couponDiscount)}</span>
                                         </div>
                                     )}
                                     <div className="ritual-summary-row">
-                                        <span className="label">Vedic Shipping <span className="text-[9px] uppercase tracking-wider opacity-70 ml-1">(Standard)</span></span>
+                                        <span className="label">Shipping <span className="text-[9px] uppercase tracking-wider opacity-70 ml-1">(Standard)</span></span>
                                         <span className="value">{deliveryFee === 0 ? 'FREE' : formatPrice(deliveryFee)}</span>
                                     </div>
 
@@ -522,11 +491,8 @@ export default function CartPage() {
 
                                 <div className="ritual-summary-total">
                                     <div>
-                                        <div className="ritual-summary-total-label">Total Investment</div>
+                                        <div className="ritual-summary-total-label font-bold ">Total Investment</div>
                                         <div className="ritual-summary-total-value mt-1">{formatPrice(grandTotal)}</div>
-                                    </div>
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.05)]">
-                                        <Leaf className="h-5 w-5 text-white opacity-80" />
                                     </div>
                                 </div>
 
@@ -554,17 +520,17 @@ export default function CartPage() {
                                     disabled={hasInsufficientStock || loading || inStockItems.length === 0}
                                     className="cart-checkout-btn block w-full text-center hover:bg-[#7AB52A] disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    {isAuthenticated ? 'Confirm & Complete Ritual' : 'Sign In to Checkout'}
+                                    {isAuthenticated ? 'Proceed to Checkout' : 'Sign In to Checkout'}
                                 </button>
-                                
-                                <div className="mt-5 flex items-center justify-center gap-4 text-[9px] text-[rgba(255,255,255,0.5)] font-bold tracking-[1.5px] uppercase">
-                                    <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full border border-[rgba(255,255,255,0.5)] flex items-center justify-center"><div className="w-0.5 h-0.5 bg-white rounded-full"></div></div> Secure Transaction</span>
+
+                                <div className="mt-5 flex items-center justify-center gap-4 text-[9px] text-gray-600 font-bold tracking-[1.5px] uppercase">
+                                    <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full border border-gray-600 flex items-center justify-center"><div className="w-0.5 h-0.5 bg-gray-600 rounded-full"></div></div> Secure Transaction</span>
                                     <span>•</span>
-                                    <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full border border-[rgba(255,255,255,0.5)] flex items-center justify-center"><div className="w-0.5 h-0.5 bg-white rounded-full"></div></div> Fast Processing</span>
+                                    <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full border border-gray-600 flex items-center justify-center"><div className="w-0.5 h-0.5 bg-gray-600 rounded-full"></div></div> Fast Processing</span>
                                 </div>
                             </div>
 
-                            <Link href="/help-center/support" className="cart-advisor-card cursor-pointer flex">
+                            <div className="cart-advisor-card">
                                 <div className="icon-wrapper border border-[#D4CFC0]">
                                     <Leaf className="w-5 h-5" />
                                 </div>
@@ -572,8 +538,8 @@ export default function CartPage() {
                                     <p className="title">Need Guidance?</p>
                                     <p className="subtitle">Our Vedic advisors are available to assist with your transaction.</p>
                                 </div>
-                                <span className="action">Contact Support</span>
-                            </Link>
+                                <Link href="/help-center/support" className="action">Contact Support</Link>
+                            </div>
                         </div>
                     </div>
                 </div>

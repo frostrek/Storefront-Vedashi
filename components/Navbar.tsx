@@ -149,7 +149,7 @@ const MegaMenuContent = ({ parent, country, colors }: { parent: Category, countr
             <h5 className="text-xl font-serif font-bold text-gray-900 mb-2 leading-tight">Explore {parent.name}</h5>
             <p className="text-xs text-gray-600 leading-relaxed italic">
               Discover our ethically sourced, premium Ayurvedic essentials crafted with traditional wisdom.
-            </p>  
+            </p>
           </div>
 
           <div className="mt-8 space-y-3 relative z-10">
@@ -398,7 +398,12 @@ export default function Navbar() {
                 <NotificationCenter colors={colors} />
               </div>
 
-              <button onClick={handleWishlistClick} className="relative p-2 group">
+              <button
+                onClick={handleWishlistClick}
+                className="relative p-2 group"
+                title="Wishlist"
+                aria-label="Wishlist"
+              >
                 <Heart className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
                 {wishlistCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 text-white text-[9px] font-black h-4 w-4 flex items-center justify-center rounded-full" style={{ backgroundColor: colors.cart_badge_bg }}>
@@ -407,7 +412,12 @@ export default function Navbar() {
                 )}
               </button>
 
-              <Link href={`/${currentCountry}/cart`} className="relative p-2 group">
+              <Link
+                href={`/${currentCountry}/cart`}
+                className="relative p-2 group"
+                title="Cart"
+                aria-label="Cart"
+              >
                 <ShoppingCart className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
                 {totalItems > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 text-white text-[9px] font-black h-4 w-4 flex items-center justify-center rounded-full" style={{ backgroundColor: colors.cart_badge_bg }}>
@@ -417,7 +427,12 @@ export default function Navbar() {
               </Link>
 
               <div className="relative group">
-                <Link href={isAuthenticated ? `/${currentCountry}/account` : `/${currentCountry}/login`} className="p-2 block">
+                <Link
+                  href={isAuthenticated ? `/${currentCountry}/account` : `/${currentCountry}/login`}
+                  className="p-2 block"
+                  title={isAuthenticated ? "Account" : "Login / Register"}
+                  aria-label={isAuthenticated ? "Account" : "Login / Register"}
+                >
                   {isAuthenticated && user?.avatar_url ? (
                     <div className="h-[22px] w-[22px] rounded-full overflow-hidden ring-1 ring-[#D4A847]/30">
                       <img src={user.avatar_url} alt="Profile" className="h-full w-full object-cover" />
@@ -467,7 +482,12 @@ export default function Navbar() {
               <div className="hidden md:block">
                 <RegionSwitcher />
               </div>
-              <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2">
+              <button
+                onClick={() => setMobileOpen(!mobileOpen)}
+                className="md:hidden p-2"
+                title="Open Menu"
+                aria-label="Open Menu"
+              >
                 <Menu className="h-5 w-5" />
               </button>
             </div>
@@ -487,7 +507,13 @@ export default function Navbar() {
                   <img src="/vedashi-logo.png" alt="Vedashi" className="h-10 w-auto" />
                   <NotificationCenter colors={colors} />
                 </div>
-                <button onClick={() => setMobileOpen(false)}><X className="h-6 w-6" /></button>
+                <button
+                  onClick={() => setMobileOpen(false)}
+                  title="Close Menu"
+                  aria-label="Close Menu"
+                >
+                  <X className="h-6 w-6" />
+                </button>
               </div>
               <div className="flex-1 overflow-y-auto p-5">
                 {/* Search bar is now in the main navbar, but keeping it here as secondary if needed or removing it */}

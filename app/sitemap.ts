@@ -44,6 +44,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 const locale = SUPPORTED_COUNTRIES[c as keyof typeof SUPPORTED_COUNTRIES].locale;
                 languages[locale] = `${SITE_URL}/${c}${p}`;
             });
+            
+            // Base language fallbacks for broader SEO matching
+            languages['en'] = `${SITE_URL}/in${p}`;
+            languages['ru'] = `${SITE_URL}/ru${p}`;
+            languages['ko'] = `${SITE_URL}/kr${p}`;
+            languages['ar'] = `${SITE_URL}/ae${p}`;
             languages['x-default'] = `${SITE_URL}/in${p}`;
 
             sitemapEntries.push({
@@ -62,6 +68,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 const locale = SUPPORTED_COUNTRIES[cc as keyof typeof SUPPORTED_COUNTRIES].locale;
                 languages[locale] = `${SITE_URL}/${cc}/products?category=${c.slug}`;
             });
+            
+            languages['en'] = `${SITE_URL}/in/products?category=${c.slug}`;
+            languages['ru'] = `${SITE_URL}/ru/products?category=${c.slug}`;
+            languages['ko'] = `${SITE_URL}/kr/products?category=${c.slug}`;
+            languages['ar'] = `${SITE_URL}/ae/products?category=${c.slug}`;
             languages['x-default'] = `${SITE_URL}/in/products?category=${c.slug}`;
 
             sitemapEntries.push({
@@ -80,6 +91,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 const locale = SUPPORTED_COUNTRIES[cc as keyof typeof SUPPORTED_COUNTRIES].locale;
                 languages[locale] = `${SITE_URL}/${cc}/products/${p.slug}`;
             });
+            
+            languages['en'] = `${SITE_URL}/in/products/${p.slug}`;
+            languages['ru'] = `${SITE_URL}/ru/products/${p.slug}`;
+            languages['ko'] = `${SITE_URL}/kr/products/${p.slug}`;
+            languages['ar'] = `${SITE_URL}/ae/products/${p.slug}`;
             languages['x-default'] = `${SITE_URL}/in/products/${p.slug}`;
 
             sitemapEntries.push({

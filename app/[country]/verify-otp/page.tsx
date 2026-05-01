@@ -95,7 +95,7 @@ export default function VerifyOtpPage() {
     };
 
     // Verify OTP
-    const handleVerify = async () => {
+    const handleVerify = useCallback(async () => {
         const code = otp.join('');
         if (code.length !== 6) {
             setErrorMessage('Please enter the complete 6-digit code');
@@ -120,26 +120,25 @@ export default function VerifyOtpPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [otp, router]);
 
     // Auto-submit when all 6 digits
     useEffect(() => {
         if (otp.every(d => d !== '') && status === 'idle' && !loading) {
             handleVerify();
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [otp]);
+    }, [otp, status, loading, handleVerify]);
 
     if (authLoading) {
         return (
-            <div className="min-h-screen bg-cream flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-burgundy" />
+            <div className="min-h-screen bg-white flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-[#91C934]" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-cream flex items-center justify-center px-4">
+        <div className="min-h-screen bg-white flex items-center justify-center px-4">
             <div className="w-full max-w-md">
                 {/* Back button */}
                 <button
@@ -150,10 +149,10 @@ export default function VerifyOtpPage() {
                 </button>
 
                 <div className="rounded-2xl border border-light-border bg-white overflow-hidden shadow-sm">
-                    {/* Header gradient */}
+                    {/* Header gradient - Green theme */}
                     <div
                         className="py-8 px-6 text-center"
-                        style={{ background: 'linear-gradient(135deg, #6B2737 0%, #8B3A4A 40%, #D4A847 100%)' }}
+                        style={{ background: 'linear-gradient(135deg, #91C934 0%, #15803d 50%, #166534 100%)' }}
                     >
                         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm">
                             {status === 'success' ? (
@@ -178,7 +177,7 @@ export default function VerifyOtpPage() {
                         {status === 'success' ? (
                             <div className="text-center py-4">
                                 <p className="text-sm text-warm-gray mb-4">Redirecting to your account...</p>
-                                <Loader2 className="h-5 w-5 animate-spin text-burgundy mx-auto" />
+                                <Loader2 className="h-5 w-5 animate-spin text-[#91C934] mx-auto" />
                             </div>
                         ) : (
                             <>
@@ -195,11 +194,11 @@ export default function VerifyOtpPage() {
                                             onChange={e => handleChange(i, e.target.value)}
                                             onKeyDown={e => handleKeyDown(i, e)}
                                             className={`w-12 h-14 text-center text-xl font-bold rounded-xl border-2 transition-all duration-200 focus:outline-none
-                                                ${status === 'error'
+                                                ${status === 'error'
                                                     ? 'border-red-300 bg-red-50 text-red-700 focus:border-red-500'
                                                     : digit
-                                                        ? 'border-burgundy/40 bg-burgundy/5 text-charcoal focus:border-burgundy'
-                                                        : 'border-light-border bg-white text-charcoal focus:border-burgundy'
+                                                        ? 'border-[#91C934]/40 bg-[#91C934]/5 text-charcoal focus:border-[#91C934]'
+                                                        : 'border-light-border bg-white text-charcoal focus:border-[#91C934]'
                                                 }`}
                                             autoFocus={i === 0}
                                         />
@@ -219,7 +218,7 @@ export default function VerifyOtpPage() {
                                     onClick={handleVerify}
                                     disabled={loading || otp.some(d => d === '')}
                                     className="w-full rounded-xl py-3 text-sm font-semibold text-white transition-all hover:shadow-md disabled:opacity-50"
-                                    style={{ backgroundColor: '#6B2737' }}
+                                    style={{ backgroundColor: '#91C934' }}
                                 >
                                     {loading ? (
                                         <span className="flex items-center justify-center gap-2">
@@ -236,7 +235,7 @@ export default function VerifyOtpPage() {
                                     <button
                                         onClick={handleSendOtp}
                                         disabled={sending || cooldown > 0}
-                                        className="inline-flex items-center gap-1.5 text-sm font-medium text-burgundy hover:text-burgundy-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="inline-flex items-center gap-1.5 text-sm font-medium text-[#91C934] hover:text-[#7ab128] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <RefreshCw className={`h-3.5 w-3.5 ${sending ? 'animate-spin' : ''}`} />
                                         {cooldown > 0

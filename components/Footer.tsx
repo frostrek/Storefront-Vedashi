@@ -240,7 +240,7 @@ export default function Footer() {
         <footer className="relative z-10 font-sans">
 
             {/* ═══════════════ SUBSCRIBE BAR (floating at top) ═══════════════ */}
-            <div className="bg-white">
+            <div className="bg-transparent">
                 <div className="mx-auto max-w-[600px] px-6 relative -mb-5 pt-5">
                     <form onSubmit={handleSubscribe} className="flex relative z-20" suppressHydrationWarning>
                         <input
