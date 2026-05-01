@@ -54,12 +54,12 @@ body {
 
 h1,
 .font-display {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-weight: 600;
 }
 
 h2 {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-weight: 600;
 }
 
@@ -926,7 +926,6 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
   transition: all 0.4s ease;
   border: 1px solid #D4CFC0;
   background: white;
-  color: #8B7A3D;
 }
 
 .cart-step-circle.active {
@@ -949,7 +948,6 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
   font-weight: 700;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: #8B7A3D;
   text-align: center;
 }
 
@@ -1033,7 +1031,7 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
 
 .cart-item-title {
   color: #1A1A1A;
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-sans);
 }
 
 /* --- Quantity Controls (Light Theme) --- */
@@ -1114,7 +1112,7 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
 
 
 .ritual-summary-title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-sans);
   font-size: 20px;
   font-weight: 700;
   color: #1A1A1A;
@@ -1127,12 +1125,12 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
 }
 
 .ritual-summary-badge {
-  background: #F5F4F0;
+  background: #91C934;
   border-radius: 12px;
   padding: 4px 10px;
   font-size: 11px;
   font-weight: 600;
-  color: #8B7A3D;
+  color: #91C934;
   margin-left: auto;
   border: 1px solid #E8E4DC;
 }
@@ -1213,11 +1211,11 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
   font-weight: 700;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: #8B7A3D;
+  color: black;
 }
 
 .ritual-summary-total-value {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-sans);
   font-size: 32px;
   font-weight: 700;
   color: #1A1A1A;
@@ -1337,7 +1335,7 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
 
 /* --- Section Titles --- */
 .cart-saved-section-title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-sans);
   font-size: 20px;
   font-weight: 600;
   color: #1A1A1A;
@@ -1348,7 +1346,7 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
 }
 
 .cart-page-title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-sans);
   font-size: 32px;
   font-weight: 700;
   color: #1A1A1A;
@@ -1373,7 +1371,7 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
 .cart-advisor-card .icon-wrapper {
   width: 40px;
   height: 40px;
-  background: #F5F4F0;
+  background: #FFFFFF;
   border-radius: 50%;
   display: flex;
   align-items: center;
