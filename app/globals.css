@@ -54,12 +54,12 @@ body {
 
 h1,
 .font-display {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-weight: 600;
 }
 
 h2 {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-weight: 600;
 }
 
@@ -1031,7 +1031,7 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
 
 .cart-item-title {
   color: #1A1A1A;
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-sans);
 }
 
 /* --- Quantity Controls (Light Theme) --- */
@@ -1112,7 +1112,7 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
 
 
 .ritual-summary-title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-sans);
   font-size: 20px;
   font-weight: 700;
   color: #1A1A1A;
@@ -1215,7 +1215,7 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
 }
 
 .ritual-summary-total-value {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-sans);
   font-size: 32px;
   font-weight: 700;
   color: #1A1A1A;
@@ -1335,7 +1335,7 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
 
 /* --- Section Titles --- */
 .cart-saved-section-title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-sans);
   font-size: 20px;
   font-weight: 600;
   color: #1A1A1A;
@@ -1346,7 +1346,7 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
 }
 
 .cart-page-title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-sans);
   font-size: 32px;
   font-weight: 700;
   color: #1A1A1A;
