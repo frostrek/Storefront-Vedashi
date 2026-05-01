@@ -12,7 +12,7 @@ export default async function PrivacyPage() {
     const doc = await getLegalDocument('privacy-policy');
 
     return (
-        <div className="min-h-screen bg-[#FAF7F2] py-20 px-4">
+        <div className="min-h-screen bg-white py-20 px-4">
             <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-sm border border-gray-100 p-8 md:p-16">
                 <div className="mb-12 border-b border-gray-100 pb-8 cursor-pointer">
                     <Link href="/">

@@ -46,7 +46,7 @@ function ForgotPasswordContent() {
     };
 
     return (
-        <div className="bg-cream flex flex-col items-center pt-10 md:pt-16 px-4 pb-25">
+        <div className="bg-white flex flex-col items-center pt-10 md:pt-16 px-4 pb-25 min-h-screen">
             <div className="w-full max-w-md">
 
                 <Link href="/login" className="inline-flex items-center gap-2 mb-6 text-sm font-medium text-warm-gray hover:text-[#91cA34] transition-colors">
@@ -117,7 +117,7 @@ function ForgotPasswordContent() {
 export default function ForgotPasswordPage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen bg-cream flex items-center justify-center px-4">
+            <div className="min-h-screen bg-white flex items-center justify-center px-4">
                 <div className="w-8 h-8 border-2 border-[#91cA34]/30 border-t-[#91cA34] rounded-full animate-spin" />
             </div>
         }>

@@ -141,41 +141,7 @@ export default function VendorRegistrationPage() {
   const textareaClass = "w-full rounded-[10px] border border-gray-200 px-4 py-3.5 text-[15px] placeholder:text-gray-400 focus:border-[#5F6F52] focus:ring-1 focus:ring-[#5F6F52] focus:outline-none transition-all shadow-sm bg-white min-h-[120px] resize-y";
 
   return (
-    <div className="relative min-h-screen bg-[#F6F7F4] overflow-hidden selection:bg-[#5F6F52] selection:text-white pb-16">
-      {/* Background Image Watermarks */}
-      <motion.div
-        initial={{ opacity: 0, x: -50 }}
-        animate={{ opacity: 0.3, x: 0 }}
-        transition={{ duration: 1.5, ease: "easeOut" }}
-        style={{ willChange: "transform, opacity" }}
-        className="absolute top-[-5%] left-[-10%] w-[1000px] h-[1000px] pointer-events-none z-0"
-      >
-        <Image
-          src="/Contact%20Us%202.png"
-          alt=""
-          fill
-          sizes="(max-width: 1000px) 100vw, 1000px"
-          className="object-contain"
-          priority
-        />
-      </motion.div>
-      <motion.div
-        initial={{ opacity: 0, x: 50 }}
-        animate={{ opacity: 0.7, x: 0 }}
-        transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
-        style={{ willChange: "transform, opacity" }}
-        className="absolute top-[30%] right-[-15%] w-[800px] h-[1000px] pointer-events-none z-0"
-      >
-        <Image
-          src="/Contact%20Us%201.png"
-          alt=""
-          fill
-          sizes="(max-width: 800px) 100vw, 800px"
-          className="object-contain"
-          priority
-        />
-      </motion.div>
-
+    <div className="relative min-h-screen bg-white overflow-hidden selection:bg-[#5F6F52] selection:text-white pb-16">
       {/* Hero Section */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}
@@ -479,7 +445,7 @@ export default function VendorRegistrationPage() {
               whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex w-full sm:w-auto items-center justify-center gap-2.5 rounded-xl bg-[#00472f] px-12 py-4 text-[16px] font-semibold text-white hover:bg-[#003822] transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-[0_4px_16px_rgba(0,71,47,0.25)] hover:shadow-[0_8px_24px_rgba(0,71,47,0.35)]"
+              className="inline-flex w-full sm:w-auto items-center justify-center gap-2.5 rounded-xl bg-[#91C934] px-12 py-4 text-[16px] font-semibold text-white hover:bg-[#003822] transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-[0_4px_16px_rgba(0,71,47,0.25)] hover:shadow-[0_8px_24px_rgba(0,71,47,0.35)]"
             >
               {isSubmitting ? 'Submitting...' : 'Submit Registration'}
               <Send className={`h-5 w-5 ${isSubmitting ? 'animate-pulse' : ''}`} />

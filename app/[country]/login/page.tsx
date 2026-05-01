@@ -525,7 +525,7 @@ function LoginContent() {
         : 'Sign in to your account';
 
     return (
-        <div className="h-screen overflow-hidden flex flex-col lg:flex-row bg-[#FAF8F0]">
+        <div className="h-screen overflow-hidden flex flex-col lg:flex-row bg-white">
             {/* ── Left Section: Brand Showcase ── */}
             <div className="relative hidden lg:flex lg:w-1/2 h-full flex-col overflow-hidden">
                 {/* Background Image with Overlay */}
@@ -543,7 +543,7 @@ function LoginContent() {
             </div>
 
             {/* ── Right Section: Auth Forms ── */}
-            <div className="w-full lg:w-1/2 h-full flex flex-col bg-white lg:bg-[#FAF8F0] overflow-y-auto">
+            <div className="w-full lg:w-1/2 h-full flex flex-col bg-white overflow-y-auto">
                 {/* Mobile Header (Visible only on mobile) */}
                 <div className="lg:hidden relative h-32 flex flex-col overflow-hidden">
                     <div className="absolute inset-0 z-0 bg-[#91C934]" />
@@ -892,7 +892,7 @@ function LoginContent() {
 export default function LoginPage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen bg-[#0d1f0d] flex items-center justify-center">
+            <div className="min-h-screen bg-white flex items-center justify-center">
                 <div className="w-8 h-8 border-2 border-[#4a7c4a]/30 border-t-[#4a7c4a] rounded-full animate-spin" />
             </div>
         }>

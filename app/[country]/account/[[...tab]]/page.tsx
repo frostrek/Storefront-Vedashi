@@ -1290,7 +1290,7 @@ export default function AccountPage() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-cream flex items-center justify-center">
+            <div className="min-h-screen bg-white flex items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-burgundy" />
             </div>
         );
@@ -1298,7 +1298,7 @@ export default function AccountPage() {
 
     if (isLoading || !isAuthenticated) {
         return (
-            <div className="min-h-screen bg-[#F8F5F0] flex items-center justify-center">
+            <div className="min-h-screen bg-white flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
                     <div className="relative">
                         <div className="absolute inset-0 rounded-full border-4 border-[#36453A]/10 animate-pulse" />
@@ -1338,7 +1338,7 @@ export default function AccountPage() {
     ];
 
     return (
-        <div className="flex flex-col lg:flex-row bg-[#F8F5F0] min-h-[calc(100vh-128px)]">
+        <div className="flex flex-col lg:flex-row bg-white min-h-[calc(100vh-128px)]">
             {/* Mobile Account Navigation (Visible only on < lg) */}
             <nav className="lg:hidden sticky top-0 z-[100] bg-white border-b border-[#E8E1D5] overflow-x-auto custom-scrollbar flex items-center gap-1.5 px-4 py-3 whitespace-nowrap shadow-sm">
                 {[...coreExperienceTabs, ...identityAccessTabs].map(tab => (
@@ -1553,7 +1553,7 @@ export default function AccountPage() {
                                             </button>
                                             <button
                                                 onClick={() => router.push('/account/profile')}
-                                                className="bg-white border text-[#36453A] border-[#E8E1D5] px-6 py-3 rounded-xl text-sm font-bold hover:bg-[#F8F5F0] transition-colors"
+                                                className="bg-white border text-[#36453A] border-[#E8E1D5] px-6 py-3 rounded-xl text-sm font-bold hover:bg-white transition-colors"
                                             >
                                                 Update Health Profile
                                             </button>
@@ -1605,7 +1605,7 @@ export default function AccountPage() {
                                 {/* Stats Row */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <div className="bg-white p-6 rounded-2xl border border-[#E8E1D5] shadow-sm flex items-start gap-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push('/account/orders')}>
-                                        <div className="h-12 w-12 rounded-xl bg-[#F8F5F0] flex items-center justify-center flex-shrink-0">
+                                        <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center flex-shrink-0">
                                             <Package className="h-6 w-6 text-[#36453A]" />
                                         </div>
                                         <div>
@@ -1616,7 +1616,7 @@ export default function AccountPage() {
                                     </div>
 
                                     <div className="bg-white p-6 rounded-2xl border border-[#E8E1D5] shadow-sm flex items-start gap-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push(`/${country}/account/wishlist`)}>
-                                        <div className="h-12 w-12 rounded-xl bg-[#F8F5F0] flex items-center justify-center flex-shrink-0">
+                                        <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center flex-shrink-0">
                                             <Heart className="h-6 w-6 text-[#36453A]" />
                                         </div>
                                         <div>
@@ -1630,7 +1630,7 @@ export default function AccountPage() {
                                         <div className="absolute top-0 right-0 p-4 opacity-5">
                                             <Star className="h-20 w-20 text-[#D4A847]" />
                                         </div>
-                                        <div className="h-12 w-12 rounded-xl bg-[#F8F5F0] flex items-center justify-center flex-shrink-0 relative z-10">
+                                        <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center flex-shrink-0 relative z-10">
                                             <Star className="h-6 w-6 text-[#36453A]" />
                                         </div>
                                         <div className="relative z-10">
@@ -1647,7 +1647,7 @@ export default function AccountPage() {
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                         <button onClick={() => router.push(`/${country}/account/orders`)} className="bg-white border border-[#E8E1D5] p-4 rounded-2xl flex items-center justify-between hover:border-[#36453A]/30 transition-colors group">
                                             <div className="flex items-center gap-4">
-                                                <div className="bg-[#F8F5F0] p-2.5 rounded-lg group-hover:bg-[#36453A] transition-colors">
+                                                <div className="bg-white p-2.5 rounded-lg group-hover:bg-[#36453A] transition-colors">
                                                     <List className="h-5 w-5 text-[#36453A] group-hover:text-white transition-colors" />
                                                 </div>
                                                 <div className="text-left">
@@ -1660,7 +1660,7 @@ export default function AccountPage() {
 
                                         <button onClick={() => router.push(`/${country}/account/addresses`)} className="bg-white border border-[#E8E1D5] p-4 rounded-2xl flex items-center justify-between hover:border-[#36453A]/30 transition-colors group">
                                             <div className="flex items-center gap-4">
-                                                <div className="bg-[#F8F5F0] p-2.5 rounded-lg group-hover:bg-[#36453A] transition-colors">
+                                                <div className="bg-white p-2.5 rounded-lg group-hover:bg-[#36453A] transition-colors">
                                                     <MapPin className="h-5 w-5 text-[#36453A] group-hover:text-white transition-colors" />
                                                 </div>
                                                 <div className="text-left">
@@ -1673,7 +1673,7 @@ export default function AccountPage() {
 
                                         <button onClick={() => router.push(`/${country}/account/profile`)} className="bg-white border border-[#E8E1D5] p-4 rounded-2xl flex items-center justify-between hover:border-[#36453A]/30 transition-colors group">
                                             <div className="flex items-center gap-4">
-                                                <div className="bg-[#F8F5F0] p-2.5 rounded-lg group-hover:bg-[#36453A] transition-colors">
+                                                <div className="bg-white p-2.5 rounded-lg group-hover:bg-[#36453A] transition-colors">
                                                     <User className="h-5 w-5 text-[#36453A] group-hover:text-white transition-colors" />
                                                 </div>
                                                 <div className="text-left">
@@ -1711,7 +1711,7 @@ export default function AccountPage() {
                                                 </thead>
                                                 <tbody>
                                                     {orders.slice(0, 5).map((order: any) => (
-                                                        <tr key={order.order_id} className="border-b border-[#F8F5F0] last:border-0 hover:bg-[#F8F5F0]/50 transition-colors">
+                                                        <tr key={order.order_id} className="border-b border-[#F8F5F0] last:border-0 hover:bg-white/50 transition-colors">
                                                             <td className="py-4 text-sm font-bold text-[#36453A]">{order.order_id.split('-')[0].toUpperCase()}</td>
                                                             <td className="py-4 text-sm text-warm-gray">{new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
                                                             <td className="py-4">
@@ -1748,7 +1748,7 @@ export default function AccountPage() {
                                             <div className="space-y-4">
                                                 {wishlistItems.slice(0, 4).map((item: any) => (
                                                     <div key={item.product_id} className="flex gap-4 group cursor-pointer" onClick={() => router.push(`/products/${item.slug || item.product_id}`)}>
-                                                        <div className="h-16 w-16 bg-[#F8F5F0] rounded-xl border border-[#E8E1D5] flex items-center justify-center p-2 flex-shrink-0 overflow-hidden">
+                                                        <div className="h-16 w-16 bg-white rounded-xl border border-[#E8E1D5] flex items-center justify-center p-2 flex-shrink-0 overflow-hidden">
                                                             {item.image_url ? (
                                                                 // eslint-disable-next-line @next/next/no-img-element
                                                                 <img src={item.image_url} alt={item.product_name} className="h-full w-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500" />
@@ -1768,14 +1768,14 @@ export default function AccountPage() {
                                                 ))}
 
                                                 {wishlistItems.length === 0 && (
-                                                    <div className="py-6 text-center border-2 border-dashed border-[#E8E1D5] rounded-xl bg-[#F8F5F0]/50">
+                                                    <div className="py-6 text-center border-2 border-dashed border-[#E8E1D5] rounded-xl bg-white/50">
                                                         <Heart className="h-6 w-6 text-warm-gray/40 mx-auto mb-2" />
                                                         <p className="text-xs font-medium text-warm-gray">Your sanctuary is empty.</p>
                                                     </div>
                                                 )}
                                             </div>
 
-                                            <button onClick={() => router.push('/account/wishlist')} className="w-full mt-6 bg-[#F8F5F0] text-[#36453A] text-xs font-bold py-3 rounded-xl hover:bg-[#E8E1D5] transition-colors flex items-center justify-center gap-2">
+                                            <button onClick={() => router.push('/account/wishlist')} className="w-full mt-6 bg-white text-[#36453A] text-xs font-bold py-3 rounded-xl hover:bg-[#E8E1D5] transition-colors flex items-center justify-center gap-2">
                                                 Manage Full Wishlist <ChevronRight className="h-3 w-3" />
                                             </button>
                                         </div>
@@ -1803,7 +1803,7 @@ export default function AccountPage() {
 
                         {/* ═══════════════════ ORDERS TAB ═══════════════════ */}
                         {activeTab === 'orders' && (
-                            <div className="flex flex-col h-full bg-[#F8F5F0]">
+                            <div className="flex flex-col h-full bg-white">
                                 {/* ── Orders Header ── */}
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                                     <div className="flex items-center gap-4">
@@ -1841,7 +1841,7 @@ export default function AccountPage() {
                                                         className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm border
                                                         ${orderStatusFilter === status
                                                                 ? 'bg-[#36453A] text-white border-[#36453A]'
-                                                                : 'bg-white text-[#36453A] border-[#E8E1D5] hover:bg-[#F8F5F0]'
+                                                                : 'bg-white text-[#36453A] border-[#E8E1D5] hover:bg-white'
                                                             }`}
                                                     >
                                                         {status}
@@ -1909,7 +1909,7 @@ export default function AccountPage() {
                                                             }`}
                                                     >
                                                         {/* Header Row */}
-                                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#F8F5F0]/60 border-b border-[#E8E1D5] px-4 py-3 sm:px-6">
+                                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white/60 border-b border-[#E8E1D5] px-4 py-3 sm:px-6">
                                                             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 w-full sm:w-auto">
                                                                 <div className="flex flex-col">
                                                                     <span className="text-[10px] uppercase tracking-widest text-warm-gray font-bold mb-0.5">Order ID</span>
@@ -1952,7 +1952,7 @@ export default function AccountPage() {
                                                             {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#36453A]"></div>}
                                                             
                                                             {/* Image */}
-                                                            <div className="relative h-20 w-20 sm:h-24 sm:w-24 rounded-2xl bg-[#F8F5F0] border border-[#E8E1D5] flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                                            <div className="relative h-20 w-20 sm:h-24 sm:w-24 rounded-2xl bg-white border border-[#E8E1D5] flex-shrink-0 flex items-center justify-center overflow-hidden">
                                                                 {prodImg ? (
                                                                     // eslint-disable-next-line @next/next/no-img-element
                                                                     <img src={prodImg} alt="Product" className="h-full w-full object-cover mix-blend-multiply" />
@@ -1988,7 +1988,7 @@ export default function AccountPage() {
                                                                         handleReorder(order.order_id);
                                                                     }}
                                                                     disabled={reorderingOrderId === order.order_id}
-                                                                    className="rounded-xl px-5 py-2 text-xs font-bold bg-white text-[#36453A] border border-[#E8E1D5] hover:border-[#36453A]/40 hover:bg-[#F8F5F0] transition-all whitespace-nowrap disabled:opacity-50 flex items-center justify-center gap-1.5"
+                                                                    className="rounded-xl px-5 py-2 text-xs font-bold bg-white text-[#36453A] border border-[#E8E1D5] hover:border-[#36453A]/40 hover:bg-white transition-all whitespace-nowrap disabled:opacity-50 flex items-center justify-center gap-1.5"
                                                                 >
                                                                     {reorderingOrderId === order.order_id ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
                                                                     {reorderingOrderId === order.order_id ? 'Reordering...' : 'Reorder'}
@@ -2023,7 +2023,7 @@ export default function AccountPage() {
                                                     <button 
                                                         onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                                         disabled={currentPage === 1}
-                                                        className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === 1 ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-[#F8F5F0]'}`}
+                                                        className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === 1 ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-white'}`}
                                                     >
                                                         Previous
                                                     </button>
@@ -2032,7 +2032,7 @@ export default function AccountPage() {
                                                         <button 
                                                             key={i}
                                                             onClick={() => setCurrentPage(i + 1)}
-                                                            className={`h-9 w-9 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center transition-all ${currentPage === i + 1 ? 'bg-[#36453A] text-white' : 'bg-white text-[#36453A] border border-[#E8E1D5] hover:bg-[#F8F5F0]'}`}
+                                                            className={`h-9 w-9 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center transition-all ${currentPage === i + 1 ? 'bg-[#36453A] text-white' : 'bg-white text-[#36453A] border border-[#E8E1D5] hover:bg-white'}`}
                                                         >
                                                             {i + 1}
                                                         </button>
@@ -2041,7 +2041,7 @@ export default function AccountPage() {
                                                     <button 
                                                         onClick={() => setCurrentPage(p => Math.min(Math.ceil(filteredAndSortedOrders.length / pageSize), p + 1))}
                                                         disabled={currentPage === Math.ceil(filteredAndSortedOrders.length / pageSize)}
-                                                        className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === Math.ceil(filteredAndSortedOrders.length / pageSize) ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-[#F8F5F0]'}`}
+                                                        className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === Math.ceil(filteredAndSortedOrders.length / pageSize) ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-white'}`}
                                                     >
                                                         Next
                                                     </button>
@@ -2061,7 +2061,7 @@ export default function AccountPage() {
                                                         <h3 className="text-xl font-bold text-[#36453A]">Order Details</h3>
                                                         <p className="text-xs font-medium text-warm-gray mt-1">Order ID: {selectedOrderDetails.order_id.split('-')[0].toUpperCase()}</p>
                                                     </div>
-                                                    <button onClick={() => setSelectedOrderDetails(null)} className="p-2 text-warm-gray hover:text-[#36453A] hover:bg-[#F8F5F0] rounded-full transition-colors">
+                                                    <button onClick={() => setSelectedOrderDetails(null)} className="p-2 text-warm-gray hover:text-[#36453A] hover:bg-white rounded-full transition-colors">
                                                         <X className="h-5 w-5" />
                                                     </button>
                                                 </div>
@@ -2095,7 +2095,7 @@ export default function AccountPage() {
                                                         </div>
                                                         <button
                                                             onClick={() => handleTrackOrder(selectedOrderDetails.order_id)}
-                                                            className="w-full bg-white text-[#36453A] rounded-xl py-3 text-sm font-bold shadow-sm hover:bg-[#F8F5F0] transition-colors flex items-center justify-center gap-2 relative z-10"
+                                                            className="w-full bg-white text-[#36453A] rounded-xl py-3 text-sm font-bold shadow-sm hover:bg-white transition-colors flex items-center justify-center gap-2 relative z-10"
                                                         >
                                                             Track Order <ChevronRight className="h-4 w-4" />
                                                         </button>
@@ -2104,7 +2104,7 @@ export default function AccountPage() {
                                                     {/* Items Summary */}
                                                     <div>
                                                         <h4 className="text-[11px] font-bold tracking-widest text-[#36453A] uppercase mb-4">Items Summary</h4>
-                                                        <div className="rounded-2xl border border-[#E8E1D5] bg-[#F8F5F0]/50 divide-y divide-[#E8E1D5]">
+                                                        <div className="rounded-2xl border border-[#E8E1D5] bg-white/50 divide-y divide-[#E8E1D5]">
                                                             {(selectedOrderDetails.items || []).map((item: any) => {
                                                                 const prodImg = item.thumbnail_url || item.product?.thumbnail_url || item.product?.primary_image_url || item.product?.images?.[0] || null;
                                                                 const prodName = item.product?.product_name || item.product_name || 'Product';
@@ -2136,7 +2136,7 @@ export default function AccountPage() {
                                                     {/* Shipping Address */}
                                                     <div>
                                                         <h4 className="text-[11px] font-bold tracking-widest text-[#36453A] uppercase mb-4">Shipping Address</h4>
-                                                        <div className="rounded-2xl border border-[#E8E1D5] bg-[#F8F5F0]/50 p-4 flex items-start gap-3">
+                                                        <div className="rounded-2xl border border-[#E8E1D5] bg-white/50 p-4 flex items-start gap-3">
                                                             <div className="mt-0.5 text-[#36453A]/60">
                                                                 <MapPin className="h-4 w-4" />
                                                             </div>
@@ -2190,7 +2190,7 @@ export default function AccountPage() {
                                                                 }
                                                             }}
                                                             disabled={isDownloadingInvoice}
-                                                            className={`flex-1 flex justify-center items-center gap-2 border border-[#E8E1D5] bg-white rounded-xl py-2.5 text-xs font-bold text-[#36453A] transition-colors shadow-sm ${isDownloadingInvoice ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#F8F5F0]'}`}
+                                                            className={`flex-1 flex justify-center items-center gap-2 border border-[#E8E1D5] bg-white rounded-xl py-2.5 text-xs font-bold text-[#36453A] transition-colors shadow-sm ${isDownloadingInvoice ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white'}`}
                                                         >
                                                             {isDownloadingInvoice ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />} {isDownloadingInvoice ? 'Downloading...' : 'Invoice'}
                                                         </button>
@@ -2199,14 +2199,14 @@ export default function AccountPage() {
                                                             return linkedTicket ? (
                                                                 <button
                                                                     onClick={() => router.push(`/${country}/help-center/support/${linkedTicket._ticket_id}`)}
-                                                                    className="flex-1 flex justify-center items-center gap-2 border border-[#36453A]/20 bg-[#F8F5F0] rounded-xl py-2.5 text-xs font-bold text-[#36453A] hover:bg-white transition-colors shadow-sm"
+                                                                    className="flex-1 flex justify-center items-center gap-2 border border-[#36453A]/20 bg-white rounded-xl py-2.5 text-xs font-bold text-[#36453A] hover:bg-white transition-colors shadow-sm"
                                                                 >
                                                                     <MessageSquare className="h-3.5 w-3.5" /> View Ticket
                                                                 </button>
                                                             ) : (
                                                                 <button
                                                                     onClick={() => router.push(`/${country}/help-center/support?orderId=${selectedOrderDetails.order_id.split('-')[0].toUpperCase()}`)}
-                                                                    className="flex-1 flex justify-center items-center gap-2 border border-[#E8E1D5] bg-white rounded-xl py-2.5 text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors shadow-sm"
+                                                                    className="flex-1 flex justify-center items-center gap-2 border border-[#E8E1D5] bg-white rounded-xl py-2.5 text-xs font-bold text-[#36453A] hover:bg-white transition-colors shadow-sm"
                                                                 >
                                                                     <Mail className="h-3.5 w-3.5" /> Support
                                                                 </button>
@@ -2230,7 +2230,7 @@ export default function AccountPage() {
                                                                 <h4 className="text-[11px] font-bold tracking-widest text-[#36453A] uppercase mb-4 flex items-center gap-2">
                                                                     <MessageCircle className="h-3.5 w-3.5 text-[#D4A847]" /> Inquiry Correspondence
                                                                 </h4>
-                                                                <div className="rounded-2xl border border-[#E8E1D5] bg-[#F8F5F0]/30 p-4 space-y-3">
+                                                                <div className="rounded-2xl border border-[#E8E1D5] bg-white/30 p-4 space-y-3">
                                                                     <div className="flex justify-between items-center">
                                                                         <span className="text-[10px] font-bold text-[#36453A] uppercase">#{ticket._ticket_number || ticket.feedback_id.slice(0, 8)}</span>
                                                                         <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
@@ -2271,7 +2271,7 @@ export default function AccountPage() {
                                     ) : (
                                         <div className="hidden lg:block w-[400px] flex-shrink-0">
                                             {/* Empty detail state placeholder to preserve grid mapping */}
-                                            <div className="bg-[#F8F5F0] border-2 border-dashed border-[#E8E1D5] rounded-3xl h-[600px] flex flex-col items-center justify-center text-center p-8 opacity-70 sticky top-32">
+                                            <div className="bg-white border-2 border-dashed border-[#E8E1D5] rounded-3xl h-[600px] flex flex-col items-center justify-center text-center p-8 opacity-70 sticky top-32">
                                                 <Package className="h-12 w-12 text-warm-gray/30 mb-4" />
                                                 <h3 className="text-xl font-bold text-[#36453A] mb-2">Select an Order</h3>
                                                 <p className="text-sm text-warm-gray leading-relaxed">Choose an order from the list to view tracking, items, and billing details here.</p>
@@ -2362,7 +2362,7 @@ export default function AccountPage() {
                             <div className="max-w-[1200px] space-y-12 pb-16">
 
                                 {/* ── Sanctuary Header ── */}
-                                <div className="rounded-[40px] bg-[#F8F5F0] overflow-hidden relative shadow-sm border border-[#E8E1D5] py-16 px-12">
+                                <div className="rounded-[40px] bg-white overflow-hidden relative shadow-sm border border-[#E8E1D5] py-16 px-12">
                                     {/* Abstract background shapes matching mockup */}
                                     <div className="absolute top-0 right-0 w-[60%] h-full bg-white opacity-40 mix-blend-overlay rounded-bl-[100px] pointer-events-none -mr-12 -mt-12"></div>
                                     <div className="absolute bottom-0 left-[20%] w-[30%] h-[30%] bg-white opacity-30 mix-blend-overlay rounded-tr-[100px] pointer-events-none"></div>
@@ -2382,7 +2382,7 @@ export default function AccountPage() {
 
                                         {/* Total Items Saved Card */}
                                         <div className="bg-white rounded-3xl shadow-md border border-[#E8E1D5]/50 p-8 flex flex-col items-center justify-center min-w-[200px] relative z-20">
-                                            <div className="h-16 w-16 bg-[#F8F5F0] rounded-2xl flex items-center justify-center mb-4">
+                                            <div className="h-16 w-16 bg-white rounded-2xl flex items-center justify-center mb-4">
                                                 <Heart className="h-7 w-7 text-[#36453A]" />
                                             </div>
                                             <p className="text-4xl font-bold text-[#36453A] mb-1">{wishlistItems.length}</p>
@@ -2429,7 +2429,7 @@ export default function AccountPage() {
                                     <div className="flex items-center gap-6 self-end sm:self-auto">
                                         {/* View Toggles */}
                                         <div className="flex items-center gap-2 border border-[#E8E1D5] rounded-full p-1 bg-white">
-                                            <button className="p-1.5 rounded-full bg-[#F8F5F0] text-[#36453A] shadow-sm"><LayoutGrid className="h-4 w-4" /></button>
+                                            <button className="p-1.5 rounded-full bg-white text-[#36453A] shadow-sm"><LayoutGrid className="h-4 w-4" /></button>
                                             <button className="p-1.5 rounded-full text-warm-gray hover:text-[#36453A]"><List className="h-4 w-4" /></button>
                                         </div>
 
@@ -2504,7 +2504,7 @@ export default function AccountPage() {
                                                     </div>
 
                                                     {/* Product Image */}
-                                                    <div className="aspect-[4/5] w-full rounded-2xl overflow-hidden bg-[#F8F5F0] mb-5 relative cursor-pointer" onClick={() => router.push(`/products/${product.slug || product.product_id}`)}>
+                                                    <div className="aspect-[4/5] w-full rounded-2xl overflow-hidden bg-white mb-5 relative cursor-pointer" onClick={() => router.push(`/products/${product.slug || product.product_id}`)}>
                                                         {product.image_url ? (
                                                             // eslint-disable-next-line @next/next/no-img-element
                                                             <img src={product.image_url} alt={product.product_name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
@@ -2544,7 +2544,7 @@ export default function AccountPage() {
                                         })}
 
                                         {/* Find More Treasures Tile */}
-                                        <div className="group flex flex-col justify-center items-center rounded-3xl border-2 border-dashed border-[#E8E1D5] bg-white p-8 transition-all hover:bg-[#F8F5F0] hover:border-transparent text-center cursor-pointer min-h-[400px]">
+                                        <div className="group flex flex-col justify-center items-center rounded-3xl border-2 border-dashed border-[#E8E1D5] bg-white p-8 transition-all hover:bg-white hover:border-transparent text-center cursor-pointer min-h-[400px]">
                                             <div className="h-12 w-12 rounded-full border-2 border-[#E8E1D5] flex items-center justify-center bg-white group-hover:border-[#36453A] group-hover:text-[#36453A] text-warm-gray transition-colors mb-6 shadow-sm">
                                                 <Plus className="h-5 w-5" />
                                             </div>
@@ -2572,7 +2572,7 @@ export default function AccountPage() {
                                             <button 
                                                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                                 disabled={currentPage === 1}
-                                                className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === 1 ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-[#F8F5F0]'}`}
+                                                className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === 1 ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-white'}`}
                                             >
                                                 Previous
                                             </button>
@@ -2581,7 +2581,7 @@ export default function AccountPage() {
                                                 <button 
                                                     key={i}
                                                     onClick={() => setCurrentPage(i + 1)}
-                                                    className={`h-9 w-9 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center transition-all ${currentPage === i + 1 ? 'bg-[#36453A] text-white' : 'bg-white text-[#36453A] border border-[#E8E1D5] hover:bg-[#F8F5F0]'}`}
+                                                    className={`h-9 w-9 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center transition-all ${currentPage === i + 1 ? 'bg-[#36453A] text-white' : 'bg-white text-[#36453A] border border-[#E8E1D5] hover:bg-white'}`}
                                                 >
                                                     {i + 1}
                                                 </button>
@@ -2590,7 +2590,7 @@ export default function AccountPage() {
                                             <button 
                                                 onClick={() => setCurrentPage(p => Math.min(Math.ceil(sortedWishlistItems.length / pageSize), p + 1))}
                                                 disabled={currentPage === Math.ceil(sortedWishlistItems.length / pageSize)}
-                                                className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === Math.ceil(sortedWishlistItems.length / pageSize) ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-[#F8F5F0]'}`}
+                                                className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === Math.ceil(sortedWishlistItems.length / pageSize) ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-white'}`}
                                             >
                                                 Next
                                             </button>
@@ -2615,7 +2615,7 @@ export default function AccountPage() {
                                             {recommendedProducts.map(product => (
                                                 <div key={product.product_id} className="group relative flex flex-col rounded-[20px] bg-white transition-all hover:shadow-md cursor-pointer overflow-hidden p-2" onClick={() => router.push(`/products/${product.slug || product.product_id}`)}>
                                                     {/* Product Image Box */}
-                                                    <div className="aspect-[4/5] w-full rounded-[14px] overflow-hidden bg-[#F8F5F0] relative">
+                                                    <div className="aspect-[4/5] w-full rounded-[14px] overflow-hidden bg-white relative">
                                                         {product.images && product.images[0] ? (
                                                             // eslint-disable-next-line @next/next/no-img-element
                                                             <img src={product.images[0]} alt={product.product_name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
@@ -2654,7 +2654,7 @@ export default function AccountPage() {
                         {activeTab === 'addresses' && (
                             <div className="max-w-[1200px] space-y-12 pb-16">
                                 {/* ── Rituals Header ── */}
-                                <div className="rounded-[40px] bg-[#F8F5F0] overflow-hidden relative shadow-sm border border-[#E8E1D5] py-16 px-12">
+                                <div className="rounded-[40px] bg-white overflow-hidden relative shadow-sm border border-[#E8E1D5] py-16 px-12">
                                     {/* Abstract background shapes matching sanctuary aesthetic */}
                                     <div className="absolute top-0 right-0 w-[60%] h-full bg-white opacity-40 mix-blend-overlay rounded-bl-[100px] pointer-events-none -mr-12 -mt-12" />
                                     <div className="absolute bottom-0 left-[20%] w-[30%] h-[30%] bg-white opacity-30 mix-blend-overlay rounded-tr-[100px] pointer-events-none" />
@@ -2678,7 +2678,7 @@ export default function AccountPage() {
                                                 onClick={() => { resetAddressForm(); setShowAddressForm(true); }}
                                                 className="bg-white rounded-3xl shadow-md border border-[#E8E1D5]/50 p-8 flex flex-col items-center justify-center min-w-[200px] relative z-20 group hover:border-[#36453A]/30 transition-all hover:shadow-lg"
                                             >
-                                                <div className="h-16 w-16 bg-[#F8F5F0] rounded-2xl flex items-center justify-center mb-4 group-hover:bg-[#36453A] transition-colors">
+                                                <div className="h-16 w-16 bg-white rounded-2xl flex items-center justify-center mb-4 group-hover:bg-[#36453A] transition-colors">
                                                     <Plus className="h-7 w-7 text-[#36453A] group-hover:text-white transition-colors" />
                                                 </div>
                                                 <p className="text-xl font-bold text-[#36453A] mb-1">Add Ritual Space</p>
@@ -2863,7 +2863,7 @@ export default function AccountPage() {
                                                 <div className="flex justify-between items-start">
                                                     <div className="pt-2">
                                                         <div className="flex items-center gap-3 mb-4">
-                                                            <div className="h-10 w-10 rounded-xl bg-[#F8F5F0] flex items-center justify-center border border-[#E8E1D5]">
+                                                            <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center border border-[#E8E1D5]">
                                                                 <MapPin className="h-5 w-5 text-[#36453A]" />
                                                             </div>
                                                             {addr.label && (
@@ -2884,7 +2884,7 @@ export default function AccountPage() {
                                                         </div>
 
                                                         {addr.phone && (
-                                                            <div className="mt-5 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#F8F5F0] border border-[#E8E1D5] w-fit">
+                                                            <div className="mt-5 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-[#E8E1D5] w-fit">
                                                                 <Phone className="h-3 w-3 text-warm-gray" />
                                                                 <span className="text-xs font-bold text-[#36453A]">{addr.phone}</span>
                                                             </div>
@@ -3014,7 +3014,7 @@ export default function AccountPage() {
                                     <div className="lg:col-span-2 space-y-8">
                                         {/* Personal Essence */}
                                         <section className="bg-white rounded-3xl p-8 border border-[#E8E1D5] shadow-sm relative overflow-hidden">
-                                            <div className="absolute top-0 right-0 w-32 h-32 bg-[#F8F5F0] rounded-bl-full opacity-50 pointer-events-none"></div>
+                                            <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-bl-full opacity-50 pointer-events-none"></div>
                                             <h3 className="text-xl font-bold text-[#36453A] mb-6 flex items-center gap-2">
                                                 <span className="w-1.5 h-6 bg-[#36453A] rounded-full inline-block"></span>
                                                 Personal Essence
@@ -3023,12 +3023,12 @@ export default function AccountPage() {
                                                 <div>
                                                     <label className="block flex items-center gap-1.5 text-[11px] font-bold text-warm-gray uppercase tracking-widest mb-2"><User className="h-3 w-3" /> Full Identity</label>
                                                     <input type="text" value={profileData.full_name} onChange={e => setProfileData({ ...profileData, full_name: e.target.value })}
-                                                        className="w-full bg-[#F8F5F0] border border-[#E8E1D5] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#36453A] focus:ring-1 focus:ring-[#36453A]/20 transition-all font-medium text-[#36453A]" />
+                                                        className="w-full bg-white border border-[#E8E1D5] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#36453A] focus:ring-1 focus:ring-[#36453A]/20 transition-all font-medium text-[#36453A]" />
                                                 </div>
                                                 <div>
                                                     <label className="block flex items-center gap-1.5 text-[11px] font-bold text-warm-gray uppercase tracking-widest mb-2"><Mail className="h-3 w-3" /> Soulful Mail</label>
                                                     <input type="email" value={profileData.email} onChange={e => setProfileData({ ...profileData, email: e.target.value })}
-                                                        className="w-full bg-[#F8F5F0] border border-[#E8E1D5] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#36453A] focus:ring-1 focus:ring-[#36453A]/20 transition-all font-medium text-[#36453A]" />
+                                                        className="w-full bg-white border border-[#E8E1D5] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#36453A] focus:ring-1 focus:ring-[#36453A]/20 transition-all font-medium text-[#36453A]" />
                                                 </div>
                                                 <div>
                                                     <label className="block flex items-center gap-1.5 text-[11px] font-bold text-warm-gray uppercase tracking-widest mb-2"><Phone className="h-3 w-3" /> Mobile Number</label>
@@ -3065,7 +3065,7 @@ export default function AccountPage() {
                                                                     setProfileData({ ...profileData, phone: val });
                                                                 }}
                                                                 placeholder="98765 43210"
-                                                                className="w-full bg-[#F8F5F0] border border-[#E8E1D5] rounded-xl px-4 py-[9px] text-sm focus:outline-none focus:border-[#36453A] focus:ring-1 focus:ring-[#36453A]/20 transition-all font-medium text-[#36453A]" />
+                                                                className="w-full bg-white border border-[#E8E1D5] rounded-xl px-4 py-[9px] text-sm focus:outline-none focus:border-[#36453A] focus:ring-1 focus:ring-[#36453A]/20 transition-all font-medium text-[#36453A]" />
                                                         </div>
                                                     </div>
                                                 </div>
@@ -3073,7 +3073,7 @@ export default function AccountPage() {
                                                     <label className="block flex items-center gap-1.5 text-[11px] font-bold text-warm-gray uppercase tracking-widest mb-2"><Calendar className="h-3 w-3" /> Date of Birth</label>
                                                     <input type="date" value={profileData.date_of_birth} onChange={e => setProfileData({ ...profileData, date_of_birth: e.target.value })}
                                                         max={new Date().toISOString().split("T")[0]}
-                                                        className="w-full bg-[#F8F5F0] border border-[#E8E1D5] rounded-xl px-4 py-[9px] text-sm focus:outline-none focus:border-[#36453A] focus:ring-1 focus:ring-[#36453A]/20 transition-all font-medium text-[#36453A] min-h-[44px]" />
+                                                        className="w-full bg-white border border-[#E8E1D5] rounded-xl px-4 py-[9px] text-sm focus:outline-none focus:border-[#36453A] focus:ring-1 focus:ring-[#36453A]/20 transition-all font-medium text-[#36453A] min-h-[44px]" />
                                                 </div>
                                                 <div className="md:col-span-2">
                                                     <label className="block flex items-center gap-1.5 text-[11px] font-bold text-warm-gray uppercase tracking-widest mb-2"><MapPin className="h-3 w-3" /> Current Location</label>
@@ -3085,7 +3085,7 @@ export default function AccountPage() {
                                                                 const addr = addresses.find(a => a.is_default) || addresses[0];
                                                                 return addr ? `${addr.city}, ${addr.state}, ${addr.country} - ${addr.pincode}` : 'No Address Added';
                                                             })()}
-                                                            className="w-full bg-[#F8F5F0] border border-[#E8E1D5] rounded-xl px-4 py-3 text-sm focus:outline-none transition-all font-medium text-warm-gray cursor-not-allowed"
+                                                            className="w-full bg-white border border-[#E8E1D5] rounded-xl px-4 py-3 text-sm focus:outline-none transition-all font-medium text-warm-gray cursor-not-allowed"
                                                             title="Location is derived from your Default Delivery Address"
                                                         />
                                                     </div>
@@ -3097,7 +3097,7 @@ export default function AccountPage() {
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                             {/* Security Sanctuary */}
                                             <section className="bg-white rounded-3xl p-8 border border-[#E8E1D5] shadow-sm relative overflow-hidden">
-                                                <div className="absolute top-0 right-0 w-24 h-24 bg-[#F8F5F0] rounded-bl-full opacity-50 pointer-events-none"></div>
+                                                <div className="absolute top-0 right-0 w-24 h-24 bg-white rounded-bl-full opacity-50 pointer-events-none"></div>
                                                 <h3 className="text-xl font-bold text-[#36453A] mb-4 flex items-center gap-2">
                                                     <span className="w-1.5 h-6 bg-[#36453A] rounded-full inline-block"></span>
                                                     Security Sanctuary
@@ -3105,7 +3105,7 @@ export default function AccountPage() {
                                                 <p className="text-sm text-warm-gray mb-6 leading-relaxed">Protect your inner sanctum with a strong, mindful password.</p>
                                                 <button
                                                     onClick={() => setShowPasswordModal(true)}
-                                                    className="w-full rounded-xl border border-[#E8E1D5] py-3.5 text-sm font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors flex items-center justify-center gap-2 mb-2"
+                                                    className="w-full rounded-xl border border-[#E8E1D5] py-3.5 text-sm font-bold text-[#36453A] hover:bg-white transition-colors flex items-center justify-center gap-2 mb-2"
                                                 >
                                                     {profileData.has_password ? 'Modify Access Password' : 'Set Access Password'} <ChevronRight className="h-4 w-4" />
                                                 </button>
@@ -3114,7 +3114,7 @@ export default function AccountPage() {
 
                                             {/* Notification Harmony */}
                                             <section className="bg-white rounded-3xl p-8 border border-[#E8E1D5] shadow-sm relative overflow-hidden group hover:border-[#36453A] transition-all duration-300">
-                                                <div className="absolute top-0 right-0 w-24 h-24 bg-[#F8F5F0] rounded-bl-full opacity-50 pointer-events-none group-hover:bg-[#E7F0E9] transition-colors"></div>
+                                                <div className="absolute top-0 right-0 w-24 h-24 bg-white rounded-bl-full opacity-50 pointer-events-none group-hover:bg-[#E7F0E9] transition-colors"></div>
                                                 <h3 className="text-xl font-bold text-[#36453A] mb-4 flex items-center gap-2">
                                                     <span className="w-1.5 h-6 bg-[#36453A] rounded-full inline-block"></span>
                                                     Notification Harmony
@@ -3122,7 +3122,7 @@ export default function AccountPage() {
                                                 <p className="text-sm text-warm-gray mb-6 leading-relaxed">Tune your alerts and stay synchronous with your wellness journey.</p>
                                                 <button
                                                     onClick={() => setShowNotificationModal(true)}
-                                                    className="w-full rounded-xl border border-[#E8E1D5] py-3.5 text-sm font-bold text-[#36453A] hover:bg-[#F8F5F0] hover:border-[#36453A]/30 transition-all flex items-center justify-center gap-2 group-hover:shadow-sm"
+                                                    className="w-full rounded-xl border border-[#E8E1D5] py-3.5 text-sm font-bold text-[#36453A] hover:bg-white hover:border-[#36453A]/30 transition-all flex items-center justify-center gap-2 group-hover:shadow-sm"
                                                 >
                                                     <BellRing className="h-4 w-4" /> Manage Notifications <ChevronRight className="h-4 w-4" />
                                                 </button>
@@ -3230,7 +3230,7 @@ export default function AccountPage() {
                                     {selectedEnquiry && (
                                         <button
                                             onClick={() => setSelectedEnquiry(null)}
-                                            className="px-4 py-2 bg-white border border-[#E8E1D5] rounded-xl text-sm font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors"
+                                            className="px-4 py-2 bg-white border border-[#E8E1D5] rounded-xl text-sm font-bold text-[#36453A] hover:bg-white transition-colors"
                                         >
                                             Back to List
                                         </button>
@@ -3272,7 +3272,7 @@ export default function AccountPage() {
 
                                                         {(!selectedEnquiry.replies || selectedEnquiry.replies.length === 0) ? (
                                                             <div className="text-center py-10">
-                                                                <div className="h-16 w-16 rounded-full bg-[#F8F5F0] flex items-center justify-center mx-auto mb-4 border border-[#E8E1D5]">
+                                                                <div className="h-16 w-16 rounded-full bg-white flex items-center justify-center mx-auto mb-4 border border-[#E8E1D5]">
                                                                     <Clock className="h-8 w-8 text-warm-gray" />
                                                                 </div>
                                                                 <p className="text-sm font-bold text-[#36453A]">Awaiting Admin Response</p>
@@ -3287,7 +3287,7 @@ export default function AccountPage() {
                                                                     </div>
 
                                                                     <div className={`flex-1 w-full p-5 rounded-2xl border ${reply.author_type === 'admin'
-                                                                        ? 'bg-[#F8F5F0] border-[#E8E1D5] rounded-tl-none'
+                                                                        ? 'bg-white border-[#E8E1D5] rounded-tl-none'
                                                                         : 'bg-white border-[#E8E1D5] rounded-tr-none'
                                                                         }`}>
                                                                         <div className="flex items-center justify-between gap-4 mb-2">
@@ -3309,13 +3309,13 @@ export default function AccountPage() {
 
                                                     {/* User Reply Box (Continuous Chatting) */}
                                                     {selectedEnquiry.status !== 'resolved' && selectedEnquiry.status !== 'dismissed' && (
-                                                        <div className="mt-8 pt-8 border-t border-[#F8F5F0]">
+                                                        <div className="mt-8 pt-8 border-t border-white">
                                                             <div className="relative">
                                                                 <textarea
                                                                     value={enquiryReplyText}
                                                                     onChange={(e) => setEnquiryReplyText(e.target.value)}
                                                                     placeholder="Type your message here..."
-                                                                    className="w-full min-h-[120px] p-5 bg-[#F8F5F0] border border-[#E8E1D5] rounded-2xl text-sm focus:outline-none focus:border-[#D4A847]/40 transition-all resize-none placeholder:text-warm-gray/60"
+                                                                    className="w-full min-h-[120px] p-5 bg-white border border-[#E8E1D5] rounded-2xl text-sm focus:outline-none focus:border-[#D4A847]/40 transition-all resize-none placeholder:text-warm-gray/60"
                                                                 />
                                                                 <div className="absolute bottom-4 right-4 flex items-center gap-3">
                                                                     <button
@@ -3358,15 +3358,15 @@ export default function AccountPage() {
                                             <div className="bg-white rounded-3xl border border-[#E8E1D5] p-6 shadow-sm">
                                                 <h3 className="text-lg font-bold text-[#36453A] mb-4">Ticket Insight</h3>
                                                 <div className="space-y-4">
-                                                    <div className="flex justify-between items-center text-xs pb-3 border-b border-[#F8F5F0]">
+                                                    <div className="flex justify-between items-center text-xs pb-3 border-b border-white">
                                                         <span className="text-warm-gray font-medium">Ticket ID</span>
                                                         <span className="font-bold text-[#36453A] uppercase">#{selectedEnquiry.feedback_id.slice(0, 8)}</span>
                                                     </div>
-                                                    <div className="flex justify-between items-center text-xs pb-3 border-b border-[#F8F5F0]">
+                                                    <div className="flex justify-between items-center text-xs pb-3 border-b border-white">
                                                         <span className="text-warm-gray font-medium">Requested On</span>
                                                         <span className="font-bold text-[#36453A]">{new Date(selectedEnquiry.created_at).toLocaleDateString()}</span>
                                                     </div>
-                                                    <div className="flex justify-between items-center text-xs pb-3 border-b border-[#F8F5F0]">
+                                                    <div className="flex justify-between items-center text-xs pb-3 border-b border-white">
                                                         <span className="text-warm-gray font-medium">Priority Range</span>
                                                         <span className="font-bold text-amber-600">Standard</span>
                                                     </div>
@@ -3384,7 +3384,7 @@ export default function AccountPage() {
                                                 </p>
                                                 <button
                                                     onClick={() => router.push(`/${country}/help-center`)}
-                                                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-[#E8E1D5] text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors"
+                                                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-[#E8E1D5] text-xs font-bold text-[#36453A] hover:bg-white transition-colors"
                                                 >
                                                     <FileText className="h-3.5 w-3.5" /> View Help Center
                                                 </button>
@@ -3411,7 +3411,7 @@ export default function AccountPage() {
                                             </div>
                                         </div>
 
-                                        <div className="divide-y divide-[#F8F5F0]">
+                                        <div className="divide-y divide-white">
                                             {enquiriesLoading ? (
                                                 <div className="py-20 flex flex-col items-center justify-center">
                                                     <Loader2 className="h-10 w-10 animate-spin text-[#36453A] mb-4" />
@@ -3419,7 +3419,7 @@ export default function AccountPage() {
                                                 </div>
                                             ) : enquiries.length === 0 ? (
                                                 <div className="py-20 text-center">
-                                                    <div className="h-20 w-20 rounded-full bg-[#F8F5F0] flex items-center justify-center mx-auto mb-6 border border-[#E8E1D5]">
+                                                    <div className="h-20 w-20 rounded-full bg-white flex items-center justify-center mx-auto mb-6 border border-[#E8E1D5]">
                                                         <MessageSquare className="h-10 w-10 text-warm-gray/40" />
                                                     </div>
                                                     <h3 className="text-2xl font-bold text-[#36453A] mb-2">No Past Enquiries</h3>
@@ -3448,7 +3448,7 @@ export default function AccountPage() {
                                                                 setSelectedEnquiry(enquiry);
                                                             }
                                                         }}
-                                                        className="p-6 transition-all hover:bg-[#F8F5F0] cursor-pointer group"
+                                                        className="p-6 transition-all hover:bg-white cursor-pointer group"
                                                     >
                                                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                                             <div className="flex-1 min-w-0">
@@ -3484,7 +3484,7 @@ export default function AccountPage() {
                                                                 </div>
                                                                 <div className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${enquiry.replies?.some((r: any) => r.type === 'admin')
                                                                     ? 'bg-amber-100 text-amber-600'
-                                                                    : 'bg-[#F8F5F0] text-warm-gray group-hover:bg-[#36453A] group-hover:text-white'
+                                                                    : 'bg-white text-warm-gray group-hover:bg-[#36453A] group-hover:text-white'
                                                                     }`}>
                                                                     <ChevronRight className="h-5 w-5" />
                                                                 </div>
@@ -3615,7 +3615,7 @@ export default function AccountPage() {
                                     {notifications.length > 0 && (
                                         <button
                                             onClick={handleMarkAllRead}
-                                            className="px-4 py-2 bg-white border border-[#E8E1D5] rounded-xl text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors flex items-center gap-2"
+                                            className="px-4 py-2 bg-white border border-[#E8E1D5] rounded-xl text-xs font-bold text-[#36453A] hover:bg-white transition-colors flex items-center gap-2"
                                         >
                                             <Check className="h-3.5 w-3.5" /> Mark All as Read
                                         </button>
@@ -3628,7 +3628,7 @@ export default function AccountPage() {
                                     </div>
                                 ) : notifications.length === 0 ? (
                                     <div className="bg-white rounded-[30px] border border-[#E8E1D5] py-20 px-6 text-center">
-                                        <div className="h-20 w-20 rounded-full bg-[#F8F5F0] border border-[#E8E1D5] flex items-center justify-center mx-auto mb-6">
+                                        <div className="h-20 w-20 rounded-full bg-white border border-[#E8E1D5] flex items-center justify-center mx-auto mb-6">
                                             <BellRing className="h-10 w-10 text-warm-gray/30" />
                                         </div>
                                         <h3 className="text-2xl font-bold text-[#36453A] mb-2">Inner Peace</h3>
@@ -3705,7 +3705,7 @@ export default function AccountPage() {
                                                     <button 
                                                         onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                                         disabled={currentPage === 1}
-                                                        className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === 1 ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-[#F8F5F0]'}`}
+                                                        className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === 1 ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-white'}`}
                                                     >
                                                         Previous
                                                     </button>
@@ -3714,7 +3714,7 @@ export default function AccountPage() {
                                                         <button 
                                                             key={i}
                                                             onClick={() => setCurrentPage(i + 1)}
-                                                            className={`h-9 w-9 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center transition-all ${currentPage === i + 1 ? 'bg-[#36453A] text-white' : 'bg-white text-[#36453A] border border-[#E8E1D5] hover:bg-[#F8F5F0]'}`}
+                                                            className={`h-9 w-9 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center transition-all ${currentPage === i + 1 ? 'bg-[#36453A] text-white' : 'bg-white text-[#36453A] border border-[#E8E1D5] hover:bg-white'}`}
                                                         >
                                                             {i + 1}
                                                         </button>
@@ -3723,7 +3723,7 @@ export default function AccountPage() {
                                                     <button 
                                                         onClick={() => setCurrentPage(p => Math.min(Math.ceil(notifications.length / pageSize), p + 1))}
                                                         disabled={currentPage === Math.ceil(notifications.length / pageSize)}
-                                                        className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === Math.ceil(notifications.length / pageSize) ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-[#F8F5F0]'}`}
+                                                        className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === Math.ceil(notifications.length / pageSize) ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-white'}`}
                                                     >
                                                         Next
                                                     </button>
@@ -4228,14 +4228,14 @@ export default function AccountPage() {
                         </div>
                         
                         <div className="p-8 max-h-[70vh] overflow-y-auto custom-scrollbar bg-white/80 backdrop-blur-md">
-                            <div className="mb-6 bg-[#F8F5F0] p-4 rounded-2xl border border-[#E8E1D5]/50">
+                            <div className="mb-6 bg-white p-4 rounded-2xl border border-[#E8E1D5]/50">
                                 <p className="text-sm text-[#36453A] flex items-center gap-2">
                                     <Sparkles className="h-4 w-4 text-[#D4A847]" /> Master your periodic presence through mindful alerts.
                                 </p>
                             </div>
                             <NotificationPreferences hideHeader={true} isMobileVerified={profileData.is_mobile_verified} />
                         </div>
-                        <div className="p-6 bg-[#F8F5F0] border-t border-[#E8E1D5] text-center">
+                        <div className="p-6 bg-white border-t border-[#E8E1D5] text-center">
                             <button 
                                 onClick={() => setShowNotificationModal(false)}
                                 className="px-12 py-3.5 bg-[#36453A] text-white rounded-xl text-sm font-bold shadow-lg hover:bg-[#2A362D] transition-all transform active:scale-95"

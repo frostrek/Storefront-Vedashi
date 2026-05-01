@@ -141,7 +141,7 @@ export default function CartPage() {
                             {savedItems.map(item => {
                                 const price = item.price ?? 0;
                                 return (
-                                    <div key={item.cart_item_id} className="cart-item-card flex items-center gap-4 bg-[#FAFAFA]">
+                                    <div key={item.cart_item_id} className="cart-item-card flex items-center gap-4 bg-white">
                                         <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img w-16 h-16 rounded-lg flex-shrink-0">
                                             {item.image_url ? <img src={item.image_url} alt="" /> : <span className="text-xl">🌿</span>}
                                         </Link>
@@ -333,7 +333,7 @@ export default function CartPage() {
                                     {savedItems.map(item => {
                                         const price = item.price ?? 0;
                                         return (
-                                            <div key={item.cart_item_id} className="cart-item-card flex items-center gap-4 bg-[#FAFAFA]">
+                                            <div key={item.cart_item_id} className="cart-item-card flex items-center gap-4 bg-white">
                                                 <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img w-16 h-16 rounded-lg flex-shrink-0">
                                                     {item.image_url ? <img src={item.image_url} alt="" /> : <span className="text-xl">🌿</span>}
                                                 </Link>

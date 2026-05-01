@@ -57,7 +57,7 @@ function ResetPasswordContent() {
 
     if (!token && !success) {
         return (
-            <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-4 py-12">
+            <div className="min-h-screen bg-white flex flex-col items-center justify-center px-4 py-12">
                 <div className="w-full max-w-md text-center">
                     <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-red-100 flex items-center justify-center">
                         <KeyRound className="w-8 h-8 text-red-600" />
@@ -80,7 +80,7 @@ function ResetPasswordContent() {
     }
 
     return (
-        <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-4 py-12">
+        <div className="min-h-screen bg-white flex flex-col items-center justify-center px-4 py-12">
             <div className="w-full max-w-md">
 
                 <div className="text-center mb-8">
@@ -165,7 +165,7 @@ function ResetPasswordContent() {
 export default function ResetPasswordPage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen bg-cream flex items-center justify-center px-4">
+            <div className="min-h-screen bg-white flex items-center justify-center px-4">
                 <div className="w-8 h-8 border-2 border-burgundy/30 border-t-burgundy rounded-full animate-spin" />
             </div>
         }>

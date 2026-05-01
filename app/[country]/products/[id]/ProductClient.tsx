@@ -537,7 +537,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
 
 
                         {/* PRICE BLOCK */}
-                        <div className="p-4 rounded-xl bg-[#F8F9FA] shadow-[inset_0_0_0_1px_#E9ECEF] space-y-1">
+                        <div className="p-4 rounded-xl bg-white shadow-[inset_0_0_0_1px_#E9ECEF] space-y-1">
                             <div className="flex flex-col gap-1">
                                 {isDiscounted && (
                                     <>
