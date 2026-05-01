@@ -1325,7 +1325,7 @@ function CheckoutContent() {
                                             {contactPhoneError && <p className="text-[10px] text-red-500 mt-1 font-bold">{contactPhoneError}</p>}
                                         </div>
                                     </div>
-                                    <p className="mt-3 text-xs text-gray-700">We will send order updates and Ayurvedic guidelines to these contacts.</p>
+                                    <p className="mt-3 text-xs text-gray-600">We will send order updates and Ayurvedic guidelines to these contacts.</p>
                                 </div>
 
                                 {/* Delivery Details Form */}
@@ -1351,10 +1351,10 @@ function CheckoutContent() {
                                                                 </div>
                                                                 {editingAddressId !== addr.address_id && (
                                                                     <div className="flex items-center gap-2 ml-4">
-                                                                        <button type="button" onClick={(e) => handleEditAddressClick(e, addr)} disabled={addressActionLoading === addr.address_id} className="text-[#8B7A3D] hover:text-[#91C934] p-1.5 rounded-full hover:bg-[#F5F4F0] transition-colors disabled:opacity-50">
+                                                                        <button type="button" onClick={(e) => handleEditAddressClick(e, addr)} disabled={addressActionLoading === addr.address_id} className="text-gray-500 hover:text-[#91C934] p-1.5 rounded-full hover:bg-[#F5F4F0] transition-colors disabled:opacity-50">
                                                                             <Pencil className="w-4 h-4" />
                                                                         </button>
-                                                                        <button type="button" onClick={(e) => handleDeleteAddressClick(e, addr.address_id)} disabled={addressActionLoading === addr.address_id} className="text-[#8B7A3D] hover:text-red-500 p-1.5 rounded-full hover:bg-red-50 transition-colors disabled:opacity-50">
+                                                                        <button type="button" onClick={(e) => handleDeleteAddressClick(e, addr.address_id)} disabled={addressActionLoading === addr.address_id} className="text-gray-500 hover:text-red-500 p-1.5 rounded-full hover:bg-red-50 transition-colors disabled:opacity-50">
                                                                             {addressActionLoading === addr.address_id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash className="w-4 h-4" />}
                                                                         </button>
                                                                     </div>
@@ -1447,7 +1447,7 @@ function CheckoutContent() {
                                                     )}
                                                 </div>
                                             ))}
-                                            <button onClick={() => { setUseNewAddress(true); setEditingAddressId(null); setEditAddressData(null); }} className={`mt-2 flex items-center gap-2 text-sm font-semibold transition-colors ${useNewAddress ? 'text-[#91C934]' : 'text-[#8B7A3D] hover:text-[#91C934]'}`}>
+                                            <button onClick={() => { setUseNewAddress(true); setEditingAddressId(null); setEditAddressData(null); }} className={`mt-2 flex items-center gap-2 text-sm transition-colors ${useNewAddress ? 'text-[#91C934]' : 'text-[#91C934] hover:text-[#7AB52A]'}`}>
                                                 <MapPin className="h-4 w-4" /> Use a different address
                                             </button>
                                         </div>

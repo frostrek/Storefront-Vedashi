@@ -307,7 +307,7 @@ export default function CartPage() {
                                                     </div>
 
                                                     <div className="flex items-center gap-2">
-                                                        <button onClick={() => { saveForLater(item.cart_item_id); toast.success('Saved for later'); }} disabled={loading} className="text-black text-[13px] font-semibold hover:underline px-2">
+                                                        <button onClick={() => { saveForLater(item.cart_item_id); toast.success('Saved for later'); }} disabled={loading} className="text-gray-500 text-[13px] hover:underline hover:text-gray-600 px-2">
                                                             Save for Later
                                                         </button>
                                                         <button onClick={() => setItemToRemove(item.cart_item_id)} disabled={loading} className="cart-remove-btn">
@@ -483,7 +483,7 @@ export default function CartPage() {
                                         </div>
                                     )}
                                     <div className="ritual-summary-row">
-                                        <span className="label">Vedic Shipping <span className="text-[9px] uppercase tracking-wider opacity-70 ml-1">(Standard)</span></span>
+                                        <span className="label">Shipping <span className="text-[9px] uppercase tracking-wider opacity-70 ml-1">(Standard)</span></span>
                                         <span className="value">{deliveryFee === 0 ? 'FREE' : formatPrice(deliveryFee)}</span>
                                     </div>
 
@@ -530,7 +530,7 @@ export default function CartPage() {
                                 </div>
                             </div>
 
-                            <Link href="/help-center/support" className="cart-advisor-card cursor-pointer flex">
+                            <div className="cart-advisor-card">
                                 <div className="icon-wrapper border border-[#D4CFC0]">
                                     <Leaf className="w-5 h-5" />
                                 </div>
@@ -538,8 +538,8 @@ export default function CartPage() {
                                     <p className="title">Need Guidance?</p>
                                     <p className="subtitle">Our Vedic advisors are available to assist with your transaction.</p>
                                 </div>
-                                <span className="action">Contact Support</span>
-                            </Link>
+                                <Link href="/help-center/support" className="action">Contact Support</Link>
+                            </div>
                         </div>
                     </div>
                 </div>
