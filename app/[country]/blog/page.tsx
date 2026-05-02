@@ -60,14 +60,14 @@ export default function BlogPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-cream flex items-center justify-center">
+            <div className="min-h-screen bg-white flex items-center justify-center">
                 <Loader2 className="w-8 h-8 animate-spin text-vedic-gold" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-cream selection:bg-burgundy selection:text-white relative">
+        <div className="min-h-screen bg-white selection:bg-burgundy selection:text-white relative">
             
             <FallingLeafBackground />
             

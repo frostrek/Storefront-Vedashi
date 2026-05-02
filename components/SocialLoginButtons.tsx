@@ -2,7 +2,7 @@
 
 import { useSignIn, useSignUp } from '@clerk/nextjs/legacy';
 import { useClerk } from '@clerk/nextjs';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 
@@ -57,7 +57,8 @@ export default function SocialLoginButtons({ onLoadingChange, disabled }: Social
 
     const handleSocialLogin = async (strategy: 'oauth_google' | 'oauth_facebook' | 'oauth_apple') => {
         if (!isReady || !signUp || !signIn) {
-            toast.error('Social login is not ready. Please wait a moment.');
+            console.error('[Social Login] Not Ready:', { signInLoaded, signUpLoaded, isReady });
+            toast.error('Social login is not ready. If you are on a hosted domain, please ensure it is authorized in your Clerk Dashboard.');
             return;
         }
 
@@ -66,11 +67,9 @@ export default function SocialLoginButtons({ onLoadingChange, disabled }: Social
         onLoadingChange?.(true);
 
         const currentPath = window.location.pathname; // e.g. /in/login
-        const baseUrl = window.location.origin;
 
         // If there's an active Clerk session but our custom backend doesn't think so,
         // we can simply use the existing Clerk session to log them back into Vedashi.
-        // This avoids the "You're already signed in" error entirely.
         if (session) {
             window.location.href = currentPath + '/sso-complete';
             return;
@@ -121,6 +120,19 @@ export default function SocialLoginButtons({ onLoadingChange, disabled }: Social
             onLoadingChange?.(false);
         }
     };
+
+    // Listen for custom trigger events from parent
+    useEffect(() => {
+        const handleExternalTrigger = (e: any) => {
+            const provider = e.detail;
+            if (provider === 'google') handleSocialLogin('oauth_google');
+            else if (provider === 'facebook') handleSocialLogin('oauth_facebook');
+            else if (provider === 'apple') handleSocialLogin('oauth_apple');
+        };
+
+        window.addEventListener('trigger-social-login', handleExternalTrigger);
+        return () => window.removeEventListener('trigger-social-login', handleExternalTrigger);
+    }, [isReady, signUp, signIn, country]); // Re-bind when ready state changes
 
     const providers = [
         { key: 'oauth_google' as const, label: 'Google', icon: <GoogleIcon />, bg: 'bg-white hover:bg-gray-50 border-gray-300 text-gray-700' },

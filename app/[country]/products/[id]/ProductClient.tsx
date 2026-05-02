@@ -455,7 +455,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                 </span>
                             )}
                             {product.is_new_arrival && (
-                                <span className="inline-flex items-center justify-center bg-[#91C934] text-white text-[10px] font-extrabold px-3 py-1 rounded-md uppercase tracking-wider leading-none">
+                                <span className="inline-flex items-center justify-center bg-[#FF0000] text-white text-[10px] font-extrabold px-3 py-1 rounded-md uppercase tracking-wider leading-none">
                                     New Arrival
                                 </span>
                             )}
@@ -781,7 +781,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                                                 key={w}
                                                                 onClick={() => active && updateSelection({ weight: w })}
                                                                 disabled={!active}
-                                                                className={`px-5 py-2 rounded-full border text-sm font-medium transition-all duration-200
+                                                                className={`px-5 py-2 rounded-lg border text-sm font-medium transition-all duration-200
                                                                     ${isSelected
                                                                         ? 'bg-white text-[#91C934] border-[#91C934] border-2 shadow-sm'
                                                                         : !available
@@ -812,7 +812,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                                                 key={str}
                                                                 onClick={() => active && updateSelection({ strength: str })}
                                                                 disabled={!active}
-                                                                className={`px-5 py-2 rounded-full border text-sm font-medium transition-all duration-200
+                                                                className={`px-5 py-2 rounded-lg border text-sm font-medium transition-all duration-200
                                                                     ${isSelected
                                                                         ? 'bg-white text-[#91C934] border-[#91C934] border-2 shadow-sm'
                                                                         : !available
@@ -843,7 +843,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                                                 key={vol}
                                                                 onClick={() => active && updateSelection({ volume: vol })}
                                                                 disabled={!active}
-                                                                className={`px-5 py-2 rounded-full border text-sm font-medium transition-all duration-200
+                                                                className={`px-5 py-2 rounded-lg border text-sm font-medium transition-all duration-200
                                                                     ${isSelected
                                                                         ? 'bg-white text-[#91C934] border-[#91C934] border-2 shadow-sm'
                                                                         : !available
@@ -874,7 +874,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                                                 key={countStr}
                                                                 onClick={() => active && updateSelection({ count: countStr })}
                                                                 disabled={!active}
-                                                                className={`px-5 py-2 rounded-full border text-sm font-medium transition-all duration-200
+                                                                className={`px-5 py-2 rounded-lg border text-sm font-medium transition-all duration-200
                                                                     ${isSelected
                                                                         ? 'bg-white text-[#91C934] border-[#91C934] border-2 shadow-sm'
                                                                         : !available
@@ -905,7 +905,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                                                 key={flav}
                                                                 onClick={() => active && updateSelection({ flavor: flav })}
                                                                 disabled={!active}
-                                                                className={`px-5 py-2 rounded-full border text-sm font-medium transition-all duration-200
+                                                                className={`px-5 py-2 rounded-lg border text-sm font-medium transition-all duration-200
                                                                     ${isSelected
                                                                         ? 'bg-white text-[#91C934] border-[#91C934] border-2 shadow-sm'
                                                                         : !available
@@ -936,7 +936,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                                                 key={pack}
                                                                 onClick={() => active && updateSelection({ pack })}
                                                                 disabled={!active}
-                                                                className={`w-11 h-11 rounded-full border text-sm font-semibold transition-all duration-200 flex items-center justify-center
+                                                                className={`w-11 h-11 rounded-lg border text-sm font-semibold transition-all duration-200 flex items-center justify-center
                                                                     ${isSelected
                                                                         ? 'bg-white text-[#91C934] border-[#91C934] border-2 shadow-sm'
                                                                         : !available

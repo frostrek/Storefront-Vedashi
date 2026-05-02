@@ -128,13 +128,13 @@ export default function CartPage() {
                         <ArrowLeft className="h-4 w-4" /> Continue Shopping
                     </Link>
                     <div className="cart-item-card text-center py-10 mb-6">
-                        <ShoppingCart className="h-8 w-8 text-[#8B7A3D] mx-auto mb-3" />
+                        <ShoppingCart className="h-8 w-8 text-[#91C934] mx-auto mb-3" />
                         <p className="text-[#4A4A4A] font-medium">Your active cart is empty.</p>
                         <Link href="/products" className="text-sm text-[#91C934] font-semibold hover:underline mt-2 inline-block">Browse Products</Link>
                     </div>
                     <div>
                         <h3 className="cart-saved-section-title">
-                            <Bookmark className="h-5 w-5 text-[#8B7A3D]" />
+                            <Bookmark className="h-5 w-5 text-[#91C934]" />
                             Saved for Later ({savedItems.length})
                         </h3>
                         <div className="space-y-4">
