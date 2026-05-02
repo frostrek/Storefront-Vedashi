@@ -118,22 +118,13 @@ function CheckoutContent() {
     const [failedOrderId, setFailedOrderId] = useState<string | null>(null);
 
     // Extra form fields for dummy display
-    const [contactEmail, setContactEmail] = useState(user?.email || '');
-    const [contactPhone, setContactPhone] = useState(user?.phone || '');
-
-    // Country code selector for contact phone
-    const defaultDialCode = (() => {
-        const match = COUNTRY_CODES.find(c => c.code === getDefaultCountry());
-        return match ? match.dial_code : '+1';
-    })();
-    const [contactPhoneDialCode, setContactPhoneDialCode] = useState(defaultDialCode);
-
-    // Helper: combine dial code + local number for backend
-    const getFullContactPhone = () => {
-        const local = contactPhone.replace(/^\+\d+/, '').replace(/[^\d]/g, '').trim();
-        return local ? `${contactPhoneDialCode}${local}` : '';
-    };
     const [billingSameAsShipping, setBillingSameAsShipping] = useState(true);
+
+    const getCheckoutEmail = () => {
+        if (useNewAddress) return newAddress.email || user?.email || '';
+        const selAddr = savedAddresses.find(a => a.address_id === selectedAddressId);
+        return selAddr?.email || user?.email || '';
+    };
 
     // Saved addresses
     const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
@@ -156,7 +147,7 @@ function CheckoutContent() {
     const defaultCountryName = COUNTRIES.find(c => c.code === defaultCountryCode)?.name || '';
 
     const [newAddress, setNewAddress] = useState({
-        address_line1: '', address_line2: '', city: '', state: '', pincode: '', phone: '', country: defaultCountryName, country_code: defaultCountryCode
+        full_name: '', email: '', address_line1: '', address_line2: '', city: '', state: '', pincode: '', phone: '', country: defaultCountryName, country_code: defaultCountryCode
     });
 
     const shippingConfig = getAddressConfig(newAddress.country_code || 'IN');
@@ -172,7 +163,7 @@ function CheckoutContent() {
 
     // Validation state
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-    const [contactPhoneError, setContactPhoneError] = useState<string>('');
+
     const [isLookupLoading, setIsLookupLoading] = useState(false);
 
     // Track manual edits to prevent auto-fill overwrite
@@ -318,17 +309,6 @@ function CheckoutContent() {
                                 const parsed = JSON.parse(draft);
                                 // Intentionally omitted parsed.step to enforce starting at step 1
                                 if (parsed.paymentMethod) setPaymentMethod(parsed.paymentMethod);
-                                if (parsed.contactEmail) setContactEmail(parsed.contactEmail);
-                                if (parsed.contactPhone) {
-                                    const pp = parsed.contactPhone;
-                                    const dialMatch = COUNTRY_CODES.find(c => pp.startsWith(c.dial_code));
-                                    if (dialMatch) {
-                                        setContactPhoneDialCode(dialMatch.dial_code);
-                                        setContactPhone(pp.substring(dialMatch.dial_code.length).trim());
-                                    } else {
-                                        setContactPhone(pp);
-                                    }
-                                }
                                 if (parsed.billingSameAsShipping !== undefined) setBillingSameAsShipping(parsed.billingSameAsShipping);
                                 if (parsed.selectedAddressId) setSelectedAddressId(parsed.selectedAddressId);
                                 if (parsed.useNewAddress !== undefined) setUseNewAddress(parsed.useNewAddress);
@@ -349,19 +329,9 @@ function CheckoutContent() {
 
             getLoyaltyWallet().then(res => {
                 if (res) setWallet(res);
-            }).catch(() => { });
-
-            if (user.email) setContactEmail(user.email);
-            if (user.phone) {
-                const ph = user.phone;
-                const dialMatch = COUNTRY_CODES.sort((a, b) => b.dial_code.length - a.dial_code.length).find(c => ph.startsWith(c.dial_code));
-                if (dialMatch) {
-                    setContactPhoneDialCode(dialMatch.dial_code);
-                    setContactPhone(ph.substring(dialMatch.dial_code.length).trim());
-                } else {
-                    setContactPhone(ph);
-                }
-            }
+            }).catch(() => {});
+            
+            // No email fallback needed, defaults to user.email or address.email
         } else {
             setUseNewAddress(true);
         }
@@ -375,17 +345,6 @@ function CheckoutContent() {
                     const parsed = cartRes.data.checkout_draft;
                     // Intentionally omitted parsed.step to enforce starting at step 1
                     if (parsed.paymentMethod) setPaymentMethod(parsed.paymentMethod);
-                    if (parsed.contactEmail) setContactEmail(parsed.contactEmail);
-                    if (parsed.contactPhone) {
-                        const pp = parsed.contactPhone;
-                        const dialMatch = COUNTRY_CODES.find(c => pp.startsWith(c.dial_code));
-                        if (dialMatch) {
-                            setContactPhoneDialCode(dialMatch.dial_code);
-                            setContactPhone(pp.substring(dialMatch.dial_code.length).trim());
-                        } else {
-                            setContactPhone(pp);
-                        }
-                    }
                     if (parsed.billingSameAsShipping !== undefined) setBillingSameAsShipping(parsed.billingSameAsShipping);
                     if (parsed.selectedAddressId) setSelectedAddressId(parsed.selectedAddressId);
                     if (parsed.useNewAddress !== undefined) setUseNewAddress(parsed.useNewAddress);
@@ -454,8 +413,6 @@ function CheckoutContent() {
             const draft = {
                 // Not saving step to enforce step-based routing on page load
                 paymentMethod,
-                contactEmail,
-                contactPhone: getFullContactPhone(),
                 billingSameAsShipping,
                 selectedAddressId,
                 useNewAddress,
@@ -473,8 +430,8 @@ function CheckoutContent() {
 
         return () => clearTimeout(timer);
     }, [
-        mounted, orderPlaced, step, maxStepReached, paymentMethod, contactEmail, contactPhone,
-        billingSameAsShipping, selectedAddressId, useNewAddress, newAddress,
+        mounted, orderPlaced, step, maxStepReached, paymentMethod,
+        billingSameAsShipping, selectedAddressId, useNewAddress, newAddress, 
         selectedBillingAddressId, useNewBillingAddress, newBillingAddress, redeemPoints,
         cartId, isAuthenticated
     ]);
@@ -609,6 +566,8 @@ function CheckoutContent() {
         }
 
         setEditAddressData({
+            full_name: address.full_name || '',
+            email: address.email || '',
             address_line1: address.address_line1 || '',
             address_line2: address.address_line2 || '',
             city: address.city || '',
@@ -687,9 +646,17 @@ function CheckoutContent() {
                 description: orderId ? `Order #${orderId.slice(0, 8)}` : 'Checkout Ritual',
                 order_id: razorpay_order_id,
                 prefill: {
-                    name: user?.name || '',
-                    email: user?.email || contactEmail,
-                    contact: getFullContactPhone(),
+                    name: (() => {
+                        if (useNewAddress) return newAddress.full_name || user?.name || '';
+                        const selAddr = savedAddresses.find(a => a.address_id === selectedAddressId);
+                        return selAddr?.full_name || user?.name || '';
+                    })(),
+                    email: getCheckoutEmail(),
+                    contact: (() => {
+                        if (useNewAddress) return newAddress.phone || '';
+                        const selAddr = savedAddresses.find(a => a.address_id === selectedAddressId);
+                        return selAddr?.phone || '';
+                    })(),
                 },
                 theme: { color: '#91C934', backdrop_color: 'rgba(0,0,0,0.6)' },
                 modal: {
@@ -819,17 +786,11 @@ function CheckoutContent() {
         }
 
         try {
-            // Determine the shipping country to use as default for phone validation
-            const currentShippingCountryCode = ((useNewAddress ? newAddress.country_code : (savedAddresses.find(a => a.address_id === selectedAddressId) as any)?.country_code) || 'IN') as CountryCode;
-
-            // Ensure numbers are properly normalized before sending to backend
-            const fullContactPhone = getFullContactPhone();
-            const contactPhoneResult = validatePhoneNumber(fullContactPhone, currentShippingCountryCode);
-            const finalContactPhone = contactPhoneResult.isValid ? contactPhoneResult.normalized || fullContactPhone : fullContactPhone;
 
             let finalNewAddress = newAddress;
             if (useNewAddress || (billingSameAsShipping && useNewAddress) || (!billingSameAsShipping && useNewAddress)) {
                 if (newAddress.phone) {
+                    const currentShippingCountryCode = (newAddress.country_code || 'IN') as CountryCode;
                     const addressPhoneResult = validateOptionalPhoneNumber(newAddress.phone, currentShippingCountryCode);
                     finalNewAddress = {
                         ...newAddress,
@@ -861,8 +822,7 @@ function CheckoutContent() {
                     checkoutData = {
                         customer_id: user?.id || undefined,
                         customer_name: user?.name || undefined,
-                        customer_email: user?.email || contactEmail || undefined,
-                        customer_phone: finalContactPhone || undefined,
+                        customer_email: getCheckoutEmail() || undefined,
                         items: [{ product_id: buyNowItem.product_id, variant_id: buyNowItem.variant_id, quantity: buyNowItem.quantity, unit_price: buyNowItem.unit_price }],
                         shipping_address_id: useNewAddress ? undefined : selectedAddressId || undefined,
                         shipping_address: useNewAddress ? finalNewAddress : undefined,
@@ -879,7 +839,6 @@ function CheckoutContent() {
                     checkoutData = {
                         cart_id: cartId,
                         customer_id: user.id,
-                        customer_phone: finalContactPhone || undefined,
                         shipping_address_id: useNewAddress ? undefined : selectedAddressId || undefined,
                         shipping_address: useNewAddress ? finalNewAddress : undefined,
                         billing_address_id: billingSameAsShipping ? (useNewAddress ? undefined : selectedAddressId || undefined) : (useNewBillingAddress ? undefined : selectedBillingAddressId || undefined),
@@ -896,8 +855,7 @@ function CheckoutContent() {
                     checkoutData = {
                         customer_id: user?.id || undefined,
                         customer_name: user?.name || undefined,
-                        customer_email: user?.email || contactEmail || undefined,
-                        customer_phone: finalContactPhone || undefined,
+                        customer_email: getCheckoutEmail() || undefined,
                         items: checkoutItems.map(item => ({ product_id: (item as any).product_id || '', variant_id: (item as any).variant_id, quantity: item.quantity, unit_price: Number((item as any).price || (item as any).unit_price) || 0 })),
                         shipping_address: useNewAddress ? finalNewAddress : undefined,
                         billing_address: !billingSameAsShipping && useNewBillingAddress ? finalNewBillingAddress : (billingSameAsShipping && useNewAddress ? finalNewAddress : undefined),
@@ -920,8 +878,7 @@ function CheckoutContent() {
                 result = await directCheckout({
                     customer_id: user?.id || undefined,
                     customer_name: user?.name || undefined,
-                    customer_email: user?.email || contactEmail || undefined,
-                    customer_phone: finalContactPhone || undefined,
+                    customer_email: getCheckoutEmail() || undefined,
                     items: [{ product_id: buyNowItem.product_id, variant_id: buyNowItem.variant_id, quantity: buyNowItem.quantity, unit_price: buyNowItem.unit_price }],
                     shipping_address_id: useNewAddress ? undefined : selectedAddressId || undefined,
                     shipping_address: useNewAddress ? finalNewAddress as unknown as Record<string, string> : undefined,
@@ -938,7 +895,6 @@ function CheckoutContent() {
                 result = await checkoutOrder({
                     cart_id: cartId,
                     customer_id: user.id,
-                    customer_phone: finalContactPhone || undefined,
                     shipping_address_id: useNewAddress ? undefined : selectedAddressId || undefined,
                     shipping_address: useNewAddress ? finalNewAddress as unknown as Record<string, string> : undefined,
                     billing_address_id: billingSameAsShipping ? (useNewAddress ? undefined : selectedAddressId || undefined) : (useNewBillingAddress ? undefined : selectedBillingAddressId || undefined),
@@ -955,8 +911,7 @@ function CheckoutContent() {
                 result = await directCheckout({
                     customer_id: user?.id || undefined,
                     customer_name: user?.name || undefined,
-                    customer_email: user?.email || contactEmail || undefined,
-                    customer_phone: finalContactPhone || undefined,
+                    customer_email: getCheckoutEmail() || undefined,
                     items: checkoutItems.map(item => ({ product_id: (item as any).product_id || '', variant_id: (item as any).variant_id, quantity: item.quantity, unit_price: Number((item as any).price || (item as any).unit_price) || 0 })),
                     shipping_address: useNewAddress ? finalNewAddress as unknown as Record<string, string> : undefined,
                     billing_address: !billingSameAsShipping && useNewBillingAddress ? finalNewBillingAddress as unknown as Record<string, string> : (billingSameAsShipping && useNewAddress ? finalNewAddress as unknown as Record<string, string> : undefined),
@@ -1026,6 +981,9 @@ function CheckoutContent() {
     const validateAddress = (addr: any, prefix: string = '') => {
         const errors: Record<string, string> = {};
         const addrConfig = getAddressConfig(addr.country_code || 'IN');
+        if (!addr.full_name || !addr.full_name.trim() || addr.full_name.trim().length < 2) {
+            errors[`${prefix}full_name`] = 'Full name is required (min 2 characters)';
+        }
         if (!addr.address_line1 || addr.address_line1.length < 5) {
             errors[`${prefix}address_line1`] = 'Address Line 1 is required (min 5 characters)';
         }
@@ -1039,11 +997,15 @@ function CheckoutContent() {
                 errors[`${prefix}pincode`] = addrConfig.postalCode.error;
             }
         }
-
-        const currentCountryCode = (((addr as any).country_code) || 'IN') as CountryCode;
-        const phoneValidation = validateOptionalPhoneNumber(addr.phone, currentCountryCode);
-        if (!phoneValidation.isValid && phoneValidation.error) {
-            errors[`${prefix}phone`] = phoneValidation.error;
+        
+        if (!addr.phone || !addr.phone.trim()) {
+            errors[`${prefix}phone`] = 'Phone number is required';
+        } else {
+            const currentCountryCode = (((addr as any).country_code) || 'IN') as CountryCode;
+            const phoneValidation = validateOptionalPhoneNumber(addr.phone, currentCountryCode);
+            if (!phoneValidation.isValid && phoneValidation.error) {
+                errors[`${prefix}phone`] = phoneValidation.error;
+            }
         }
 
         return errors;
@@ -1053,28 +1015,7 @@ function CheckoutContent() {
 
     const goToPayment = () => {
         setFormErrors({});
-        setContactPhoneError('');
 
-        const currentShippingCountryCode = ((useNewAddress ? newAddress.country_code : (savedAddresses.find(a => a.address_id === selectedAddressId) as any)?.country_code) || 'IN') as CountryCode;
-
-        // Validate Contact Phone (combine dial code + local number)
-        const fullContactPhone = getFullContactPhone();
-        const contactPhoneResult = validatePhoneNumber(fullContactPhone, currentShippingCountryCode);
-        if (!contactPhoneResult.isValid) {
-            setContactPhoneError(contactPhoneResult.error || 'Invalid mobile number');
-            toast.error('Please fix contact phone validation error');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            return;
-        }
-
-        // Normalize Contact Phone
-        if (contactPhoneResult.normalized) {
-            // Keep the local number for display, the full number is assembled on submit
-            const normalized = contactPhoneResult.normalized;
-            if (normalized.startsWith(contactPhoneDialCode)) {
-                setContactPhone(normalized.substring(contactPhoneDialCode.length).trim());
-            }
-        }
 
         if (useNewAddress) {
             const errors = validateAddress(newAddress);
@@ -1084,6 +1025,7 @@ function CheckoutContent() {
                 return;
             }
             // Normalize Address Phone
+            const currentShippingCountryCode = (newAddress.country_code || 'IN') as CountryCode;
             const addressPhoneResult = validateOptionalPhoneNumber(newAddress.phone, currentShippingCountryCode);
             if (addressPhoneResult.isValid && addressPhoneResult.normalized) {
                 setNewAddress(prev => ({ ...prev, phone: addressPhoneResult.normalized! }));
@@ -1243,95 +1185,11 @@ function CheckoutContent() {
                         {step === 1 && (
                             <div className="space-y-6">
                                 <h2 className="text-2xl font-bold text-[#1A1A1A] mb-4">Shipping Sanctuary</h2>
-                                {/* Contact Details Form */}
-                                <div className="cart-item-card p-6 border-l-4 border-l-[#2D3B2D]">
-                                    <h3 className="font-bold text-[#1A1A1A] mb-4 flex items-center gap-2">
-                                        <div className="bg-[#91C934]/10 text-[#2D3B2D] rounded-full w-6 h-6 flex items-center justify-center text-xs">A</div>
-                                        Contact Information
-                                    </h3>
-                                    <div className="grid sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Email *</label>
-                                            <input type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} className="w-full rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#91C934] focus:outline-none bg-[#F5F4F0]" placeholder="Enter your email" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Mobile Phone *</label>
-                                            <div className="flex gap-2">
-                                                <div className="w-[130px] flex-shrink-0">
-                                                    <Select
-                                                        options={COUNTRY_CODES.map(c => ({
-                                                            value: c.dial_code,
-                                                            label: `${c.flag} ${c.dial_code}`,
-                                                            name: c.name
-                                                        }))}
-                                                        value={{
-                                                            value: contactPhoneDialCode,
-                                                            label: `${COUNTRY_CODES.find(c => c.dial_code === contactPhoneDialCode)?.flag || ''} ${contactPhoneDialCode}`
-                                                        }}
-                                                        onChange={(val: any) => {
-                                                            if (val) setContactPhoneDialCode(val.value);
-                                                        }}
-                                                        styles={{
-                                                            ...customSelectStyles,
-                                                            control: (base: any, state: any) => ({
-                                                                ...customSelectStyles.control(base, state),
-                                                                paddingLeft: '8px',
-                                                                backgroundColor: '#F5F4F0',
-                                                                minHeight: '42px',
-                                                            }),
-                                                        }}
-                                                        isSearchable
-                                                        filterOption={(option: any, input: string) => {
-                                                            if (!input) return true;
-                                                            const q = input.toLowerCase();
-                                                            return option.data.name?.toLowerCase().includes(q) || option.value.includes(q);
-                                                        }}
-                                                        classNamePrefix="react-select"
-                                                        placeholder="Code"
-                                                        menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
-                                                        menuPosition="fixed"
-                                                    />
-                                                </div>
-                                                <div className="flex-1">
-                                                    <input
-                                                        type="tel"
-                                                        value={contactPhone}
-                                                        onChange={e => {
-                                                            const sanitized = sanitizePhoneInput(e.target.value);
-                                                            setContactPhone(sanitized);
-                                                            if (sanitized) {
-                                                                const full = `${contactPhoneDialCode}${sanitized.replace(/[^\d]/g, '')}`;
-                                                                const currentShippingCountryCode = ((useNewAddress ? newAddress.country_code : (savedAddresses.find(a => a.address_id === selectedAddressId) as any)?.country_code) || 'IN') as CountryCode;
-                                                                const res = validatePhoneNumber(full, currentShippingCountryCode);
-                                                                setContactPhoneError(res.isValid ? '' : res.error || '');
-                                                            } else {
-                                                                setContactPhoneError('');
-                                                            }
-                                                        }}
-                                                        onBlur={() => {
-                                                            if (contactPhone) {
-                                                                const full = `${contactPhoneDialCode}${contactPhone.replace(/[^\d]/g, '')}`;
-                                                                const currentShippingCountryCode = ((useNewAddress ? newAddress.country_code : (savedAddresses.find(a => a.address_id === selectedAddressId) as any)?.country_code) || 'IN') as CountryCode;
-                                                                const res = validatePhoneNumber(full, currentShippingCountryCode);
-                                                                setContactPhoneError(res.isValid ? '' : res.error || '');
-                                                            }
-                                                        }}
-                                                        className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#91C934] focus:outline-none bg-[#F5F4F0] ${contactPhoneError ? 'border-red-400' : 'border-[#D4CFC0]'}`}
-                                                        placeholder="Enter mobile number"
-                                                        maxLength={15}
-                                                    />
-                                                </div>
-                                            </div>
-                                            {contactPhoneError && <p className="text-[10px] text-red-500 mt-1 font-bold">{contactPhoneError}</p>}
-                                        </div>
-                                    </div>
-                                    <p className="mt-3 text-xs text-gray-600">We will send order updates and Ayurvedic guidelines to these contacts.</p>
-                                </div>
 
                                 {/* Delivery Details Form */}
                                 <div className="cart-item-card p-6 border-l-4 border-l-[#91C934]">
                                     <h3 className="font-bold text-[#1A1A1A] mb-4 flex items-center gap-2">
-                                        <div className="bg-[#91C934]/10 text-[#2D3B2D] rounded-full w-6 h-6 flex items-center justify-center text-xs">B</div>
+                                        <div className="bg-[#91C934]/10 text-[#2D3B2D] rounded-full w-6 h-6 flex items-center justify-center text-xs">A</div>
                                         Delivery Address
                                     </h3>
 
@@ -1360,6 +1218,7 @@ function CheckoutContent() {
                                                                     </div>
                                                                 )}
                                                             </div>
+                                                            <p className="text-sm text-[#4A4A4A] truncate">{addr.full_name && <span className="font-semibold text-[#1A1A1A]">{addr.full_name}</span>}</p>
                                                             <p className="text-sm text-[#4A4A4A] truncate">{addr.address_line1}</p>
                                                             {addr.address_line2 && <p className="text-sm text-[#4A4A4A] truncate">{addr.address_line2}</p>}
                                                             <p className="text-sm text-[#4A4A4A] truncate">{addr.city}, {addr.state} {addr.pincode}</p>
@@ -1391,6 +1250,15 @@ function CheckoutContent() {
                                                                     </div>
                                                                 </div>
                                                                 <div className="sm:col-span-2">
+                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Full Name *</label>
+                                                                    <input type="text" value={editAddressData.full_name} onChange={e => setEditAddressData({ ...editAddressData, full_name: e.target.value })} className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.full_name ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Full name" />
+                                                                    {formErrors.full_name && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.full_name}</p>}
+                                                                </div>
+                                                                <div className="sm:col-span-2">
+                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Email</label>
+                                                                    <input type="email" value={editAddressData.email || ''} onChange={e => setEditAddressData({ ...editAddressData, email: e.target.value })} className="w-full rounded-lg border border-[#D4CFC0] px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white" placeholder="Email address (optional)" />
+                                                                </div>
+                                                                <div className="sm:col-span-2">
                                                                     <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Address Line 1 *</label>
                                                                     <input type="text" value={editAddressData.address_line1} onChange={e => setEditAddressData({ ...editAddressData, address_line1: e.target.value })} className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#91C934] focus:outline-none bg-white ${formErrors.address_line1 ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Street address" />
                                                                     {formErrors.address_line1 && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.address_line1}</p>}
@@ -1415,10 +1283,10 @@ function CheckoutContent() {
                                                                     {formErrors.state && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.state}</p>}
                                                                 </div>
                                                                 <div>
-                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Mobile Phone (optional)</label>
-                                                                    <input
-                                                                        type="tel"
-                                                                        value={editAddressData.phone}
+                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Mobile Phone *</label>
+                                                                    <input 
+                                                                        type="tel" 
+                                                                        value={editAddressData.phone} 
                                                                         onChange={e => {
                                                                             const sanitized = sanitizePhoneInput(e.target.value);
                                                                             setEditAddressData({ ...editAddressData, phone: sanitized });
@@ -1447,7 +1315,7 @@ function CheckoutContent() {
                                                     )}
                                                 </div>
                                             ))}
-                                            <button onClick={() => { setUseNewAddress(true); setEditingAddressId(null); setEditAddressData(null); }} className={`mt-2 flex items-center gap-2 text-sm transition-colors ${useNewAddress ? 'text-[#91C934]' : 'text-[#91C934] hover:text-[#7AB52A]'}`}>
+                                            <button onClick={() => { setUseNewAddress(true); setEditingAddressId(null); setEditAddressData(null); setNewAddress(prev => ({ ...prev, email: user?.email || '' })); }} className={`mt-2 flex items-center gap-2 text-sm font-semibold transition-colors ${useNewAddress ? 'text-[#91C934]' : 'text-[#91C934] hover:text-[#7AB52A]'}`}>
                                                 <MapPin className="h-4 w-4" /> Use a different address
                                             </button>
                                         </div>
@@ -1478,6 +1346,15 @@ function CheckoutContent() {
                                                 </div>
                                             </div>
                                             <div className="sm:col-span-2">
+                                                <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Full Name *</label>
+                                                <input type="text" value={newAddress.full_name} onChange={e => setNewAddress({ ...newAddress, full_name: e.target.value })} className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.full_name ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Full name" />
+                                                {formErrors.full_name && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.full_name}</p>}
+                                            </div>
+                                            <div className="sm:col-span-2">
+                                                <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Email</label>
+                                                <input type="email" value={newAddress.email || ''} onChange={e => setNewAddress({ ...newAddress, email: e.target.value })} className="w-full rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white" placeholder="Email address (optional)" />
+                                            </div>
+                                            <div className="sm:col-span-2">
                                                 <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Address Line 1 *</label>
                                                 <input type="text" value={newAddress.address_line1} onChange={e => setNewAddress({ ...newAddress, address_line1: e.target.value })} className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#91C934] focus:outline-none bg-white ${formErrors.address_line1 ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Street address" />
                                                 {formErrors.address_line1 && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.address_line1}</p>}
@@ -1505,10 +1382,10 @@ function CheckoutContent() {
                                                 {formErrors.state && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.state}</p>}
                                             </div>
                                             <div>
-                                                <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Mobile Phone (optional)</label>
-                                                <input
-                                                    type="tel"
-                                                    value={newAddress.phone}
+                                                <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Mobile Phone *</label>
+                                                <input 
+                                                    type="tel" 
+                                                    value={newAddress.phone} 
                                                     onChange={e => {
                                                         const sanitized = sanitizePhoneInput(e.target.value);
                                                         setNewAddress({ ...newAddress, phone: sanitized });
@@ -1745,10 +1622,22 @@ function CheckoutContent() {
                                             <button onClick={() => setStep(1)} className="text-[11px] font-bold text-[#8B7A3D] uppercase hover:underline">Edit</button>
                                         </div>
                                         <p className="text-sm text-[#4A4A4A] leading-relaxed">
-                                            <span className="font-bold text-[#1A1A1A]">{user?.name || 'Customer'}</span><br />
+                                            <span className="font-bold text-[#1A1A1A]">{(() => {
+                                                if (useNewAddress) return newAddress.full_name || user?.name || 'Customer';
+                                                const selAddr = savedAddresses.find(a => a.address_id === selectedAddressId);
+                                                return selAddr?.full_name || user?.name || 'Customer';
+                                            })()}</span><br />
                                             {getSelectedAddressText()}<br />
-                                            {contactPhone && <>{contactPhone}<br /></>}
-                                            {contactEmail}
+                                            {(() => {
+                                                if (useNewAddress) return newAddress.phone;
+                                                const selAddr = savedAddresses.find(a => a.address_id === selectedAddressId);
+                                                return selAddr?.phone;
+                                            })() && <>{(() => {
+                                                if (useNewAddress) return newAddress.phone;
+                                                const selAddr = savedAddresses.find(a => a.address_id === selectedAddressId);
+                                                return selAddr?.phone || '';
+                                            })()}<br /></>}
+                                            {getCheckoutEmail()}
                                         </p>
                                     </div>
 

@@ -353,13 +353,15 @@ export interface OrderItem {
 export interface Address {
     address_id: string;
     customer_id: string;
+    full_name: string;
     address_line1: string;
     address_line2?: string;
     city: string;
     state: string;
     pincode: string;
     country?: string;
-    phone?: string;
+    phone: string;
+    email?: string;
     is_default?: boolean;
     label?: string;
 }
