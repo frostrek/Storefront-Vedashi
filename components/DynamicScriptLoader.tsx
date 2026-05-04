@@ -119,7 +119,7 @@ export default function DynamicScriptLoader() {
             )}
 
             {/* ── Meta Pixel — only loads AFTER marketing consent ── */}
-            {consent?.marketing && (
+            {consent?.marketing && process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID && (
                 <Script id="meta-pixel" strategy="afterInteractive">
                     {`
                         !function(f,b,e,v,n,t,s)
@@ -130,8 +130,7 @@ export default function DynamicScriptLoader() {
                         t.src=v;s=b.getElementsByTagName(e)[0];
                         s.parentNode.insertBefore(t,s)}(window, document,'script',
                         'https://connect.facebook.net/en_US/fbevents.js');
-                        // Intentionally left initialization out until consent
-                        fbq('init', 'XXXXXXXXXXXXXXX');
+                        fbq('init', '${process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID}');
                     `}
                 </Script>
             )}

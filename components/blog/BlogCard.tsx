@@ -12,11 +12,11 @@ export default function BlogCard({ post }: BlogCardProps) {
     const image = post.featured_image || post.cover_image || '/hero-ayurveda.png';
     const categoryName = post.category_name || 'Wellness';
     const readTime = post.reading_time ? `${post.reading_time} min` : '5 min';
-    
+
     return (
         <div className="group flex flex-col pt-4">
             {/* Image Container */}
-            <Link 
+            <Link
                 href={`/blog/${slug}`}
                 className="relative block w-full aspect-[4/3] rounded-[2rem] overflow-hidden mb-6 bg-cream-dark"
             >
@@ -26,9 +26,9 @@ export default function BlogCard({ post }: BlogCardProps) {
                         {categoryName}
                     </span>
                 </div>
-                
-                <img 
-                    src={image} 
+
+                <img
+                    src={image}
                     alt={post.title}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     onError={(e) => { e.currentTarget.src = '/hero-ayurveda.png'; }}
@@ -62,9 +62,9 @@ export default function BlogCard({ post }: BlogCardProps) {
 
                 {/* Keep Reading CTA */}
                 <div className="mt-auto">
-                    <Link 
+                    <Link
                         href={`/blog/${slug}`}
-                        className="inline-flex items-center text-sm font-bold tracking-wide text-charcoal group-hover:text-burgundy transition-colors"
+                        className="inline-flex items-center text-sm font-bold tracking-wide text-charcoal group-hover:text-[#91C934] transition-colors"
                     >
                         Keep Reading
                         <svg className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">

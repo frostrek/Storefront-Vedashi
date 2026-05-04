@@ -2,7 +2,7 @@
 
 import { useSignIn, useSignUp } from '@clerk/nextjs/legacy';
 import { useClerk } from '@clerk/nextjs';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 
@@ -72,7 +72,7 @@ export default function SocialLoginButtons({ onLoadingChange, disabled }: Social
             return;
         }
 
-        const params = new URLSearchParams({
+        const oauthParams = new URLSearchParams({
             client_id: clientId,
             redirect_uri: redirectUri,
             response_type: 'code',
@@ -81,7 +81,7 @@ export default function SocialLoginButtons({ onLoadingChange, disabled }: Social
             prompt: 'select_account',
         });
 
-        window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+        window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${oauthParams.toString()}`;
     };
 
     // ── Clerk OAuth for Facebook + Apple ──────────────────────────────
@@ -99,7 +99,6 @@ export default function SocialLoginButtons({ onLoadingChange, disabled }: Social
 
         // If there's an active Clerk session but our custom backend doesn't think so,
         // we can simply use the existing Clerk session to log them back into Vedashi.
-        // This avoids the "You're already signed in" error entirely.
         if (session) {
             window.location.href = currentPath + '/sso-complete';
             return;
@@ -150,6 +149,19 @@ export default function SocialLoginButtons({ onLoadingChange, disabled }: Social
             onLoadingChange?.(false);
         }
     };
+
+    // Listen for custom trigger events from parent
+    useEffect(() => {
+        const handleExternalTrigger = (e: any) => {
+            const provider = e.detail;
+            if (provider === 'google') handleGoogleLogin();
+            else if (provider === 'facebook') handleClerkSocialLogin('oauth_facebook');
+            else if (provider === 'apple') handleClerkSocialLogin('oauth_apple');
+        };
+
+        window.addEventListener('trigger-social-login', handleExternalTrigger);
+        return () => window.removeEventListener('trigger-social-login', handleExternalTrigger);
+    }, [isClerkReady, signUp, signIn, country]); // Re-bind when ready state changes
 
     const providers = [
         { key: 'google' as const, label: 'Google', icon: <GoogleIcon />, bg: 'bg-white hover:bg-gray-50 border-gray-300 text-gray-700' },

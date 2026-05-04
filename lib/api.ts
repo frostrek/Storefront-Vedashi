@@ -123,7 +123,9 @@ export async function authFetch(url: string, init?: RequestInit): Promise<Respon
     // ── Inactivity session expiry interceptors ──────────────────────────
     if (res.status === 401 && typeof window !== 'undefined') {
         const isAuthEndpoint = url.includes('/api/auth/login') || url.includes('/api/auth/register') || url.includes('/api/auth/refresh-token') || url.includes('/api/auth/initiate-registration');
-        if (!isAuthEndpoint) {
+        const isLoginPage = window.location.pathname.includes('/login');
+        
+        if (!isAuthEndpoint && !isLoginPage) {
             const cloned = res.clone();
             try {
                 const data = await cloned.json();
