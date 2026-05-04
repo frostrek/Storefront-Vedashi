@@ -10,7 +10,7 @@ import PromoBanner from "@/components/PromoBanner";
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { AuthProvider } from "@/context/AuthContext";
-import { ClerkProvider } from "@clerk/nextjs";
+
 import { Toaster } from "react-hot-toast";
 import { CookieConsentProvider } from "@/context/CookieConsentContext";
 import CookieBanner from "@/components/CookieBanner";
@@ -150,12 +150,7 @@ export default async function RootLayout({
         />
 
 
-        <ClerkProvider
-          signInUrl="/in/login"
-          signUpUrl="/in/register"
-          signInFallbackRedirectUrl="/"
-          signUpFallbackRedirectUrl="/"
-        >
+        <>
           <Script
             src="https://challenges.cloudflare.com/turnstile/v0/api.js"
             strategy="lazyOnload"
@@ -208,7 +203,7 @@ export default async function RootLayout({
               </CartProvider>
             </AuthProvider>
           </CookieConsentProvider>
-        </ClerkProvider>
+        </>
       </body>
     </html>
   );

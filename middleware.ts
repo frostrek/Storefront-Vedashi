@@ -1,4 +1,3 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
@@ -165,7 +164,7 @@ function applyLanguageCookies(
 
 // ─── Middleware ──────────────────────────────────────────────────────
 
-export default clerkMiddleware(async (auth, req) => {
+export default async function middleware(req: NextRequest) {
   // NOTE: To test region detection locally, visit:
   // http://localhost:3000/?test_ip=8.8.8.8 (USA)
   // http://localhost:3000/?test_ip=1.1.1.1 (Australia)
@@ -253,7 +252,7 @@ export default clerkMiddleware(async (auth, req) => {
   applyLanguageCookies(req, response, country);
 
   return response;
-});
+}
 
 // ─── Matcher ────────────────────────────────────────────────────────
 

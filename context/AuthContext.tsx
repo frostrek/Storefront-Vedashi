@@ -13,7 +13,6 @@ interface AuthContextType {
     register: (name: string, email: string, password: string, turnstileToken?: string) => Promise<RegisterResponse>;
     /** Log-in the user directly from verification data (after OTP verified and account created) */
     loginFromVerification: (customerData: Record<string, unknown>) => void;
-    socialLogin: (clerkToken: string) => Promise<{ success: boolean; error?: string; is_new_user?: boolean; account_linked?: boolean; pending_verification?: boolean; customer_id?: string; email?: string; full_name?: string }>;
     logout: () => void;
     /** Update partial user info (like avatar_url) dynamically in cache and context */
     updateUser: (updates: Partial<UserInfo>) => void;
@@ -309,55 +308,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         notifyListeners('logout', null);
     }, [notifyListeners, pushClearUserId]);
 
-    /** Social login via Clerk token → backend JWT (or pending OTP for new users) */
-    const socialLogin = useCallback(async (clerkToken: string) => {
-        try {
-            const res = await authFetch(`${API_URL}/api/auth/social/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ clerk_token: clerkToken }),
-            });
-            const json = await res.json();
-
-            // New user → pending OTP verification (no JWT yet)
-            if (res.ok && json.success && json.pending_verification) {
-                return {
-                    success: true,
-                    pending_verification: true,
-                    customer_id: json.data.customer_id,
-                    email: json.data.email,
-                    full_name: json.data.full_name,
-                };
-            }
-
-            // Returning user → JWT issued as HttpOnly cookie
-            if (res.ok && json.success && json.data?.customer) {
-                const u = toUserInfo(json.data.customer);
-                setUser(u);
-                localStorage.setItem(USER_KEY, JSON.stringify(u));
-                // SECURITY: No token stored — access token is in HttpOnly cookie
-                sessionStorage.setItem('justSignedIn', String(Date.now()));
-                pushUserId(u.id);
-                notifyListeners('login', u);
-                return {
-                    success: true,
-                    is_new_user: json.data.is_new_user,
-                    account_linked: json.data.account_linked,
-                };
-            }
-            return { success: false, error: json.message || 'Social login failed' };
-        } catch (err) {
-            console.error('[Auth] Social login error:', err);
-            return { success: false, error: 'Social login failed. Please try again.' };
-        }
-    }, [notifyListeners]);
-
 
     return (
         <AuthContext.Provider value={{
             user, isAuthenticated: !!user, isLoading,
-            login, register, loginFromVerification, socialLogin, logout, updateUser, onAuthChange,
+            login, register, loginFromVerification, logout, updateUser, onAuthChange,
         }}>
             {children}
         </AuthContext.Provider>

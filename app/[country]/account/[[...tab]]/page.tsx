@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { useClerk } from '@clerk/nextjs';
+
 import { useWishlist } from '@/context/WishlistContext';
 import { useCart } from '@/context/CartContext';
 // ProductCard removed as it was unused
@@ -57,7 +57,6 @@ export default function AccountPage() {
     const urlOrderId = searchParams.get('orderId');
     const country = params?.country || 'in';
     const { user, isAuthenticated, isLoading, logout, updateUser } = useAuth();
-    const { signOut: clerkSignOut } = useClerk();
     const { items: wishlistItems, removeItem: removeWishlistItem, loading: wishlistLoading } = useWishlist();
     const { addItem: addCartItem, items: cartItems, getItemInCart, loading: cartLoading } = useCart();
 
@@ -3541,7 +3540,6 @@ export default function AccountPage() {
                                                     const res = await deactivateAccount(deactivatePassword);
                                                     if (res.success) {
                                                         setShowDeactivateModal(false);
-                                                        clerkSignOut().catch(()=>{});
                                                         logout();
                                                         toast.success('Account deactivated. You can reactivate anytime.');
                                                         router.push('/');
