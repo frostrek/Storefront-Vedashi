@@ -43,7 +43,7 @@ export default function NeedHelpSection() {
                 
                 {/* HTML text overlay replacing the baked-in green bar */}
                 <div 
-                  className="absolute bottom-0 left-0 right-0 py-2 text-center text-[13px] font-bold tracking-[0.05em] z-10"
+                  className="absolute bottom-0 left-0 right-0 h-[44px] flex items-center justify-center text-[13px] font-bold tracking-[0.05em] z-10"
                   style={{ backgroundColor: category.bg, color: category.text }}
                 >
                   {category.name}
