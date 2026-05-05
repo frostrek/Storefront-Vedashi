@@ -48,14 +48,14 @@ const isCodEnabled = process.env.NEXT_PUBLIC_ENABLE_COD === 'true';
 
 const STEPS = ['BAG', 'SHIPPING', 'PAYMENT', 'REVIEW'] as const;
 
-function StepIndicator({ 
-    currentStep = 1, 
-    maxStepReached = 1, 
-    onStepClick 
-}: { 
-    currentStep?: number; 
+function StepIndicator({
+    currentStep = 1,
+    maxStepReached = 1,
+    onStepClick
+}: {
+    currentStep?: number;
     maxStepReached?: number;
-    onStepClick?: (index: number) => void 
+    onStepClick?: (index: number) => void
 }) {
     return (
         <div className="cart-step-bar">
@@ -66,22 +66,19 @@ function StepIndicator({
 
                 return (
                     <div key={step} className="cart-step-item">
-                        <button 
+                        <button
                             type="button"
                             onClick={() => isReachable && onStepClick?.(i)}
-                            className={`flex flex-col items-center group/step transition-all ${
-                                isReachable ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'
-                            }`}
+                            className={`flex flex-col items-center group/step transition-all ${isReachable ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'
+                                }`}
                             disabled={!onStepClick || !isReachable}
                         >
-                            <div className={`cart-step-circle ${
-                                isActive ? 'active' : isCompleted ? 'completed' : ''
-                            } ${isReachable ? 'group-hover/step:scale-110' : ''} transition-transform`}>
+                            <div className={`cart-step-circle ${isActive ? 'active' : isCompleted ? 'completed' : ''
+                                } ${isReachable ? 'group-hover/step:scale-110' : ''} transition-transform`}>
                                 {isCompleted ? '✓' : i + 1}
                             </div>
-                            <span className={`cart-step-label ${
-                                i <= currentStep ? 'active' : ''
-                            } ${isReachable ? 'group-hover/step:text-[#1A1A1A]' : ''} transition-colors uppercase tracking-widest`}>
+                            <span className={`cart-step-label ${i <= currentStep ? 'active' : ''
+                                } ${isReachable ? 'group-hover/step:text-[#1A1A1A]' : ''} transition-colors uppercase tracking-widest`}>
                                 {step}
                             </span>
                         </button>
@@ -119,24 +116,15 @@ function CheckoutContent() {
     const [paymentProcessing, setPaymentProcessing] = useState(false);
     const [paymentFailed, setPaymentFailed] = useState(false);
     const [failedOrderId, setFailedOrderId] = useState<string | null>(null);
-    
+
     // Extra form fields for dummy display
-    const [contactEmail, setContactEmail] = useState(user?.email || '');
-    const [contactPhone, setContactPhone] = useState(user?.phone || '');
-
-    // Country code selector for contact phone
-    const defaultDialCode = (() => {
-        const match = COUNTRY_CODES.find(c => c.code === getDefaultCountry());
-        return match ? match.dial_code : '+1';
-    })();
-    const [contactPhoneDialCode, setContactPhoneDialCode] = useState(defaultDialCode);
-
-    // Helper: combine dial code + local number for backend
-    const getFullContactPhone = () => {
-        const local = contactPhone.replace(/^\+\d+/, '').replace(/[^\d]/g, '').trim();
-        return local ? `${contactPhoneDialCode}${local}` : '';
-    };
     const [billingSameAsShipping, setBillingSameAsShipping] = useState(true);
+
+    const getCheckoutEmail = () => {
+        if (useNewAddress) return newAddress.email || user?.email || '';
+        const selAddr = savedAddresses.find(a => a.address_id === selectedAddressId);
+        return selAddr?.email || user?.email || '';
+    };
 
     // Saved addresses
     const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
@@ -159,7 +147,7 @@ function CheckoutContent() {
     const defaultCountryName = COUNTRIES.find(c => c.code === defaultCountryCode)?.name || '';
 
     const [newAddress, setNewAddress] = useState({
-        address_line1: '', address_line2: '', city: '', state: '', pincode: '', phone: '', country: defaultCountryName, country_code: defaultCountryCode
+        full_name: '', email: '', address_line1: '', address_line2: '', city: '', state: '', pincode: '', phone: '', country: defaultCountryName, country_code: defaultCountryCode
     });
 
     const shippingConfig = getAddressConfig(newAddress.country_code || 'IN');
@@ -175,7 +163,7 @@ function CheckoutContent() {
 
     // Validation state
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-    const [contactPhoneError, setContactPhoneError] = useState<string>('');
+
     const [isLookupLoading, setIsLookupLoading] = useState(false);
 
     // Track manual edits to prevent auto-fill overwrite
@@ -196,10 +184,10 @@ function CheckoutContent() {
         control: (provided: any, state: any) => ({
             ...provided,
             borderRadius: '8px',
-            borderColor: state.isFocused ? '#6B8F5E' : '#D4CFC0',
+            borderColor: state.isFocused ? '#91C934' : '#D4CFC0',
             boxShadow: 'none',
             '&:hover': {
-                borderColor: '#6B8F5E',
+                borderColor: '#91C934',
             },
             backgroundColor: 'white',
             paddingLeft: '34px',
@@ -208,10 +196,10 @@ function CheckoutContent() {
         }),
         option: (provided: any, state: any) => ({
             ...provided,
-            backgroundColor: state.isSelected ? '#6B8F5E' : state.isFocused ? '#DFE5D9' : 'white',
+            backgroundColor: state.isSelected ? '#91C934' : state.isFocused ? 'rgba(145, 201, 52, 0.1)' : 'white',
             color: state.isSelected ? 'white' : '#1A1A1A',
             '&:active': {
-                backgroundColor: '#6B8F5E',
+                backgroundColor: '#91C934',
             },
             fontSize: '14px',
         }),
@@ -230,7 +218,7 @@ function CheckoutContent() {
                 border: "none"
             },
             "::-webkit-scrollbar-thumb:hover": {
-                background: "#6B8F5E"
+                background: "#91C934"
             },
             "::-webkit-scrollbar-button": {
                 display: "none"
@@ -280,7 +268,7 @@ function CheckoutContent() {
     // Compute prices
     const checkoutItems = isBuyNow && buyNowItem ? [buyNowItem] : items;
     const itemsCount = isBuyNow && buyNowItem ? buyNowItem.quantity : totalItems;
-    
+
     const baseSubtotal = isBuyNow && buyNowItem
         ? Math.round(buyNowItem.unit_price * buyNowItem.quantity)
         : items.reduce((sum, item) => sum + (item.price ?? 0) * item.quantity, 0);
@@ -291,13 +279,13 @@ function CheckoutContent() {
 
     const prePointsTotal = baseSubtotal + shippingCost - discount;
     const maxRedeemablePoints = Math.min(wallet?.balance || 0, Math.max(0, Math.floor(prePointsTotal) - minPayable));
-    
+
     // Parse valid points from input
     let pointsToRedeem = 0;
     if (redeemPoints && !isNaN(Number(redeemPoints))) {
         pointsToRedeem = Math.min(parseInt(redeemPoints) || 0, maxRedeemablePoints);
     }
-    
+
     // Assuming 1 point = 1 INR — enforce minimum payable of ₹1
     const grandTotal = Math.max(minPayable, prePointsTotal - pointsToRedeem);
     const localTotal = Number((grandTotal * exchangeRate).toFixed(2));
@@ -313,7 +301,7 @@ function CheckoutContent() {
                         const defaultAddr = res.data.find((a: Address) => a.is_default) || res.data[0];
                         if (defaultAddr) setSelectedAddressId(defaultAddr.address_id);
                         else setUseNewAddress(true);
-                        
+
                         // After loading addresses, check if we have a persisted draft to restore
                         try {
                             const draft = sessionStorage.getItem(PERSIST_KEY);
@@ -321,17 +309,6 @@ function CheckoutContent() {
                                 const parsed = JSON.parse(draft);
                                 // Intentionally omitted parsed.step to enforce starting at step 1
                                 if (parsed.paymentMethod) setPaymentMethod(parsed.paymentMethod);
-                                if (parsed.contactEmail) setContactEmail(parsed.contactEmail);
-                                if (parsed.contactPhone) {
-                                    const pp = parsed.contactPhone;
-                                    const dialMatch = COUNTRY_CODES.find(c => pp.startsWith(c.dial_code));
-                                    if (dialMatch) {
-                                        setContactPhoneDialCode(dialMatch.dial_code);
-                                        setContactPhone(pp.substring(dialMatch.dial_code.length).trim());
-                                    } else {
-                                        setContactPhone(pp);
-                                    }
-                                }
                                 if (parsed.billingSameAsShipping !== undefined) setBillingSameAsShipping(parsed.billingSameAsShipping);
                                 if (parsed.selectedAddressId) setSelectedAddressId(parsed.selectedAddressId);
                                 if (parsed.useNewAddress !== undefined) setUseNewAddress(parsed.useNewAddress);
@@ -354,17 +331,7 @@ function CheckoutContent() {
                 if (res) setWallet(res);
             }).catch(() => {});
             
-            if (user.email) setContactEmail(user.email);
-            if (user.phone) {
-                const ph = user.phone;
-                const dialMatch = COUNTRY_CODES.sort((a, b) => b.dial_code.length - a.dial_code.length).find(c => ph.startsWith(c.dial_code));
-                if (dialMatch) {
-                    setContactPhoneDialCode(dialMatch.dial_code);
-                    setContactPhone(ph.substring(dialMatch.dial_code.length).trim());
-                } else {
-                    setContactPhone(ph);
-                }
-            }
+            // No email fallback needed, defaults to user.email or address.email
         } else {
             setUseNewAddress(true);
         }
@@ -378,17 +345,6 @@ function CheckoutContent() {
                     const parsed = cartRes.data.checkout_draft;
                     // Intentionally omitted parsed.step to enforce starting at step 1
                     if (parsed.paymentMethod) setPaymentMethod(parsed.paymentMethod);
-                    if (parsed.contactEmail) setContactEmail(parsed.contactEmail);
-                    if (parsed.contactPhone) {
-                        const pp = parsed.contactPhone;
-                        const dialMatch = COUNTRY_CODES.find(c => pp.startsWith(c.dial_code));
-                        if (dialMatch) {
-                            setContactPhoneDialCode(dialMatch.dial_code);
-                            setContactPhone(pp.substring(dialMatch.dial_code.length).trim());
-                        } else {
-                            setContactPhone(pp);
-                        }
-                    }
                     if (parsed.billingSameAsShipping !== undefined) setBillingSameAsShipping(parsed.billingSameAsShipping);
                     if (parsed.selectedAddressId) setSelectedAddressId(parsed.selectedAddressId);
                     if (parsed.useNewAddress !== undefined) setUseNewAddress(parsed.useNewAddress);
@@ -399,7 +355,7 @@ function CheckoutContent() {
                     if (parsed.redeemPoints) setRedeemPoints(parsed.redeemPoints);
                     sessionStorage.setItem(PERSIST_KEY, JSON.stringify(parsed));
                 }
-            }).catch(() => {});
+            }).catch(() => { });
         }
     }, [cartId, isAuthenticated, mounted]);
 
@@ -452,13 +408,11 @@ function CheckoutContent() {
     // Persist changes to sessionStorage
     useEffect(() => {
         if (!mounted || orderPlaced) return;
-        
+
         const timer = setTimeout(() => {
             const draft = {
                 // Not saving step to enforce step-based routing on page load
                 paymentMethod,
-                contactEmail,
-                contactPhone: getFullContactPhone(),
                 billingSameAsShipping,
                 selectedAddressId,
                 useNewAddress,
@@ -470,13 +424,13 @@ function CheckoutContent() {
             };
             sessionStorage.setItem(PERSIST_KEY, JSON.stringify(draft));
             if (cartId && isAuthenticated) {
-                updateCheckoutDraft(cartId, draft).catch(() => {});
+                updateCheckoutDraft(cartId, draft).catch(() => { });
             }
         }, 500); // Debounce saves
-        
+
         return () => clearTimeout(timer);
     }, [
-        mounted, orderPlaced, step, maxStepReached, paymentMethod, contactEmail, contactPhone, 
+        mounted, orderPlaced, step, maxStepReached, paymentMethod,
         billingSameAsShipping, selectedAddressId, useNewAddress, newAddress, 
         selectedBillingAddressId, useNewBillingAddress, newBillingAddress, redeemPoints,
         cartId, isAuthenticated
@@ -555,7 +509,7 @@ function CheckoutContent() {
     if (isBuyNow && !buyNowItem && !orderPlaced) {
         return (
             <div className="cart-leaf-bg min-h-screen flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-[#6B8F5E]" />
+                <Loader2 className="h-8 w-8 animate-spin text-[#91C934]" />
             </div>
         );
     }
@@ -602,16 +556,18 @@ function CheckoutContent() {
         setEditingAddressId(address.address_id);
         const currentCountryCode = (address as any).country_code || 'IN';
         let phoneToEdit = address.phone || '';
-        
+
         if (phoneToEdit) {
             const formatRes = validateOptionalPhoneNumber(phoneToEdit, currentCountryCode);
             if (formatRes.isValid && formatRes.normalized) {
                 // Keep the raw input or just the local part if international formatting applies
-                phoneToEdit = formatRes.normalized; 
+                phoneToEdit = formatRes.normalized;
             }
         }
 
         setEditAddressData({
+            full_name: address.full_name || '',
+            email: address.email || '',
             address_line1: address.address_line1 || '',
             address_line2: address.address_line2 || '',
             city: address.city || '',
@@ -626,7 +582,7 @@ function CheckoutContent() {
 
     const handleSaveEditedAddress = async (addressId: string) => {
         if (!user?.id) return;
-        
+
         const errors = validateAddress(editAddressData);
         if (Object.keys(errors).length > 0) {
             setFormErrors(errors);
@@ -690,11 +646,19 @@ function CheckoutContent() {
                 description: orderId ? `Order #${orderId.slice(0, 8)}` : 'Checkout Ritual',
                 order_id: razorpay_order_id,
                 prefill: {
-                    name: user?.name || '',
-                    email: user?.email || contactEmail,
-                    contact: getFullContactPhone(),
+                    name: (() => {
+                        if (useNewAddress) return newAddress.full_name || user?.name || '';
+                        const selAddr = savedAddresses.find(a => a.address_id === selectedAddressId);
+                        return selAddr?.full_name || user?.name || '';
+                    })(),
+                    email: getCheckoutEmail(),
+                    contact: (() => {
+                        if (useNewAddress) return newAddress.phone || '';
+                        const selAddr = savedAddresses.find(a => a.address_id === selectedAddressId);
+                        return selAddr?.phone || '';
+                    })(),
                 },
-                theme: { color: '#6B8F5E', backdrop_color: 'rgba(0,0,0,0.6)' },
+                theme: { color: '#91C934', backdrop_color: 'rgba(0,0,0,0.6)' },
                 modal: {
                     ondismiss: () => {
                         setPaymentProcessing(false);
@@ -786,7 +750,7 @@ function CheckoutContent() {
             setStep(2);
             toast.error(error.message || 'Failed to initiate payment');
             trackEvent('payment_failed', { reason: 'initiation_exception', details: error.message });
-            
+
             // Handle session expiry gracefully
             const errorMsg = error.message?.toLowerCase() || '';
             if (errorMsg.includes('token') || errorMsg.includes('expire') || errorMsg.includes('unauthorized') || error.statusCode === 401) {
@@ -822,21 +786,15 @@ function CheckoutContent() {
         }
 
         try {
-            // Determine the shipping country to use as default for phone validation
-            const currentShippingCountryCode = ((useNewAddress ? newAddress.country_code : (savedAddresses.find(a => a.address_id === selectedAddressId) as any)?.country_code) || 'IN') as CountryCode;
 
-            // Ensure numbers are properly normalized before sending to backend
-            const fullContactPhone = getFullContactPhone();
-            const contactPhoneResult = validatePhoneNumber(fullContactPhone, currentShippingCountryCode);
-            const finalContactPhone = contactPhoneResult.isValid ? contactPhoneResult.normalized || fullContactPhone : fullContactPhone;
-            
             let finalNewAddress = newAddress;
             if (useNewAddress || (billingSameAsShipping && useNewAddress) || (!billingSameAsShipping && useNewAddress)) {
                 if (newAddress.phone) {
+                    const currentShippingCountryCode = (newAddress.country_code || 'IN') as CountryCode;
                     const addressPhoneResult = validateOptionalPhoneNumber(newAddress.phone, currentShippingCountryCode);
-                    finalNewAddress = { 
-                        ...newAddress, 
-                        phone: addressPhoneResult.isValid ? (addressPhoneResult.normalized || newAddress.phone) : newAddress.phone 
+                    finalNewAddress = {
+                        ...newAddress,
+                        phone: addressPhoneResult.isValid ? (addressPhoneResult.normalized || newAddress.phone) : newAddress.phone
                     };
                 }
             }
@@ -847,9 +805,9 @@ function CheckoutContent() {
                 // Assuming newBillingAddress has phone too, if not it won't hurt
                 if ((newBillingAddress as any).phone) {
                     const billingPhoneResult = validateOptionalPhoneNumber((newBillingAddress as any).phone, currentBillingCountryCode);
-                    finalNewBillingAddress = { 
-                        ...newBillingAddress, 
-                        phone: billingPhoneResult.isValid ? (billingPhoneResult.normalized || (newBillingAddress as any).phone) : (newBillingAddress as any).phone 
+                    finalNewBillingAddress = {
+                        ...newBillingAddress,
+                        phone: billingPhoneResult.isValid ? (billingPhoneResult.normalized || (newBillingAddress as any).phone) : (newBillingAddress as any).phone
                     } as any;
                 }
             }
@@ -857,15 +815,14 @@ function CheckoutContent() {
             // NEW RAZORPAY FLOW:
             if (paymentMethod === 'razorpay') {
                 setPlacing(false);
-                
+
                 // Construct checkout data for backend to create order LATER
                 let checkoutData: any;
                 if (isBuyNow && buyNowItem) {
                     checkoutData = {
                         customer_id: user?.id || undefined,
                         customer_name: user?.name || undefined,
-                        customer_email: user?.email || contactEmail || undefined,
-                        customer_phone: finalContactPhone || undefined,
+                        customer_email: getCheckoutEmail() || undefined,
                         items: [{ product_id: buyNowItem.product_id, variant_id: buyNowItem.variant_id, quantity: buyNowItem.quantity, unit_price: buyNowItem.unit_price }],
                         shipping_address_id: useNewAddress ? undefined : selectedAddressId || undefined,
                         shipping_address: useNewAddress ? finalNewAddress : undefined,
@@ -882,7 +839,6 @@ function CheckoutContent() {
                     checkoutData = {
                         cart_id: cartId,
                         customer_id: user.id,
-                        customer_phone: finalContactPhone || undefined,
                         shipping_address_id: useNewAddress ? undefined : selectedAddressId || undefined,
                         shipping_address: useNewAddress ? finalNewAddress : undefined,
                         billing_address_id: billingSameAsShipping ? (useNewAddress ? undefined : selectedAddressId || undefined) : (useNewBillingAddress ? undefined : selectedBillingAddressId || undefined),
@@ -899,8 +855,7 @@ function CheckoutContent() {
                     checkoutData = {
                         customer_id: user?.id || undefined,
                         customer_name: user?.name || undefined,
-                        customer_email: user?.email || contactEmail || undefined,
-                        customer_phone: finalContactPhone || undefined,
+                        customer_email: getCheckoutEmail() || undefined,
                         items: checkoutItems.map(item => ({ product_id: (item as any).product_id || '', variant_id: (item as any).variant_id, quantity: item.quantity, unit_price: Number((item as any).price || (item as any).unit_price) || 0 })),
                         shipping_address: useNewAddress ? finalNewAddress : undefined,
                         billing_address: !billingSameAsShipping && useNewBillingAddress ? finalNewBillingAddress : (billingSameAsShipping && useNewAddress ? finalNewAddress : undefined),
@@ -920,11 +875,10 @@ function CheckoutContent() {
 
             let result;
             if (isBuyNow && buyNowItem) {
-            result = await directCheckout({
+                result = await directCheckout({
                     customer_id: user?.id || undefined,
                     customer_name: user?.name || undefined,
-                    customer_email: user?.email || contactEmail || undefined,
-                    customer_phone: finalContactPhone || undefined,
+                    customer_email: getCheckoutEmail() || undefined,
                     items: [{ product_id: buyNowItem.product_id, variant_id: buyNowItem.variant_id, quantity: buyNowItem.quantity, unit_price: buyNowItem.unit_price }],
                     shipping_address_id: useNewAddress ? undefined : selectedAddressId || undefined,
                     shipping_address: useNewAddress ? finalNewAddress as unknown as Record<string, string> : undefined,
@@ -941,7 +895,6 @@ function CheckoutContent() {
                 result = await checkoutOrder({
                     cart_id: cartId,
                     customer_id: user.id,
-                    customer_phone: finalContactPhone || undefined,
                     shipping_address_id: useNewAddress ? undefined : selectedAddressId || undefined,
                     shipping_address: useNewAddress ? finalNewAddress as unknown as Record<string, string> : undefined,
                     billing_address_id: billingSameAsShipping ? (useNewAddress ? undefined : selectedAddressId || undefined) : (useNewBillingAddress ? undefined : selectedBillingAddressId || undefined),
@@ -958,8 +911,7 @@ function CheckoutContent() {
                 result = await directCheckout({
                     customer_id: user?.id || undefined,
                     customer_name: user?.name || undefined,
-                    customer_email: user?.email || contactEmail || undefined,
-                    customer_phone: finalContactPhone || undefined,
+                    customer_email: getCheckoutEmail() || undefined,
                     items: checkoutItems.map(item => ({ product_id: (item as any).product_id || '', variant_id: (item as any).variant_id, quantity: item.quantity, unit_price: Number((item as any).price || (item as any).unit_price) || 0 })),
                     shipping_address: useNewAddress ? finalNewAddress as unknown as Record<string, string> : undefined,
                     billing_address: !billingSameAsShipping && useNewBillingAddress ? finalNewBillingAddress as unknown as Record<string, string> : (billingSameAsShipping && useNewAddress ? finalNewAddress as unknown as Record<string, string> : undefined),
@@ -1003,7 +955,7 @@ function CheckoutContent() {
             } else {
                 toast.error(result.message || 'Failed to place order');
                 trackEvent('checkout_error', { reason: 'api_failed', details: result.message });
-                
+
                 // Handle session expiry gracefully
                 const errorMsg = result.message?.toLowerCase() || '';
                 if (errorMsg.includes('token') || errorMsg.includes('expire') || errorMsg.includes('unauthorized') || result.statusCode === 401) {
@@ -1013,7 +965,7 @@ function CheckoutContent() {
         } catch (error: any) {
             toast.error('Something went wrong. Please try again.');
             trackEvent('checkout_error', { reason: 'exception', details: error.message });
-            
+
             // Handle session expiry gracefully
             const errorMsg = error.message?.toLowerCase() || '';
             if (errorMsg.includes('token') || errorMsg.includes('expire') || errorMsg.includes('unauthorized') || error.statusCode === 401) {
@@ -1029,6 +981,9 @@ function CheckoutContent() {
     const validateAddress = (addr: any, prefix: string = '') => {
         const errors: Record<string, string> = {};
         const addrConfig = getAddressConfig(addr.country_code || 'IN');
+        if (!addr.full_name || !addr.full_name.trim() || addr.full_name.trim().length < 2) {
+            errors[`${prefix}full_name`] = 'Full name is required (min 2 characters)';
+        }
         if (!addr.address_line1 || addr.address_line1.length < 5) {
             errors[`${prefix}address_line1`] = 'Address Line 1 is required (min 5 characters)';
         }
@@ -1043,10 +998,14 @@ function CheckoutContent() {
             }
         }
         
-        const currentCountryCode = (((addr as any).country_code) || 'IN') as CountryCode;
-        const phoneValidation = validateOptionalPhoneNumber(addr.phone, currentCountryCode);
-        if (!phoneValidation.isValid && phoneValidation.error) {
-            errors[`${prefix}phone`] = phoneValidation.error;
+        if (!addr.phone || !addr.phone.trim()) {
+            errors[`${prefix}phone`] = 'Phone number is required';
+        } else {
+            const currentCountryCode = (((addr as any).country_code) || 'IN') as CountryCode;
+            const phoneValidation = validateOptionalPhoneNumber(addr.phone, currentCountryCode);
+            if (!phoneValidation.isValid && phoneValidation.error) {
+                errors[`${prefix}phone`] = phoneValidation.error;
+            }
         }
 
         return errors;
@@ -1056,29 +1015,8 @@ function CheckoutContent() {
 
     const goToPayment = () => {
         setFormErrors({});
-        setContactPhoneError('');
 
-        const currentShippingCountryCode = ((useNewAddress ? newAddress.country_code : (savedAddresses.find(a => a.address_id === selectedAddressId) as any)?.country_code) || 'IN') as CountryCode;
 
-        // Validate Contact Phone (combine dial code + local number)
-        const fullContactPhone = getFullContactPhone();
-        const contactPhoneResult = validatePhoneNumber(fullContactPhone, currentShippingCountryCode);
-        if (!contactPhoneResult.isValid) {
-            setContactPhoneError(contactPhoneResult.error || 'Invalid mobile number');
-            toast.error('Please fix contact phone validation error');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            return;
-        }
-        
-        // Normalize Contact Phone
-        if (contactPhoneResult.normalized) {
-            // Keep the local number for display, the full number is assembled on submit
-            const normalized = contactPhoneResult.normalized;
-            if (normalized.startsWith(contactPhoneDialCode)) {
-                setContactPhone(normalized.substring(contactPhoneDialCode.length).trim());
-            }
-        }
-        
         if (useNewAddress) {
             const errors = validateAddress(newAddress);
             if (Object.keys(errors).length > 0) {
@@ -1087,6 +1025,7 @@ function CheckoutContent() {
                 return;
             }
             // Normalize Address Phone
+            const currentShippingCountryCode = (newAddress.country_code || 'IN') as CountryCode;
             const addressPhoneResult = validateOptionalPhoneNumber(newAddress.phone, currentShippingCountryCode);
             if (addressPhoneResult.isValid && addressPhoneResult.normalized) {
                 setNewAddress(prev => ({ ...prev, phone: addressPhoneResult.normalized! }));
@@ -1155,7 +1094,7 @@ function CheckoutContent() {
             router.push('/cart');
             return;
         }
-        
+
         // Only allow clicking if reachable
         if (index <= maxStepReached) {
             if (index === 1) {
@@ -1177,13 +1116,13 @@ function CheckoutContent() {
                 <div className="cart-noise-overlay" aria-hidden="true" />
                 <div className="mx-auto max-w-7xl px-4 py-8 sm:py-16 relative z-10 flex items-center justify-center">
                     <div className="text-center max-w-lg p-10 bg-white rounded-2xl border border-[#E8E4DC] shadow-sm relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-full h-2 bg-[#6B8F5E]" />
-                        <CheckCircle className="mx-auto h-24 w-24 text-[#6B8F5E] mb-6" />
-                        <h1 className="text-3xl font-bold text-[#1A1A1A]">Ritual Initialized</h1>
+                        <div className="absolute top-0 left-0 w-full h-2 bg-[#91C934]" />
+                        <CheckCircle className="mx-auto h-24 w-24 text-[#91C934] mb-6" />
+                        <h1 className="text-3xl font-bold text-[#1A1A1A]">Checkout Completed</h1>
                         {orderId && (
                             <p className="mt-2 text-sm font-mono text-[#6B6B60]">Order ID: {orderId}</p>
                         )}
-                        <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#DFE5D9] text-[#2D3B2D] text-sm font-bold tracking-wide uppercase">
+                        <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#91C934]/10 text-[#2D3B2D] text-sm font-bold tracking-wide uppercase">
                             <ShieldCheck className="h-4 w-4" />
                             {paymentMethod === 'razorpay' ? 'Payment Confirmed' : 'Cash on Delivery'}
                         </div>
@@ -1226,16 +1165,16 @@ function CheckoutContent() {
             {/* Step Indicator */}
             <div className="border-b border-[#D4CFC0] bg-[#FFFFFF] sticky top-0 z-20 shadow-sm">
                 <div className="mx-auto max-w-5xl">
-                    <StepIndicator 
-                        currentStep={step} 
-                        maxStepReached={maxStepReached} 
-                        onStepClick={handleStepLink} 
+                    <StepIndicator
+                        currentStep={step}
+                        maxStepReached={maxStepReached}
+                        onStepClick={handleStepLink}
                     />
                 </div>
             </div>
 
             <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12 relative z-10">
-                <button onClick={() => { if (step > 1) setStep(step - 1); else router.push('/cart'); }} className="inline-flex items-center gap-2 text-sm font-semibold text-[#6B8F5E] hover:text-[#5A7A4E] mb-6 transition-colors uppercase tracking-wider">
+                <button onClick={() => { if (step > 1) setStep(step - 1); else router.push('/cart'); }} className="inline-flex items-center gap-2 text-sm font-semibold text-[#91C934] hover:text-[#5A7A4E] mb-6 transition-colors uppercase tracking-wider">
                     <ArrowLeft className="h-4 w-4" /> {step > 1 ? 'Back to previous step' : 'Back to Bag'}
                 </button>
 
@@ -1246,123 +1185,40 @@ function CheckoutContent() {
                         {step === 1 && (
                             <div className="space-y-6">
                                 <h2 className="text-2xl font-bold text-[#1A1A1A] mb-4">Shipping Sanctuary</h2>
-                                 {/* Contact Details Form */}
-                                <div className="cart-item-card p-6 border-l-4 border-l-[#2D3B2D]">
-                                    <h3 className="font-bold text-[#1A1A1A] mb-4 flex items-center gap-2">
-                                        <div className="bg-[#DFE5D9] text-[#2D3B2D] rounded-full w-6 h-6 flex items-center justify-center text-xs">A</div>
-                                        Contact Information
-                                    </h3>
-                                    <div className="grid sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Email *</label>
-                                            <input type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} className="w-full rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-[#F5F4F0]" placeholder="Enter your email" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Mobile Phone *</label>
-                                            <div className="flex gap-2">
-                                                <div className="w-[130px] flex-shrink-0">
-                                                    <Select
-                                                        options={COUNTRY_CODES.map(c => ({
-                                                            value: c.dial_code,
-                                                            label: `${c.flag} ${c.dial_code}`,
-                                                            name: c.name
-                                                        }))}
-                                                        value={{
-                                                            value: contactPhoneDialCode,
-                                                            label: `${COUNTRY_CODES.find(c => c.dial_code === contactPhoneDialCode)?.flag || ''} ${contactPhoneDialCode}`
-                                                        }}
-                                                        onChange={(val: any) => {
-                                                            if (val) setContactPhoneDialCode(val.value);
-                                                        }}
-                                                        styles={{
-                                                            ...customSelectStyles,
-                                                            control: (base: any, state: any) => ({
-                                                                ...customSelectStyles.control(base, state),
-                                                                paddingLeft: '8px',
-                                                                backgroundColor: '#F5F4F0',
-                                                                minHeight: '42px',
-                                                            }),
-                                                        }}
-                                                        isSearchable
-                                                        filterOption={(option: any, input: string) => {
-                                                            if (!input) return true;
-                                                            const q = input.toLowerCase();
-                                                            return option.data.name?.toLowerCase().includes(q) || option.value.includes(q);
-                                                        }}
-                                                        classNamePrefix="react-select"
-                                                        placeholder="Code"
-                                                        menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
-                                                        menuPosition="fixed"
-                                                    />
-                                                </div>
-                                                <div className="flex-1">
-                                                    <input 
-                                                        type="tel" 
-                                                        value={contactPhone} 
-                                                        onChange={e => {
-                                                            const sanitized = sanitizePhoneInput(e.target.value);
-                                                            setContactPhone(sanitized);
-                                                            if (sanitized) {
-                                                                const full = `${contactPhoneDialCode}${sanitized.replace(/[^\d]/g, '')}`;
-                                                                const currentShippingCountryCode = ((useNewAddress ? newAddress.country_code : (savedAddresses.find(a => a.address_id === selectedAddressId) as any)?.country_code) || 'IN') as CountryCode;
-                                                                const res = validatePhoneNumber(full, currentShippingCountryCode);
-                                                                setContactPhoneError(res.isValid ? '' : res.error || '');
-                                                            } else {
-                                                                setContactPhoneError('');
-                                                            }
-                                                        }}
-                                                        onBlur={() => {
-                                                            if (contactPhone) {
-                                                                const full = `${contactPhoneDialCode}${contactPhone.replace(/[^\d]/g, '')}`;
-                                                                const currentShippingCountryCode = ((useNewAddress ? newAddress.country_code : (savedAddresses.find(a => a.address_id === selectedAddressId) as any)?.country_code) || 'IN') as CountryCode;
-                                                                const res = validatePhoneNumber(full, currentShippingCountryCode);
-                                                                setContactPhoneError(res.isValid ? '' : res.error || '');
-                                                            }
-                                                        }}
-                                                        className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-[#F5F4F0] ${contactPhoneError ? 'border-red-400' : 'border-[#D4CFC0]'}`} 
-                                                        placeholder="Enter mobile number" 
-                                                        maxLength={15}
-                                                    />
-                                                </div>
-                                            </div>
-                                            {contactPhoneError && <p className="text-[10px] text-red-500 mt-1 font-bold">{contactPhoneError}</p>}
-                                        </div>
-                                    </div>
-                                    <p className="mt-3 text-xs text-[#8B7A3D]">We will send order updates and Ayurvedic guidelines to these contacts.</p>
-                                </div>
 
                                 {/* Delivery Details Form */}
-                                <div className="cart-item-card p-6 border-l-4 border-l-[#6B8F5E]">
+                                <div className="cart-item-card p-6 border-l-4 border-l-[#91C934]">
                                     <h3 className="font-bold text-[#1A1A1A] mb-4 flex items-center gap-2">
-                                        <div className="bg-[#DFE5D9] text-[#2D3B2D] rounded-full w-6 h-6 flex items-center justify-center text-xs">B</div>
+                                        <div className="bg-[#91C934]/10 text-[#2D3B2D] rounded-full w-6 h-6 flex items-center justify-center text-xs">A</div>
                                         Delivery Address
                                     </h3>
-                                    
+
                                     {addressesLoading ? (
-                                        <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-[#6B8F5E]" /></div>
+                                        <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-[#91C934]" /></div>
                                     ) : savedAddresses.length > 0 && (
                                         <div className="mb-6 space-y-3">
                                             {savedAddresses.map(addr => (
                                                 <div key={addr.address_id} className="min-w-0">
-                                                    <label className={`flex items-start gap-4 rounded-xl border p-4 cursor-pointer transition-colors w-full ${selectedAddressId === addr.address_id && !useNewAddress && editingAddressId !== addr.address_id ? 'border-[#6B8F5E] bg-[#DFE5D9] border-2 shadow-sm' : 'border-[#D4CFC0] bg-white hover:border-[#CEDBCE]'}`}>
-                                                        <input type="radio" name="address" checked={selectedAddressId === addr.address_id && !useNewAddress && editingAddressId !== addr.address_id} onChange={() => { setSelectedAddressId(addr.address_id); setUseNewAddress(false); setEditingAddressId(null); }} className="mt-1 w-4 h-4 accent-[#6B8F5E]" />
+                                                    <label className={`flex items-start gap-4 rounded-xl border p-4 cursor-pointer transition-colors w-full ${selectedAddressId === addr.address_id && !useNewAddress && editingAddressId !== addr.address_id ? 'border-[#91C934] bg-[#91C934]/10 border-1 shadow-sm' : 'border-[#D4CFC0] bg-white hover:border-[#CEDBCE]'}`}>
+                                                        <input type="radio" name="address" checked={selectedAddressId === addr.address_id && !useNewAddress && editingAddressId !== addr.address_id} onChange={() => { setSelectedAddressId(addr.address_id); setUseNewAddress(false); setEditingAddressId(null); }} className="mt-1 w-4 h-4 appearance-none rounded-full border border-[#D4CFC0] checked:border-[#91C934] checked:bg-[#91C934] checked:ring-2 checked:ring-white checked:ring-inset transition-all cursor-pointer focus:outline-none" />
                                                         <div className="flex-1 min-w-0">
                                                             <div className="flex items-center justify-between mb-1">
                                                                 <div className="flex items-center gap-2">
                                                                     <span className="font-bold text-[#1A1A1A]">{addr.label || 'Saved Address'}</span>
-                                                                    {addr.is_default && <span className="bg-[#1A1A1A] text-white text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full">Default</span>}
+                                                                    {addr.is_default && <span className="bg-[#91C934] text-white font-bold text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full">Default</span>}
                                                                 </div>
                                                                 {editingAddressId !== addr.address_id && (
                                                                     <div className="flex items-center gap-2 ml-4">
-                                                                        <button type="button" onClick={(e) => handleEditAddressClick(e, addr)} disabled={addressActionLoading === addr.address_id} className="text-[#8B7A3D] hover:text-[#6B8F5E] p-1.5 rounded-full hover:bg-[#F5F4F0] transition-colors disabled:opacity-50">
+                                                                        <button type="button" onClick={(e) => handleEditAddressClick(e, addr)} disabled={addressActionLoading === addr.address_id} className="text-gray-500 hover:text-[#91C934] p-1.5 rounded-full hover:bg-[#F5F4F0] transition-colors disabled:opacity-50">
                                                                             <Pencil className="w-4 h-4" />
                                                                         </button>
-                                                                        <button type="button" onClick={(e) => handleDeleteAddressClick(e, addr.address_id)} disabled={addressActionLoading === addr.address_id} className="text-[#8B7A3D] hover:text-red-500 p-1.5 rounded-full hover:bg-red-50 transition-colors disabled:opacity-50">
+                                                                        <button type="button" onClick={(e) => handleDeleteAddressClick(e, addr.address_id)} disabled={addressActionLoading === addr.address_id} className="text-gray-500 hover:text-red-500 p-1.5 rounded-full hover:bg-red-50 transition-colors disabled:opacity-50">
                                                                             {addressActionLoading === addr.address_id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash className="w-4 h-4" />}
                                                                         </button>
                                                                     </div>
                                                                 )}
                                                             </div>
+                                                            <p className="text-sm text-[#4A4A4A] truncate">{addr.full_name && <span className="font-semibold text-[#1A1A1A]">{addr.full_name}</span>}</p>
                                                             <p className="text-sm text-[#4A4A4A] truncate">{addr.address_line1}</p>
                                                             {addr.address_line2 && <p className="text-sm text-[#4A4A4A] truncate">{addr.address_line2}</p>}
                                                             <p className="text-sm text-[#4A4A4A] truncate">{addr.city}, {addr.state} {addr.pincode}</p>
@@ -1394,31 +1250,40 @@ function CheckoutContent() {
                                                                     </div>
                                                                 </div>
                                                                 <div className="sm:col-span-2">
+                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Full Name *</label>
+                                                                    <input type="text" value={editAddressData.full_name} onChange={e => setEditAddressData({ ...editAddressData, full_name: e.target.value })} className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.full_name ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Full name" />
+                                                                    {formErrors.full_name && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.full_name}</p>}
+                                                                </div>
+                                                                <div className="sm:col-span-2">
+                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Email</label>
+                                                                    <input type="email" value={editAddressData.email || ''} onChange={e => setEditAddressData({ ...editAddressData, email: e.target.value })} className="w-full rounded-lg border border-[#D4CFC0] px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white" placeholder="Email address (optional)" />
+                                                                </div>
+                                                                <div className="sm:col-span-2">
                                                                     <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Address Line 1 *</label>
-                                                                    <input type="text" value={editAddressData.address_line1} onChange={e => setEditAddressData({ ...editAddressData, address_line1: e.target.value })} className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.address_line1 ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Street address" />
+                                                                    <input type="text" value={editAddressData.address_line1} onChange={e => setEditAddressData({ ...editAddressData, address_line1: e.target.value })} className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#91C934] focus:outline-none bg-white ${formErrors.address_line1 ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Street address" />
                                                                     {formErrors.address_line1 && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.address_line1}</p>}
                                                                 </div>
                                                                 <div className="sm:col-span-2">
                                                                     <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Address Line 2</label>
-                                                                    <input type="text" value={editAddressData.address_line2} onChange={e => setEditAddressData({ ...editAddressData, address_line2: e.target.value })} className="w-full rounded-lg border border-[#D4CFC0] px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white" placeholder="Apartment, suite, etc." />
+                                                                    <input type="text" value={editAddressData.address_line2} onChange={e => setEditAddressData({ ...editAddressData, address_line2: e.target.value })} className="w-full rounded-lg border border-[#D4CFC0] px-3 py-2 text-sm focus:border-[#91C934] focus:outline-none bg-white" placeholder="Apartment, suite, etc." />
                                                                 </div>
                                                                 <div>
                                                                     <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">{editConfig.labels.postalCode} *</label>
-                                                                    <input type="text" value={editAddressData.pincode} onChange={e => setEditAddressData({ ...editAddressData, pincode: e.target.value })} className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.pincode ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={editConfig.labels.postalCode} />
+                                                                    <input type="text" value={editAddressData.pincode} onChange={e => setEditAddressData({ ...editAddressData, pincode: e.target.value })} className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#91C934] focus:outline-none bg-white ${formErrors.pincode ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={editConfig.labels.postalCode} />
                                                                     {formErrors.pincode && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.pincode}</p>}
                                                                 </div>
                                                                 <div>
                                                                     <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">{editConfig.labels.city} *</label>
-                                                                    <input type="text" value={editAddressData.city} onChange={e => setEditAddressData({ ...editAddressData, city: e.target.value })} className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.city ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={editConfig.labels.city} />
+                                                                    <input type="text" value={editAddressData.city} onChange={e => setEditAddressData({ ...editAddressData, city: e.target.value })} className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#91C934] focus:outline-none bg-white ${formErrors.city ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={editConfig.labels.city} />
                                                                     {formErrors.city && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.city}</p>}
                                                                 </div>
                                                                 <div>
                                                                     <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">{editConfig.labels.state} *</label>
-                                                                    <input type="text" value={editAddressData.state} onChange={e => setEditAddressData({ ...editAddressData, state: e.target.value })} className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.state ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={editConfig.labels.state} />
+                                                                    <input type="text" value={editAddressData.state} onChange={e => setEditAddressData({ ...editAddressData, state: e.target.value })} className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#91C934] focus:outline-none bg-white ${formErrors.state ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={editConfig.labels.state} />
                                                                     {formErrors.state && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.state}</p>}
                                                                 </div>
                                                                 <div>
-                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Mobile Phone (optional)</label>
+                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Mobile Phone *</label>
                                                                     <input 
                                                                         type="tel" 
                                                                         value={editAddressData.phone} 
@@ -1434,15 +1299,15 @@ function CheckoutContent() {
                                                                                 setFormErrors(prev => { const copy = { ...prev }; delete copy.phone; return copy; });
                                                                             }
                                                                         }}
-                                                                        className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.phone ? 'border-red-400' : 'border-[#D4CFC0]'}`} 
-                                                                        placeholder="e.g., 9876543210" 
+                                                                        className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#91C934] focus:outline-none bg-white ${formErrors.phone ? 'border-red-400' : 'border-[#D4CFC0]'}`}
+                                                                        placeholder="e.g., 9876543210"
                                                                     />
                                                                     {formErrors.phone && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.phone}</p>}
                                                                 </div>
                                                             </div>
                                                             <div className="mt-5 flex justify-end gap-3">
                                                                 <button type="button" onClick={() => { setEditingAddressId(null); setEditAddressData(null); setFormErrors({}); }} className="px-4 py-2 text-sm font-bold text-[#8B7A3D] bg-white border border-[#D4CFC0] rounded-lg hover:bg-[#F5F4F0] transition-colors">Cancel</button>
-                                                                <button type="button" onClick={() => handleSaveEditedAddress(addr.address_id)} disabled={addressActionLoading === addr.address_id} className="px-4 py-2 text-sm font-bold text-white bg-[#6B8F5E] rounded-lg hover:bg-[#5A7A4E] transition-colors flex items-center gap-2">
+                                                                <button type="button" onClick={() => handleSaveEditedAddress(addr.address_id)} disabled={addressActionLoading === addr.address_id} className="px-4 py-2 text-sm font-bold text-white bg-[#91C934] rounded-lg hover:bg-[#5A7A4E] transition-colors flex items-center gap-2">
                                                                     {addressActionLoading === addr.address_id ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}
                                                                 </button>
                                                             </div>
@@ -1450,7 +1315,7 @@ function CheckoutContent() {
                                                     )}
                                                 </div>
                                             ))}
-                                            <button onClick={() => { setUseNewAddress(true); setEditingAddressId(null); setEditAddressData(null); }} className={`mt-2 flex items-center gap-2 text-sm font-semibold transition-colors ${useNewAddress ? 'text-[#6B8F5E]' : 'text-[#8B7A3D] hover:text-[#6B8F5E]'}`}>
+                                            <button onClick={() => { setUseNewAddress(true); setEditingAddressId(null); setEditAddressData(null); setNewAddress(prev => ({ ...prev, email: user?.email || '' })); }} className={`mt-2 flex items-center gap-2 text-sm font-semibold transition-colors ${useNewAddress ? 'text-[#91C934]' : 'text-[#91C934] hover:text-[#7AB52A]'}`}>
                                                 <MapPin className="h-4 w-4" /> Use a different address
                                             </button>
                                         </div>
@@ -1481,34 +1346,43 @@ function CheckoutContent() {
                                                 </div>
                                             </div>
                                             <div className="sm:col-span-2">
+                                                <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Full Name *</label>
+                                                <input type="text" value={newAddress.full_name} onChange={e => setNewAddress({ ...newAddress, full_name: e.target.value })} className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.full_name ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Full name" />
+                                                {formErrors.full_name && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.full_name}</p>}
+                                            </div>
+                                            <div className="sm:col-span-2">
+                                                <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Email</label>
+                                                <input type="email" value={newAddress.email || ''} onChange={e => setNewAddress({ ...newAddress, email: e.target.value })} className="w-full rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white" placeholder="Email address (optional)" />
+                                            </div>
+                                            <div className="sm:col-span-2">
                                                 <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Address Line 1 *</label>
-                                                <input type="text" value={newAddress.address_line1} onChange={e => setNewAddress({ ...newAddress, address_line1: e.target.value })} className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.address_line1 ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Street address" />
+                                                <input type="text" value={newAddress.address_line1} onChange={e => setNewAddress({ ...newAddress, address_line1: e.target.value })} className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#91C934] focus:outline-none bg-white ${formErrors.address_line1 ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Street address" />
                                                 {formErrors.address_line1 && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.address_line1}</p>}
                                             </div>
                                             <div className="sm:col-span-2">
                                                 <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Address Line 2</label>
-                                                <input type="text" value={newAddress.address_line2} onChange={e => setNewAddress({ ...newAddress, address_line2: e.target.value })} className="w-full rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white" placeholder="Apartment, suite, etc." />
+                                                <input type="text" value={newAddress.address_line2} onChange={e => setNewAddress({ ...newAddress, address_line2: e.target.value })} className="w-full rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#91C934] focus:outline-none bg-white" placeholder="Apartment, suite, etc." />
                                             </div>
                                             <div>
                                                 <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">{shippingConfig.labels.postalCode} *</label>
                                                 <div className="relative">
-                                                    <input type="text" value={newAddress.pincode} onChange={e => setNewAddress({ ...newAddress, pincode: e.target.value })} className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.pincode ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={shippingConfig.labels.postalCode} />
-                                                    {isLookupLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-[#6B8F5E]" />}
+                                                    <input type="text" value={newAddress.pincode} onChange={e => setNewAddress({ ...newAddress, pincode: e.target.value })} className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#91C934] focus:outline-none bg-white ${formErrors.pincode ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={shippingConfig.labels.postalCode} />
+                                                    {isLookupLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-[#91C934]" />}
                                                 </div>
                                                 {formErrors.pincode && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.pincode}</p>}
                                             </div>
                                             <div>
                                                 <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">{shippingConfig.labels.city} *</label>
-                                                <input type="text" value={newAddress.city} onChange={e => { setNewAddress({ ...newAddress, city: e.target.value }); setManualEdits(prev => ({ ...prev, shipping_city: true })); }} className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.city ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={shippingConfig.labels.city} />
+                                                <input type="text" value={newAddress.city} onChange={e => { setNewAddress({ ...newAddress, city: e.target.value }); setManualEdits(prev => ({ ...prev, shipping_city: true })); }} className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#91C934] focus:outline-none bg-white ${formErrors.city ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={shippingConfig.labels.city} />
                                                 {formErrors.city && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.city}</p>}
                                             </div>
                                             <div>
                                                 <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">{shippingConfig.labels.state} *</label>
-                                                <input type="text" value={newAddress.state} onChange={e => { setNewAddress({ ...newAddress, state: e.target.value }); setManualEdits(prev => ({ ...prev, shipping_state: true })); }} className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.state ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={shippingConfig.labels.state} />
+                                                <input type="text" value={newAddress.state} onChange={e => { setNewAddress({ ...newAddress, state: e.target.value }); setManualEdits(prev => ({ ...prev, shipping_state: true })); }} className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#91C934] focus:outline-none bg-white ${formErrors.state ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={shippingConfig.labels.state} />
                                                 {formErrors.state && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.state}</p>}
                                             </div>
                                             <div>
-                                                <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Mobile Phone (optional)</label>
+                                                <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Mobile Phone *</label>
                                                 <input 
                                                     type="tel" 
                                                     value={newAddress.phone} 
@@ -1551,8 +1425,8 @@ function CheckoutContent() {
                                                             }
                                                         }
                                                     }}
-                                                    className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.phone ? 'border-red-400' : 'border-[#D4CFC0]'}`} 
-                                                    placeholder="e.g., 9876543210" 
+                                                    className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#91C934] focus:outline-none bg-white ${formErrors.phone ? 'border-red-400' : 'border-[#D4CFC0]'}`}
+                                                    placeholder="e.g., 9876543210"
                                                 />
                                                 {formErrors.phone && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.phone}</p>}
                                             </div>
@@ -1573,7 +1447,7 @@ function CheckoutContent() {
                             <div className="space-y-6">
                                 <div className="flex justify-between items-center mb-4">
                                     <h2 className="text-2xl font-bold text-[#1A1A1A]">Payment Methodology</h2>
-                                    <div className="flex items-center gap-1.5 text-xs font-bold text-[#6B8F5E]">
+                                    <div className="flex items-center gap-1.5 text-xs font-bold text-[#91C934]">
                                         <Lock className="w-3.5 h-3.5" /> SECURE CHECKOUT
                                     </div>
                                 </div>
@@ -1596,14 +1470,14 @@ function CheckoutContent() {
                                 {/* Payment Methods */}
                                 <div className="cart-item-card p-6 border-l-4 border-l-[#8B7A3D]">
                                     <p className="text-[#6B6B60] text-sm mb-5 font-medium">Select a payment option for your healing bundle:</p>
-                                    
+
                                     <div className="space-y-4">
-                                        <label className={`flex items-start sm:items-center gap-4 rounded-xl border-2 p-5 cursor-pointer transition-all ${paymentMethod === 'razorpay' ? 'border-[#6B8F5E] bg-[#DFE5D9]/50 shadow-sm' : 'border-[#D4CFC0] bg-white hover:border-[#CEDBCE]'}`}>
-                                            <input type="radio" name="payment-method" value="razorpay" checked={paymentMethod === 'razorpay'} onChange={() => setPaymentMethod('razorpay')} className="w-5 h-5 accent-[#6B8F5E] mt-0.5 sm:mt-0" />
+                                        <label className={`flex items-start sm:items-center gap-4 rounded-xl border-2 p-5 cursor-pointer transition-all ${paymentMethod === 'razorpay' ? 'border-[#91C934] bg-[#91C934]/5 shadow-sm' : 'border-[#D4CFC0] bg-white hover:border-[#CEDBCE]'}`}>
+                                            <input type="radio" name="payment-method" value="razorpay" checked={paymentMethod === 'razorpay'} onChange={() => setPaymentMethod('razorpay')} className="w-5 h-5 appearance-none rounded-full border border-[#D4CFC0] checked:border-[#91C934] checked:bg-[#91C934] checked:ring-2 checked:ring-white checked:ring-inset transition-all cursor-pointer focus:outline-none mt-0.5 sm:mt-0" />
                                             <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                                 <div>
                                                     <div className="flex items-center gap-2 mb-1">
-                                                        <CreditCard className={`h-5 w-5 ${paymentMethod === 'razorpay' ? 'text-[#6B8F5E]' : 'text-[#8B7A3D]'}`} />
+                                                        <CreditCard className={`h-5 w-5 ${paymentMethod === 'razorpay' ? 'text-[#91C934]' : 'text-[#8B7A3D]'}`} />
                                                         <span className="font-bold text-[#1A1A1A]">Online Payment (Secure)</span>
                                                     </div>
                                                     <p className="text-xs text-[#6B6B60]">Credit/Debit, Netbanking, UPI, Wallets</p>
@@ -1618,16 +1492,16 @@ function CheckoutContent() {
 
                                         {/* Cash on Delivery — only shown if feature flag is enabled */}
                                         {isCodEnabled && (
-                                        <label className={`flex items-start sm:items-center gap-4 rounded-xl border-2 p-5 cursor-pointer transition-all ${paymentMethod === 'cod' ? 'border-[#6B8F5E] bg-[#DFE5D9]/50 shadow-sm' : 'border-[#D4CFC0] bg-white hover:border-[#CEDBCE]'}`}>
-                                            <input type="radio" name="payment-method" value="cod" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} className="w-5 h-5 accent-[#6B8F5E] mt-0.5 sm:mt-0" />
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <Banknote className={`h-5 w-5 ${paymentMethod === 'cod' ? 'text-[#6B8F5E]' : 'text-[#8B7A3D]'}`} />
-                                                    <span className="font-bold text-[#1A1A1A]">Cash on Delivery</span>
+                                            <label className={`flex items-start sm:items-center gap-4 rounded-xl border-2 p-5 cursor-pointer transition-all ${paymentMethod === 'cod' ? 'border-[#91C934] bg-[#91C934]/5 shadow-sm' : 'border-[#D4CFC0] bg-white hover:border-[#CEDBCE]'}`}>
+                                                <input type="radio" name="payment-method" value="cod" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} className="w-5 h-5 appearance-none rounded-full border border-[#D4CFC0] checked:border-[#91C934] checked:bg-[#91C934] checked:ring-2 checked:ring-white checked:ring-inset transition-all cursor-pointer focus:outline-none mt-0.5 sm:mt-0" />
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <Banknote className={`h-5 w-5 ${paymentMethod === 'cod' ? 'text-[#91C934]' : 'text-[#8B7A3D]'}`} />
+                                                        <span className="font-bold text-[#1A1A1A]">Cash on Delivery</span>
+                                                    </div>
+                                                    <p className="text-xs text-[#6B6B60]">Settle the amount upon receiving your package.</p>
                                                 </div>
-                                                <p className="text-xs text-[#6B6B60]">Settle the amount upon receiving your package.</p>
-                                            </div>
-                                        </label>
+                                            </label>
                                         )}
                                     </div>
 
@@ -1635,7 +1509,7 @@ function CheckoutContent() {
                                     <div className="cart-item-card p-6 border-l-4 border-l-[#8B7A3D] mt-6">
                                         <h3 className="font-bold text-[#1A1A1A] mb-4 text-sm">Billing Address</h3>
                                         <label className="flex items-center gap-3 cursor-pointer group">
-                                            <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${billingSameAsShipping ? 'bg-[#6B8F5E] border-[#6B8F5E]' : 'border-[#D4CFC0] group-hover:border-[#6B8F5E]'}`}>
+                                            <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${billingSameAsShipping ? 'bg-[#91C934] border-[#91C934]' : 'border-[#D4CFC0] group-hover:border-[#91C934]'}`}>
                                                 {billingSameAsShipping && <div className="w-2.5 h-2.5 bg-white rounded-sm" />}
                                                 <input type="checkbox" className="hidden" checked={billingSameAsShipping} onChange={(e) => setBillingSameAsShipping(e.target.checked)} />
                                             </div>
@@ -1647,8 +1521,8 @@ function CheckoutContent() {
                                                 {savedAddresses.length > 0 && (
                                                     <div className="space-y-3">
                                                         {savedAddresses.map(addr => (
-                                                            <label key={`billing-${addr.address_id}`} className={`flex items-start gap-4 rounded-xl border p-4 cursor-pointer transition-colors ${selectedBillingAddressId === addr.address_id && !useNewBillingAddress ? 'border-[#6B8F5E] bg-[#DFE5D9] border-2 shadow-sm' : 'border-[#D4CFC0] bg-white hover:border-[#CEDBCE]'}`}>
-                                                                <input type="radio" name="billing-address" checked={selectedBillingAddressId === addr.address_id && !useNewBillingAddress} onChange={() => { setSelectedBillingAddressId(addr.address_id); setUseNewBillingAddress(false); }} className="mt-1 w-4 h-4 accent-[#6B8F5E]" />
+                                                            <label key={`billing-${addr.address_id}`} className={`flex items-start gap-4 rounded-xl border p-4 cursor-pointer transition-colors ${selectedBillingAddressId === addr.address_id && !useNewBillingAddress ? 'border-[#91C934] bg-[#91C934]/10 border-2 shadow-sm' : 'border-[#D4CFC0] bg-white hover:border-[#CEDBCE]'}`}>
+                                                                <input type="radio" name="billing-address" checked={selectedBillingAddressId === addr.address_id && !useNewBillingAddress} onChange={() => { setSelectedBillingAddressId(addr.address_id); setUseNewBillingAddress(false); }} className="mt-1 w-4 h-4 appearance-none rounded-full border border-[#D4CFC0] checked:border-[#91C934] checked:bg-[#91C934] checked:ring-2 checked:ring-white checked:ring-inset transition-all cursor-pointer focus:outline-none" />
                                                                 <div className="flex-1 text-left">
                                                                     <div className="flex items-center justify-between mb-1">
                                                                         <span className="font-bold text-[#1A1A1A] text-sm">{addr.label || 'Saved Address'}</span>
@@ -1657,7 +1531,7 @@ function CheckoutContent() {
                                                                 </div>
                                                             </label>
                                                         ))}
-                                                        <button onClick={() => setUseNewBillingAddress(true)} className={`mt-2 flex items-center gap-2 text-xs font-semibold transition-colors ${useNewBillingAddress ? 'text-[#6B8F5E]' : 'text-[#8B7A3D] hover:text-[#6B8F5E]'}`}>
+                                                        <button onClick={() => setUseNewBillingAddress(true)} className={`mt-2 flex items-center gap-2 text-xs font-semibold transition-colors ${useNewBillingAddress ? 'text-[#91C934]' : 'text-[#8B7A3D] hover:text-[#91C934]'}`}>
                                                             <MapPin className="h-3.5 w-3.5" /> Use a different billing address
                                                         </button>
                                                     </div>
@@ -1682,9 +1556,9 @@ function CheckoutContent() {
                                                                         control: (provided: any, state: any) => ({
                                                                             ...provided,
                                                                             borderRadius: '8px',
-                                                                            borderColor: state.isFocused ? '#6B8F5E' : '#D4CFC0',
+                                                                            borderColor: state.isFocused ? '#91C934' : '#D4CFC0',
                                                                             boxShadow: 'none',
-                                                                            '&:hover': { borderColor: '#6B8F5E' },
+                                                                            '&:hover': { borderColor: '#91C934' },
                                                                             backgroundColor: 'white',
                                                                             minHeight: '38px',
                                                                             fontSize: '13px',
@@ -1699,25 +1573,25 @@ function CheckoutContent() {
                                                         </div>
                                                         <div className="sm:col-span-2">
                                                             <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Address Line 1 *</label>
-                                                            <input type="text" value={newBillingAddress.address_line1} onChange={e => setNewBillingAddress({ ...newBillingAddress, address_line1: e.target.value })} className={`w-full rounded-lg border px-4 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.billing_address_line1 ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Street address" />
+                                                            <input type="text" value={newBillingAddress.address_line1} onChange={e => setNewBillingAddress({ ...newBillingAddress, address_line1: e.target.value })} className={`w-full rounded-lg border px-4 py-2 text-sm focus:border-[#91C934] focus:outline-none bg-white ${formErrors.billing_address_line1 ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Street address" />
                                                             {formErrors.billing_address_line1 && <p className="text-[9px] text-red-500 mt-0.5 font-bold">{formErrors.billing_address_line1}</p>}
                                                         </div>
                                                         <div>
                                                             <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">{billingConfig.labels.postalCode} *</label>
                                                             <div className="relative">
-                                                                <input type="text" value={newBillingAddress.pincode} onChange={e => setNewBillingAddress({ ...newBillingAddress, pincode: e.target.value })} className={`w-full rounded-lg border px-4 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.billing_pincode ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={billingConfig.labels.postalCode} />
-                                                                {isLookupLoading && <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 animate-spin text-[#6B8F5E]" />}
+                                                                <input type="text" value={newBillingAddress.pincode} onChange={e => setNewBillingAddress({ ...newBillingAddress, pincode: e.target.value })} className={`w-full rounded-lg border px-4 py-2 text-sm focus:border-[#91C934] focus:outline-none bg-white ${formErrors.billing_pincode ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={billingConfig.labels.postalCode} />
+                                                                {isLookupLoading && <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 animate-spin text-[#91C934]" />}
                                                             </div>
                                                             {formErrors.billing_pincode && <p className="text-[9px] text-red-500 mt-0.5 font-bold">{formErrors.billing_pincode}</p>}
                                                         </div>
                                                         <div>
                                                             <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">{billingConfig.labels.city} *</label>
-                                                            <input type="text" value={newBillingAddress.city} onChange={e => { setNewBillingAddress({ ...newBillingAddress, city: e.target.value }); setManualEdits(prev => ({ ...prev, billing_city: true })); }} className={`w-full rounded-lg border px-4 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.billing_city ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={billingConfig.labels.city} />
+                                                            <input type="text" value={newBillingAddress.city} onChange={e => { setNewBillingAddress({ ...newBillingAddress, city: e.target.value }); setManualEdits(prev => ({ ...prev, billing_city: true })); }} className={`w-full rounded-lg border px-4 py-2 text-sm focus:border-[#91C934] focus:outline-none bg-white ${formErrors.billing_city ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={billingConfig.labels.city} />
                                                             {formErrors.billing_city && <p className="text-[9px] text-red-500 mt-0.5 font-bold">{formErrors.billing_city}</p>}
                                                         </div>
                                                         <div>
                                                             <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">{billingConfig.labels.state} *</label>
-                                                            <input type="text" value={newBillingAddress.state} onChange={e => { setNewBillingAddress({ ...newBillingAddress, state: e.target.value }); setManualEdits(prev => ({ ...prev, billing_state: true })); }} className={`w-full rounded-lg border px-4 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.billing_state ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={billingConfig.labels.state} />
+                                                            <input type="text" value={newBillingAddress.state} onChange={e => { setNewBillingAddress({ ...newBillingAddress, state: e.target.value }); setManualEdits(prev => ({ ...prev, billing_state: true })); }} className={`w-full rounded-lg border px-4 py-2 text-sm focus:border-[#91C934] focus:outline-none bg-white ${formErrors.billing_state ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={billingConfig.labels.state} />
                                                             {formErrors.billing_state && <p className="text-[9px] text-red-500 mt-0.5 font-bold">{formErrors.billing_state}</p>}
                                                         </div>
                                                     </div>
@@ -1748,13 +1622,25 @@ function CheckoutContent() {
                                             <button onClick={() => setStep(1)} className="text-[11px] font-bold text-[#8B7A3D] uppercase hover:underline">Edit</button>
                                         </div>
                                         <p className="text-sm text-[#4A4A4A] leading-relaxed">
-                                            <span className="font-bold text-[#1A1A1A]">{user?.name || 'Customer'}</span><br />
+                                            <span className="font-bold text-[#1A1A1A]">{(() => {
+                                                if (useNewAddress) return newAddress.full_name || user?.name || 'Customer';
+                                                const selAddr = savedAddresses.find(a => a.address_id === selectedAddressId);
+                                                return selAddr?.full_name || user?.name || 'Customer';
+                                            })()}</span><br />
                                             {getSelectedAddressText()}<br />
-                                            {contactPhone && <>{contactPhone}<br /></>}
-                                            {contactEmail}
+                                            {(() => {
+                                                if (useNewAddress) return newAddress.phone;
+                                                const selAddr = savedAddresses.find(a => a.address_id === selectedAddressId);
+                                                return selAddr?.phone;
+                                            })() && <>{(() => {
+                                                if (useNewAddress) return newAddress.phone;
+                                                const selAddr = savedAddresses.find(a => a.address_id === selectedAddressId);
+                                                return selAddr?.phone || '';
+                                            })()}<br /></>}
+                                            {getCheckoutEmail()}
                                         </p>
                                     </div>
-                                    
+
                                     {/* Payment details */}
                                     <div className="cart-item-card p-5">
                                         <div className="flex justify-between items-start mb-3 border-b border-[#D4CFC0] pb-2">
@@ -1763,9 +1649,9 @@ function CheckoutContent() {
                                         </div>
                                         <div className="flex items-center gap-3">
                                             {paymentMethod === 'razorpay' ? (
-                                                <><CreditCard className="w-5 h-5 text-[#6B8F5E]" /> <span className="font-bold text-[#4A4A4A]">Online Payment</span></>
+                                                <><CreditCard className="w-5 h-5 text-[#91C934]" /> <span className="font-bold text-[#4A4A4A]">Online Payment</span></>
                                             ) : (
-                                                <><Banknote className="w-5 h-5 text-[#6B8F5E]" /> <span className="font-bold text-[#4A4A4A]">Cash on Delivery</span></>
+                                                <><Banknote className="w-5 h-5 text-[#91C934]" /> <span className="font-bold text-[#4A4A4A]">Cash on Delivery</span></>
                                             )}
                                         </div>
                                         <div className="mt-3 pt-2 border-t border-[#D4CFC0]/50">
@@ -1777,7 +1663,7 @@ function CheckoutContent() {
                                     </div>
                                 </div>
 
-                                
+
                                 <div className="mt-8">
                                     <button onClick={handlePlaceOrder} disabled={placing || paymentProcessing} className="cart-checkout-btn w-full text-center flex items-center justify-center gap-2 py-4 text-base">
                                         {placing || paymentProcessing ? <><Loader2 className="h-5 w-5 animate-spin" /> Processing Ritual...</> : <><Lock className="w-4 h-4" /> Place Final Order — {formatPrice(grandTotal)}</>}
@@ -1793,19 +1679,19 @@ function CheckoutContent() {
                         <div className="sticky top-28">
                             <div className="ritual-summary">
                                 <div className="ritual-summary-title">
-                                    <div className="w-8 h-8 rounded-full bg-[rgba(255,255,255,0.1)] flex items-center justify-center mr-2">
-                                        <Leaf className="w-4 h-4 text-white" />
+                                    <div className="w-8 h-8 rounded-full bg-[#F5F4F0] flex items-center justify-center mr-2 border border-[#E8E4DC]">
+                                        <Leaf className="w-4 h-4 text-[#91C934]" />
                                     </div>
                                     Ritual Investment
                                     <span className="ritual-summary-badge">{itemsCount} Item{itemsCount !== 1 ? 's' : ''}</span>
                                 </div>
-                                
+
                                 <div className="space-y-1 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar mt-4">
                                     {checkoutItems.map(item => {
                                         const price = isBuyNow ? (item as BuyNowItem).unit_price : (item as any).price ?? 0;
                                         const lineTotal = price * item.quantity;
                                         return (
-                                            <div key={item.product_id + (item.variant_id || '')} className="ritual-summary-item pb-3 border-b border-[rgba(255,255,255,0.1)] last:border-0 last:pb-0">
+                                            <div key={item.product_id + (item.variant_id || '')} className="ritual-summary-item pb-3 border-b border-[#E8E4DC] last:border-0 last:pb-0">
                                                 <div className="ritual-summary-item-img">
                                                     {item.image_url ? (
                                                         <img src={item.image_url} alt="" />
@@ -1855,32 +1741,32 @@ function CheckoutContent() {
                                         <div className="ritual-summary-total-label">Total Amount</div>
                                         <div className="ritual-summary-total-value mt-1">{formatPrice(grandTotal)}</div>
                                     </div>
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.05)]">
-                                        <Leaf className="h-5 w-5 text-white opacity-80" />
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#91C934]/20 bg-[#91C934]/10">
+                                        <Leaf className="h-5 w-5 text-[#91C934]" />
                                     </div>
                                 </div>
-                                
+
                                 {/* Promo Code in Sidebar only if not buy_now */}
                                 {!isBuyNow && step < 3 && !couponCode && (
-                                    <div className="mt-4 pt-4 border-t border-[rgba(255,255,255,0.1)]">
-                                        <p className="text-xs text-[rgba(255,255,255,0.7)] mb-2 font-bold uppercase tracking-wide">Promo Code</p>
+                                    <div className="mt-4 pt-4 border-t border-[#E8E4DC]">
+                                        <p className="text-xs text-[#6B6B60] mb-2 font-bold uppercase tracking-wide">Promo Code</p>
                                         <div className="flex gap-2">
-                                            <input type="text" value={couponInput} onChange={e => setCouponInput(e.target.value.toUpperCase())} placeholder="Enter code" className="flex-1 rounded border border-[rgba(255,255,255,0.3)] bg-[rgba(255,255,255,0.05)] px-3 py-1.5 text-sm text-white focus:outline-none focus:border-white font-mono uppercase" />
-                                            <button onClick={async () => { if (!couponInput.trim()) return; setApplyingCoupon(true); const ok = await applyCoupon(couponInput.trim()); if (ok) { toast.success('Coupon applied!'); setCouponInput(''); } setApplyingCoupon(false); }} disabled={applyingCoupon || !couponInput.trim()} className="bg-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.2)] text-white px-3 py-1.5 rounded text-sm font-bold transition-colors disabled:opacity-50">Apply</button>
+                                            <input type="text" value={couponInput} onChange={e => setCouponInput(e.target.value.toUpperCase())} placeholder="Enter code" className="flex-1 rounded border border-[#D4CFC0] bg-[#F5F4F0] px-3 py-1.5 text-sm text-[#1A1A1A] placeholder:text-[#A4A9A4] focus:outline-none focus:border-[#91C934] font-mono uppercase" />
+                                            <button onClick={async () => { if (!couponInput.trim()) return; setApplyingCoupon(true); const ok = await applyCoupon(couponInput.trim()); if (ok) { toast.success('Coupon applied!'); setCouponInput(''); } setApplyingCoupon(false); }} disabled={applyingCoupon || !couponInput.trim()} className="bg-[#91C934] hover:bg-[#7AB52A] text-white px-3 py-1.5 rounded text-sm font-bold transition-colors disabled:opacity-50">Apply</button>
                                         </div>
                                     </div>
                                 )}
 
                                 {isAuthenticated && wallet && wallet.balance > 0 && (
-                                    <div className="mt-4 pt-4 border-t border-[rgba(255,255,255,0.1)]">
-                                        <p className="text-xs text-[rgba(255,255,255,0.7)] mb-2 font-bold uppercase tracking-wide flex justify-between items-center">
+                                    <div className="mt-4 pt-4 border-t border-[#E8E4DC]">
+                                        <p className="text-xs text-[#6B6B60] mb-2 font-bold uppercase tracking-wide flex justify-between items-center">
                                             <span>Loyalty Points</span>
-                                            <span className="text-[#86EFAC]">{wallet.balance} available</span>
+                                            <span className="text-[#91C934] font-black">{wallet.balance} available</span>
                                         </p>
                                         <div className="flex gap-2">
-                                            <input 
-                                                type="number" 
-                                                value={redeemPoints} 
+                                            <input
+                                                type="number"
+                                                value={redeemPoints}
                                                 onChange={e => {
                                                     const val = e.target.value;
                                                     if (!val) setRedeemPoints('');
@@ -1888,17 +1774,17 @@ function CheckoutContent() {
                                                 }}
                                                 placeholder={`Max: ${maxRedeemablePoints}`}
                                                 max={maxRedeemablePoints}
-                                                className="flex-1 rounded border border-[rgba(255,255,255,0.3)] bg-[rgba(255,255,255,0.05)] px-3 py-1.5 text-sm text-white focus:outline-none focus:border-white font-mono" 
+                                                className="flex-1 rounded border border-[#D4CFC0] bg-[#F5F4F0] px-3 py-1.5 text-sm text-[#1A1A1A] placeholder:text-[#A4A9A4] focus:outline-none focus:border-[#91C934] font-mono"
                                             />
-                                            <button 
-                                                onClick={() => { setRedeemPoints(maxRedeemablePoints.toString()) }} 
-                                                className="bg-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.2)] text-white px-3 py-1.5 rounded text-sm font-bold transition-colors"
+                                            <button
+                                                onClick={() => { setRedeemPoints(maxRedeemablePoints.toString()) }}
+                                                className="bg-[#F5F4F0] border border-[#D4CFC0] hover:bg-[#E8E4DC] text-[#1A1A1A] px-3 py-1.5 rounded text-sm font-bold transition-colors"
                                             >
                                                 Max
                                             </button>
                                         </div>
                                         {pointsToRedeem > 0 && (
-                                            <p className="text-[10px] text-[#86EFAC] mt-1 text-right">
+                                            <p className="text-[10px] text-[#91C934] mt-1 text-right font-bold">
                                                 - {formatPrice(pointsToRedeem)} applied
                                             </p>
                                         )}
@@ -1959,7 +1845,7 @@ function CheckoutContent() {
 
 export default function CheckoutPage() {
     return (
-        <Suspense fallback={<div className="cart-leaf-bg min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-[#6B8F5E]" /></div>}>
+        <Suspense fallback={<div className="cart-leaf-bg min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-[#91C934]" /></div>}>
             <CheckoutContent />
         </Suspense>
     );

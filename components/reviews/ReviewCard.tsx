@@ -110,10 +110,10 @@ export default function ReviewCard({ review }: ReviewCardProps) {
 
             {/* Admin Reply */}
             {review.admin_reply && (
-                <div className="mt-4 ml-4 bg-[#3d5c3a]/5 p-4 rounded-xl border-l-2 border-[#3d5c3a]">
+                <div className="mt-4 ml-4 bg-[#91C934]/5 p-4 rounded-xl border-l-2 border-[#91C934]">
                     <div className="flex items-center gap-2 mb-1">
-                        <CornerDownRight size={14} className="text-[#3d5c3a]" />
-                        <span className="text-xs font-bold uppercase tracking-wider text-[#3d5c3a]">Vedashi Response</span>
+                        <CornerDownRight size={14} className="text-[#91C934]" />
+                        <span className="text-xs font-bold uppercase tracking-wider text-[#91C934]">Vedashi Response</span>
                         {review.admin_reply_at && (
                             <span className="text-xs text-gray-500 font-medium ml-1">
                                 {new Date(review.admin_reply_at).toLocaleDateString('en-US', {
@@ -131,14 +131,14 @@ export default function ReviewCard({ review }: ReviewCardProps) {
             {/* Footer */}
             <div className="mt-6 flex items-center justify-between gap-4 pt-4 border-t border-gray-100">
                 <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-[#3d5c3a] text-white flex items-center justify-center text-xs font-bold shadow-sm">
+                    <div className="h-8 w-8 rounded-full bg-[#91C934] text-white flex items-center justify-center text-xs font-bold shadow-sm">
                         {review.reviewer_name.charAt(0).toUpperCase()}
                     </div>
                     <div>
                         <span className="block text-sm font-bold text-gray-900">{review.reviewer_name}</span>
                         {review.is_verified_purchase && (
                             <span className="flex items-center gap-1 text-[10px] text-gray-500 font-medium">
-                                <BadgeCheck size={12} className="text-[#3d5c3a]" />
+                                <BadgeCheck size={12} className="text-[#91C934]" />
                                 Verified Purchase
                             </span>
                         )}
@@ -150,7 +150,7 @@ export default function ReviewCard({ review }: ReviewCardProps) {
                     <div className="flex items-center gap-2 bg-neutral-50 px-2.5 py-1 rounded-full border border-neutral-100">
                         <button
                             onClick={() => handleVote('up')}
-                            className={`flex items-center transition-colors hover:text-[#C5A46D] ${voteStatus === 'up' ? 'text-[#C5A46D]' : ''}`}
+                            className={`flex items-center transition-colors hover:text-[#91C934] ${voteStatus === 'up' ? 'text-[#91C934]' : ''}`}
                             aria-label="Upvote review"
                         >
                             <ThumbsUp size={14} className={voteStatus === 'up' ? 'fill-current' : ''} />

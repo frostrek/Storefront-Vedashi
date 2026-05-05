@@ -53,7 +53,7 @@ export default function StarRating({ value, onChange, size = 'md', showValue, cl
                                 <Star
                                     width={px}
                                     height={px}
-                                    className="fill-[#C5A46D] text-[#C5A46D] drop-shadow-[0_0_3px_rgba(197,164,109,0.4)]"
+                                    className="fill-[#FFD801] text-[#FFD801] drop-shadow-[0_0_3px_rgba(255,216,1,0.4)]"
                                     strokeWidth={1.5}
                                 />
                             </span>

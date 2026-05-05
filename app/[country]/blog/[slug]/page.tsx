@@ -35,14 +35,14 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-cream pt-8">
+            <div className="min-h-screen bg-white pt-8">
                 <div className="max-w-3xl mx-auto px-4 space-y-6">
-                    <div className="h-6 w-32 bg-cream-dark animate-shimmer rounded" />
-                    <div className="h-10 w-3/4 bg-cream-dark animate-shimmer rounded" />
-                    <div className="h-64 bg-cream-dark animate-shimmer rounded-2xl" />
+                    <div className="h-6 w-32 bg-gray-100 animate-shimmer rounded" />
+                    <div className="h-10 w-3/4 bg-gray-100 animate-shimmer rounded" />
+                    <div className="h-64 bg-gray-100 animate-shimmer rounded-2xl" />
                     <div className="space-y-3">
                         {[1, 2, 3, 4, 5].map(i => (
-                            <div key={i} className="h-4 bg-cream-dark animate-shimmer rounded" />
+                            <div key={i} className="h-4 bg-gray-100 animate-shimmer rounded" />
                         ))}
                     </div>
                 </div>
@@ -52,7 +52,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
 
     if (!post) {
         return (
-            <div className="min-h-screen bg-cream flex items-center justify-center">
+            <div className="min-h-screen bg-white flex items-center justify-center">
                 <div className="text-center">
                     <h1 className="text-3xl font-bold text-charcoal mb-3">Article Not Found</h1>
                     <p className="text-warm-gray mb-6">This article might have been moved or deleted.</p>
@@ -69,7 +69,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
         : '';
 
     return (
-        <div className="min-h-screen bg-cream">
+        <div className="min-h-screen bg-white">
             {/* Structured Data */}
             <script
                 type="application/ld+json"
@@ -109,7 +109,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
                         </Link>
                     )}
                     {post.blog_type && (
-                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-cream-dark text-warm-gray border border-light-border">
+                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-warm-gray border border-light-border">
                             {post.blog_type.replace(/_/g, ' ')}
                         </span>
                     )}
@@ -176,7 +176,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
                             <Link
                                 key={tag.tag_id}
                                 href={`/blog/tag/${tag.slug}`}
-                                className="px-3 py-1 rounded-full text-xs font-medium bg-cream-dark text-charcoal border border-light-border hover:border-burgundy/30 hover:text-burgundy transition-all"
+                                className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-charcoal border border-light-border hover:border-burgundy/30 hover:text-burgundy transition-all"
                             >
                                 #{tag.name}
                             </Link>
@@ -192,7 +192,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
                         prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
                         prose-p:mb-5
                         prose-a:text-burgundy prose-a:no-underline hover:prose-a:underline
-                        prose-blockquote:border-l-burgundy/40 prose-blockquote:bg-cream-dark prose-blockquote:rounded-r-xl prose-blockquote:py-1 prose-blockquote:px-5
+                        prose-blockquote:border-l-burgundy/40 prose-blockquote:bg-gray-100 prose-blockquote:rounded-r-xl prose-blockquote:py-1 prose-blockquote:px-5
                         prose-img:rounded-xl prose-img:border prose-img:border-light-border
                         prose-strong:text-charcoal"
                     dangerouslySetInnerHTML={{ __html: post.body }}

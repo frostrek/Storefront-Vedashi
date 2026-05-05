@@ -11,7 +11,7 @@ import { SkeletonProductGrid } from '@/components/Skeleton';
 import SearchBar from '@/components/SearchBar';
 import {
     SlidersHorizontal, X, Leaf, Loader2,
-    LayoutGrid, List
+    LayoutGrid, List, ChevronDown
 } from 'lucide-react';
 import { useFilters } from '@/hooks/useFilters';
 import { FILTER_CONFIGS, SORT_OPTIONS } from '@/lib/filterConfig';
@@ -79,6 +79,8 @@ function ProductsContent() {
     const [currentPage, setCurrentPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [sortOpen, setSortOpen] = useState(false);
+    const [activeFilterTab, setActiveFilterTab] = useState('Category');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [isMounted, setIsMounted] = useState(false);
 
@@ -227,12 +229,13 @@ function ProductsContent() {
 
     // Reset to page 1 whenever filters change
     useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         const cancelled = { value: false };
         setCurrentPage(1);
         setHasMore(true);
         fetchPage(1, cancelled, true);
         return () => { cancelled.value = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [filtersKey]);
 
     // GA4: view_item_list
@@ -297,9 +300,9 @@ function ProductsContent() {
     }, []);
 
     useEffect(() => {
-        document.body.style.overflow = mobileOpen ? 'hidden' : '';
+        document.body.style.overflow = (mobileOpen || sortOpen) ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
-    }, [mobileOpen]);
+    }, [mobileOpen, sortOpen]);
 
     /* ─── Search bar state ─── */
     // (managed inside SearchBar component; we just call setSearch)
@@ -347,6 +350,8 @@ function ProductsContent() {
                         selected={filters.brands}
                         onChange={setBrands}
                         maxVisible={brandOptions.length}
+                        searchable={true}
+                        placeholder="Search brands..."
                     />
                 </FilterSection>
             )}
@@ -487,67 +492,7 @@ function ProductsContent() {
 
             {/* ═══════ MAIN CONTENT ═══════ */}
             <div className="w-full max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-2 sm:pt-4 relative z-10">
-                {/* ── Mobile Sticky Controls (Filters, Sort, View) ── */}
-                <div className="sticky top-[60px] z-[40] bg-white/95 backdrop-blur-md pb-3 pt-3 lg:hidden border-b border-gray-100 mb-5 -mx-4 px-4 sm:-mx-6 sm:px-6 shadow-sm">
-                    <div className="flex items-center justify-between gap-3">
-                        <button
-                            onClick={() => setMobileOpen(true)}
-                            className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-[13px] font-bold text-gray-700 shadow-sm hover:shadow-md transition-all cursor-pointer flex-1"
-                        >
-                            <SlidersHorizontal className="h-4 w-4 text-[#3d5c3a]" />
-                            Filters
-                            {activeChips.length > 0 && (
-                                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#3d5c3a] text-[10px] font-bold text-white">
-                                    {activeChips.length}
-                                </span>
-                            )}
-                        </button>
 
-                        <div className="flex-1">
-                            <SortDropdown
-                                value={filters.sort || SORT_OPTIONS[0].value}
-                                onChange={setSort}
-                                options={SORT_OPTIONS}
-                            />
-                        </div>
-
-                        <div className="flex items-center rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden flex-shrink-0">
-                            <button
-                                onClick={() => { setViewMode('grid'); localStorage.setItem('vedashi_view_mode', 'grid'); }}
-                                className={`p-2.5 transition-colors cursor-pointer ${viewMode === 'grid' ? 'bg-[#3d5c3a] text-white' : 'text-gray-400 hover:text-gray-600'}`}
-                            >
-                                <LayoutGrid className="h-4 w-4" />
-                            </button>
-                            <button
-                                onClick={() => { setViewMode('list'); localStorage.setItem('vedashi_view_mode', 'list'); }}
-                                className={`p-2.5 transition-colors cursor-pointer ${viewMode === 'list' ? 'bg-[#3d5c3a] text-white' : 'text-gray-400 hover:text-gray-600'}`}
-                            >
-                                <List className="h-4 w-4" />
-                            </button>
-                        </div>
-                    </div>
-                    
-                    {/* Quick Category Pills for Mobile */}
-                    {categories.length > 0 && (
-                        <div className="mt-3.5 flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                            <button 
-                                onClick={() => setCategory('')}
-                                className={`flex-shrink-0 px-4 py-1.5 rounded-full text-[12px] font-bold transition-colors border ${!filters.category ? 'bg-gray-900 text-white border-gray-900 shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'}`}
-                            >
-                                All
-                            </button>
-                            {categories.map(c => (
-                                <button 
-                                    key={c.category_id}
-                                    onClick={() => setCategory(c.slug)}
-                                    className={`flex-shrink-0 px-4 py-1.5 rounded-full text-[12px] font-bold transition-colors border ${filters.category === c.slug ? 'bg-gray-900 text-white border-gray-900 shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'}`}
-                                >
-                                    {c.name}
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                </div>
 
                 <div className="lg:grid lg:grid-cols-[280px_1fr] lg:gap-10">
                     {/* ─── Desktop Sidebar ─── */}
@@ -562,23 +507,248 @@ function ProductsContent() {
 
                     {/* ─── Mobile Drawer ─── */}
                     {mobileOpen && (
-                        <div className="fixed inset-0 z-50 lg:hidden">
+                        <div className="fixed top-[100px] bottom-0 left-0 right-0 z-[100] lg:hidden">
                             <div
-                                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                                className="absolute inset-0 bg-black/40"
                                 onClick={() => setMobileOpen(false)}
                             />
-                            <div className="absolute left-0 top-0 bottom-0 w-[320px] max-w-[85vw] bg-white shadow-2xl flex flex-col overflow-hidden">
-                                <div className="flex items-center justify-between border-b border-gray-100 px-5 py-5">
+                            <div className="absolute inset-0 w-full bg-white flex flex-col overflow-hidden animate-in fade-in duration-300">
+                                <div className="flex-none flex items-center justify-between border-b border-gray-100 px-5 py-4 bg-white relative z-[110]">
                                     <h2 className="text-xl font-bold text-gray-900">Filters</h2>
+                                    <div className="flex items-center gap-4">
+                                        <button
+                                            onClick={clearAll}
+                                            className="text-[13px] font-bold text-[#91C934] hover:underline cursor-pointer"
+                                        >
+                                            Clear All
+                                        </button>
+                                        <button
+                                            onClick={() => setMobileOpen(false)}
+                                            className="rounded-full p-1 hover:bg-gray-100 transition-colors cursor-pointer"
+                                        >
+                                            <X className="h-6 w-6 text-gray-500" />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="flex-1 flex overflow-hidden">
+                                    {/* Left Sidebar: Headings */}
+                                    <div className="w-[120px] bg-gray-50 border-r border-gray-100 overflow-y-auto no-scrollbar">
+                                        {[
+                                            'Category', 'Brand', 'Price Range', 'Country', 'Rating', 'Discount', 'Form', 'Specialities',
+                                            ...filterAttributes.map(a => a.attribute_name),
+                                            'Availability'
+                                        ].map(tab => (
+                                            <button
+                                                key={tab}
+                                                onClick={() => setActiveFilterTab(tab)}
+                                                className={`w-full px-4 py-4 text-left text-[13px] font-bold transition-all border-l-4 ${activeFilterTab === tab
+                                                    ? 'bg-white text-[#91C934] border-[#91C934]'
+                                                    : 'text-gray-500 border-transparent hover:bg-gray-100'
+                                                    }`}
+                                            >
+                                                {tab}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Right Content: Filter Options */}
+                                    <div className="flex-1 overflow-y-auto px-5 py-4 no-scrollbar bg-white">
+                                        {activeFilterTab === 'Category' && (
+                                            <div className="space-y-4">
+                                                <h3 className="text-sm font-bold text-gray-900">Category</h3>
+                                                <div className="space-y-3">
+                                                    <select
+                                                        className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] font-medium focus:border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-colors cursor-pointer"
+                                                        value={filters.category}
+                                                        onChange={(e) => setCategory(e.target.value)}
+                                                    >
+                                                        <option value="">All Categories</option>
+                                                        {categories.map((cat: Category) => (
+                                                            <option key={cat.category_id} value={cat.slug}>{cat.name}</option>
+                                                        ))}
+                                                    </select>
+                                                    {filters.category && (categories.find((c: any) => c.slug === filters.category)?.children?.length ?? 0) > 0 && (
+                                                        <select
+                                                            className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] font-medium focus:border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-colors cursor-pointer"
+                                                            value={filters.sub_category}
+                                                            onChange={(e) => setSubCategory(e.target.value)}
+                                                        >
+                                                            <option value="">All Subcategories</option>
+                                                            {categories.find((c: Category) => c.slug === filters.category)?.children?.map((sub: Category) => (
+                                                                <option key={sub.category_id} value={sub.slug}>{sub.name}</option>
+                                                            ))}
+                                                        </select>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                        {activeFilterTab === 'Brand' && (
+                                            <div className="space-y-4">
+                                                <h3 className="text-sm font-bold text-gray-900">Brand</h3>
+                                                <CheckboxGroup
+                                                    options={brandOptions}
+                                                    selected={filters.brands}
+                                                    onChange={setBrands}
+                                                    maxVisible={brandOptions.length}
+                                                    searchable={true}
+                                                    placeholder="Search brands..."
+                                                />
+                                            </div>
+                                        )}
+                                        {activeFilterTab === 'Price Range' && (
+                                            <div className="space-y-6">
+                                                <h3 className="text-sm font-bold text-gray-900">Price Range</h3>
+                                                <div className="flex flex-wrap gap-2 text-xs">
+                                                    {[
+                                                        { label: 'Under ₹1,000', range: [0, 1000] as [number, number] },
+                                                        { label: '₹1,000 – ₹2,500', range: [1000, 2500] as [number, number] },
+                                                        { label: '₹2,500 – ₹5,000', range: [2500, 5000] as [number, number] },
+                                                        { label: '₹5,000+', range: [5000, Infinity] as [number, number] },
+                                                    ].map(p => (
+                                                        <button
+                                                            key={p.label}
+                                                            onClick={() => setPriceRange(p.range, priceMax)}
+                                                            className={`rounded-full border px-3 py-1.5 transition-colors cursor-pointer ${(filters.priceRange[0] === p.range[0] && filters.priceRange[1] === p.range[1])
+                                                                ? 'bg-gray-800 text-white border-gray-800 shadow-sm'
+                                                                : 'border-gray-200 bg-white text-gray-500 hover:border-gray-400 hover:text-gray-800'
+                                                                }`}
+                                                        >
+                                                            {p.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                <RangeSlider
+                                                    min={0}
+                                                    max={priceMax}
+                                                    step={priceMax <= 5000 ? 100 : (priceMax <= 20000 ? 500 : 1000)}
+                                                    value={[filters.priceRange[0] ?? 0, filters.priceRange[1] === Infinity ? priceMax : filters.priceRange[1]]}
+                                                    onChange={(val) => setPriceRange(val, priceMax)}
+                                                    formatLabel={v => formatPrice(v)}
+                                                />
+                                            </div>
+                                        )}
+                                        {activeFilterTab === 'Country' && (
+                                            <div className="space-y-4">
+                                                <h3 className="text-sm font-bold text-gray-900">Country</h3>
+                                                <div className="space-y-3">
+                                                    {displayCountryOptions.map((opt) => (
+                                                        <label key={opt} className="flex items-center gap-3 cursor-pointer group">
+                                                            <input
+                                                                type="radio"
+                                                                name="mobile-country"
+                                                                className="h-4 w-4 rounded-full border-gray-300 text-[#3d5c3a] focus:ring-[#3d5c3a] cursor-pointer"
+                                                                checked={filters.country === opt}
+                                                                onChange={() => setCountry(opt)}
+                                                            />
+                                                            <span className="text-[13px] text-gray-700 group-hover:text-gray-900 transition-colors">{opt}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                        {activeFilterTab === 'Rating' && (
+                                            <div className="space-y-4">
+                                                <h3 className="text-sm font-bold text-gray-900">Rating</h3>
+                                                <CheckboxGroup
+                                                    options={FILTER_CONFIGS.find(f => f.key === 'rating')?.staticOptions ?? []}
+                                                    selected={filters.ratings}
+                                                    onChange={setRatings}
+                                                />
+                                            </div>
+                                        )}
+                                        {activeFilterTab === 'Discount' && (
+                                            <div className="space-y-4">
+                                                <h3 className="text-sm font-bold text-gray-900">Discount</h3>
+                                                <div className="flex flex-col gap-3 text-[13px] text-gray-700">
+                                                    {[10, 20, 30, 40, 50].map(pct => (
+                                                        <label key={pct} className="flex items-center gap-3 cursor-pointer group">
+                                                            <input
+                                                                type="radio"
+                                                                name="mobile-discount"
+                                                                className="h-4 w-4 rounded-full border-gray-300 text-[#3d5c3a] focus:ring-[#3d5c3a] cursor-pointer"
+                                                                checked={filters.discountMin === pct}
+                                                                onChange={() => setDiscountMin(pct)}
+                                                            />
+                                                            <span className="group-hover:text-gray-900 transition-colors">{pct}% and above</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                        {activeFilterTab === 'Form' && (
+                                            <div className="space-y-4">
+                                                <h3 className="text-sm font-bold text-gray-900">Form</h3>
+                                                <CheckboxGroup
+                                                    options={formFilterOptions}
+                                                    selected={filters.form}
+                                                    onChange={setForm}
+                                                />
+                                            </div>
+                                        )}
+                                        {activeFilterTab === 'Specialities' && (
+                                            <div className="space-y-4">
+                                                <h3 className="text-sm font-bold text-gray-900">Specialities</h3>
+                                                <CheckboxGroup
+                                                    options={specialityFilterOptions}
+                                                    selected={filters.specialities}
+                                                    onChange={setSpecialities}
+                                                />
+                                            </div>
+                                        )}
+                                        {filterAttributes.map((attr) => activeFilterTab === attr.attribute_name && (
+                                            <div key={attr.attribute_id} className="space-y-4">
+                                                <h3 className="text-sm font-bold text-gray-900">{attr.attribute_name}</h3>
+                                                <CheckboxGroup
+                                                    options={attr.values.map((v) => v.value_name)}
+                                                    selected={filters.attributes[attr.attribute_slug] ? filters.attributes[attr.attribute_slug].map(slug => attr.values.find((v) => v.value_slug === slug)?.value_name || slug) : []}
+                                                    onChange={(selectedNames) => {
+                                                        const selectedSlugs = selectedNames.map(name => attr.values.find((v) => v.value_name === name)?.value_slug || name);
+                                                        // @ts-ignore
+                                                        setAttribute(attr.attribute_slug, selectedSlugs);
+                                                    }}
+                                                />
+                                            </div>
+                                        ))}
+                                        {activeFilterTab === 'Availability' && (
+                                            <div className="space-y-4">
+                                                <h3 className="text-sm font-bold text-gray-900">Availability</h3>
+                                                <div className="space-y-4">
+                                                    <ToggleSwitch
+                                                        label="In Stock Only"
+                                                        checked={filters.inStock}
+                                                        onChange={setInStock}
+                                                    />
+                                                    <ToggleSwitch
+                                                        label="Best Sellers"
+                                                        checked={filters.bestSellers}
+                                                        onChange={setBestSellers}
+                                                    />
+                                                    <ToggleSwitch
+                                                        label="New Arrivals"
+                                                        checked={filters.newArrivals}
+                                                        onChange={setNewArrivals}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Bottom Buttons */}
+                                <div className="flex-none border-t border-gray-100 flex bg-white pb-safe">
                                     <button
                                         onClick={() => setMobileOpen(false)}
-                                        className="rounded-full p-1.5 hover:bg-gray-100 transition-colors cursor-pointer"
+                                        className="flex-1 h-14 flex items-center justify-center text-[14px] font-bold text-gray-800 border-r border-gray-100 active:bg-gray-50 transition-colors"
                                     >
-                                        <X className="h-5 w-5 text-gray-400" />
+                                        Cancel
                                     </button>
-                                </div>
-                                <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 no-scrollbar">
-                                    {sidebarContent}
+                                    <button
+                                        onClick={() => setMobileOpen(false)}
+                                        className="flex-1 h-14 flex items-center justify-center text-[14px] font-bold text-[#91C934] active:bg-gray-50 transition-colors"
+                                    >
+                                        Apply Filters
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -601,7 +771,7 @@ function ProductsContent() {
                                 <div className="flex items-center rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
                                     <button
                                         onClick={() => { setViewMode('grid'); localStorage.setItem('vedashi_view_mode', 'grid'); }}
-                                        className={`p-2 transition-colors cursor-pointer ${viewMode === 'grid' ? 'bg-[#3d5c3a] text-white' : 'text-gray-400 hover:text-gray-600'}`}
+                                        className={`p-2 transition-colors cursor-pointer ${viewMode === 'grid' ? 'bg-[#91C934] text-white' : 'text-gray-400 hover:text-gray-600'}`}
                                         aria-label="Grid view"
                                         title="Grid view"
                                     >
@@ -609,7 +779,7 @@ function ProductsContent() {
                                     </button>
                                     <button
                                         onClick={() => { setViewMode('list'); localStorage.setItem('vedashi_view_mode', 'list'); }}
-                                        className={`p-2 transition-colors cursor-pointer ${viewMode === 'list' ? 'bg-[#3d5c3a] text-white' : 'text-gray-400 hover:text-gray-600'}`}
+                                        className={`p-2 transition-colors cursor-pointer ${viewMode === 'list' ? 'bg-[#91C934] text-white' : 'text-gray-400 hover:text-gray-600'}`}
                                         aria-label="List view"
                                         title="List view"
                                     >
@@ -710,6 +880,86 @@ function ProductsContent() {
             </div>
 
 
+
+            {/* ── Mobile Bottom Sticky Bar ── */}
+            {!mobileOpen && (
+                <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-white border-t border-gray-200 shadow-[0_-10px_30px_rgba(0,0,0,0.08)] pb-safe animate-in fade-in slide-in-from-bottom-5 duration-300">
+                    <div className="flex h-14">
+                        <button
+                            onClick={() => setMobileOpen(true)}
+                            className="flex-1 flex items-center justify-center gap-2.5 text-[14px] font-bold text-gray-800 border-r border-gray-100 active:bg-gray-50 transition-colors"
+                        >
+                            <SlidersHorizontal className="h-4 w-4 text-[#91C934]" />
+                            Filters
+                            {activeChips.length > 0 && (
+                                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#91C934] text-[10px] font-black text-white shadow-sm">
+                                    {activeChips.length}
+                                </span>
+                            )}
+                        </button>
+                        <button
+                            onClick={() => setSortOpen(true)}
+                            className="flex-1 flex items-center justify-center gap-2.5 text-[14px] font-bold text-gray-800 active:bg-gray-50 transition-colors"
+                        >
+                            <div className="flex flex-col items-start leading-none">
+                                <span className="text-[10px] text-gray-400 uppercase tracking-widest mb-0.5">Sort by</span>
+                                <span className="truncate max-w-[120px]">
+                                    {SORT_OPTIONS.find(o => o.value === (filters.sort || SORT_OPTIONS[0].value))?.label}
+                                </span>
+                            </div>
+                            <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Mobile Sort Bottom Sheet ── */}
+            {sortOpen && (
+                <div className="fixed inset-0 z-[1000] lg:hidden">
+                    <div
+                        className="absolute inset-0 bg-black/60 animate-in fade-in duration-300"
+                        onClick={() => setSortOpen(false)}
+                    />
+                    <div className="absolute bottom-0 left-0 right-0 bg-white overflow-hidden animate-in slide-in-from-bottom duration-500 ease-out shadow-2xl">
+                        <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mt-3 mb-1" />
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-50">
+                            <h3 className="text-xl font-black text-gray-900 tracking-tight">Sort By</h3>
+                            <button
+                                onClick={() => setSortOpen(false)}
+                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                            >
+                                <X className="h-5 w-5 text-gray-500" />
+                            </button>
+                        </div>
+                        <div className="px-3 py-4 space-y-1">
+                            {SORT_OPTIONS.map((option) => {
+                                const isSelected = (filters.sort || SORT_OPTIONS[0].value) === option.value;
+                                return (
+                                    <button
+                                        key={option.value}
+                                        onClick={() => {
+                                            setSort(option.value);
+                                            setSortOpen(false);
+                                        }}
+                                        className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl text-[15px] font-bold transition-all ${isSelected
+                                            ? 'bg-[#91C934]/5 text-[#91C934]'
+                                            : 'text-gray-600 hover:bg-gray-50'
+                                            }`}
+                                    >
+                                        {option.label}
+                                        {isSelected && (
+                                            <div className="h-5 w-5 rounded-full bg-[#91C934] flex items-center justify-center shadow-md">
+                                                <div className="h-2 w-2 rounded-full bg-white" />
+                                            </div>
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        <div className="h-10 bg-white" /> {/* Extra padding for home indicator */}
+                    </div>
+                </div>
+            )}
 
         </div>
     );

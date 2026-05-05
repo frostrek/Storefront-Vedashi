@@ -3,7 +3,7 @@
 import { useState, useEffect, use, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { getProduct, getProductDetails, getBestSellers, trackProductView, requestRestockNotification } from '@/lib/api';
+import { getProduct, getProductDetails, getBestSellers, trackProductView, requestRestockNotification, getRatingSummary } from '@/lib/api';
 import { trackEcommerce } from '@/lib/analytics/gtag';
 
 import { useCurrency } from '@/context/CurrencyContext';
@@ -13,7 +13,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useWishlist } from '@/context/WishlistContext';
 import ProductCard from '@/components/ProductCard';
 import { SkeletonLine, SkeletonReviewSection, SkeletonProductRow } from '@/components/Skeleton';
-import { Heart, ShoppingCart, Minus, Plus, Star, Truck, RotateCcw, ChevronRight, AlertTriangle, Sparkles, Info, Package, Award, BadgeCheck, Clock, Globe, Trash2, Share2 } from 'lucide-react';
+import { Heart, ShoppingCart, Minus, Plus, Star, Truck, RotateCcw, ChevronRight, AlertTriangle, Sparkles, Info, Package, Award, BadgeCheck, Clock, Globe, Trash2, Share2, Tag } from 'lucide-react';
 import ProductImageGallery from '@/components/gallery/ProductImageGallery';
 import LazySection from '@/components/lazy/LazySection';
 import toast from 'react-hot-toast';
@@ -29,6 +29,11 @@ const ReviewSection = dynamic(
     { ssr: false }
 );
 
+const ProductReel = dynamic(
+    () => import('@/components/ProductReel'),
+    { ssr: false }
+);
+
 const RecentlyViewedProducts = dynamic(
     () => import('@/components/RecentlyViewedProducts'),
     { ssr: false }
@@ -39,10 +44,7 @@ const SimilarProducts = dynamic(
     { ssr: false }
 );
 
-const ProductCarousel = dynamic(
-    () => import('@/components/ProductCarousel'),
-    { ssr: false }
-);
+
 
 interface Props {
     id: string;
@@ -78,12 +80,10 @@ function LazyBestSellers({ title, icon }: {
     }, []);
 
     return (
-        <ProductCarousel
+        <ProductReel
             title={title}
-            icon={icon}
             products={products}
             loading={loading}
-            idPrefix="best-sellers"
         />
     );
 }
@@ -105,6 +105,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
     const [selectedFlavor, setSelectedFlavor] = useState<string | null>(null);
     const [selectedPack, setSelectedPack] = useState<number | null>(null);
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+    const [ratingSummary, setRatingSummary] = useState<any>(null);
     const [activeInfoTab, setActiveInfoTab] = useState<'description' | 'howToUse' | 'specifications'>('description');
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -164,6 +165,9 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
     // Only fetch product details and variants (above-fold data)
     // Related products and reviews are deferred to their lazy sections
     useEffect(() => {
+        window.scrollTo(0, 0);
+        // Also scroll on next tick just in case
+        setTimeout(() => window.scrollTo(0, 0), 0);
         const load = async () => {
             if (!initialProduct) {
                 setLoading(true);
@@ -259,6 +263,16 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
         load();
     }, [id]);
 
+    useEffect(() => {
+        if (product?.product_id) {
+            getRatingSummary(product.product_id).then(res => {
+                if (res.success && res.data) {
+                    setRatingSummary(res.data);
+                }
+            });
+        }
+    }, [product?.product_id]);
+
     // ── Express checkout: auto-trigger Buy Now after login redirect ──
     useEffect(() => {
         if (searchParams.get('buyNow') === 'true' && isAuthenticated && product && !loading) {
@@ -288,6 +302,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
 
     if (loading) {
         return (
+
             <div className="min-h-screen bg-[#FDFCFB]">
                 <div className="mx-auto max-w-7xl px-4 py-8">
                     <div className="grid gap-10 lg:grid-cols-2">
@@ -392,10 +407,10 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
     };
 
     return (
-        <div className="min-h-screen bg-[#FDFCFB] pb-16">
+        <div className="min-h-screen bg-[#FFFFFF] pb-16">
             {/* Breadcrumb */}
             <div className="border-b border-light-border bg-white py-1">
-                <div className="mx-auto max-w-7xl px-4 py-1">
+                <div className="mx-auto max-w-[1440px] px-4 py-1">
                     <nav className="flex items-center gap-2 text-sm text-gray-500">
                         <Link href="/">Home</Link>
                         <ChevronRight className="h-3 w-3" />
@@ -414,11 +429,11 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                 </div>
             </div>
 
-            <div className="mx-auto max-w-7xl px-4 py-6">
+            <div className="mx-auto max-w-[1420px] px-4 py-4">
                 {/* ═══ ABOVE THE FOLD — loads immediately ═══ */}
-                <div className="grid gap-10 lg:grid-cols-2 items-start">
+                <div className="grid gap-2 lg:grid-cols-[50%_1fr] items-start">
                     {/* IMAGE GALLERY */}
-                    <div>
+                    <div className="w-full max-w-[700px] mx-auto lg:mx-0">
                         <ProductImageGallery
                             assets={product.assets}
                             productName={product.product_name}
@@ -431,74 +446,181 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                     </div>
 
                     {/* DETAILS */}
-                    <div className="space-y-5 pt-0 pr-4 lg:min-h-[700px]">
-                        {/* Vedashi Badges */}
-
-
-                        <div className="flex justify-between items-start gap-4">
-                            <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 italic tracking-tight leading-[1.1] flex-1">
-                                {selectedVariant?.variant_name ?? variants?.[0]?.variant_name ?? product.product_name}
-                            </h1>
-                            <button
-                                onClick={handleShare}
-                                className="p-3 rounded-full bg-white border border-gray-200 text-gray-600 hover:text-[#3d5c3a] hover:border-[#3d5c3a] hover:shadow-md transition-all group mt-1"
-                                title="Share product"
-                            >
-                                <Share2 size={20} className="group-hover:scale-110 transition-transform" />
-                            </button>
-                        </div>
-
-                        {(product.review_count && Number(product.review_count) > 0) ? (
-                            <div className="flex items-center gap-2 mt-2">
-                                <div className="flex text-[#C5A46D]">
-                                    {[...Array(5)].map((_, i) => {
-                                        const rating = Number(product.avg_rating) || 0;
-                                        const fill = Math.min(1, Math.max(0, rating - i));
-                                        return (
-                                            <svg key={i} className="w-4 h-4" viewBox="0 0 24 24">
-                                                <defs>
-                                                    <linearGradient id={`star-fill-${i}`}>
-                                                        <stop offset={`${fill * 100}%`} stopColor="#C5A46D" />
-                                                        <stop offset={`${fill * 100}%`} stopColor="#E5E7EB" />
-                                                    </linearGradient>
-                                                </defs>
-                                                <path fill={`url(#star-fill-${i})`} d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                                            </svg>
-                                        );
-                                    })}
-                                </div>
-                                <span className="text-sm text-gray-500">({product.review_count} Verified Review{Number(product.review_count) !== 1 ? 's' : ''})</span>
-                            </div>
-                        ) : (
-                            <p className="text-sm text-gray-400 mt-2">No reviews yet</p>
-                        )}
-
-                        {/* PRICE */}
-                        <div className="flex items-end gap-3 mt-4">
-                            <p className="text-2xl font-bold text-gray-900">
-                                {formatPrice(displayPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
-                                {!isDiscounted && <span className="text-sm font-normal text-gray-500 ml-1">/ set</span>}
-                            </p>
-                            {isDiscounted && (
-                                <>
-                                    <p className="text-base text-gray-400 line-through mb-0.5">
-                                        {formatPrice(originalPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
-                                    </p>
-                                    <span className="bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wide mb-0.5">
-                                        {discountPercent}% OFF
-                                    </span>
-                                </>
+                    <div className="space-y-1.5 pt-0 pr-0 lg:pr-4">
+                        {/* Product Badges */}
+                        <div className="flex flex-wrap gap-2">
+                            {product.is_best_seller && (
+                                <span className="inline-flex items-center justify-center bg-[#91C934] text-white text-[10px] font-extrabold px-3 py-1 rounded-md uppercase tracking-wider leading-none">
+                                    Bestseller
+                                </span>
+                            )}
+                            {product.is_new_arrival && (
+                                <span className="inline-flex items-center justify-center bg-[#FF0000] text-white text-[10px] font-extrabold px-3 py-1 rounded-md uppercase tracking-wider leading-none">
+                                    New Arrival
+                                </span>
                             )}
                         </div>
 
+                        {/* Title + Share */}
+                        <div className="flex justify-between items-start gap-3">
+                            <div className="flex-1">
+                                <h1 className="text-2xl lg:text-[28px] font-bold !font-sans text-black leading-snug">
+                                    {selectedVariant?.variant_name ?? variants?.[0]?.variant_name ?? product.product_name}
+                                </h1>
+                                {product.brand && (
+                                    <div className="mt-1">
+                                        <Link
+                                            href={`/products?brand=${encodeURIComponent(product.brand)}`}
+                                            className="text-sm font-semibold underline text-gray-500 hover:text-gray-700 transition-all"
+                                        >
+                                            {product.brand}
+                                        </Link>
+                                    </div>
+                                )}
+                            </div>
+                            <button
+                                onClick={handleShare}
+                                className="p-2.5 rounded-full bg-white border border-gray-200 text-gray-500 hover:text-[#91C934] hover:border-[#91C934] hover:shadow-md transition-all group flex-shrink-0 mt-1"
+                                title="Share product"
+                            >
+                                <Share2 size={18} className="group-hover:scale-110 transition-transform" />
+                            </button>
+                        </div>
+
+                        {/* Short description under title */}
                         {product.short_description && (
-                            <p className="text-[15px] leading-relaxed text-gray-600">
+                            <p className="text-sm text-gray-500 leading-relaxed -mt-1">
                                 {product.short_description}
                             </p>
                         )}
 
+                        {/* Rating + Reviews row */}
+                        {(Number(ratingSummary?.average_rating || product.avg_rating || 0) > 0 || (Number(ratingSummary?.total_reviews || product.review_count || 0) > 0)) ? (
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <div className="flex items-center gap-1">
+                                    <div className="flex">
+                                        {[...Array(5)].map((_, i) => {
+                                            const rating = Number(ratingSummary?.average_rating || product.avg_rating || 0);
+                                            const fill = Math.min(1, Math.max(0, rating - i));
+                                            return (
+                                                <svg key={i} className="w-4 h-4" viewBox="0 0 24 24">
+                                                    <defs>
+                                                        <linearGradient id={`star-fill-${i}`}>
+                                                            <stop offset={`${fill * 100}%`} stopColor="#FFD801" />
+                                                            <stop offset={`${fill * 100}%`} stopColor="#E5E7EB" />
+                                                        </linearGradient>
+                                                    </defs>
+                                                    <path fill={`url(#star-fill-${i})`} d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                                </svg>
+                                            );
+                                        })}
+                                    </div>
+                                    <span className="text-sm font-semibold text-gray-800 ml-1">{Number(ratingSummary?.average_rating || product.avg_rating || 0).toFixed(1)}</span>
+                                </div>
+                                {(ratingSummary?.total_reviews || Number(product.review_count || 0)) > 0 && (
+                                    <span className="text-sm text-gray-500">({Number(ratingSummary?.total_reviews || product.review_count || 0).toLocaleString()} review{(ratingSummary?.total_reviews || Number(product.review_count || 0)) !== 1 ? 's' : ''})</span>
+                                )}
+                                {Number((product as any).total_sold || 0) > 0 && (
+                                    <span className="text-sm text-gray-500 flex items-center gap-1">
+                                        <span className="text-green-600">●</span> {(product as any).total_sold}+ bought this month
+                                    </span>
+                                )}
+                            </div>
+                        ) : (
+                            <p className="text-sm text-gray-400 italic">No reviews yet</p>
+                        )}
+
+
+                        {/* Divider */}
+                        <hr className="border-gray-100" />
+
+
+
+                        {/* PRICE BLOCK */}
+                        <div className="p-4 rounded-xl bg-white shadow-[inset_0_0_0_1px_#E9ECEF] space-y-1">
+                            <div className="flex flex-col gap-1">
+                                {isDiscounted && (
+                                    <>
+                                        <div className="text-[#1e3a8a] text-[13px] leading-none mb-1">
+                                            <span className="font-black">WOW!</span> <span className="font-semibold">Limited Time Offer</span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <span className="bg-[#C1262D] text-white text-xs font-bold px-2 py-0.5 rounded-sm">
+                                                {discountPercent}% OFF
+                                            </span>
+                                            <div className="flex items-center gap-1.5 text-sm">
+                                                <span className="text-gray-500">MRP</span>
+                                                <span className="text-gray-400 line-through">
+                                                    {formatPrice(originalPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                                <div className="flex items-baseline gap-2">
+                                    <p className="text-3xl font-extrabold text-[#C1262D]">
+                                        {formatPrice(displayPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
+                                    </p>
+                                    <span className="text-sm text-gray-500">
+                                        {selectedVariant?.size_label && selectedVariant.size_label.toLowerCase() !== 'standard'
+                                            ? `(${selectedVariant.size_label})`
+                                            : 'Inclusive of all taxes'}
+                                    </span>
+                                </div>
+                            </div>
+                            {selectedVariant?.size_label && selectedVariant.size_label.toLowerCase() !== 'standard' && (
+                                <p className="text-sm text-gray-500">Inclusive of all taxes</p>
+                            )}
+                            <hr className="border-gray-200" />
+                            <div className="pt-2">
+                                <p className="text-[11px] text-gray-400 uppercase tracking-tight leading-none mb-1">MRP</p>
+                                <div className="flex items-baseline gap-1.5">
+                                    <span className="text-xl font-bold text-black">
+                                        {formatPrice(originalPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
+                                    </span>
+                                    <span className="text-[12px] text-gray-400">(Inclusive of all taxes)</span>
+                                </div>
+                            </div>
+
+
+                        </div>
+
+                        {/* COUPON ROW */}
+                        <div className="flex items-center justify-between border border-dashed border-gray-300 bg-[#FFFFFF] rounded-xl p-1 transition-all">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-sm text-[#91C934]">
+                                    <Tag size={18} />
+                                </div>
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
+                                    <span className="text-[15px] font-bold text-gray-800">Extra 10% OFF</span>
+                                    <span className="text-sm text-gray-500">Only for New Users.</span>
+                                </div>
+                            </div>
+                            <div className="bg-white px-3 py-1 rounded-lg border border-gray-200 shadow-sm">
+                                <span className="text-[13px] text-[#91C934] font-bold tracking-wider">Code : NEWUSER</span>
+                            </div>
+                        </div>
+
+                        {/* GUARANTEED DELIVERY ROW */}
+                        <div className="border border-dashed border-gray-300 rounded-lg p-2">
+                            <div className="flex items-start gap-3">
+                                <Truck className="h-5 w-5 text-gray-400 mt-0.5" />
+                                <div className="flex-1">
+                                    <p className="text-sm text-gray-800">
+                                        Guaranteed delivery within <span className="font-bold text-[#91C934]">14 days </span>of ordering.
+                                    </p>
+
+                                </div>
+                            </div>
+                        </div>
+
+
+                        {/* Divider */}
+                        <hr className="border-gray-100" />
+
+
                         {/* ✅ VARIANT SELECTORS: Weight, Strength, Volume, Count, Flavor, Pack */}
-                        <div className="min-h-[120px]">
+                        <div className="min-h-[20px]">
                             {variants.length > 0 && (() => {
                                 const uniqueWeights = [...new Set(variants.map((v: ProductVariant) => v.weight_g as number))].filter(Boolean).sort((a, b) => a - b);
                                 const uniqueStrengths = [...new Set(variants.map((v: ProductVariant) => v.strength ? `${v.strength} ${v.strength_unit || ''}`.trim() : null))].filter(Boolean);
@@ -607,48 +729,48 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-6 pb-4 border-b border-gray-100">
                                                 {hasSingleWeight && (
                                                     <div className="flex items-baseline">
-                                                        <span className="text-sm text-gray-500 mr-2">Weight:</span>
+                                                        <span className="text-sm text-gray-900 mr-2 font-medium">Weight:</span>
                                                         <span className="text-sm font-medium text-gray-900">{formatWeight(uniqueWeights[0])}</span>
                                                     </div>
                                                 )}
                                                 {hasSingleStrength && (
                                                     <div className="flex items-baseline">
-                                                        <span className="text-sm text-gray-500 mr-2">Strength:</span>
+                                                        <span className="text-sm text-gray-900 mr-2 font-medium">Strength:</span>
                                                         <span className="text-sm font-medium text-gray-900">{uniqueStrengths[0]}</span>
                                                     </div>
                                                 )}
                                                 {hasSingleVolume && (
                                                     <div className="flex items-baseline">
-                                                        <span className="text-sm text-gray-500 mr-2">Volume:</span>
+                                                        <span className="text-sm text-gray-900 mr-2 font-medium">Volume:</span>
                                                         <span className="text-sm font-medium text-gray-900">{formatVolume(uniqueVolumes[0])}</span>
                                                     </div>
                                                 )}
                                                 {hasSingleCount && (
                                                     <div className="flex items-baseline">
-                                                        <span className="text-sm text-gray-500 mr-2">Count:</span>
+                                                        <span className="text-sm text-gray-900 mr-2 font-medium">Count:</span>
                                                         <span className="text-sm font-medium text-gray-900">{uniqueCounts[0]}</span>
                                                     </div>
                                                 )}
                                                 {hasSingleFlavor && (
                                                     <div className="flex items-baseline">
-                                                        <span className="text-sm text-gray-500 mr-2">Flavour:</span>
+                                                        <span className="text-sm text-gray-900 mr-2 font-medium">Flavour:</span>
                                                         <span className="text-sm font-medium text-gray-900 capitalize">{uniqueFlavors[0]}</span>
                                                     </div>
                                                 )}
                                                 {hasSinglePack && (
                                                     <div className="flex items-baseline">
-                                                        <span className="text-sm text-gray-500 mr-2">Pack:</span>
+                                                        <span className="text-sm text-gray-900 mr-2 font-medium">Pack:</span>
                                                         <span className="text-sm font-medium text-gray-900">Pack of {uniquePacks[0]}</span>
                                                     </div>
                                                 )}
                                             </div>
                                         )}
 
-                                        {/* Choose Weight */}
+                                        {/* Choose Weight / Size */}
                                         {uniqueWeights.length > 1 && (
-                                            <div>
-                                                <p className="text-sm font-semibold mb-2">Choose Weight:</p>
-                                                <div className="flex gap-2 flex-wrap">
+                                            <div className="flex items-start gap-3">
+                                                <p className="text-sm font-bold text-gray-900 w-[65px] pt-2.5 flex-shrink-0">Size</p>
+                                                <div className="flex gap-2.5 flex-wrap flex-1">
                                                     {uniqueWeights.map((w) => {
                                                         const isSelected = selectedWeight === w;
                                                         const available = checkAvailable('weight', w);
@@ -659,12 +781,12 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                                                 key={w}
                                                                 onClick={() => active && updateSelection({ weight: w })}
                                                                 disabled={!active}
-                                                                className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200 shadow-sm
+                                                                className={`px-5 py-2 rounded-lg border text-sm font-medium transition-all duration-200
                                                                     ${isSelected
-                                                                        ? 'bg-[#3d5c3a] text-white border-[#3d5c3a] shadow-lg scale-[1.02]'
+                                                                        ? 'bg-white text-[#91C934] border-[#91C934] border-2 shadow-sm'
                                                                         : !available
-                                                                            ? 'border-gray-300 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
-                                                                            : 'bg-white border-gray-200 text-gray-700 hover:bg-[#edf5ed] hover:border-[#3d5c3a]/40 hover:text-[#3d5c3a] hover:shadow-md'
+                                                                            ? 'border-gray-200 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
+                                                                            : 'bg-white border-gray-300 text-gray-700 hover:border-[#91C934] hover:text-[#91C934]'
                                                                     }`}
                                                             >
                                                                 {formatWeight(w)}
@@ -677,9 +799,9 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
 
                                         {/* By Strength */}
                                         {uniqueStrengths.length > 1 && (
-                                            <div>
-                                                <p className="text-sm font-semibold mb-2">By Strength:</p>
-                                                <div className="flex gap-2 flex-wrap">
+                                            <div className="flex items-start gap-3">
+                                                <p className="text-sm font-bold text-gray-900 w-[65px] pt-2.5 flex-shrink-0">Strength</p>
+                                                <div className="flex gap-2.5 flex-wrap flex-1">
                                                     {uniqueStrengths.map((str) => {
                                                         const isSelected = selectedStrength === str;
                                                         const available = checkAvailable('strength', str);
@@ -690,12 +812,12 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                                                 key={str}
                                                                 onClick={() => active && updateSelection({ strength: str })}
                                                                 disabled={!active}
-                                                                className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200 shadow-sm
+                                                                className={`px-5 py-2 rounded-lg border text-sm font-medium transition-all duration-200
                                                                     ${isSelected
-                                                                        ? 'bg-[#3d5c3a] text-white border-[#3d5c3a] shadow-lg scale-[1.02]'
+                                                                        ? 'bg-white text-[#91C934] border-[#91C934] border-2 shadow-sm'
                                                                         : !available
-                                                                            ? 'border-gray-300 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
-                                                                            : 'bg-white border-gray-200 text-gray-700 hover:bg-[#edf5ed] hover:border-[#3d5c3a]/40 hover:text-[#3d5c3a] hover:shadow-md'
+                                                                            ? 'border-gray-200 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
+                                                                            : 'bg-white border-gray-300 text-gray-700 hover:border-[#91C934] hover:text-[#91C934]'
                                                                     }`}
                                                             >
                                                                 {str}
@@ -708,9 +830,9 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
 
                                         {/* Choose Volume */}
                                         {uniqueVolumes.length > 1 && (
-                                            <div>
-                                                <p className="text-sm font-semibold mb-2">Choose Volume:</p>
-                                                <div className="flex gap-2 flex-wrap">
+                                            <div className="flex items-start gap-3">
+                                                <p className="text-sm font-bold text-gray-900 w-[65px] pt-2.5 flex-shrink-0">Volume</p>
+                                                <div className="flex gap-2.5 flex-wrap flex-1">
                                                     {uniqueVolumes.map((vol) => {
                                                         const isSelected = selectedVolume === vol;
                                                         const available = checkAvailable('volume', vol);
@@ -721,12 +843,12 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                                                 key={vol}
                                                                 onClick={() => active && updateSelection({ volume: vol })}
                                                                 disabled={!active}
-                                                                className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200 shadow-sm
+                                                                className={`px-5 py-2 rounded-lg border text-sm font-medium transition-all duration-200
                                                                     ${isSelected
-                                                                        ? 'bg-[#3d5c3a] text-white border-[#3d5c3a] shadow-lg scale-[1.02]'
+                                                                        ? 'bg-white text-[#91C934] border-[#91C934] border-2 shadow-sm'
                                                                         : !available
-                                                                            ? 'border-gray-300 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
-                                                                            : 'bg-white border-gray-200 text-gray-700 hover:bg-[#edf5ed] hover:border-[#3d5c3a]/40 hover:text-[#3d5c3a] hover:shadow-md'
+                                                                            ? 'border-gray-200 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
+                                                                            : 'bg-white border-gray-300 text-gray-700 hover:border-[#91C934] hover:text-[#91C934]'
                                                                     }`}
                                                             >
                                                                 {formatVolume(vol)}
@@ -739,9 +861,9 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
 
                                         {/* By Count */}
                                         {uniqueCounts.length > 1 && (
-                                            <div>
-                                                <p className="text-sm font-semibold mb-2">By Count:</p>
-                                                <div className="flex gap-2 flex-wrap">
+                                            <div className="flex items-start gap-3">
+                                                <p className="text-sm font-bold text-gray-900 w-[65px] pt-2.5 flex-shrink-0">Count</p>
+                                                <div className="flex gap-2.5 flex-wrap flex-1">
                                                     {uniqueCounts.map((countStr) => {
                                                         const isSelected = selectedCount === countStr;
                                                         const available = checkAvailable('count', countStr);
@@ -752,12 +874,12 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                                                 key={countStr}
                                                                 onClick={() => active && updateSelection({ count: countStr })}
                                                                 disabled={!active}
-                                                                className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200 shadow-sm
+                                                                className={`px-5 py-2 rounded-lg border text-sm font-medium transition-all duration-200
                                                                     ${isSelected
-                                                                        ? 'bg-[#3d5c3a] text-white border-[#3d5c3a] shadow-lg scale-[1.02]'
+                                                                        ? 'bg-white text-[#91C934] border-[#91C934] border-2 shadow-sm'
                                                                         : !available
-                                                                            ? 'border-gray-300 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
-                                                                            : 'bg-white border-gray-200 text-gray-700 hover:bg-[#edf5ed] hover:border-[#3d5c3a]/40 hover:text-[#3d5c3a] hover:shadow-md'
+                                                                            ? 'border-gray-200 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
+                                                                            : 'bg-white border-gray-300 text-gray-700 hover:border-[#91C934] hover:text-[#91C934]'
                                                                     }`}
                                                             >
                                                                 {countStr}
@@ -770,9 +892,9 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
 
                                         {/* By Flavor */}
                                         {uniqueFlavors.length > 1 && (
-                                            <div>
-                                                <p className="text-sm font-semibold mb-2">By Flavour:</p>
-                                                <div className="flex gap-2 flex-wrap">
+                                            <div className="flex items-start gap-3">
+                                                <p className="text-sm font-bold text-gray-900 w-[65px] pt-2.5 flex-shrink-0">Flavour</p>
+                                                <div className="flex gap-2.5 flex-wrap flex-1">
                                                     {uniqueFlavors.map((flav) => {
                                                         const isSelected = selectedFlavor === flav;
                                                         const available = checkAvailable('flavor', flav);
@@ -783,12 +905,12 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                                                 key={flav}
                                                                 onClick={() => active && updateSelection({ flavor: flav })}
                                                                 disabled={!active}
-                                                                className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200 shadow-sm
+                                                                className={`px-5 py-2 rounded-lg border text-sm font-medium transition-all duration-200
                                                                     ${isSelected
-                                                                        ? 'bg-[#3d5c3a] text-white border-[#3d5c3a] shadow-lg scale-[1.02]'
+                                                                        ? 'bg-white text-[#91C934] border-[#91C934] border-2 shadow-sm'
                                                                         : !available
-                                                                            ? 'border-gray-300 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
-                                                                            : 'bg-white border-gray-200 text-gray-700 hover:bg-[#edf5ed] hover:border-[#3d5c3a]/40 hover:text-[#3d5c3a] hover:shadow-md'
+                                                                            ? 'border-gray-200 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
+                                                                            : 'bg-white border-gray-300 text-gray-700 hover:border-[#91C934] hover:text-[#91C934]'
                                                                     }`}
                                                             >
                                                                 {flav}
@@ -799,11 +921,11 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                             </div>
                                         )}
 
-                                        {/* Choose Pack */}
+                                        {/* Pack of */}
                                         {uniquePacks.length > 1 && (
-                                            <div>
-                                                <p className="text-sm font-semibold mb-2">Choose Pack:</p>
-                                                <div className="flex gap-2 flex-wrap">
+                                            <div className="flex items-start gap-3">
+                                                <p className="text-sm font-bold text-gray-900 w-[65px] pt-3 flex-shrink-0">Pack of</p>
+                                                <div className="flex gap-2.5 flex-wrap flex-1">
                                                     {uniquePacks.map((pack) => {
                                                         const isSelected = selectedPack === pack;
                                                         const available = checkAvailable('pack', pack);
@@ -814,15 +936,15 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                                                 key={pack}
                                                                 onClick={() => active && updateSelection({ pack })}
                                                                 disabled={!active}
-                                                                className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200 shadow-sm
+                                                                className={`w-11 h-11 rounded-lg border text-sm font-semibold transition-all duration-200 flex items-center justify-center
                                                                     ${isSelected
-                                                                        ? 'bg-[#3d5c3a] text-white border-[#3d5c3a] shadow-lg scale-[1.02]'
+                                                                        ? 'bg-white text-[#91C934] border-[#91C934] border-2 shadow-sm'
                                                                         : !available
-                                                                            ? 'border-gray-300 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
-                                                                            : 'bg-white border-gray-200 text-gray-700 hover:bg-[#edf5ed] hover:border-[#3d5c3a]/40 hover:text-[#3d5c3a] hover:shadow-md'
+                                                                            ? 'border-gray-200 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
+                                                                            : 'bg-white border-gray-300 text-gray-700 hover:border-[#91C934] hover:text-[#91C934]'
                                                                     }`}
                                                             >
-                                                                Pack of {pack}
+                                                                {pack}
                                                             </button>
                                                         );
                                                     })}
@@ -835,58 +957,30 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                             })()}
                         </div>
 
-                        {/* STOCK AVAILABILITY BADGE & QUANTITY COUNTER */}
-                        <div className="flex items-center flex-wrap gap-4">
-                            {isComingSoon ? (
-                                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
-                                    🕒 Coming Soon
-                                </div>
-                            ) : isExpired ? (
-                                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200">
-                                    <AlertTriangle size={12} /> Availability Ended
-                                </div>
-                            ) : stockQty !== null && (
-                                <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${isOutOfStock
-                                    ? 'bg-red-50 text-red-600 border border-red-200'
-                                    : stockQty <= 5
-                                        ? 'bg-amber-50 text-amber-600 border border-amber-200'
-                                        : 'bg-emerald-50 text-emerald-600 border border-emerald-200'
-                                    }`}>
-                                    {isOutOfStock ? (
-                                        <><AlertTriangle size={12} /> Out of Stock</>
-                                    ) : stockQty <= 5 ? (
-                                        <><AlertTriangle size={12} /> Only {stockQty} left</>
-                                    ) : (
-                                        <>✓ In Stock</>
-                                    )}
-                                </div>
-                            )}
 
-                            {!isUnavailable && !existingCartItem && (
-                                <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-0.5 shadow-sm">
-                                    <button
-                                        onClick={handleMinus}
-                                        disabled={pageQuantity <= 1}
-                                        className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-gray-100 transition-colors disabled:opacity-30 text-gray-600"
-                                    >
-                                        <Minus className="h-4 w-4" />
-                                    </button>
-                                    <span className="text-sm font-bold text-gray-900 w-6 text-center select-none">
-                                        {pageQuantity}
-                                    </span>
-                                    <button
-                                        onClick={handlePlus}
-                                        disabled={pageQuantity >= effectiveMaxQty}
-                                        className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-gray-100 transition-colors disabled:opacity-30 text-gray-600"
-                                    >
-                                        <Plus className="h-3.5 w-3.5" />
-                                    </button>
-                                </div>
-                            )}
-                        </div>
 
-                        {/* QUANTITY + CART */}
-                        <div className="space-y-4 pt-4 mt-2">
+
+                        {/* STOCK BADGE (Hidden if available, shown if issues) */}
+                        {isUnavailable && (
+                            <div className="flex items-center gap-4 py-2">
+                                {isComingSoon ? (
+                                    <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+                                        🕒 Coming Soon
+                                    </div>
+                                ) : isExpired ? (
+                                    <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200">
+                                        <AlertTriangle size={12} /> Availability Ended
+                                    </div>
+                                ) : isOutOfStock && (
+                                    <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200">
+                                        <AlertTriangle size={12} /> Out of Stock
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* QUANTITY + ACTION BUTTONS ROW */}
+                        <div className="pt-2">
                             {isOutOfStock ? (
                                 <div className="bg-red-50 p-4 rounded-xl border border-red-100 flex flex-col gap-3">
                                     <div className="flex items-center gap-2 text-red-700 font-semibold mb-1">
@@ -911,8 +1005,9 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                     </div>
                                 </div>
                             ) : existingCartItem ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <div className="flex items-center justify-between border border-[#3d5c3a] shadow-[0px_0px_0px_2px_rgba(61,92,58,0.1)] rounded-xl py-1 px-2 bg-white h-[56px] animate-in fade-in">
+                                <div className="grid grid-cols-[auto_1fr_1fr] gap-3">
+                                    {/* Qty Selector */}
+                                    <div className="flex items-center justify-between border border-gray-300 rounded-lg p-1 bg-white h-[48px] w-[110px]">
                                         <button
                                             onClick={async () => {
                                                 const newQty = existingCartQty - 1;
@@ -924,14 +1019,11 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                                 }
                                             }}
                                             disabled={cartLoading}
-                                            className="w-10 h-10 flex items-center justify-center text-[#3d5c3a] hover:bg-[#3d5c3a]/10 rounded-lg transition"
+                                            className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-gray-800 transition"
                                         >
-                                            {existingCartQty <= 1 ? <Trash2 size={18} /> : <Minus size={18} />}
+                                            {existingCartQty <= 1 ? <Trash2 size={16} /> : <Minus size={16} />}
                                         </button>
-                                        <div className="flex flex-col items-center justify-center">
-                                            <span className="text-base font-black text-[#3d5c3a] leading-none mb-0.5">{existingCartQty}</span>
-                                            <span className="text-[9px] font-bold uppercase tracking-widest text-warm-gray leading-none">In Cart</span>
-                                        </div>
+                                        <span className="text-base font-bold text-gray-900">{existingCartQty}</span>
                                         <button
                                             onClick={async () => {
                                                 const maxStock = stockQty ?? 99;
@@ -942,106 +1034,76 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                                 await updateQuantity(existingCartItem.cart_item_id, existingCartQty + 1);
                                             }}
                                             disabled={cartLoading || existingCartQty >= (stockQty ?? 99)}
-                                            className="w-10 h-10 flex items-center justify-center text-[#3d5c3a] bg-[#3d5c3a]/5 hover:bg-[#3d5c3a]/15 hover:text-black rounded-lg transition disabled:opacity-30 disabled:cursor-not-allowed"
+                                            className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-gray-800 transition disabled:opacity-30 disabled:cursor-not-allowed"
                                         >
-                                            <Plus size={18} />
+                                            <Plus size={16} />
                                         </button>
                                     </div>
                                     <button
                                         onClick={() => router.push(`/${country || 'in'}/cart`)}
-                                        className="w-full bg-[#f8f5f0] border border-[#e8e1d5] hover:bg-white hover:border-[#3d5c3a] hover:text-[#3d5c3a] text-[#36453A] font-bold rounded-xl h-[56px] transition-colors flex items-center justify-center gap-2 group shadow-sm"
+                                        className="w-full bg-white border border-gray-300 hover:border-[#91C934] text-gray-800 font-bold rounded-lg h-[48px] transition-colors flex items-center justify-center gap-2 group"
                                     >
-                                        <ShoppingCart size={18} className="group-hover:-translate-y-0.5 group-hover:scale-105 transition-transform" /> View Cart
+                                        <ShoppingCart size={18} className="text-[#91C934]" /> View Cart
+                                    </button>
+                                    <button
+                                        onClick={handleBuyNow}
+                                        disabled={isUnavailable || cartLoading}
+                                        className={`w-full rounded-lg py-2 flex justify-center items-center gap-2 font-bold transition-all h-[48px] ${isUnavailable
+                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
+                                            : 'bg-[#91C934] hover:bg-[#7ab52a] text-white shadow-sm'
+                                            }`}
+                                    >
+                                        Buy Now
                                     </button>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-[auto_1fr_1fr] gap-3">
+                                    {/* Qty Selector */}
+                                    <div className="flex items-center justify-between border border-gray-300 rounded-lg p-1 bg-white h-[48px] w-[110px]">
+                                        <button
+                                            onClick={handleMinus}
+                                            disabled={pageQuantity <= 1}
+                                            className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-gray-800 transition disabled:opacity-30"
+                                        >
+                                            <Minus className="h-4 w-4" />
+                                        </button>
+                                        <span className="text-base font-bold text-gray-900">{pageQuantity}</span>
+                                        <button
+                                            onClick={handlePlus}
+                                            disabled={pageQuantity >= effectiveMaxQty}
+                                            className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-gray-800 transition disabled:opacity-30"
+                                        >
+                                            <Plus className="h-4 w-4" />
+                                        </button>
+                                    </div>
+
                                     <button
                                         onClick={(e) => handleAddToCart(e)}
                                         disabled={isUnavailable || cartLoading}
-                                        className={`w-full rounded-xl py-4 flex justify-center items-center gap-2 transition-all font-semibold h-[56px] ${isUnavailable
-                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
-                                            : 'bg-[#7a8f69] hover:bg-[#6b805a] text-white shadow-sm'
+                                        className={`w-full rounded-lg py-2 flex cursor-pointer justify-center items-center gap-2 font-semibold transition-all h-[48px] ${isUnavailable
+                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-2 border-[#91C934]'
+                                            : 'bg-white border-2 border-[#91C934] hover:border-[#91C934] hover:bg-gray-50 text-[#91C934] shadow-sm'
                                             }`}
                                     >
-                                        <ShoppingCart size={18} />
-                                        {isComingSoon ? 'Coming Soon' : isExpired ? 'Unavailable' : isVariantInactive ? 'Option Unavailable' : 'Add to Cart'}
+                                        <ShoppingCart size={18} className={isUnavailable ? "text-gray-400" : "text-[#91C934]"} />
+                                        {isComingSoon ? 'Coming Soon' : isExpired ? 'Unavailable' : isVariantInactive ? 'Unavailable' : 'Add to Cart'}
                                     </button>
 
                                     <button
                                         onClick={handleBuyNow}
                                         disabled={isUnavailable || cartLoading}
-                                        className={`w-full rounded-xl py-4 flex justify-center items-center font-semibold transition-all border ${isUnavailable
-                                            ? 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed'
-                                            : 'bg-white border-gray-300 text-gray-900 hover:border-gray-400 hover:bg-gray-50 shadow-sm'
+                                        className={`w-full rounded-lg py-2 flex cursor-pointer justify-center items-center gap-2 font-bold transition-all h-[48px] ${isUnavailable
+                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
+                                            : 'bg-[#91C934] hover:bg-[#7ab52a] text-white shadow-sm'
                                             }`}
                                     >
-                                        Buy It Now
+                                        Buy Now
                                     </button>
                                 </div>
                             )}
                         </div>
 
-                        {/* TRUST BADGES */}
-                        <div className="grid grid-cols-3 gap-2 pt-4 pb-1">
-                            <div className="flex flex-col items-center text-center gap-2">
-                                <div className="h-10 w-10 min-w-10 rounded-full bg-[#3d5c3a]/10 text-[#3d5c3a] flex items-center justify-center">
-                                    <FlaskConical size={18} />
-                                </div>
-                                <span className="text-[9px] font-bold uppercase tracking-wider text-gray-600">Lab Certified</span>
-                            </div>
-                            <div className="flex flex-col items-center text-center gap-2">
-                                <div className="h-10 w-10 min-w-10 rounded-full bg-[#3d5c3a]/10 text-[#3d5c3a] flex items-center justify-center">
-                                    <LeafIcon size={18} />
-                                </div>
-                                <span className="text-[9px] font-bold uppercase tracking-wider text-gray-600">100% Organic</span>
-                            </div>
-                            <div className="flex flex-col items-center text-center gap-2">
-                                <div className="h-10 w-10 min-w-10 rounded-full bg-[#3d5c3a]/10 text-[#3d5c3a] flex items-center justify-center">
-                                    <ShieldCheck size={18} />
-                                </div>
-                                <span className="text-[9px] font-bold uppercase tracking-wider text-gray-600">Clinical Defended</span>
-                            </div>
-                        </div>
-
-                        {/* SELLER & DELIVERY INFO GRID — Aligned side-by-side */}
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="border border-gray-200 rounded-xl divide-y divide-gray-100 bg-white">
-                                <div className="px-3 py-2.5">
-                                    <div className="flex items-center gap-2 text-[11px] font-semibold text-gray-700">
-                                        <BadgeCheck className="h-3.5 w-3.5 text-[#3d5c3a]" />
-                                        <span>100% Genuine</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-[11px] font-semibold text-gray-700 mt-1">
-                                        <RotateCcw className="h-3.5 w-3.5 text-[#3d5c3a]" />
-                                        <span>Easy Returns</span>
-                                    </div>
-                                </div>
-                                <div className="px-3 py-2 text-[10px] text-gray-500">
-                                    <span className="flex items-center gap-1.5">
-                                        <Package className="h-3.5 w-3.5 text-gray-400" />
-                                        <span>Sold by: <strong className="text-gray-700">Vedashi Wellness</strong></span>
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div className="bg-[#f8f6f3] rounded-xl p-3 flex flex-col justify-center space-y-2">
-                                <div className="flex items-start gap-2">
-                                    <Truck className="h-4 w-4 text-[#3d5c3a] mt-0.5" />
-                                    <div>
-                                        <p className="text-[11px] font-bold text-gray-900">Free Shipping</p>
-                                        <p className="text-[10px] text-gray-500 leading-tight">Above ₹499. Delivered in 3-7 days</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                    <Clock className="h-4 w-4 text-[#3d5c3a] mt-0.5" />
-                                    <div>
-                                        <p className="text-[11px] font-bold text-gray-900">Cash on Delivery</p>
-                                        <p className="text-[10px] text-gray-500 leading-tight">Pay at your doorstep</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        {/* Removed old Trust Badges and Delivery Info to match cleaner reference layout */}
                     </div>
                 </div>
 
@@ -1060,7 +1122,37 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                             </section>
                         }
                     >
-                        <section className="mt-6 pt-6">
+                        <section className="mt-2 pt-2">
+                            {/* WHY VEDASHI HIGHLIGHTS - Mamaearth Style */}
+                            <div className="bg-[#f0f4ef] rounded-2xl p-4 mb-8">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                    <div className="flex flex-col items-center text-center gap-2">
+                                        <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-[#91C934] shadow-sm">
+                                            <ShieldCheck size={24} />
+                                        </div>
+                                        <span className="text-[11px] font-bold uppercase tracking-wider text-gray-700 leading-tight">Dermatologically<br />Tested</span>
+                                    </div>
+                                    <div className="flex flex-col items-center text-center gap-2">
+                                        <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-[#91C934] shadow-sm">
+                                            <CheckCircle2 size={24} />
+                                        </div>
+                                        <span className="text-[11px] font-bold uppercase tracking-wider text-gray-700 leading-tight">Safe for<br />All Types</span>
+                                    </div>
+                                    <div className="flex flex-col items-center text-center gap-2">
+                                        <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-[#91C934] shadow-sm">
+                                            <Award size={24} />
+                                        </div>
+                                        <span className="text-[11px] font-bold uppercase tracking-wider text-gray-700 leading-tight">Cruelty<br />Free</span>
+                                    </div>
+                                    <div className="flex flex-col items-center text-center gap-2">
+                                        <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-[#91C934] shadow-sm">
+                                            <LeafIcon size={24} />
+                                        </div>
+                                        <span className="text-[11px] font-bold uppercase tracking-wider text-gray-700 leading-tight">100%<br />Natural</span>
+                                    </div>
+                                </div>
+                            </div>
+
                             <h2 className="text-2xl font-bold text-gray-900 mb-6">Product Description</h2>
 
                             {/* Tab Headers */}
@@ -1070,13 +1162,13 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                         <button
                                             onClick={() => setActiveInfoTab('description')}
                                             className={`relative px-6 py-3 text-sm font-semibold transition-colors ${activeInfoTab === 'description'
-                                                ? 'text-[#1d351d]'
+                                                ? 'text-[#91C934]'
                                                 : 'text-gray-500 hover:text-gray-800'
                                                 }`}
                                         >
                                             Description
                                             {activeInfoTab === 'description' && (
-                                                <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#1d351d] rounded-t-full" />
+                                                <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#91C934] rounded-t-full" />
                                             )}
                                         </button>
                                     )}
@@ -1084,13 +1176,13 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                         <button
                                             onClick={() => setActiveInfoTab('howToUse')}
                                             className={`relative px-6 py-3 text-sm font-semibold transition-colors ${activeInfoTab === 'howToUse'
-                                                ? 'text-[#1d351d]'
+                                                ? 'text-[#91C934]'
                                                 : 'text-gray-500 hover:text-gray-800'
                                                 }`}
                                         >
                                             How To Use
                                             {activeInfoTab === 'howToUse' && (
-                                                <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#1d351d] rounded-t-full" />
+                                                <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#91C934] rounded-t-full" />
                                             )}
                                         </button>
                                     )}
@@ -1098,13 +1190,13 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                         <button
                                             onClick={() => setActiveInfoTab('specifications')}
                                             className={`relative px-6 py-3 text-sm font-semibold transition-colors ${activeInfoTab === 'specifications'
-                                                ? 'text-[#1d351d]'
+                                                ? 'text-[#91C934]'
                                                 : 'text-gray-500 hover:text-gray-800'
                                                 }`}
                                         >
                                             Specifications
                                             {activeInfoTab === 'specifications' && (
-                                                <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#1d351d] rounded-t-full" />
+                                                <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#91C934] rounded-t-full" />
                                             )}
                                         </button>
                                     )}
@@ -1124,7 +1216,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                         {product.description.split(/\s+/).length > 150 && (
                                             <button
                                                 onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-                                                className="mt-6 text-[#1d351d] font-bold text-sm tracking-wide hover:underline flex items-center gap-1"
+                                                className="mt-6 text-[#91C934] font-bold text-sm tracking-wide hover:underline flex items-center gap-1"
                                             >
                                                 {isDescriptionExpanded ? 'Read Less ▲' : 'Read More ▼'}
                                             </button>
@@ -1137,7 +1229,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                                 <ul className="space-y-2">
                                                     {product.specialities.map((s: string, i: number) => (
                                                         <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
-                                                            <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-[#3d5c3a] flex-shrink-0" />
+                                                            <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-[#91C934] flex-shrink-0" />
                                                             {s}
                                                         </li>
                                                     ))}
@@ -1247,16 +1339,9 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
 
                 {/* REVIEWS SECTION — lazy loaded + dynamic import */}
                 <div className="relative isolate w-full mt-6 pt-6 pb-6 overflow-hidden">
-                    {/* Shadow Background Illustration (Absolute positioned) */}
-                    <div className="absolute inset-0 -z-10 pointer-events-none opacity-[0.03] flex justify-center items-center">
-                        {/* A massive placeholder SVG for the "shadow leaves" effect */}
-                        <svg viewBox="0 0 1000 1000" className="w-[150%] max-w-none transform min-w-[1200px]" preserveAspectRatio="xMidYMid slice">
-                            <path fill="currentColor" d="M374.4,-331.1C470.9,-201.5,524.8,-42.9,493.4,87.9C462.1,218.7,345.5,321.7,211.5,410.6C77.4,499.5,-74.2,574.4,-190.2,525C-306.2,475.6,-386.5,301.9,-438.4,124.7C-490.3,-52.5,-513.7,-233.1,-437.4,-352C-361," />
-                            <path fill="currentColor" transform="translate(400, 200) scale(0.8) rotate(45)" d="M434.3,-463.8C545,-387.8,604,-221.9,642.3,-45.8C680.7,130.3,698.3,316.5,614.9,451.3C531.5,586.2,347,669.7,157.9,681C-31.1,692.3,-224.8,631.3,-375.3,533C-525.8,434.8,-633.2,299.3,-667,144C-700.8,-11.3,-661.1,-186.4,-575.4,-322.6C-489.6,-458.8,-357.7,-556,-212.8,-575.3C-67.9,-594.7,89,-536.2,234.3,-480.1" />
-                        </svg>
-                    </div>
 
-                    <div className="mx-auto max-w-7xl px-4 space-y-6">
+
+                    <div className="mx-auto max-w-[1440px] px-4 space-y-6">
                         {/* REVIEWS SECTION — lazy loaded + dynamic import */}
                         <LazySection
                             minHeight="300px"
@@ -1288,7 +1373,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                         >
                             <LazyBestSellers
                                 title="Best Sellers"
-                                icon={<Sparkles className="h-6 w-6 text-[#3d5c3a]" />}
+                                icon={<Sparkles className="h-6 w-6 text-[#91C934]" />}
                             />
                         </LazySection>
 

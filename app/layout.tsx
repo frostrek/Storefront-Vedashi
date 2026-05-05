@@ -1,18 +1,23 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import Script from "next/script";
+import { Suspense } from "react";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import DeferredComponents from "@/components/DeferredComponents";
 
+import PromoBanner from "@/components/PromoBanner";
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { AuthProvider } from "@/context/AuthContext";
-import { ClerkProvider } from "@clerk/nextjs";
+
 import { Toaster } from "react-hot-toast";
 import { CookieConsentProvider } from "@/context/CookieConsentContext";
+import CookieBanner from "@/components/CookieBanner";
+import LanguageSuggestionBanner from "@/components/LanguageSuggestionBanner";
 import DynamicScriptLoader from "@/components/DynamicScriptLoader";
+import RouteTracker from "@/components/RouteTracker";
+import GlobalErrorTracker from "@/components/GlobalErrorTracker";
 import MaintenancePage from "@/components/MaintenancePage";
 import { generateLocalBusinessJsonLd, generateOrganizationJsonLd, generateWebSiteJsonLd } from "@/lib/seo";
 
@@ -42,28 +47,12 @@ export const metadata: Metadata = {
   },
   description:
     "Experience the healing power of authentic Ayurvedic remedies crafted from nature. Discover clinically tested herbal formulations for holistic wellness.",
-  keywords: [
-    "ayurveda", "ayurvedic wellness", "herbal remedies", "Vedashi", "natural healing", 
-    "dosha", "panchakarma", "ayurvedic skincare", "natural hair care", 
-    "herbal supplements", "organic wellness products", "traditional indian medicine", 
-    "ayurvedic beauty", "holistic health", "ayurvedic oils", "natural immunity boosters"
-  ],
-  icons: {
-    icon: [
-      { url: '/favicon.ico', sizes: 'any' },
-      { url: '/vedashi-logo.png', type: 'image/png' },
-    ],
-    apple: [
-      { url: '/vedashi-logo.png' },
-    ],
-  },
+  keywords: ["ayurveda", "ayurvedic wellness", "herbal remedies", "Vedashi", "natural healing", "dosha", "panchakarma"],
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
-    yandex: "40dd8bca6ac40b29",
-    other: {
-      "naver-site-verification": ["abc7e3ec4e7003d600d9ff8eb8a87428"],
-      "msvalidate.01": [process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION].filter(Boolean) as string[],
-    },
+    other: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION ? {
+      "msvalidate.01": [process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION],
+    } : undefined,
   },
   openGraph: {
     type: "website",
@@ -160,23 +149,22 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(generateWebSiteJsonLd()) }}
         />
 
-        <ClerkProvider
-          signInUrl="/in/login"
-          signUpUrl="/in/register"
-          signInFallbackRedirectUrl="/"
-          signUpFallbackRedirectUrl="/"
-        >
+
+        <>
           <Script
             src="https://challenges.cloudflare.com/turnstile/v0/api.js"
             strategy="lazyOnload"
           />
-          {/* Deferred: Razorpay only needed on checkout */}
           <Script
             src="https://checkout.razorpay.com/v1/checkout.js"
             strategy="lazyOnload"
           />
           <CookieConsentProvider>
             <DynamicScriptLoader />
+            <Suspense fallback={null}>
+              <RouteTracker />
+            </Suspense>
+            <GlobalErrorTracker />
             <AuthProvider>
               <CartProvider>
                 <WishlistProvider>
@@ -205,15 +193,17 @@ export default async function RootLayout({
                       }
                     }}
                   />
-                  <DeferredComponents />
                   <Navbar />
                   <main className="flex-1">{children}</main>
                   <Footer />
+
+                  <CookieBanner />
+                  <LanguageSuggestionBanner />
                 </WishlistProvider>
               </CartProvider>
             </AuthProvider>
           </CookieConsentProvider>
-        </ClerkProvider>
+        </>
       </body>
     </html>
   );

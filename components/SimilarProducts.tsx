@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { getSimilarProducts } from '@/lib/api';
 import { Product } from '@/types';
 import { Sparkles } from 'lucide-react';
-import ProductCarousel from '@/components/ProductCarousel';
+import ProductReel from '@/components/ProductReel';
 
 interface SimilarProductsProps {
     productId: string;
@@ -33,12 +33,10 @@ export default function SimilarProducts({ productId }: SimilarProductsProps) {
     }, [productId]);
 
     return (
-        <ProductCarousel
+        <ProductReel
             title="Similar Products"
-            icon={<Sparkles className="h-6 w-6 text-[#3d5c3a]" />}
             products={products}
             loading={loading}
-            idPrefix="similar-products"
         />
     );
 }

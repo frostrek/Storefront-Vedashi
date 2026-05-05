@@ -66,7 +66,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
         setShowInlineOptions(false);
     }, []);
 
-    
+
     const triggerAddedFeedback = useCallback(() => {
         setJustAdded(true);
         setTimeout(() => setJustAdded(false), 1000);
@@ -97,7 +97,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
     const handleShare = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        
+
         const shareData = {
             title: product.product_name,
             text: `Check out ${product.product_name} on Vedashi — Premium Ayurvedic Wellness.`,
@@ -105,7 +105,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
         };
 
         if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-            navigator.share(shareData).catch(() => {});
+            navigator.share(shareData).catch(() => { });
         } else {
             navigator.clipboard.writeText(shareData.url);
             toast.success('Link copied to clipboard!');
@@ -121,7 +121,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
         product.price,
         product.original_price ?? product.price
     );
-    
+
     const isOnSale = product.is_on_sale ?? false;
     const discountPercent = (originalPrice > displayPrice) ? Math.round((1 - displayPrice / originalPrice) * 100) : 0;
 
@@ -459,25 +459,25 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                         (product.common_flavor && v.flavor === product.common_flavor) ? '' : (v.flavor ?? ''),
                                         (v.pack_quantity ?? 0) > 1 ? `Pack of ${v.pack_quantity ?? 0}` : ''
                                     ].filter(Boolean);
-                                    
+
                                     let parsedOptions = v.options;
                                     if (typeof parsedOptions === 'string') {
-                                        try { parsedOptions = JSON.parse(parsedOptions); } catch (e) {}
+                                        try { parsedOptions = JSON.parse(parsedOptions); } catch (e) { }
                                     }
                                     let optionsValList: string[] = [];
                                     if (parsedOptions && typeof parsedOptions === 'object') {
                                         optionsValList = Object.values(parsedOptions).filter(val => val !== null && val !== undefined && String(val).trim() !== '').map(String);
                                     }
-                                    
-                                    const label = optionsValList.length > 0 
-                                        ? optionsValList.join(' · ') 
+
+                                    const label = optionsValList.length > 0
+                                        ? optionsValList.join(' · ')
                                         : (labelParts.join(' · ') || v.sku || 'Standard');
 
                                     const { displayPrice: vDisplayPrice, originalPrice: vOriginalPrice } = getValidPrices(
                                         v.price,
                                         v.original_price ?? v.sale_price ?? v.price
                                     );
-                                    
+
                                     const vIsDiscounted = vOriginalPrice > vDisplayPrice;
 
                                     return (
@@ -885,7 +885,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
             <div className="relative group block h-full" ref={cardRef}>
                 {/* ═══════ FRONT OF CARD ═══════ */}
                 <div className={`h-full bg-white transition-all duration-300 ${isList ? 'overflow-hidden flex flex-row p-3 border border-gray-100 hover:bg-gray-50/50 hover:border-[#FF0000]/30 rounded-2xl gap-4 sm:gap-6 items-center shadow-sm hover:shadow-md' : 'flex flex-col rounded-2xl overflow-visible'}`}>
-                    <div className={`relative overflow-hidden bg-gradient-to-br from-[#f5f2ed] to-[#ece6dd] ${isList ? 'w-[100px] h-[100px] sm:w-[150px] sm:h-[150px] rounded-xl flex-shrink-0 border border-gray-100/50' : 'rounded-2xl border border-gray-200 mx-2 mt-2'}`} style={isList ? {} : { aspectRatio: '5 / 4' }}>
+                    <div className={`relative overflow-hidden bg-white ${isList ? 'w-[100px] h-[100px] sm:w-[150px] sm:h-[150px] rounded-xl flex-shrink-0 border border-gray-100/50' : 'rounded-t-2xl border-b border-gray-100'}`} style={isList ? {} : { aspectRatio: '5 / 4' }}>
                         <div className="absolute inset-0 flex items-center justify-center p-4">
                             {isBase64 ? (
                                 <img
@@ -929,17 +929,19 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                 <button
                                     onClick={handleToggleWishlist}
                                     className="rounded-full bg-white/90 backdrop-blur-sm p-1.5 shadow-sm transition-all hover:scale-110 hover:shadow-md cursor-pointer"
+                                    title={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                                    aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
                                 >
                                     <Heart
-                                        className={`h-3.5 w-3.5 transition ${wishlisted
-                                            ? 'fill-[#3d5c3a] text-[#3d5c3a]'
+                                        className={`h-3.5 w-3.5 transition hover:text-[#91C934] ${wishlisted
+                                            ? 'fill-[#91C934] text-[#91C934]'
                                             : 'text-gray-400'
                                             }`}
                                     />
                                 </button>
                                 <button
                                     onClick={handleShare}
-                                    className="rounded-full bg-white/90 backdrop-blur-sm p-1.5 shadow-sm transition-all hover:scale-110 hover:shadow-md cursor-pointer text-gray-400 hover:text-[#3d5c3a]"
+                                    className="rounded-full bg-white/90 backdrop-blur-sm p-1.5 shadow-sm transition-all hover:scale-110 hover:shadow-md cursor-pointer text-gray-400 hover:text-[#91C934]"
                                     title="Share"
                                 >
                                     <Share2 size={14} />

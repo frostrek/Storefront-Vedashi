@@ -5,7 +5,7 @@ import { getProductDetails, getProduct } from '@/lib/api';
 import { Product } from '@/types';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { Clock } from 'lucide-react';
-import ProductCarousel from '@/components/ProductCarousel';
+import ProductReel from '@/components/ProductReel';
 
 interface RecentlyViewedProductsProps {
     /** Current product ID to exclude from the list */
@@ -61,12 +61,10 @@ export default function RecentlyViewedProducts({ currentProductId }: RecentlyVie
     }, [currentProductId, getProductIds]);
 
     return (
-        <ProductCarousel
+        <ProductReel
             title="Recently Viewed"
-            icon={<Clock className="h-6 w-6 text-burgundy" />}
             products={products}
             loading={loading}
-            idPrefix="recently-viewed"
         />
     );
 }

@@ -96,7 +96,7 @@ export default function SecondaryNavbar() {
   return (
     <div className="hidden md:block bg-white relative z-[90]">
       <div className="mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8">
-        <div className="flex h-[32px] items-center justify-between text-[14px] uppercase font-bold text-black-700 font-sans">
+        <div className="flex h-[32px] items-center justify-between text-[14px] uppercase font-bold text-black font-sans">
 
           <div className="flex items-center gap-0 h-full overflow-x-auto no-scrollbar scroll-smooth">
             {/* Individual Categories */}
@@ -149,7 +149,7 @@ export default function SecondaryNavbar() {
 
             {/* Vertical Divider before Brands */}
             {!loading && parentCategories.length > 0 && (
-              <div className="h-4 w-[1px] bg-gray-200 self-center shrink-0 mx-2" />
+              <div className="h-4 w-[1px] bg-black/10 self-center shrink-0 mx-2" />
             )}
 
             {/* Brands A-Z Dropdown */}
@@ -197,9 +197,9 @@ export default function SecondaryNavbar() {
           </div>
 
           <div className="flex items-center h-full text-[13px] font-bold tracking-wide shrink-0 ml-4">
-            <div className="h-4 w-[1px] bg-gray-200 self-center mx-3" />
-            <Link href={`/${country}/products?bestSeller=true`} className="text-gray-900 hover:text-[#91CA35] h-full flex items-center">Best Sellers</Link>
-            <div className="h-4 w-[1px] bg-gray-200 self-center mx-3" />
+            <div className="h-4 w-[1px] bg-black/10 self-center mx-3" />
+            <Link href={`/${country}/products?bestSeller=true`} className="text-black hover:text-[#91CA35] h-full flex items-center">Best Sellers</Link>
+            <div className="h-4 w-[1px] bg-black/10 self-center mx-3" />
             <Link href={`/${country}/products?newArrival=true`} className="text-[#FF0000] font-bold h-full flex items-center gap-1.5 group">
               <span className="flex h-2 w-2 rounded-full bg-[#FF0000] animate-promo-blink shadow-[0_0_8px_rgba(255,0,0,0.5)]"></span>
               New Arrivals

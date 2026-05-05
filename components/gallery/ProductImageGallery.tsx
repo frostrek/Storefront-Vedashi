@@ -226,7 +226,6 @@ function ProductImageGalleryInner({
                 role="region"
                 aria-label="Product image gallery"
             >
-                {/* Thumbnail strip */}
                 <ImageThumbnailStrip
                     images={images}
                     activeIndex={activeIndex}
@@ -315,6 +314,7 @@ function ProductImageGalleryInner({
                     imageRef={imageRef}
                     panelRef={zoomPanelRef}
                 />
+
             </div>
 
             {/* Lightbox */}
