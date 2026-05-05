@@ -885,7 +885,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
             <div className="relative group block h-full" ref={cardRef}>
                 {/* ═══════ FRONT OF CARD ═══════ */}
                 <div className={`h-full bg-white transition-all duration-300 ${isList ? 'overflow-hidden flex flex-row p-3 border border-gray-100 hover:bg-gray-50/50 hover:border-[#FF0000]/30 rounded-2xl gap-4 sm:gap-6 items-center shadow-sm hover:shadow-md' : 'flex flex-col rounded-2xl overflow-visible'}`}>
-                    <div className={`relative overflow-hidden bg-gradient-to-br from-[#f5f2ed] to-[#ece6dd] ${isList ? 'w-[100px] h-[100px] sm:w-[150px] sm:h-[150px] rounded-xl flex-shrink-0 border border-gray-100/50' : 'rounded-t-2xl border-b border-gray-100'}`} style={isList ? {} : { aspectRatio: '5 / 4' }}>
+                    <div className={`relative overflow-hidden bg-white ${isList ? 'w-[100px] h-[100px] sm:w-[150px] sm:h-[150px] rounded-xl flex-shrink-0 border border-gray-100/50' : 'rounded-t-2xl border-b border-gray-100'}`} style={isList ? {} : { aspectRatio: '5 / 4' }}>
                         <div className="absolute inset-0 flex items-center justify-center p-4">
                             {isBase64 ? (
                                 <img
