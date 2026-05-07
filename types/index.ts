@@ -1,5 +1,5 @@
 /* === Storefront Type Definitions === */
-/* Maps to existing backend inventory.products schema */
+/* Maps to existing backend inventory.products schemas */
 
 import { CountryPriceOverride } from '@/lib/currency';
 
