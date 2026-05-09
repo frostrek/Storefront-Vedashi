@@ -61,31 +61,20 @@ function GoogleCallbackContent() {
 
                 const data = await res.json();
 
-                if (data.success && data.pending_verification) {
-                    // NEW USER → OTP verification required
-                    sessionStorage.setItem('social_otp_data', JSON.stringify({
-                        customer_id: data.data.customer_id,
-                        email: data.data.email,
-                        full_name: data.data.full_name,
-                    }));
-                    setStatus('Redirecting to verification...');
-                    setTimeout(() => {
-                        window.location.href = `/${country}/login/verify-social-otp`;
-                    }, 100);
-                } else if (data.success && data.data?.customer) {
-                    // RETURNING USER → JWT issued via HttpOnly cookie
-                    setStatus('Welcome back! Redirecting...');
+                if (data.success && data.data?.customer) {
+                    // All users (new + returning) get JWT immediately — no OTP required
+                    setStatus('Welcome! Redirecting...');
 
-                    // Use loginFromVerification to store user in AuthContext + localStorage
                     loginFromVerification(data.data.customer);
 
-                    if (data.data.account_linked) {
+                    if (data.data.is_new_user) {
+                        toast.success('Account created! Welcome to Vedashi 🌿');
+                    } else if (data.data.account_linked) {
                         toast.success('Google account linked to your existing account!');
                     } else {
                         toast.success('Welcome back!');
                     }
 
-                    // Full page load ensures AuthContext initializes from localStorage
                     setTimeout(() => {
                         window.location.href = `/${country}`;
                     }, 100);

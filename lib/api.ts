@@ -1198,6 +1198,8 @@ export async function checkoutOrder(data: {
     payment_method?: string;
     redeem_points?: number;
     currency?: string;
+    ga_client_id?: string;
+    attribution?: any;
 }) {
     try {
         const res = await authFetch(`${API_URL}/api/orders/checkout`, {

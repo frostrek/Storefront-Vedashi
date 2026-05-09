@@ -84,7 +84,7 @@ export default function RegionSwitcher({ upward = false }: { upward?: boolean })
       </button>
 
       {isOpen && (
-        <div className={`absolute left-0 sm:left-auto sm:right-0 w-48 rounded-xl bg-white shadow-xl ring-1 ring-black/5 z-50 overflow-hidden ${upward ? 'bottom-full mb-2 origin-bottom-left sm:origin-bottom-right' : 'mt-2 origin-top-left sm:origin-top-right'} animate-in fade-in ${upward ? 'slide-in-from-bottom-2' : 'slide-in-from-top-2'} duration-200`}>
+        <div className={`absolute left-0 sm:left-auto sm:right-0 w-48 rounded-xl bg-white shadow-xl ring-1 ring-black/5 z-[9999] overflow-hidden ${upward ? 'bottom-full mb-2 origin-bottom-left sm:origin-bottom-right' : 'mt-2 origin-top-left sm:origin-top-right'} animate-in fade-in ${upward ? 'slide-in-from-bottom-2' : 'slide-in-from-top-2'} duration-200`}>
           <div className="p-1">
             {Object.entries(SUPPORTED_COUNTRIES).map(([code, config]) => (
               <button

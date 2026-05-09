@@ -374,7 +374,13 @@ function LoginContent() {
 
     // ── Phone OTP View ───────────────────────────────────────────────
     const PhoneOTPCard = () => (
-        <div className="bg-white/95 lg:bg-transparent backdrop-blur-sm lg:backdrop-blur-none rounded-2xl lg:rounded-none shadow-2xl lg:shadow-none p-6 lg:p-0 w-full">
+        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 w-full">
+            {/* Logo */}
+            <div className="flex justify-center mb-6">
+                <Link href="/">
+                    <img src="/vedashi-logo.png" alt="Vedashi" className="h-12 w-auto object-contain" />
+                </Link>
+            </div>
             <div className="flex flex-col items-center mb-4">
                 <div className="w-12 h-12 rounded-2xl bg-[#91C934] flex items-center justify-center mb-4 shadow-lg">
                     <Smartphone className="w-6 h-6 text-white" />
@@ -548,35 +554,36 @@ function LoginContent() {
         : 'Sign in to your account';
 
     return (
-        <div className="min-h-screen flex bg-white overflow-hidden">
-            {/* ── Left Panel: Solid Brand Color (hidden on mobile) ── */}
-            <div className="hidden lg:block lg:w-1/2" style={{ backgroundColor: '#8EC433' }}>
-            </div>
+        <div className="min-h-screen flex items-center justify-center bg-[#f7f9f7] relative overflow-hidden py-12 px-4 sm:px-6 lg:px-8">
+            {/* Background Decoration */}
+            <div className="absolute top-0 left-0 w-full h-1 bg-[#8EC433]" />
+            <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#8EC433]/5 rounded-full blur-3xl" />
+            <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#8EC433]/5 rounded-full blur-3xl" />
 
-            {/* ── Right Panel: Login Form ── */}
-            <div className="w-full lg:w-1/2 flex flex-col justify-center overflow-y-auto py-12 px-6 sm:px-12 relative">
-                {/* Skip / Back Button */}
-                <button
-                    onClick={() => router.back()}
-                    className="absolute top-6 right-6 lg:top-10 lg:right-10 flex items-center gap-2 text-[13px] font-bold text-[#91C934] hover:text-[#82B52F] transition-all cursor-pointer group"
-                >
-                    Back
-                </button>
+            {/* Skip / Back Button */}
+            <button
+                onClick={() => router.back()}
+                className="absolute top-6 right-6 lg:top-10 lg:right-10 flex items-center gap-2 text-[13px] font-bold text-[#91C934] hover:text-[#82B52F] transition-all cursor-pointer group z-20"
+            >
+                Back
+            </button>
 
-                <div className="w-full max-w-md mx-auto">
-                    {/* Logo */}
-                    <div className="flex justify-center mb-8">
-                        <Link href="/">
-                            <img src="/vedashi-logo.png" alt="Vedashi" className="h-16 w-auto object-contain" />
-                        </Link>
-                    </div>
+            {/* ── Single Panel: Login Form ── */}
+            <div className="w-full max-w-md flex flex-col relative z-10">
+                <div className="w-full">
 
                     {/* Phone OTP View */}
                     {authMethod === 'phone' && !isRegister ? (
                         <PhoneOTPCard />
                     ) : (
                         /* Main Login / Register Form */
-                        <div className="bg-white/95 lg:bg-transparent backdrop-blur-sm lg:backdrop-blur-none rounded-2xl lg:rounded-none shadow-2xl lg:shadow-none p-6 lg:p-0">
+                        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                            {/* Logo */}
+                            <div className="flex justify-center mb-6">
+                                <Link href="/">
+                                    <img src="/vedashi-logo.png" alt="Vedashi" className="h-12 w-auto object-contain" />
+                                </Link>
+                            </div>
 
                             {/* Card header */}
                             <div className="flex flex-col items-center mb-4">

@@ -236,7 +236,7 @@ export default function Footer() {
     );
 
     return (
-        <footer className="relative z-10 font-sans">
+        <footer className="relative z-10 font-sans" style={{ isolation: 'auto' }}>
 
             {/* ═══════════════ SUBSCRIBE BAR (floating at top) ═══════════════ */}
             <div className="bg-transparent">
@@ -339,7 +339,7 @@ export default function Footer() {
                                 </div>
 
                                 {/* Mobile-only Currency & Language */}
-                                <div className="flex md:hidden flex-row items-center gap-0 mt-2">
+                                <div className="flex md:hidden flex-row items-center gap-0 mt-2 relative z-[200]">
                                     <div className="scale-[0.85] origin-left">
                                         <RegionSwitcher upward={true} />
                                     </div>
@@ -432,7 +432,7 @@ export default function Footer() {
             </div>
 
             {/* ═══════════════ BOTTOM BAR ═══════════════ */}
-            <div className="bg-[#111111] py-1.5 sm:py-2.5">
+            <div className="bg-[#111111] py-1.5 sm:py-2.5 relative z-[200]">
                 <div className="mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-12">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-1 sm:gap-2">
                         <p className="text-[9.5px] sm:text-[11px] text-gray-500 text-center order-1 md:order-2">
@@ -443,7 +443,7 @@ export default function Footer() {
                                 {bottomBar?.copyright || `© ${new Date().getFullYear()} Vedashi. All rights reserved.`}
                             </p>
                         </div>
-                        <div className="hidden md:flex items-center gap-2 sm:gap-3 mt-1 sm:mt-0 order-3 md:order-3">
+                        <div className="hidden md:flex items-center gap-2 sm:gap-3 mt-1 sm:mt-0 order-3 md:order-3 relative z-[200]">
                             <div className="scale-90 sm:scale-100 origin-right">
                                 <RegionSwitcher upward={true} />
                             </div>
