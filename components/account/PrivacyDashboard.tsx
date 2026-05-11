@@ -82,7 +82,7 @@ export default function PrivacyDashboard() {
     return (
         <div className="space-y-6 max-w-3xl">
             <div className="flex items-center gap-3 border-b border-light-border pb-4">
-                <Shield className="h-6 w-6 text-burgundy" />
+                <Shield className="h-6 w-6 text-[#91C934]" />
                 <div>
                     <h2 className="text-xl font-bold text-charcoal">Privacy & Data Management</h2>
                     <p className="text-sm text-warm-gray">Control your personal data in compliance with GDPR guidelines.</p>

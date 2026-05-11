@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import HeroCarousel, { HeroSlide, HeroSettings } from '@/components/HeroCarousel';
 import { Product } from '@/types';
-import { getBestSellers, getNewArrivals, getCategories } from '@/lib/api';
+import { getBestSellers, getNewArrivals, getCategories, getFilteredProducts } from '@/lib/api';
 import ProductCard from '@/components/ProductCard';
 import ProductReel from '@/components/ProductReel';
 import BestSellerShowcase from '@/components/BestSellerShowcase';
@@ -54,6 +54,8 @@ export default function HomeClientPage({
 
   const [bestSellers, setBestSellers] = useState<Product[]>(initialBestSellers);
   const [newArrivals, setNewArrivals] = useState<Product[]>(initialNewArrivals);
+  const [faceWash, setFaceWash] = useState<Product[]>([]);
+  const [hairOils, setHairOils] = useState<Product[]>([]);
   const [allCategories, setAllCategories] = useState<any[]>(initialCategories);
   const [loading, setLoading] = useState(false);
 
@@ -79,6 +81,19 @@ export default function HomeClientPage({
       }
     }
     loadData();
+  }, []);
+
+  // Fetch Additional Reels independently (not gated by SSR data)
+  useEffect(() => {
+    // Face Wash
+    getFilteredProducts({ category: 'cosmetics', sub_category: 'face-care', limit: 10 })
+      .then(res => setFaceWash(res.data as any[]))
+      .catch(() => {});
+    
+    // Hair Oils
+    getFilteredProducts({ category: 'cosmetics', sub_category: 'hair-care', limit: 10 })
+      .then(res => setHairOils(res.data as any[]))
+      .catch(() => {});
   }, []);
 
   const viewListHashRef = useRef<string>('');
@@ -293,6 +308,33 @@ export default function HomeClientPage({
               subtitle="Discover the newest additions to our natural wellness collection."
               viewAllLink="/products?newArrival=true"
               viewAllText="Shop New Arrivals"
+            />
+          </div>
+        </section>
+
+        {/* 6. FACE WASH REEL */}
+        <section className="relative py-0 overflow-hidden bg-white content-lazy">
+          <div className="max-w-[1500px] mx-auto relative z-10">
+            <ProductReel
+              products={faceWash}
+              loading={loading}
+              title="Face Wash"
+              subtitle="Gentle cleansers for a fresh, radiant complexion every day."
+              viewAllLink={`/${country}/products?category=cosmetics&sub_category=face-care&sub_sub_category=cleansers-and-face-wash`}
+              viewAllText="Shop All Face Wash"
+            />
+          </div>
+        </section>
+        {/* 7. HAIR OILS REEL */}
+        <section className="relative py-0 overflow-hidden bg-white content-lazy">
+          <div className="max-w-[1500px] mx-auto relative z-10">
+            <ProductReel
+              products={hairOils}
+              loading={loading}
+              title="Hair oils"
+              subtitle="Nourishing oils for stronger, shinier, and healthier hair."
+              viewAllLink={`/${country}/products?category=cosmetics&sub_category=hair-care&sub_sub_category=shampoos-and-conditioners`}
+              viewAllText="Shop All Hair Care"
             />
           </div>
         </section>

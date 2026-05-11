@@ -868,7 +868,7 @@ function ProductsContent() {
                                 {activeChips.length > 0 && (
                                     <button
                                         onClick={clearAll}
-                                        className="mt-5 rounded-xl bg-[#3d5c3a] px-6 py-2.5 text-sm font-bold text-white hover:bg-[#2d4a2a] transition-colors cursor-pointer"
+                                        className="mt-5 rounded-xl bg-[#91C934] px-6 py-2.5 text-sm font-bold text-white hover:bg-[#2d4a2a] transition-colors cursor-pointer"
                                     >
                                         Clear All Filters
                                     </button>

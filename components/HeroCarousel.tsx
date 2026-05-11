@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { API_URL } from '@/lib/api';
+import { useParams } from 'next/navigation';
 
 // API_URL imported from @/lib/api
 
@@ -31,6 +32,7 @@ export interface HeroSlide {
     subheadings: TextElement[];
     buttons: ButtonElement[];
     overlay_opacity: number;
+    link_url?: string;
 }
 
 export interface HeroSettings {
@@ -46,6 +48,8 @@ export interface HeroCarouselProps {
 }
 
 export default function HeroCarousel({ initialSlides = [], initialSettings = undefined }: HeroCarouselProps) {
+    const params = useParams<{ country: string }>();
+    const country = params?.country || 'in';
     const [slides, setSlides] = useState<HeroSlide[]>(initialSlides);
     const [settings, setSettings] = useState<HeroSettings>(
         initialSettings || { slider_speed: 3000, arrow_visibility: 'hover', loop: true, slideshow_type: 'fade' }
@@ -231,65 +235,88 @@ export default function HeroCarousel({ initialSlides = [], initialSettings = und
             ))}
 
             {/* ── Content ── */}
-            <div className="relative z-20 mx-auto max-w-7xl px-4 py-2 sm:py-8 md:py-10 lg:py-12 text-center w-full h-full flex flex-col justify-center">
-                {/* Dynamic Headings */}
-                <div className="animate-fade-in-up space-y-1 sm:space-y-2 mb-2 sm:mb-6 shadow-black/20 drop-shadow-2xl">
-                    {slide.headings?.map(h => {
-                        const isNum = !isNaN(Number(h.fontSize)) && h.fontSize !== '';
-                        return (
-                            <h1 
-                                key={h.id} 
-                                style={{ 
-                                    color: h.color, 
-                                    fontSize: isNum ? `clamp(1.125rem, 5vw, ${h.fontSize}px)` : undefined 
-                                }} 
-                                className={`font-bold leading-tight ${!isNum ? `text-${h.fontSize}` : ''}`}
-                            >
-                                {h.text}
-                            </h1>
-                        )
-                    })}
-                </div>
+            {(() => {
+                const slideContent = (
+                    <>
+                        {/* Dynamic Headings */}
+                        <div className="animate-fade-in-up space-y-1 sm:space-y-2 mb-2 sm:mb-6 shadow-black/20 drop-shadow-2xl">
+                            {slide.headings?.map(h => {
+                                const isNum = !isNaN(Number(h.fontSize)) && h.fontSize !== '';
+                                return (
+                                    <h1 
+                                        key={h.id} 
+                                        style={{ 
+                                            color: h.color, 
+                                            fontSize: isNum ? `clamp(1.125rem, 5vw, ${h.fontSize}px)` : undefined 
+                                        }} 
+                                        className={`font-bold leading-tight ${!isNum ? `text-${h.fontSize}` : ''}`}
+                                    >
+                                        {h.text}
+                                    </h1>
+                                )
+                            })}
+                        </div>
 
-                {/* Dynamic Subheadings */}
-                <div className="animate-fade-in-up space-y-3 mx-auto max-w-2xl shadow-black/20 drop-shadow-md" style={{ animationDelay: '0.2s' }}>
-                    {slide.subheadings?.map(s => {
-                        const isNum = !isNaN(Number(s.fontSize)) && s.fontSize !== '';
-                        return (
-                            <p 
-                                key={s.id} 
-                                style={{ 
-                                    color: s.color, 
-                                    fontSize: isNum ? `clamp(0.875rem, 3vw, ${s.fontSize}px)` : undefined 
-                                }} 
-                                className={`leading-relaxed mx-auto max-w-[90%] sm:max-w-none ${!isNum ? `text-${s.fontSize}` : ''}`}
-                            >
-                                {s.text}
-                            </p>
-                        )
-                    })}
-                </div>
+                        {/* Dynamic Subheadings */}
+                        <div className="animate-fade-in-up space-y-3 mx-auto max-w-2xl shadow-black/20 drop-shadow-md" style={{ animationDelay: '0.2s' }}>
+                            {slide.subheadings?.map(s => {
+                                const isNum = !isNaN(Number(s.fontSize)) && s.fontSize !== '';
+                                return (
+                                    <p 
+                                        key={s.id} 
+                                        style={{ 
+                                            color: s.color, 
+                                            fontSize: isNum ? `clamp(0.875rem, 3vw, ${s.fontSize}px)` : undefined 
+                                        }} 
+                                        className={`leading-relaxed mx-auto max-w-[90%] sm:max-w-none ${!isNum ? `text-${s.fontSize}` : ''}`}
+                                    >
+                                        {s.text}
+                                    </p>
+                                )
+                            })}
+                        </div>
 
-                {/* Dynamic Buttons */}
-                <div className="animate-fade-in-up mt-3 sm:mt-10 flex flex-wrap justify-center gap-2 sm:gap-4" style={{ animationDelay: '0.4s' }}>
-                    {slide.buttons?.map(b => (
+                        {/* Dynamic Buttons */}
+                        <div className="animate-fade-in-up mt-3 sm:mt-10 flex flex-wrap justify-center gap-2 sm:gap-4" style={{ animationDelay: '0.4s' }}>
+                            {slide.buttons?.map(b => (
+                                <Link
+                                    key={b.id}
+                                    href={b.url || '/products'}
+                                    data-hero-btn="true"
+                                    onClick={(e) => e.stopPropagation()}
+                                    style={{
+                                        backgroundColor: b.bgColor !== 'transparent' ? b.bgColor : 'transparent',
+                                        color: b.textColor,
+                                        borderColor: b.bgColor === 'transparent' ? 'rgba(255,255,255,0.3)' : 'transparent',
+                                        borderWidth: b.bgColor === 'transparent' ? '2px' : '0px'
+                                    }}
+                                    className={`inline-flex items-center gap-2 rounded-lg px-5 py-2 sm:px-8 sm:py-3.5 text-[12px] sm:text-sm font-semibold shadow-lg transition-all hover:brightness-110 hover:-translate-y-0.5 hover:shadow-xl ${b.bgColor === 'transparent' ? 'hover:bg-white/10' : ''}`}
+                                >
+                                    {b.label}
+                                    {b.bgColor !== 'transparent' && <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" />}
+                                </Link>
+                            ))}
+                        </div>
+                    </>
+                );
+
+                if (slide.link_url) {
+                    return (
                         <Link
-                            key={b.id}
-                            href={b.url || '/products'}
-                            style={{
-                                backgroundColor: b.bgColor !== 'transparent' ? b.bgColor : 'transparent',
-                                color: b.textColor,
-                                borderColor: b.bgColor === 'transparent' ? 'rgba(255,255,255,0.3)' : 'transparent',
-                                borderWidth: b.bgColor === 'transparent' ? '2px' : '0px'
-                            }}
-                            className={`inline-flex items-center gap-2 rounded-lg px-5 py-2 sm:px-8 sm:py-3.5 text-[12px] sm:text-sm font-semibold shadow-lg transition-all hover:brightness-110 hover:-translate-y-0.5 hover:shadow-xl ${b.bgColor === 'transparent' ? 'hover:bg-white/10' : ''}`}
+                            href={`/${country}${slide.link_url.startsWith('/') ? '' : '/'}${slide.link_url}`}
+                            className="relative z-20 mx-auto max-w-7xl px-4 py-2 sm:py-8 md:py-10 lg:py-12 text-center w-full h-full flex flex-col justify-center cursor-pointer"
                         >
-                            {b.label}
-                            {b.bgColor !== 'transparent' && <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" />}
+                            {slideContent}
                         </Link>
-                    ))}
-                </div>
-            </div>
+                    );
+                }
+
+                return (
+                    <div className="relative z-20 mx-auto max-w-7xl px-4 py-2 sm:py-8 md:py-10 lg:py-12 text-center w-full h-full flex flex-col justify-center">
+                        {slideContent}
+                    </div>
+                );
+            })()}
 
             {/* ── Prev / Next arrows (only if multiple slides AND visibility matches setting) ── */}
             {displaySlides.length > 1 && settings.arrow_visibility !== 'hidden' && (

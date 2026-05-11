@@ -152,7 +152,7 @@ export default function AccountPage() {
         address_line1: '', address_line2: '', city: '', state: '', pincode: '',
         country: defaultCountryName, country_code: defaultCountryCode, phone: '', label: '', is_default: false,
     });
-    
+
     const addressConfig = getAddressConfig(addressForm.country_code || 'IN');
     const addressDialCode = useMemo(() => {
         const match = Array.isArray(COUNTRY_CODES) ? COUNTRY_CODES.find(c => c.code === addressForm.country_code) : null;
@@ -382,11 +382,11 @@ export default function AccountPage() {
 
     // Body scroll lock for all modals
     useEffect(() => {
-        const isAnyModalOpen = isTrackOrderModalOpen || showDeactivateModal || deletingAddressId || 
-                             cancellingOrderId || reviewModal || showNotificationOverlay || 
-                             showExportModal || showPasswordModal || showEmailOtpModal || 
-                              showNotificationModal || isZoomModalOpen || showPhoneOtpModal;
-        
+        const isAnyModalOpen = isTrackOrderModalOpen || showDeactivateModal || deletingAddressId ||
+            cancellingOrderId || reviewModal || showNotificationOverlay ||
+            showExportModal || showPasswordModal || showEmailOtpModal ||
+            showNotificationModal || isZoomModalOpen || showPhoneOtpModal;
+
         if (isAnyModalOpen) {
             document.body.style.overflow = 'hidden';
         } else {
@@ -395,8 +395,8 @@ export default function AccountPage() {
         return () => {
             document.body.style.overflow = 'unset';
         };
-    }, [isTrackOrderModalOpen, showDeactivateModal, deletingAddressId, cancellingOrderId, 
-        reviewModal, showNotificationOverlay, showExportModal, showPasswordModal, 
+    }, [isTrackOrderModalOpen, showDeactivateModal, deletingAddressId, cancellingOrderId,
+        reviewModal, showNotificationOverlay, showExportModal, showPasswordModal,
         showEmailOtpModal, showNotificationModal, isZoomModalOpen, showPhoneOtpModal]);
 
     useEffect(() => {
@@ -502,11 +502,11 @@ export default function AccountPage() {
             const res = await getCustomerProfile(user.id);
             if (res.success && res.data) {
                 const fetchedEmail = res.data.email || '';
-                
+
                 // Important fix: handle truthy values explicitly or just rely on backend boolean.
                 // Assuming res.data.has_password is a boolean or 1/0
                 const hasPassword = Boolean(res.data.has_password);
-                
+
                 const phone = res.data.phone || '';
                 let countryCode = defaultDialCode;
                 let localNumber = phone;
@@ -556,7 +556,7 @@ export default function AccountPage() {
             const res = await getProfileImage(user.id);
             if (res.success && res.data) {
                 const { profile_image: base64Data, avatar_url: s3Url, mime_type: mimeType } = res.data;
-                
+
                 let parsedBase64 = base64Data;
                 if (base64Data && !base64Data.startsWith('data:')) {
                     const mime = mimeType || 'image/jpeg';
@@ -566,7 +566,7 @@ export default function AccountPage() {
                 setBase64Fallback(parsedBase64);
                 // Priority: S3 URL > Base64
                 setProfileImageUrl(s3Url || parsedBase64);
-                
+
                 // Keep global AuthContext user state synced
                 const finalUrl = s3Url || parsedBase64;
                 if (user?.avatar_url !== finalUrl) {
@@ -664,7 +664,7 @@ export default function AccountPage() {
         setReorderingOrderId(orderId);
         setBuyAgainLoading(true);
         let items = itemsToAdd;
-        
+
         try {
             if (!items) {
                 // Fetch the order full details if we don't have items
@@ -676,7 +676,7 @@ export default function AccountPage() {
                     return;
                 }
             }
-            
+
             if (items?.length === 0) {
                 toast.error('No items found in this order.');
                 return;
@@ -694,11 +694,11 @@ export default function AccountPage() {
 
                 const existingItem = getItemInCart(productId, variantId);
                 const currentQtyInCart = existingItem?.quantity || 0;
-                
+
                 // Get stock quantity (fallback to product stock if variant stock is null)
                 const stockQty = item.variant?.stock_quantity ?? item.product?.stock_quantity ?? null;
                 const requestedQty = item.quantity || 1;
-                
+
                 const availableSpace = stockQty !== null ? Math.max(0, stockQty - currentQtyInCart) : Infinity;
 
                 if (availableSpace === 0) {
@@ -812,7 +812,7 @@ export default function AccountPage() {
     useEffect(() => {
         setCurrentPage(1);
         if (!user?.id) return;
-        
+
         // Always fetch profile details and image for the sidebar and header
         fetchProfile();
         fetchProfileImage();
@@ -911,10 +911,10 @@ export default function AccountPage() {
             // Note: email and phone are handled above. If we are here, it means they haven't changed 
             // from original OR they were just verified and fetchProfile was called (which updated originalEmail/originalPhone).
             const { has_password, is_email_verified, is_mobile_verified, email, created_at, phone, ...rest } = profileData;
-            
+
             const updateData: any = { ...rest };
             // DO NOT update phone or email here; they are managed by separate verification endpoints
-            
+
             const res = await updateCustomerProfile(user.id, updateData);
             if (res.success) {
                 toast.success('Profile updated successfully');
@@ -953,7 +953,7 @@ export default function AccountPage() {
             toast.error('Please enter the OTP');
             return;
         }
-        
+
         setPhoneOtpSubmitting(true);
         try {
             const res = await verifyPhoneChangeProfile(phoneOtpCode);
@@ -962,7 +962,7 @@ export default function AccountPage() {
                 setShowPhoneOtpModal(false);
                 setPhoneOtpCode('');
                 setPhoneOtpResendTimer(0);
-                
+
                 // Continue to update the rest of the profile if needed, but phone is already updated by backend
                 setProfileEditing(false);
                 fetchProfile();
@@ -978,7 +978,7 @@ export default function AccountPage() {
 
     const handleResendEmailOtp = async () => {
         if (emailOtpResendTimer > 0) return;
-        
+
         try {
             const reqRes = await requestEmailChange(profileData.email);
             if (reqRes.success) {
@@ -997,7 +997,7 @@ export default function AccountPage() {
             toast.error('Please enter the OTP');
             return;
         }
-        
+
         setEmailOtpSubmitting(true);
         try {
             const res = await verifyEmailChangeProfile(emailOtpCode);
@@ -1006,18 +1006,18 @@ export default function AccountPage() {
                 setShowEmailOtpModal(false);
                 setEmailOtpCode('');
                 setEmailOtpResendTimer(0);
-                
+
                 // Continue to update the rest of the profile if it was being edited
                 if (!user?.id) return;
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const { has_password, is_email_verified, is_mobile_verified, email, ...updateData } = profileData;
                 const profileRes = await updateCustomerProfile(user.id, updateData);
-                
+
                 if (profileRes.success) {
                     toast.success('Profile all updated');
                     setProfileEditing(false);
                 }
-                
+
                 fetchProfile();
             } else {
                 toast.error(res.message || 'Invalid or expired OTP');
@@ -1031,7 +1031,7 @@ export default function AccountPage() {
 
     const handlePasswordChange = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (profileData.has_password && passwords.current === passwords.new) {
             toast.error('New password cannot be the same as your current password');
             return;
@@ -1336,18 +1336,17 @@ export default function AccountPage() {
     ];
 
     return (
-        <div className="flex flex-col lg:flex-row bg-[#FAFAFA] min-h-[calc(100vh-128px)]">
+        <div className="flex flex-col lg:flex-row bg-[#FFFFFF] min-h-[calc(100vh-128px)]">
             {/* Mobile Account Navigation (Visible only on < lg) */}
             <nav className="lg:hidden sticky top-0 z-[100] bg-white/95 backdrop-blur-md border-b border-gray-100 overflow-x-auto shadow-sm custom-scrollbar flex items-center gap-1.5 px-4 py-3 whitespace-nowrap shadow-sm">
                 {[...coreExperienceTabs, ...identityAccessTabs].map(tab => (
                     <button
                         key={tab.id}
                         onClick={() => router.push(`/${country}/account/${tab.id}`)}
-                        className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-2 ${
-                            activeTab === tab.id 
-                            ? 'bg-[#91c934] text-white shadow-md' 
+                        className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-2 ${activeTab === tab.id
+                            ? 'bg-[#91c934] text-white shadow-md'
                             : 'bg-white text-gray-700 border border-gray-100 hover:bg-gray-50'
-                        }`}
+                            }`}
                     >
                         <tab.icon className={`h-3 w-3 ${activeTab === tab.id ? 'opacity-100' : 'opacity-60'}`} />
                         {tab.label}
@@ -1432,14 +1431,14 @@ export default function AccountPage() {
                         </div>
                         <div className="flex items-center gap-2 mb-2">
                             <span className="p-1.5 bg-white/15 rounded-full flex items-center justify-center">
-                                <Star className="h-3 w-3 text-[#D4A847] fill-[#D4A847]" />
+                                <Star className="h-3 w-3 text-[#FFD801] fill-[#FFD801]" />
                             </span>
                             <span className="text-[10px] font-bold tracking-wider text-white uppercase">{activeTier} STATUS</span>
                         </div>
-                        <p className="text-xs text-white/80 leading-relaxed mb-3">You currently possess the <strong className="text-white">{activeTier}</strong> ritualist rank.</p>
-                        <button 
+                        <p className="text-xs text-white leading-relaxed mb-3">You currently possess the <strong className="text-white">{activeTier}</strong> ritualist rank.</p>
+                        <button
                             onClick={() => router.push(`/${country}/account/wallet`)}
-                            className="text-[10px] uppercase font-bold text-[#D4A847] flex items-center gap-1 hover:text-white transition-colors"
+                            className="text-[10px] uppercase font-bold text-white flex items-center gap-1 hover:text-[#FFD801] transition-colors"
                         >
                             VIEW BENEFITS <ChevronRight className="h-3 w-3" />
                         </button>
@@ -1450,9 +1449,9 @@ export default function AccountPage() {
                         <div className="h-9 w-9 rounded-full bg-[#91c934] flex items-center justify-center overflow-hidden border-2 border-white shadow-sm">
                             {profileImageUrl ? (
                                 // eslint-disable-next-line @next/next/no-img-element
-                                <img 
-                                    src={profileImageUrl} 
-                                    alt="Profile" 
+                                <img
+                                    src={profileImageUrl}
+                                    alt="Profile"
                                     className="h-full w-full object-cover"
                                     onError={() => {
                                         if (base64Fallback && profileImageUrl !== base64Fallback) {
@@ -1788,9 +1787,9 @@ export default function AccountPage() {
                                             </div>
 
                                             <div className="relative z-10">
-                                                <p className="text-[10px] font-bold tracking-widest text-[#D4A847] uppercase mb-1">Vedashi Wallet</p>
+                                                <p className="text-[10px] font-bold tracking-widest text-white uppercase mb-1">Vedashi Wallet</p>
                                                 <h3 className="text-3xl font-bold mb-1">${(Number(user?.wallet_balance || 0)).toFixed(2)}</h3>
-                                                <p className="text-[10px] text-white/70 tracking-wide">Available balance for quick checkout</p>
+                                                <p className="text-[10px] text-white tracking-wide">Available balance for quick checkout</p>
                                             </div>
                                         </div>
 
@@ -1809,7 +1808,7 @@ export default function AccountPage() {
                                         <span className="bg-[#f0fdf4] text-[#2D5A3A] text-xs font-bold px-3 py-1 rounded-full">
                                             {filteredAndSortedOrders.length} {filteredAndSortedOrders.length !== orders.length ? `of ${orders.length}` : ''} Total
                                         </span>
-                                    </div> 
+                                    </div>
                                 </div>
 
                                 <div className="flex flex-col lg:flex-row gap-8 items-start">
@@ -1826,7 +1825,7 @@ export default function AccountPage() {
                                                     onChange={e => setOrderSearch(e.target.value)}
                                                     className="w-full bg-white border border-gray-100 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-[#91c934]/40 focus:ring-1 focus:ring-[#91c934]/20 transition-all text-gray-900 placeholder:text-warm-gray/70 shadow-sm"
                                                 />
-                                            </div>  
+                                            </div>
                                         </div>
 
                                         {/* Status Filters & Sort */}
@@ -1948,7 +1947,7 @@ export default function AccountPage() {
                                                         <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 p-4 sm:p-6 items-start sm:items-center relative">
                                                             {/* Selected state overlay hint */}
                                                             {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#91c934]"></div>}
-                                                            
+
                                                             {/* Image */}
                                                             <div className="relative h-20 w-20 sm:h-24 sm:w-24 rounded-3xl bg-gray-50 border border-gray-100 flex-shrink-0 flex items-center justify-center overflow-hidden">
                                                                 {prodImg ? (
@@ -1958,7 +1957,7 @@ export default function AccountPage() {
                                                                     <Package className="h-8 w-8 text-warm-gray/40" />
                                                                 )}
                                                             </div>
-                                                            
+
                                                             {/* Info */}
                                                             <div className="flex-1 w-full min-w-0 flex flex-col justify-center">
                                                                 <p className="text-base font-bold text-gray-900 line-clamp-2">{prodName}</p>
@@ -1969,7 +1968,7 @@ export default function AccountPage() {
                                                                 )}
                                                                 <p className="text-xs font-medium text-warm-gray mt-2">Sold by Vedashi</p>
                                                             </div>
-                                                            
+
                                                             {/* Actions */}
                                                             <div className="flex flex-wrap sm:flex-col gap-2 w-full sm:w-auto shrink-0 mt-4 sm:mt-0 border-t sm:border-t-0 sm:border-l border-gray-100 pt-4 sm:pt-0 sm:pl-6 justify-center">
                                                                 <button
@@ -2018,16 +2017,16 @@ export default function AccountPage() {
                                                     </strong> of <strong className="text-gray-900">{filteredAndSortedOrders.length}</strong> orders
                                                 </span>
                                                 <div className="flex items-center gap-2">
-                                                    <button 
+                                                    <button
                                                         onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                                         disabled={currentPage === 1}
                                                         className={`px-4 py-2 text-sm font-bold rounded-xl border border-gray-100 transition-colors ${currentPage === 1 ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-gray-900 bg-white hover:bg-gray-50'}`}
                                                     >
                                                         Previous
                                                     </button>
-                                                    
+
                                                     {Array.from({ length: Math.ceil(filteredAndSortedOrders.length / pageSize) }).map((_, i) => (
-                                                        <button 
+                                                        <button
                                                             key={i}
                                                             onClick={() => setCurrentPage(i + 1)}
                                                             className={`h-9 w-9 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center transition-all ${currentPage === i + 1 ? 'bg-[#91c934] text-white' : 'bg-white text-gray-900 border border-gray-100 hover:bg-gray-50'}`}
@@ -2036,7 +2035,7 @@ export default function AccountPage() {
                                                         </button>
                                                     ))}
 
-                                                    <button 
+                                                    <button
                                                         onClick={() => setCurrentPage(p => Math.min(Math.ceil(filteredAndSortedOrders.length / pageSize), p + 1))}
                                                         disabled={currentPage === Math.ceil(filteredAndSortedOrders.length / pageSize)}
                                                         className={`px-4 py-2 text-sm font-bold rounded-xl border border-gray-100 transition-colors ${currentPage === Math.ceil(filteredAndSortedOrders.length / pageSize) ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-gray-900 bg-white hover:bg-gray-50'}`}
@@ -2080,9 +2079,9 @@ export default function AccountPage() {
                                                         <div className="mb-6 relative z-10">
                                                             <p className="text-xs font-medium opacity-70 mb-1">
                                                                 {selectedOrderDetails.order_status === 'DELIVERED' ? 'Delivered On' :
-                                                                 selectedOrderDetails.order_status === 'SHIPPED' ? 'Shipped On' :
-                                                                 selectedOrderDetails.order_status === 'CONFIRMED' ? 'Confirmed On' :
-                                                                 'Ordered On'}
+                                                                    selectedOrderDetails.order_status === 'SHIPPED' ? 'Shipped On' :
+                                                                        selectedOrderDetails.order_status === 'CONFIRMED' ? 'Confirmed On' :
+                                                                            'Ordered On'}
                                                             </p>
                                                             <p className="text-2xl font-bold">
                                                                 {selectedOrderDetails.order_status === 'DELIVERED'
@@ -2231,11 +2230,10 @@ export default function AccountPage() {
                                                                 <div className="rounded-3xl border border-gray-100 bg-gray-50/30 p-4 space-y-3">
                                                                     <div className="flex justify-between items-center">
                                                                         <span className="text-[10px] font-bold text-gray-900 uppercase">#{ticket._ticket_number || ticket.feedback_id.slice(0, 8)}</span>
-                                                                        <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
-                                                                            ticket.status === 'resolved' || ticket.status === 'closed' ? 'bg-green-100 text-green-700' :
+                                                                        <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${ticket.status === 'resolved' || ticket.status === 'closed' ? 'bg-green-100 text-green-700' :
                                                                             ticket.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
-                                                                            'bg-amber-100 text-amber-700'
-                                                                        }`}>
+                                                                                'bg-amber-100 text-amber-700'
+                                                                            }`}>
                                                                             {ticket.status}
                                                                         </span>
                                                                     </div>
@@ -2466,7 +2464,7 @@ export default function AccountPage() {
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                                         {sortedWishlistItems.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((prod) => {
+                                        {sortedWishlistItems.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((prod) => {
                                             const product = prod;
                                             const isSelected = selectedWishlistItems.has(product.product_id);
                                             const stockStatus = (product.stock_status || '').toLowerCase();
@@ -2567,16 +2565,16 @@ export default function AccountPage() {
                                             </strong> of <strong className="text-gray-900">{sortedWishlistItems.length}</strong> items
                                         </span>
                                         <div className="flex items-center gap-2">
-                                            <button 
+                                            <button
                                                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                                 disabled={currentPage === 1}
                                                 className={`px-4 py-2 text-sm font-bold rounded-xl border border-gray-100 transition-colors ${currentPage === 1 ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-gray-900 bg-white hover:bg-gray-50'}`}
                                             >
                                                 Previous
                                             </button>
-                                            
+
                                             {Array.from({ length: Math.ceil(sortedWishlistItems.length / pageSize) }).map((_, i) => (
-                                                <button 
+                                                <button
                                                     key={i}
                                                     onClick={() => setCurrentPage(i + 1)}
                                                     className={`h-9 w-9 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center transition-all ${currentPage === i + 1 ? 'bg-[#91c934] text-white' : 'bg-white text-gray-900 border border-gray-100 hover:bg-gray-50'}`}
@@ -2585,7 +2583,7 @@ export default function AccountPage() {
                                                 </button>
                                             ))}
 
-                                            <button 
+                                            <button
                                                 onClick={() => setCurrentPage(p => Math.min(Math.ceil(sortedWishlistItems.length / pageSize), p + 1))}
                                                 disabled={currentPage === Math.ceil(sortedWishlistItems.length / pageSize)}
                                                 className={`px-4 py-2 text-sm font-bold rounded-xl border border-gray-100 transition-colors ${currentPage === Math.ceil(sortedWishlistItems.length / pageSize) ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-gray-900 bg-white hover:bg-gray-50'}`}
@@ -2997,8 +2995,8 @@ export default function AccountPage() {
                                         </div>
                                         <div className="w-px h-12 bg-gray-200"></div>
                                         <div className="text-center">
-                                            <p className="text-3xl font-bold text-[#D4A847] mb-1">{activePoints}</p>
-                                            <p className="text-[10px] font-bold text-[#D4A847]/70 tracking-widest uppercase flex items-center gap-1 justify-center">
+                                            <p className="text-3xl font-bold text-[#FFD801] mb-1">{activePoints}</p>
+                                            <p className="text-[10px] font-bold text-[#FFD801] tracking-widest uppercase flex items-center gap-1 justify-center">
                                                 <Star className="h-2.5 w-2.5" /> Seed Points
                                             </p>
                                         </div>
@@ -3150,13 +3148,13 @@ export default function AccountPage() {
                                         </div>
 
                                         {/* Active Plan / Loyalty Status */}
-                                        <div className="bg-[#1f2937] rounded-[2rem] p-6 text-white relative overflow-hidden shadow-lg border border-[#D4A847]/30 group hover:border-[#D4A847] transition-all duration-500">
+                                        <div className="bg-[#83BD2E] rounded-[2rem] p-6 text-white relative overflow-hidden shadow-lg border border-[#D4A847]/30 group hover:border-[#D4A847] transition-all duration-500">
                                             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                                                 <Star className="h-16 w-16 text-[#D4A847]" />
                                             </div>
-                                            <p className="text-[10px] font-bold tracking-[0.2em] text-[#D4A847]/60 mb-2 uppercase">ACTIVE PLAN</p>
-                                            <h3 className="text-2xl font-bold text-[#D4A847] mb-2">{activeTier} Ritualist</h3>
-                                            <p className="text-sm text-white/70 leading-relaxed mb-6">
+                                            <p className="text-[10px] font-bold tracking-[0.2em] text-white mb-2 uppercase">ACTIVE PLAN</p>
+                                            <h3 className="text-2xl font-bold text-[#FFD801] mb-2">{activeTier} Ritualist</h3>
+                                            <p className="text-sm text-white leading-relaxed mb-6">
                                                 {loyaltyData?.tier?.benefits && Array.isArray(loyaltyData?.tier?.benefits) && loyaltyData?.tier?.benefits.length > 0
                                                     ? loyaltyData?.tier?.benefits.join(', ')
                                                     : "Enhance your aura with every ritual to unlock exotic benefits and golden boons."
@@ -3164,7 +3162,7 @@ export default function AccountPage() {
                                             </p>
                                             <button
                                                 onClick={() => router.push(`/${country}/account/wallet`)}
-                                                className="w-full rounded-xl bg-[#D4A847] text-[#1f2937] py-3 text-sm font-bold hover:bg-white transition-all transform active:scale-95 shadow-lg"
+                                                className="w-full rounded-xl bg-[#FFD801] text-[#1f2937] py-3 text-sm font-bold hover:bg-[#FFD801]/80 transition-all transform active:scale-95 shadow-lg"
                                             >
                                                 Manage Rewards
                                             </button>
@@ -3456,11 +3454,10 @@ export default function AccountPage() {
                                                                             Ticket
                                                                         </span>
                                                                     )}
-                                                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${
-                                                                        enquiry.status === 'resolved' || enquiry.status === 'closed' ? 'bg-green-100 text-green-700' :
+                                                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${enquiry.status === 'resolved' || enquiry.status === 'closed' ? 'bg-green-100 text-green-700' :
                                                                         enquiry.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
-                                                                        'bg-[#D4A847]/20 text-[#B38720]'
-                                                                    }`}>
+                                                                            'bg-[#D4A847]/20 text-[#B38720]'
+                                                                        }`}>
                                                                         {enquiry.status || 'Pending'}
                                                                     </span>
                                                                     <span className="text-[10px] font-bold text-warm-gray uppercase tracking-widest">
@@ -3612,7 +3609,7 @@ export default function AccountPage() {
                                     {notifications.length > 0 && (
                                         <button
                                             onClick={handleMarkAllRead}
-                                            className="px-4 py-2 bg-white border border-gray-100 rounded-xl text-xs font-bold text-gray-900 hover:bg-gray-50 transition-colors flex items-center gap-2"
+                                            className="px-4 py-2 bg-white border border-[#91C934] rounded-xl text-xs font-bold text-[#91C934] hover:bg-gray-50 transition-colors flex items-center gap-2"
                                         >
                                             <Check className="h-3.5 w-3.5" /> Mark All as Read
                                         </button>
@@ -3669,7 +3666,7 @@ export default function AccountPage() {
                                                                     fetchNotificationsData();
                                                                     window.dispatchEvent(new CustomEvent('notifications-updated'));
                                                                 }}
-                                                                className="text-[10px] font-black uppercase tracking-widest transition-colors text-[#D4A847] hover:text-[#B38720]"
+                                                                className="text-[10px] font-black uppercase tracking-widest transition-colors text-[#91C934] hover:underline"
                                                             >
                                                                 Mark as Read
                                                             </button>
@@ -3699,16 +3696,16 @@ export default function AccountPage() {
                                                     </strong> of <strong className="text-gray-900">{notifications.length}</strong> notifications
                                                 </span>
                                                 <div className="flex items-center gap-2">
-                                                    <button 
+                                                    <button
                                                         onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                                         disabled={currentPage === 1}
                                                         className={`px-4 py-2 text-sm font-bold rounded-xl border border-gray-100 transition-colors ${currentPage === 1 ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-gray-900 bg-white hover:bg-gray-50'}`}
                                                     >
                                                         Previous
                                                     </button>
-                                                    
+
                                                     {Array.from({ length: Math.ceil(notifications.length / pageSize) }).map((_, i) => (
-                                                        <button 
+                                                        <button
                                                             key={i}
                                                             onClick={() => setCurrentPage(i + 1)}
                                                             className={`h-9 w-9 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center transition-all ${currentPage === i + 1 ? 'bg-[#91c934] text-white' : 'bg-white text-gray-900 border border-gray-100 hover:bg-gray-50'}`}
@@ -3717,7 +3714,7 @@ export default function AccountPage() {
                                                         </button>
                                                     ))}
 
-                                                    <button 
+                                                    <button
                                                         onClick={() => setCurrentPage(p => Math.min(Math.ceil(notifications.length / pageSize), p + 1))}
                                                         disabled={currentPage === Math.ceil(notifications.length / pageSize)}
                                                         className={`px-4 py-2 text-sm font-bold rounded-xl border border-gray-100 transition-colors ${currentPage === Math.ceil(notifications.length / pageSize) ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-gray-900 bg-white hover:bg-gray-50'}`}
@@ -3736,8 +3733,8 @@ export default function AccountPage() {
                         {isMounted && isTrackOrderModalOpen && createPortal(
                             <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4" style={{ animation: 'fadeIn 0.2s ease-out' }}>
                                 <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsTrackOrderModalOpen(false)} />
-                                <div className="relative w-full max-w-md rounded-3xl bg-[#fafafa] p-8 shadow-2xl border border-gray-100 text-center" style={{ animation: 'slideUp 0.25s ease-out' }}>
-                                    
+                                <div className="relative w-full max-w-md rounded-3xl bg-[#FFFFFF] p-8 shadow-2xl border border-gray-100 text-center" style={{ animation: 'slideUp 0.25s ease-out' }}>
+
                                     {/* Botanical Icon */}
                                     {(() => {
                                         const s = (trackOrderStatus || 'PENDING').toUpperCase();
@@ -3770,20 +3767,19 @@ export default function AccountPage() {
                                     <h3 className="text-2xl font-bold text-[#374151] mb-2">Track Order</h3>
                                     <p className="font-mono text-sm font-semibold text-[#6b7280] mb-1">#{trackOrderId?.split('-')[0].toUpperCase()}</p>
                                     {trackOrderStatus && (
-                                        <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-4 ${
-                                            trackOrderStatus === 'DELIVERED' ? 'bg-[#E8F5E9] text-[#2E7D32]' :
+                                        <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-4 ${trackOrderStatus === 'DELIVERED' ? 'bg-[#E8F5E9] text-[#2E7D32]' :
                                             trackOrderStatus === 'SHIPPED' ? 'bg-[#E0F2F1] text-[#00695C]' :
-                                            trackOrderStatus === 'CONFIRMED' ? 'bg-[#F1F8E9] text-[#558B2F]' :
-                                            trackOrderStatus === 'CANCELLED' ? 'bg-[#FBE9E7] text-[#BF360C]' :
-                                            'bg-[#FFF8E1] text-[#F9A825]'
-                                        }`}>{trackOrderStatus}</span>
+                                                trackOrderStatus === 'CONFIRMED' ? 'bg-[#F1F8E9] text-[#558B2F]' :
+                                                    trackOrderStatus === 'CANCELLED' ? 'bg-[#FBE9E7] text-[#BF360C]' :
+                                                        'bg-[#FFF8E1] text-[#F9A825]'
+                                            }`}>{trackOrderStatus}</span>
                                     )}
 
                                     {/* Growth Progress Bar */}
                                     {trackOrderStatus && trackOrderStatus !== 'CANCELLED' && (
                                         <div className="flex items-center justify-between px-2 mb-5">
                                             {['PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED'].map((step, idx) => {
-                                                const statusOrder = ['PENDING','CONFIRMED','SHIPPED','DELIVERED'];
+                                                const statusOrder = ['PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED'];
                                                 const currentIdx = statusOrder.indexOf(trackOrderStatus || 'PENDING');
                                                 const isActive = idx <= currentIdx;
                                                 return (
@@ -3818,12 +3814,12 @@ export default function AccountPage() {
                                                         </a>
                                                     )}
                                                 </div>
-                                                
+
                                                 {trackingData.shipment_track && trackingData.shipment_track.length > 0 && (
                                                     <div className="relative pl-4 space-y-4 before:content-[''] before:absolute before:left-1.5 before:top-2 before:bottom-0 before:w-0.5 before:bg-gray-200">
                                                         {trackingData.shipment_track.slice(0, 3).map((track: any, idx: number) => (
                                                             <div key={idx} className="relative">
-                                                                <div className={`absolute -left-[19px] top-1.5 w-3 h-3 rounded-full border-2 border-[#fafafa] ${idx === 0 ? 'bg-[#91c934]' : 'bg-[#d1d5db]'}`} />
+                                                                <div className={`absolute -left-[19px] top-1.5 w-3 h-3 rounded-full border-2 border-[#FFFFFF] ${idx === 0 ? 'bg-[#91c934]' : 'bg-[#d1d5db]'}`} />
                                                                 <p className="text-xs font-bold text-[#374151]">{track.activity || track.current_status}</p>
                                                                 <div className="flex items-center gap-2 mt-0.5">
                                                                     <p className="text-[10px] text-[#6b7280] font-medium flex items-center gap-1"><Calendar className="h-3 w-3" /> {track.date}</p>
@@ -3837,8 +3833,8 @@ export default function AccountPage() {
                                         ) : (
                                             <div className="flex flex-col items-center justify-center py-6">
                                                 <svg width="32" height="32" viewBox="0 0 64 64" fill="none" className="mb-2 opacity-40">
-                                                    <rect x="8" y="44" rx="4" width="48" height="12" fill="#8B6914" opacity="0.3"/>
-                                                    <ellipse cx="32" cy="38" rx="6" ry="8" fill="#8B6914" opacity="0.4"/>
+                                                    <rect x="8" y="44" rx="4" width="48" height="12" fill="#8B6914" opacity="0.3" />
+                                                    <ellipse cx="32" cy="38" rx="6" ry="8" fill="#8B6914" opacity="0.4" />
                                                 </svg>
                                                 <p className="text-[#374151] text-sm leading-relaxed font-medium">
                                                     Your order is being prepared.
@@ -4162,8 +4158,8 @@ export default function AccountPage() {
                                                 className="w-full rounded-xl border border-light-border bg-cream/20 pl-4 pr-12 py-3 text-sm focus:border-burgundy/40 focus:outline-none transition-all"
                                                 placeholder="••••••••"
                                             />
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                                                 className="absolute right-4 top-1/2 -translate-y-1/2 text-warm-gray hover:text-gray-900 transition-colors"
                                             >
@@ -4172,7 +4168,7 @@ export default function AccountPage() {
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div className="pt-6">
                                     <button
                                         type="submit"
@@ -4207,7 +4203,7 @@ export default function AccountPage() {
                         <div className="bg-[#1f2937] p-8 text-white relative">
                             {/* Decorative elements */}
                             <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-full pointer-events-none"></div>
-                            
+
                             <div className="flex items-center justify-between relative z-10">
                                 <div className="flex items-center gap-4">
                                     <div className="w-14 h-14 rounded-3xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-inner">
@@ -4223,7 +4219,7 @@ export default function AccountPage() {
                                 </button>
                             </div>
                         </div>
-                        
+
                         <div className="p-8 max-h-[70vh] overflow-y-auto custom-scrollbar bg-white/80 backdrop-blur-md">
                             <div className="mb-6 bg-gray-50 p-4 rounded-3xl border border-gray-100/50">
                                 <p className="text-sm text-gray-900 flex items-center gap-2">
@@ -4233,7 +4229,7 @@ export default function AccountPage() {
                             <NotificationPreferences hideHeader={true} isMobileVerified={profileData.is_mobile_verified} />
                         </div>
                         <div className="p-6 bg-gray-50 border-t border-gray-100 text-center">
-                            <button 
+                            <button
                                 onClick={() => setShowNotificationModal(false)}
                                 className="px-12 py-3.5 bg-[#91c934] text-white rounded-xl text-sm font-bold shadow-lg hover:bg-[#7ab52a] transition-all transform active:scale-95"
                             >
