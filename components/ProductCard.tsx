@@ -801,19 +801,19 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                             {/* Label + Price */}
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-[11px] font-semibold text-gray-800 leading-tight line-clamp-1">{label}</p>
-                                                <div className="flex items-center gap-1.5 mt-0.5">
-                                                    <span className="text-[12px] font-bold text-gray-900">
+                                                <div className="flex flex-col mt-0.5">
+                                                    <span className="text-[12px] font-bold text-gray-900 leading-none">
                                                         {formatPrice(vDisplayPrice, v.country_prices || product.country_prices)}
                                                     </span>
                                                     {vIsDiscounted && (
-                                                        <>
-                                                            <span className="text-[10px] text-gray-400 line-through">
-                                                                {formatPrice(vOriginalPrice, v.country_prices || product.country_prices)}
-                                                            </span>
+                                                        <div className="flex items-center gap-1.5 mt-1">
                                                             <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full text-red-500 bg-red-50">
                                                                 {getDiscountPercent(v)}% OFF
                                                             </span>
-                                                        </>
+                                                            <span className="text-[10px] text-gray-400 line-through">
+                                                                MRP {formatPrice(vOriginalPrice, v.country_prices || product.country_prices)}
+                                                            </span>
+                                                        </div>
                                                     )}
                                                 </div>
                                                 {isOut && !isInactive && (
@@ -1044,19 +1044,19 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                     {/* Content */}
                     <div className={`p-2 sm:p-2 ${isList ? 'flex-1 flex flex-col justify-center min-w-0 p-0 sm:pr-3' : 'pt-5'}`}>
                         {/* Price Display */}
-                        <div className="flex items-center gap-2 mb-1.5 sm:mb-2 px-1 text-[#91C935]">
-                            <span className="font-black text-[15px] sm:text-[17px] leading-none py-0.5">
+                        <div className="flex flex-col mb-1.5 sm:mb-2 px-1">
+                            <span className="font-black text-[15px] sm:text-[17px] leading-none text-[#91C935]">
                                 {formatPrice(displayPrice, product.country_prices)}
                             </span>
                             {originalPrice > displayPrice && (
-                                <>
-                                    <span className="text-gray-400 line-through text-[11px] sm:text-xs font-bold font-ui mt-0.5">
-                                        {formatPrice(originalPrice, product.country_prices)}
-                                    </span>
+                                <div className="flex items-center gap-1.5 mt-1">
                                     <span className="text-[#FF0000] bg-red-50 text-[10px] font-bold px-1.5 py-0.5 rounded border border-red-100 whitespace-nowrap">
                                         {Math.round((1 - displayPrice / originalPrice) * 100)}% OFF
                                     </span>
-                                </>
+                                    <span className="text-gray-400 line-through text-[11px] sm:text-xs font-bold font-ui">
+                                        MRP {formatPrice(originalPrice, product.country_prices)}
+                                    </span>
+                                </div>
                             )}
                         </div>
 

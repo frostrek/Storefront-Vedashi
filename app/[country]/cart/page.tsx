@@ -286,12 +286,26 @@ export default function CartPage() {
                                                             <p className="text-xs mt-2 text-[#D35400] font-bold">Only {item.stock_quantity} left in stock</p>
                                                         )}
                                                     </div>
-                                                    <div className="text-right">
-                                                        <div className="text-lg font-bold text-[#1A1A1A]">
-                                                            {formatPrice(price * item.quantity)}
+                                                        <div className="text-right">
+                                                            <div className="text-lg font-bold text-[#1A1A1A]">
+                                                                {formatPrice(price * item.quantity)}
+                                                            </div>
+                                                            {unitPrice > price && (
+                                                                <div className="flex items-center justify-end gap-1.5 mt-0.5">
+                                                                    <span className="text-red-500 font-bold text-xs">
+                                                                        {Math.round((1 - price / unitPrice) * 100)}% OFF
+                                                                    </span>
+                                                                    <span className="text-gray-400 line-through text-xs">
+                                                                        {formatPrice(unitPrice * item.quantity)}
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                            {item.quantity > 1 && (
+                                                                <div className="text-[10px] text-gray-400 mt-1 uppercase tracking-tight">
+                                                                    {formatPrice(price)} each
+                                                                </div>
+                                                            )}
                                                         </div>
-                                                        <div className="text-xs text-[#8B7A3D] mt-1">{formatPrice(price)} each</div>
-                                                    </div>
                                                 </div>
 
                                                 <div className="flex items-center justify-between mt-4">
@@ -457,7 +471,14 @@ export default function CartPage() {
                                                     {item.product_name || 'Product'}
                                                     <div className="ritual-summary-item-qty mt-0.5">Qty: {item.quantity}</div>
                                                 </div>
-                                                <span className="ritual-summary-item-price">{formatPrice(lineTotal)}</span>
+                                                <div className="flex flex-col items-end">
+                                                    <span className="ritual-summary-item-price">{formatPrice(lineTotal)}</span>
+                                                    {((item as any).original_price ?? 0) > price && (
+                                                        <span className="text-[10px] text-[rgba(255,255,255,0.4)] line-through">
+                                                            {formatPrice(((item as any).original_price || 0) * item.quantity)}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                         );
                                     })}
@@ -465,33 +486,44 @@ export default function CartPage() {
 
                                 <div className="ritual-summary-divider" />
 
-                                <div className="space-y-2">
+                                <div className="space-y-2.5">
                                     <div className="ritual-summary-row">
-                                        <span className="label">Bundle Subtotal</span>
+                                        <span className="label">Total MRP</span>
                                         <span className="value">{formatPrice(totalMRP)}</span>
                                     </div>
                                     {saleDiscount > 0 && (
                                         <div className="ritual-summary-row">
-                                            <span className="label">Vedic Discount</span>
+                                            <span className="label">Discount on MRP</span>
                                             <span className="value !text-[#86EFAC]">- {formatPrice(saleDiscount)}</span>
                                         </div>
                                     )}
                                     {couponDiscount > 0 && (
                                         <div className="ritual-summary-row">
-                                            <span className="label">Promo Discount</span>
+                                            <span className="label">Coupon Discount</span>
                                             <span className="value !text-[#86EFAC]">- {formatPrice(couponDiscount)}</span>
                                         </div>
                                     )}
                                     <div className="ritual-summary-row">
-                                        <span className="label">Vedic Shipping <span className="text-[9px] uppercase tracking-wider opacity-70 ml-1">(Standard)</span></span>
-                                        <span className="value">{deliveryFee === 0 ? 'FREE' : formatPrice(deliveryFee)}</span>
+                                        <span className="label">Platform Fee</span>
+                                        <span className="value !text-[#86EFAC] uppercase font-bold text-[10px] tracking-wider">FREE</span>
                                     </div>
-
+                                    <div className="ritual-summary-row">
+                                        <span className="label">Shipping Fee</span>
+                                        <span className="value">{deliveryFee === 0 ? <span className="text-[#86EFAC] font-bold uppercase tracking-wider">FREE</span> : formatPrice(deliveryFee)}</span>
+                                    </div>
                                 </div>
+
+                                {(saleDiscount + couponDiscount) > 0 && (
+                                    <div className="mt-4 p-3 bg-white/10 rounded-xl border border-white/10 text-center">
+                                        <p className="text-[10px] font-bold text-[#86EFAC] uppercase tracking-widest">
+                                            Total Savings: {formatPrice(saleDiscount + couponDiscount)}
+                                        </p>
+                                    </div>
+                                )}
 
                                 <div className="ritual-summary-total">
                                     <div>
-                                        <div className="ritual-summary-total-label">Total Investment</div>
+                                        <div className="ritual-summary-total-label">Total Amount</div>
                                         <div className="ritual-summary-total-value mt-1">{formatPrice(grandTotal)}</div>
                                     </div>
                                     <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.05)]">

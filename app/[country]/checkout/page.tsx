@@ -37,6 +37,7 @@ interface BuyNowItem {
     size_label: string;
     quantity: number;
     unit_price: number;
+    original_price: number;
     image_url: string;
 }
 
@@ -288,6 +289,12 @@ function CheckoutContent() {
     const baseSubtotal = isBuyNow && buyNowItem
         ? Math.round(buyNowItem.unit_price * buyNowItem.quantity)
         : items.reduce((sum, item) => sum + (item.price ?? 0) * item.quantity, 0);
+
+    const totalMrp = isBuyNow && buyNowItem
+        ? Math.round((buyNowItem.original_price || buyNowItem.unit_price) * buyNowItem.quantity)
+        : items.reduce((sum, item) => sum + ((item as any).original_price ?? item.price ?? 0) * item.quantity, 0);
+
+    const mrpDiscount = totalMrp - baseSubtotal;
 
     const shippingCost = couponType === 'free_shipping' ? 0 : (baseSubtotal > 50 ? 0 : 15);
     const discount = isBuyNow ? 0 : couponDiscount;
@@ -1695,6 +1702,7 @@ function CheckoutContent() {
                                 <div className="space-y-1 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar mt-4">
                                     {checkoutItems.map(item => {
                                         const price = isBuyNow ? (item as BuyNowItem).unit_price : (item as any).price ?? 0;
+                                        const originalPrice = isBuyNow ? (item as BuyNowItem).original_price : (item as any).original_price ?? price;
                                         const lineTotal = price * item.quantity;
                                         return (
                                             <div key={item.product_id + (item.variant_id || '')} className="ritual-summary-item pb-3 border-b border-[#E8E4DC] last:border-0 last:pb-0">
@@ -1710,7 +1718,19 @@ function CheckoutContent() {
                                                     {(item as any).size_label && <p className="text-[#a4a9a4] text-xs">{(item as any).size_label}</p>}
                                                     <div className="ritual-summary-item-qty mt-0.5">Qty: {item.quantity}</div>
                                                 </div>
-                                                <span className="ritual-summary-item-price">{formatPrice(lineTotal)}</span>
+                                                    <div className="flex flex-col items-end">
+                                                        <span className="ritual-summary-item-price">{formatPrice(lineTotal)}</span>
+                                                        {originalPrice > price && (
+                                                            <div className="flex items-center gap-1 mt-0.5">
+                                                                <span className="text-[10px] text-red-500 font-bold">
+                                                                    {Math.round((1 - price / originalPrice) * 100)}% OFF
+                                                                </span>
+                                                                <span className="text-[10px] text-gray-400 line-through">
+                                                                    {formatPrice(originalPrice * item.quantity)}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                             </div>
                                         );
                                     })}
@@ -1718,29 +1738,57 @@ function CheckoutContent() {
 
                                 <div className="ritual-summary-divider" />
 
-                                <div className="space-y-2">
+                                <div className="space-y-2.5">
                                     <div className="ritual-summary-row">
-                                        <span className="label">Item Subtotal</span>
-                                        <span className="value">{formatPrice(baseSubtotal)}</span>
+                                        <span className="label font-medium text-gray-900">Total MRP</span>
+                                        <span className="value font-medium text-gray-900">{formatPrice(totalMrp)}</span>
                                     </div>
+                                    
+                                    {mrpDiscount > 0 && (
+                                        <div className="ritual-summary-row">
+                                            <span className="label text-gray-600">Discount on MRP</span>
+                                            <span className="value text-[#91C934] font-medium">- {formatPrice(mrpDiscount)}</span>
+                                        </div>
+                                    )}
+
                                     {!isBuyNow && couponDiscount > 0 && (
                                         <div className="ritual-summary-row">
-                                            <span className="label text-[#86EFAC] flex items-center gap-1"><Ticket className="w-3 h-3" /> Promo: {couponCode}</span>
-                                            <span className="value text-[#86EFAC]">- {formatPrice(couponDiscount)}</span>
+                                            <span className="label text-gray-600 flex items-center gap-1"><Ticket className="w-3 h-3" /> Coupon Discount</span>
+                                            <span className="value text-[#91C934] font-medium">- {formatPrice(couponDiscount)}</span>
                                         </div>
                                     )}
+
                                     {pointsToRedeem > 0 && (
                                         <div className="ritual-summary-row">
-                                            <span className="label text-[#86EFAC] flex items-center gap-1"><Leaf className="w-3 h-3" /> Loyalty Points</span>
-                                            <span className="value text-[#86EFAC]">- {formatPrice(pointsToRedeem)}</span>
+                                            <span className="label text-gray-600 flex items-center gap-1"><Leaf className="w-3 h-3" /> Loyalty Points</span>
+                                            <span className="value text-[#91C934] font-medium">- {formatPrice(pointsToRedeem)}</span>
                                         </div>
                                     )}
+
                                     <div className="ritual-summary-row">
-                                        <span className="label">Shipping</span>
-                                        <span className="value">{shippingCost === 0 ? 'FREE' : formatPrice(shippingCost)}</span>
+                                        <span className="label text-gray-600">Platform Fee</span>
+                                        <span className="value text-[#91C934] font-bold uppercase text-[10px] tracking-wider">FREE</span>
                                     </div>
 
+                                    <div className="ritual-summary-row">
+                                        <span className="label text-gray-600">Shipping Fee</span>
+                                        <span className="value text-gray-900">{shippingCost === 0 ? <span className="text-[#91C934] font-bold">FREE</span> : formatPrice(shippingCost)}</span>
+                                    </div>
+
+                                    {shippingCost > 0 && baseSubtotal > 0 && baseSubtotal < 50 && (
+                                        <p className="text-[10px] text-gray-400 -mt-1">
+                                            Add {formatPrice(50 - baseSubtotal)} more for free shipping
+                                        </p>
+                                    )}
                                 </div>
+
+                                {(mrpDiscount + (isBuyNow ? 0 : couponDiscount) + pointsToRedeem) > 0 && (
+                                    <div className="mt-4 p-3 bg-[#91C934]/10 rounded-xl border border-[#91C934]/20 text-center">
+                                        <p className="text-[11px] font-bold text-[#91C934] uppercase tracking-wider">
+                                            You are saving {formatPrice(mrpDiscount + (isBuyNow ? 0 : couponDiscount) + pointsToRedeem)} on this order
+                                        </p>
+                                    </div>
+                                )}
 
                                 <div className="ritual-summary-total">
                                     <div>
