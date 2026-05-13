@@ -13,12 +13,11 @@ const brands = [
   { name: 'colgate', slug: 'colgate', logo: '/brands/colgate.png' },
   { name: 'dove', slug: 'dove', logo: '/brands/dove.png' },
   { name: 'emami', slug: 'emami', logo: '/brands/emami.png' },
-  { name: 'Dabur', slug: 'Dabur', logo: '/brands/Dabur.avif' },
-  { name: 'Organic-India', slug: 'Organic-India', logo: '/brands/Organic-India.avif' },
+  { name: 'Dabur', slug: 'Dabur', logo: '/brands/dabur.avif' },
+  { name: 'Organic-India', slug: 'Organic-India', logo: '/brands/organic-india.avif' },
   { name: 'wishcare', slug: 'wishcare', logo: '/brands/wishcare.webp' },
-  { name: 'Mamaearth', slug: 'Mamaearth', logo: '/brands/Mamaearth.webp' },
+  { name: 'Mamaearth', slug: 'Mamaearth', logo: '/brands/mamaearth.webp' },
   { name: 'maybelline', slug: 'maybelline', logo: '/brands/maybelline.png' },
-
 ];
 
 export default function BrandReel() {

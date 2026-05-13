@@ -46,27 +46,9 @@ export default async function HomePage() {
 
         if (slidesRes.success && slidesRes.data?.length > 0) {
             heroSlides = slidesRes.data;
-        } else {
-            // Fallback default slides
-            heroSlides = [
-                {
-                    id: 'default-1',
-                    image_url: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&q=80&w=2000',
-                    headings: [{ id: 'h1', text: 'Radiant Skin,', color: '#FFFFFF', fontSize: '64' }, { id: 'h2', text: 'Naturally.', color: '#C9B87A', fontSize: '64' }],
-                    subheadings: [{ id: 's1', text: 'Discover our premium Ayurvedic skincare collection.', color: '#FFFFFF', fontSize: '24' }],
-                    buttons: [{ id: 'b1', label: 'Shop Skincare', url: '/products?category=Skin Care', bgColor: '#C9B87A', textColor: '#000000', size: 'lg' }],
-                    overlay_opacity: 0.4
-                },
-                {
-                    id: 'default-2',
-                    image_url: 'https://images.unsplash.com/photo-1544367567-0f2fc100a867?auto=format&fit=crop&q=80&w=2000',
-                    headings: [{ id: 'h1', text: 'Holistic Wellness', color: '#FFFFFF', fontSize: '64' }],
-                    subheadings: [{ id: 's1', text: 'Authentic remedies for mind, body and soul.', color: '#FFFFFF', fontSize: '24' }],
-                    buttons: [{ id: 'b1', label: 'Explore Remedies', url: '/products', bgColor: '#3B5D3B', textColor: '#FFFFFF', size: 'lg' }],
-                    overlay_opacity: 0.4
-                }
-            ];
         }
+        // No hardcoded fallback — if API didn't return slides, heroSlides stays [].
+        // HeroCarousel will show a loading skeleton and fetch real slides client-side.
 
         if (settingsRes.success && settingsRes.data) {
             heroSettings = settingsRes.data;
