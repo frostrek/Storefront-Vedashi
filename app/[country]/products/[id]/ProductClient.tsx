@@ -398,7 +398,8 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
             variant_id: selectedVariant?.variant_id || null,
             size_label: selectedVariant?.size_label || '',
             quantity: pageQuantity,
-            unit_price: Number(selectedVariant?.price ?? product.price ?? 0),
+            unit_price: displayPrice,
+            original_price: originalPrice,
             image_url: product.thumbnail_url || '',
         };
         sessionStorage.setItem('ksp_buy_now_item', JSON.stringify(buyNowItem));
@@ -537,52 +538,41 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
 
 
                         {/* PRICE BLOCK */}
-                        <div className="p-4 rounded-xl bg-white shadow-[inset_0_0_0_1px_#E9ECEF] space-y-1">
+                        <div className="p-5 rounded-2xl bg-[#FDFCFB] border border-[#E9ECEF] shadow-sm space-y-3">
                             <div className="flex flex-col gap-1">
                                 {isDiscounted && (
-                                    <>
-                                        <div className="text-[#1e3a8a] text-[13px] leading-none mb-1">
-                                            <span className="font-black">WOW!</span> <span className="font-semibold">Limited Time Offer</span>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <span className="bg-[#C1262D] text-white text-xs font-bold px-2 py-0.5 rounded-sm">
-                                                {discountPercent}% OFF
-                                            </span>
-                                            <div className="flex items-center gap-1.5 text-sm">
-                                                <span className="text-gray-500">MRP</span>
-                                                <span className="text-gray-400 line-through">
-                                                    {formatPrice(originalPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="bg-[#91C934] text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider">
+                                            {discountPercent}% OFF
+                                        </span>
+                                        <span className="text-[11px] font-bold text-[#91C934] uppercase tracking-wide">
+                                            Special Ritual Price
+                                        </span>
+                                    </div>
                                 )}
                                 <div className="flex items-baseline gap-2">
-                                    <p className="text-3xl font-extrabold text-[#C1262D]">
+                                    <span className="text-3xl lg:text-4xl font-black text-[#1A1A1A]">
                                         {formatPrice(displayPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
-                                    </p>
-                                    <span className="text-sm text-gray-500">
-                                        {selectedVariant?.size_label && selectedVariant.size_label.toLowerCase() !== 'standard'
-                                            ? `(${selectedVariant.size_label})`
-                                            : 'Inclusive of all taxes'}
+                                    </span>
+                                    <span className="text-sm text-gray-500 font-medium">
+                                        Inclusive of all taxes
                                     </span>
                                 </div>
                             </div>
-                            {selectedVariant?.size_label && selectedVariant.size_label.toLowerCase() !== 'standard' && (
-                                <p className="text-sm text-gray-500">Inclusive of all taxes</p>
+
+                            {isDiscounted && (
+                                <div className="pt-3 border-t border-dashed border-gray-200">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs text-gray-500 font-bold uppercase tracking-tight">MRP</span>
+                                        <span className="text-lg font-bold text-gray-400 line-through">
+                                            {formatPrice(originalPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
+                                        </span>
+                                        <span className="text-xs font-bold text-[#FF0000]">
+                                            You save {formatPrice(originalPrice - displayPrice)}
+                                        </span>
+                                    </div>
+                                </div>
                             )}
-                            <hr className="border-gray-200" />
-                            <div className="pt-2">
-                                <p className="text-[11px] text-gray-400 uppercase tracking-tight leading-none mb-1">MRP</p>
-                                <div className="flex items-baseline gap-1.5">
-                                    <span className="text-xl font-bold text-black">
-                                        {formatPrice(originalPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
-                                    </span>
-                                    <span className="text-[12px] text-gray-400">(Inclusive of all taxes)</span>
-                                </div>
-                            </div>
-
-
                         </div>
 
                         {/* COUPON ROW */}
