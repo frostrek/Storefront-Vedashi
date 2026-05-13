@@ -9,7 +9,21 @@ import { env } from '@/lib/env';
 import PerformanceStore from '@/lib/analytics/performance';
 import { isConsentGranted } from '@/lib/analytics/gtag';
 
+// Force IPv4 first on server to avoid 'localhost' resolving to '::1' if backend is only on 127.0.0.1
+if (typeof window === 'undefined') {
+    const dns = require('dns');
+    if (dns.setDefaultResultOrder) {
+        dns.setDefaultResultOrder('ipv4first');
+    }
+}
+
 export let API_URL = env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+// Normalize API_URL: remove trailing slash
+if (API_URL.endsWith('/')) {
+    API_URL = API_URL.slice(0, -1);
+}
+
 if (typeof window !== 'undefined' && (API_URL.includes('localhost') || API_URL.includes('127.0.0.1'))) {
     API_URL = `${window.location.protocol}//${window.location.hostname}:5000`;
 }
@@ -2203,5 +2217,43 @@ export async function trackOrder(orderId: string) {
     } catch (error) {
         console.warn('[API] trackOrder failed:', error);
         return { success: false, message: 'Network error' };
+    }
+}
+
+/* ─── Hero Slides & Settings ─── */
+
+export async function getHeroSlides(): Promise<{ success: boolean; data: any[] }> {
+    try {
+        const res = await apiFetch(`${API_URL}/api/media/hero/active`, { 
+            cache: 'no-store',
+            credentials: 'include'
+        });
+        if (!res.ok) return { success: false, data: [] };
+        const json = await res.json();
+        return {
+            success: json.success || false,
+            data: Array.isArray(json.data) ? json.data : []
+        };
+    } catch (error) {
+        console.warn('[API] Failed to fetch hero slides:', error);
+        return { success: false, data: [] };
+    }
+}
+
+export async function getHeroSettings(): Promise<{ success: boolean; data: any }> {
+    try {
+        const res = await apiFetch(`${API_URL}/api/media/hero/settings`, { 
+            cache: 'no-store',
+            credentials: 'include'
+        });
+        if (!res.ok) return { success: false, data: null };
+        const json = await res.json();
+        return {
+            success: json.success || false,
+            data: json.data || null
+        };
+    } catch (error) {
+        console.warn('[API] Failed to fetch hero settings:', error);
+        return { success: false, data: null };
     }
 }

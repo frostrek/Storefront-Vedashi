@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: { params: Promise<{ country: 
     };
 }
 
-import { getBestSellers, getNewArrivals, getCategories, API_URL } from '@/lib/api';
+import { getBestSellers, getNewArrivals, getCategories, API_URL, getHeroSlides, getHeroSettings } from '@/lib/api';
 
 export default async function HomePage() {
     let heroSlides = [];
@@ -40,8 +40,8 @@ export default async function HomePage() {
             getBestSellers({ limit: 10 }),
             getNewArrivals({ limit: 10 }),
             getCategories(true),
-            fetch(`${API_URL}/api/media/hero/active`, { cache: 'no-store' }).then(r => r.json()).catch(() => ({})),
-            fetch(`${API_URL}/api/media/hero/settings`, { cache: 'no-store' }).then(r => r.json()).catch(() => ({}))
+            getHeroSlides(),
+            getHeroSettings()
         ]);
 
         if (slidesRes.success && slidesRes.data?.length > 0) {

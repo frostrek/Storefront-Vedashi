@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
-import { API_URL } from '@/lib/api';
+import { API_URL, getHeroSlides, getHeroSettings } from '@/lib/api';
 import { useParams } from 'next/navigation';
 
 // API_URL imported from @/lib/api
@@ -83,14 +83,16 @@ export default function HeroCarousel({ initialSlides = [], initialSettings = und
     };
 
     useEffect(() => {
-        // If we received initial slides from SSR, don't fetch immediately
-        if (slides.length > 0) return;
+        // If we received initial slides from SSR, check if they are real or just fallbacks
+        // If they are fallbacks (starting with 'default-'), we still want to try fetching the real ones on the client
+        const hasRealSlides = slides.length > 0 && !slides.some(s => s.id.startsWith('default-'));
+        if (hasRealSlides) return;
 
         setLoading(true);
-        // Fetch active slides and settings in parallel
+        // Fetch active slides and settings in parallel using helpers
         Promise.all([
-            fetch(`${API_URL}/api/media/hero/active`, { credentials: 'include' }).then(r => r.json()),
-            fetch(`${API_URL}/api/media/hero/settings`, { credentials: 'include' }).then(r => r.json())
+            getHeroSlides(),
+            getHeroSettings()
         ])
             .then(([slidesData, settingsData]) => {
                 if (slidesData.success && slidesData.data?.length > 0) {
