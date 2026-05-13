@@ -12,7 +12,7 @@ import {
     updateAddress as apiUpdateAddress, deleteAddress as apiDeleteAddress,
     getCustomerProfile, updateCustomerProfile, deactivateAccount,
     uploadProfileImage, getProfileImage, removeProfileImage, getOrderById,
-    cancelOrder as apiCancelOrder, downloadInvoice, getBestSellers,
+    cancelOrder as apiCancelOrder, downloadInvoice,
     getMyEnquiries, replyToEnquiry, changePassword,
     requestEmailChange, verifyEmailChangeProfile,
     requestPhoneChange, verifyPhoneChangeProfile,
@@ -59,49 +59,11 @@ export default function AccountPage() {
     const { items: wishlistItems, removeItem: removeWishlistItem, loading: wishlistLoading } = useWishlist();
     const { addItem: addCartItem, items: cartItems, getItemInCart, loading: cartLoading } = useCart();
 
-    // Wishlist extra state
-    const [selectedWishlistItems, setSelectedWishlistItems] = useState<Set<string>>(new Set());
-    const [wishlistSort, setWishlistSort] = useState('recently_added');
-    const [recommendedProducts, setRecommendedProducts] = useState<any[]>([]);
-
-    const handleWishlistSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.checked) {
-            setSelectedWishlistItems(new Set(wishlistItems.map(item => item.product_id)));
-        } else {
-            setSelectedWishlistItems(new Set());
-        }
-    };
-
-    const handleWishlistToggleItem = (id: string) => {
-        const next = new Set(selectedWishlistItems);
-        if (next.has(id)) next.delete(id);
-        else next.add(id);
-        setSelectedWishlistItems(next);
-    };
-
-    const handleAddSelectedToCart = () => {
-        if (selectedWishlistItems.size === 0) return;
-        selectedWishlistItems.forEach(id => {
-            addCartItem(id, null, 1);
-            removeWishlistItem(id);
-        });
-        toast.success(`Moved ${selectedWishlistItems.size} items to cart`);
-        setSelectedWishlistItems(new Set());
-    };
-
-    const handleRemoveSelected = () => {
-        if (selectedWishlistItems.size === 0) return;
-        selectedWishlistItems.forEach(id => {
-            removeWishlistItem(id);
-        });
-        toast.success(`Removed ${selectedWishlistItems.size} items from wishlist`);
-        setSelectedWishlistItems(new Set());
-        setConfirmingBulkRemove(false);
-    };
+    // Wishlist state
 
     const [currentPage, setCurrentPage] = useState(1);
     const pageSize = 10;
-    const [confirmingBulkRemove, setConfirmingBulkRemove] = useState(false);
+
     const [confirmingIndividualRemove, setConfirmingIndividualRemove] = useState<string | null>(null);
 
     // Derive active tab from URL path segment, default to 'overview'
@@ -110,15 +72,7 @@ export default function AccountPage() {
         return slug && VALID_TABS.includes(slug) ? slug : 'overview';
     }, [params?.tab]);
 
-    useEffect(() => {
-        if (activeTab === 'wishlist' && wishlistItems.length > 0 && recommendedProducts.length === 0) {
-            getBestSellers({ limit: 4 }).then(res => {
-                if (res?.data) {
-                    setRecommendedProducts(res.data);
-                }
-            }).catch(err => console.error("Failed to fetch recommended products", err));
-        }
-    }, [activeTab, wishlistItems.length, recommendedProducts.length]);
+
 
     // Orders state
     const [orders, setOrders] = useState<Order[]>([]);
@@ -466,18 +420,7 @@ export default function AccountPage() {
         return result;
     }, [orders, orderStatusFilter, orderSearch, orderSort]);
 
-    // ── Derive Sorted Wishlist ─────────────────────────────────────
-    const sortedWishlistItems = useMemo(() => {
-        const result = [...wishlistItems];
-        if (wishlistSort === 'recently_added') {
-            result.sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
-        } else if (wishlistSort === 'price_low') {
-            result.sort((a, b) => (a.price || 0) - (b.price || 0));
-        } else if (wishlistSort === 'price_high') {
-            result.sort((a, b) => (b.price || 0) - (a.price || 0));
-        }
-        return result;
-    }, [wishlistItems, wishlistSort]);
+
 
     // ── Fetch orders ─────────────────────────────────────────────────
     const fetchOrders = useCallback(async () => {
@@ -2413,70 +2356,14 @@ export default function AccountPage() {
                                     </div>
                                 </div>
 
-                                {/* ── Actions Bar ── */}
-                                <div className="border-b border-gray-100 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                    <div className="flex items-center gap-6">
-                                        <label className="flex items-center gap-3 cursor-pointer group">
-                                            <div className="relative flex items-center justify-center">
-                                                <input
-                                                    type="checkbox"
-                                                    className="peer appearance-none w-5 h-5 rounded-md border-2 border-gray-100 checked:bg-[#91c934] checked:border-[#91c934] transition-colors cursor-pointer"
-                                                    onChange={handleWishlistSelectAll}
-                                                    checked={wishlistItems.length > 0 && selectedWishlistItems.size === wishlistItems.length}
-                                                />
-                                                <Check className="absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100 pointer-events-none" />
-                                            </div>
-                                            <span className="text-sm font-bold text-gray-900 group-hover:text-[#2A362D] transition-colors">Select All</span>
-                                        </label>
 
-                                        <div className="w-px h-5 bg-gray-200"></div>
-
-                                        <button
-                                            onClick={handleAddSelectedToCart}
-                                            disabled={selectedWishlistItems.size === 0}
-                                            className="flex items-center gap-2 text-sm font-bold text-gray-900 hover:text-[#2A362D] disabled:opacity-30 transition-colors"
-                                        >
-                                            <ShoppingCart className="h-4 w-4" /> Add Selected to Cart
-                                        </button>
-
-                                        <button
-                                            onClick={() => setConfirmingBulkRemove(true)}
-                                            disabled={selectedWishlistItems.size === 0}
-                                            className="flex items-center gap-2 text-sm font-bold text-warm-gray hover:text-red-500 disabled:opacity-30 transition-colors"
-                                        >
-                                            <Trash2 className="h-4 w-4" /> Remove
-                                        </button>
-                                    </div>
-
-                                    <div className="flex items-center gap-6 self-end sm:self-auto">
-                                        {/* View Toggles */}
-                                        <div className="flex items-center gap-2 border border-gray-100 rounded-full p-1 bg-white">
-                                            <button className="p-1.5 rounded-full bg-gray-50 text-gray-900 shadow-sm"><LayoutGrid className="h-4 w-4" /></button>
-                                            <button className="p-1.5 rounded-full text-warm-gray hover:text-gray-900"><List className="h-4 w-4" /></button>
-                                        </div>
-
-                                        {/* Sort */}
-                                        <div className="flex items-center gap-3 bg-white border border-gray-100 rounded-full px-4 py-2">
-                                            <span className="text-[10px] font-bold text-warm-gray tracking-widest uppercase">SORT BY:</span>
-                                            <select
-                                                value={wishlistSort}
-                                                onChange={(e) => setWishlistSort(e.target.value)}
-                                                className="text-sm font-bold text-gray-900 bg-transparent focus:outline-none appearance-none cursor-pointer pr-4 uppercase"
-                                            >
-                                                <option value="recently_added">Recently Added</option>
-                                                <option value="price_low">Price: Low to High</option>
-                                                <option value="price_high">Price: High to Low</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
 
                                 {wishlistLoading ? (
                                     <div className="flex flex-col items-center justify-center py-24 rounded-[30px] border border-gray-100 bg-white">
                                         <Loader2 className="h-10 w-10 text-gray-900 animate-spin mb-4" />
                                         <p className="text-xl font-bold text-gray-900">Opening your sanctuary...</p>
                                     </div>
-                                ) : sortedWishlistItems.length === 0 ? (
+                                ) : wishlistItems.length === 0 ? (
                                     <div className="rounded-[30px] border border-gray-100 bg-white py-24 text-center">
                                         <Heart className="mx-auto h-16 w-16 text-warm-gray/30 mb-4" />
                                         <p className="text-2xl font-bold text-gray-900">Your wishlist is empty</p>
@@ -2490,7 +2377,7 @@ export default function AccountPage() {
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                                        {sortedWishlistItems.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((product) => (
+                                        {wishlistItems.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((product) => (
                                             <ProductCard
                                                 key={product.product_id}
                                                 product={product}
@@ -2516,12 +2403,12 @@ export default function AccountPage() {
                                 )}
 
                                 {/* Wishlist Pagination Bottom */}
-                                {sortedWishlistItems.length > pageSize && (
+                                {wishlistItems.length > pageSize && (
                                     <div className="flex items-center justify-between pt-6 border-t border-gray-100">
                                         <span className="text-sm font-medium text-warm-gray">
                                             Showing <strong className="text-gray-900">
-                                                {Math.min((currentPage - 1) * pageSize + 1, sortedWishlistItems.length)}-{Math.min(currentPage * pageSize, sortedWishlistItems.length)}
-                                            </strong> of <strong className="text-gray-900">{sortedWishlistItems.length}</strong> items
+                                                {Math.min((currentPage - 1) * pageSize + 1, wishlistItems.length)}-{Math.min(currentPage * pageSize, wishlistItems.length)}
+                                            </strong> of <strong className="text-gray-900">{wishlistItems.length}</strong> items
                                         </span>
                                         <div className="flex items-center gap-2">
                                             <button
@@ -2532,7 +2419,7 @@ export default function AccountPage() {
                                                 Previous
                                             </button>
 
-                                            {Array.from({ length: Math.ceil(sortedWishlistItems.length / pageSize) }).map((_, i) => (
+                                            {Array.from({ length: Math.ceil(wishlistItems.length / pageSize) }).map((_, i) => (
                                                 <button
                                                     key={i}
                                                     onClick={() => setCurrentPage(i + 1)}
@@ -2543,9 +2430,9 @@ export default function AccountPage() {
                                             ))}
 
                                             <button
-                                                onClick={() => setCurrentPage(p => Math.min(Math.ceil(sortedWishlistItems.length / pageSize), p + 1))}
-                                                disabled={currentPage === Math.ceil(sortedWishlistItems.length / pageSize)}
-                                                className={`px-4 py-2 text-sm font-bold rounded-xl border border-gray-100 transition-colors ${currentPage === Math.ceil(sortedWishlistItems.length / pageSize) ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-gray-900 bg-white hover:bg-gray-50'}`}
+                                                onClick={() => setCurrentPage(p => Math.min(Math.ceil(wishlistItems.length / pageSize), p + 1))}
+                                                disabled={currentPage === Math.ceil(wishlistItems.length / pageSize)}
+                                                className={`px-4 py-2 text-sm font-bold rounded-xl border border-gray-100 transition-colors ${currentPage === Math.ceil(wishlistItems.length / pageSize) ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-gray-900 bg-white hover:bg-gray-50'}`}
                                             >
                                                 Next
                                             </button>
@@ -2553,55 +2440,7 @@ export default function AccountPage() {
                                     </div>
                                 )}
 
-                                {/* ── Recommended Rituals ── */}
-                                {wishlistItems.length > 0 && (
-                                    <div className="pt-12 border-t border-gray-100">
-                                        <div className="flex items-end justify-between mb-8">
-                                            <div>
-                                                <h3 className="text-2xl font-bold text-gray-900 mb-1">Recommended Rituals</h3>
-                                                <p className="text-sm font-medium text-warm-gray">Based on your saved wellness essentials</p>
-                                            </div>
-                                            <button className="text-[11px] font-bold text-gray-900 uppercase tracking-widest flex items-center gap-1 hover:opacity-70 transition-opacity">
-                                                See All Recommendations <ChevronRight className="h-3.5 w-3.5" />
-                                            </button>
-                                        </div>
 
-                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                                            {recommendedProducts.map(product => (
-                                                <div key={product.product_id} className="group relative flex flex-col rounded-[20px] bg-white transition-all hover:shadow-md cursor-pointer overflow-hidden p-2" onClick={() => router.push(`/products/${product.slug || product.product_id}`)}>
-                                                    {/* Product Image Box */}
-                                                    <div className="aspect-[4/5] w-full rounded-[14px] overflow-hidden bg-gray-50 relative">
-                                                        {product.images && product.images[0] ? (
-                                                            // eslint-disable-next-line @next/next/no-img-element
-                                                            <img src={product.images[0]} alt={product.product_name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                                                        ) : (
-                                                            <div className="flex h-full items-center justify-center text-warm-gray/30"><Package className="h-10 w-10" /></div>
-                                                        )}
-                                                        {/* Quick Add Plus Icon Overlay */}
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                addCartItem(product.product_id, null, 1);
-                                                                toast.success('Added to cart');
-                                                            }}
-                                                            className="absolute bottom-3 right-3 h-7 w-7 rounded-sm bg-[#91c934] text-white flex items-center justify-center shadow-md hover:bg-[#7ab52a] transition-colors"
-                                                        >
-                                                            <Plus className="h-4 w-4" />
-                                                        </button>
-                                                    </div>
-
-                                                    {/* Details */}
-                                                    <div className="pt-3 px-1">
-                                                        <h4 className="text-[13px] font-bold text-gray-900 leading-snug line-clamp-2 min-h-[38px]">
-                                                            {product.product_name}
-                                                        </h4>
-                                                        <p className="font-bold text-gray-900 text-xs mt-1">${product.price}</p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
                             </div>
                         )}
 
@@ -3910,16 +3749,6 @@ export default function AccountPage() {
             </main>
 
             {/* Confirm modals */}
-            <ConfirmModal
-                isOpen={confirmingBulkRemove}
-                title="Remove Items"
-                message={`Are you sure you want to remove ${selectedWishlistItems.size} items from your sanctuary?`}
-                confirmText="Remove"
-                cancelText="Cancel"
-                isDestructive={true}
-                onConfirm={handleRemoveSelected}
-                onCancel={() => setConfirmingBulkRemove(false)}
-            />
 
             <ConfirmModal
                 isOpen={!!confirmingIndividualRemove}
