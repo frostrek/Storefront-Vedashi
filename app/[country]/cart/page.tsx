@@ -124,17 +124,17 @@ export default function CartPage() {
                     </div>
                 </div>
                 <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12 relative z-10">
-                    <Link href="/products" className="inline-flex items-center gap-2 text-sm font-semibold text-[#6B8F5E] hover:text-[#5A7A4E] mb-6 transition-colors uppercase tracking-wider">
-                        <ArrowLeft className="h-4 w-4" /> Continue Shopping
+                    <Link href="/products" className="inline-flex items-center gap-2 text-sm font-semibold text-[#91c934] hover:text-[#5A7A4E] mb-6 transition-colors uppercase tracking-wider">
+                        <ArrowLeft className="h-4 w-4 text-[#91c934]" /> Continue Shopping
                     </Link>
                     <div className="cart-item-card text-center py-10 mb-6">
                         <ShoppingCart className="h-8 w-8 text-[#8B7A3D] mx-auto mb-3" />
                         <p className="text-[#4A4A4A] font-medium">Your active cart is empty.</p>
-                        <Link href="/products" className="text-sm text-[#6B8F5E] font-semibold hover:underline mt-2 inline-block">Browse Products</Link>
+                        <Link href="/products" className="text-sm text-[#91c934] font-semibold hover:underline mt-2 inline-block">Browse Products</Link>
                     </div>
                     <div>
                         <h3 className="cart-saved-section-title">
-                            <Bookmark className="h-5 w-5 text-[#8B7A3D]" />
+                            <Bookmark className="h-5 w-5 text-[#91C934]" />
                             Saved for Later ({savedItems.length})
                         </h3>
                         <div className="space-y-4">
@@ -213,8 +213,8 @@ export default function CartPage() {
             {/* Main Content */}
             <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12 relative z-10">
                 {/* Back Link */}
-                <Link href="/products" className="inline-flex items-center gap-2 text-sm font-semibold text-[#6B8F5E] hover:text-[#5A7A4E] mb-6 transition-colors uppercase tracking-wider">
-                    <ArrowLeft className="h-4 w-4" /> Continue Shopping
+                <Link href="/products" className="inline-flex items-center gap-2 text-sm font-semibold text-[#91c934] hover:text-[#5A7A4E] mb-6 transition-colors uppercase tracking-wider">
+                    <ArrowLeft className="h-4 w-4 text-[#91c934]" /> Continue Shopping
                 </Link>
 
                 <div className="lg:grid lg:grid-cols-[1fr_400px] lg:gap-10">
@@ -307,7 +307,7 @@ export default function CartPage() {
                                                     </div>
 
                                                     <div className="flex items-center gap-2">
-                                                        <button onClick={() => { saveForLater(item.cart_item_id); toast.success('Saved for later'); }} disabled={loading} className="text-[#8B7A3D] text-[13px] font-semibold hover:underline px-2">
+                                                        <button onClick={() => { saveForLater(item.cart_item_id); toast.success('Saved for later'); }} disabled={loading} className="text-[#] text-[13px] font-semibold hover:underline px-2">
                                                             Save for Later
                                                         </button>
                                                         <button onClick={() => setItemToRemove(item.cart_item_id)} disabled={loading} className="cart-remove-btn">
@@ -326,7 +326,7 @@ export default function CartPage() {
                         {savedItems.length > 0 && (
                             <div className="mt-4">
                                 <h3 className="cart-saved-section-title">
-                                    <Bookmark className="h-5 w-5 text-[#8B7A3D]" />
+                                    <Bookmark className="h-5 w-5 text-[#91c934]" />
                                     Saved for Later ({savedItems.length})
                                 </h3>
                                 <div className="space-y-4">
@@ -344,7 +344,7 @@ export default function CartPage() {
                                                     <p className="text-[#4A4A4A] mt-1">{formatPrice(price)}</p>
                                                 </div>
                                                 <div className="flex flex-col items-end gap-2">
-                                                    <button onClick={() => { moveToCart(item.cart_item_id); toast.success('Moved to cart'); }} disabled={loading} className="bg-[#6B8F5E] text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-[#5A7A4E]">
+                                                    <button onClick={() => { moveToCart(item.cart_item_id); toast.success('Moved to cart'); }} disabled={loading} className="bg-[#91C934] text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-[#7faf27]">
                                                         Move to Bag
                                                     </button>
                                                     <button onClick={() => setItemToRemove(item.cart_item_id)} disabled={loading} className="text-[#C0392B] text-[11px] uppercase tracking-wider font-semibold hover:underline">
@@ -364,8 +364,8 @@ export default function CartPage() {
                                 {/* Ayurvedic Practitioner Notes */}
                                 <div className="cart-item-card p-6 border-l-4 border-l-[#2D3B2D]">
                                     <div className="flex items-center gap-2 mb-3">
-                                        <FileText className="h-5 w-5 text-[#2D3B2D]" />
-                                        <h4 className="text-lg font-bold text-[#1A1A1A]">Order Notes <span className="text-[#8B7A3D] font-normal text-xs">(optional)</span></h4>
+                                        <FileText className="h-5 w-5 text-[#91C934]" />
+                                        <h4 className="text-lg font-bold text-[#1A1A1A]">Order Notes <span className="text-[#6B6B60] font-normal text-xs">(optional)</span></h4>
                                     </div>
                                     <p className="text-[13px] text-[#6B6B60] mb-4">Add any specific allergies, preferences, or delivery instructions for our practitioners.</p>
                                     <textarea
@@ -380,9 +380,9 @@ export default function CartPage() {
                                 </div>
 
                                 <div className="grid sm:grid-cols-2 gap-4">
-                                    <div className="cart-item-card p-6 border-t-4 border-t-[#8B7A3D]">
+                                    <div className="cart-item-card p-6 border-t-4 border-t-[#91C934]">
                                         <div className="flex items-center gap-2 mb-3">
-                                            <Ticket className="h-5 w-5 text-[#8B7A3D]" />
+                                            <Ticket className="h-5 w-5 text-[#91C934]" />
                                             <h4 className="text-lg font-bold text-[#1A1A1A]">Promo Offering</h4>
                                         </div>
                                         <p className="text-[13px] text-[#6B6B60] mb-4">Have a sacred promo code? Enter it below.</p>
@@ -411,44 +411,13 @@ export default function CartPage() {
                                                         setApplyingCoupon(false);
                                                     }}
                                                     disabled={applyingCoupon || !couponInput.trim()}
-                                                    className="bg-[#2D3B2D] text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-[#1F291F] transition-colors disabled:opacity-50 tracking-wide"
+                                                    className="bg-[#91c934] text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-[#1F291F] transition-colors disabled:opacity-50 tracking-wide"
                                                 >
                                                     {applyingCoupon ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Apply'}
                                                 </button>
                                             </div>
                                         )}
                                         {couponError && <p className="mt-2 text-xs text-[#C0392B]">{couponError}</p>}
-                                    </div>
-
-                                    <div className="cart-item-card p-6 border-t-4 border-t-[#6B8F5E]">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <MapPin className="h-5 w-5 text-[#6B8F5E]" />
-                                            <h4 className="text-lg font-bold text-[#1A1A1A]">Shipping Sanctuary</h4>
-                                        </div>
-                                        <p className="text-[13px] text-[#6B6B60] mb-4">Estimate delivery to your location.</p>
-                                        <div className="space-y-3">
-                                            <select
-                                                value={shippingCountry}
-                                                onChange={(e) => setShippingCountry(e.target.value)}
-                                                className="w-full rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-[#F5F4F0]"
-                                            >
-                                                <option value="India">India</option>
-                                                <option value="USA">United States</option>
-                                                <option value="UK">United Kingdom</option>
-                                            </select>
-                                            <div className="flex gap-2">
-                                                <input
-                                                    type="text"
-                                                    placeholder="Zip / Postal Code"
-                                                    value={shippingZip}
-                                                    onChange={(e) => setShippingZip(e.target.value)}
-                                                    className="flex-1 rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-[#F5F4F0]"
-                                                />
-                                                <button className="bg-[#E8E4DC] text-[#1A1A1A] px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-[#D4CFC0] transition-colors tracking-wide">
-                                                    Update
-                                                </button>
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -461,8 +430,8 @@ export default function CartPage() {
                         <div className="sticky top-28">
                             <div className="ritual-summary">
                                 <div className="ritual-summary-title">
-                                    <div className="w-8 h-8 rounded-full bg-[rgba(255,255,255,0.1)] flex items-center justify-center mr-2">
-                                        <Leaf className="w-4 h-4 text-white" />
+                                    <div className="w-8 h-8 rounded-full bg-[#F5F4F0] flex items-center justify-center mr-2 border border-[#E8E4DC]">
+                                        <Leaf className="w-4 h-4 text-[#91C934]" />
                                     </div>
                                     Investment Summary
                                     <span className="ritual-summary-badge">{inStockItemCount} Item{inStockItemCount !== 1 ? 's' : ''}</span>

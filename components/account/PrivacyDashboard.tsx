@@ -98,7 +98,7 @@ export default function PrivacyDashboard() {
                         Under the General Data Protection Regulation (GDPR), you have the right to access, rectify, port, and erase your personal information.
                         Use the tools below to execute these rights automatically.
                     </p>
-                    <a href="/privacy-policy" className="inline-flex items-center gap-1 mt-2 text-emerald-700 font-medium hover:underline">
+                    <a href="/privacy" className="inline-flex items-center gap-1 mt-2 text-emerald-700 font-medium hover:underline">
                         Read our Privacy Policy <ExternalLink className="h-3 w-3" />
                     </a>
                 </div>

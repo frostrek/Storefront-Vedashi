@@ -16,7 +16,7 @@ import Select from 'react-select';
 import { CheckCircle, Loader2, MapPin, CreditCard, Banknote, ShieldCheck, AlertTriangle, ArrowLeft, Leaf, ChevronRight, Lock, Ticket, Globe, Info, Pencil, Trash } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
-import { validatePhoneNumber, validateOptionalPhoneNumber, sanitizePhoneInput, formatPhoneDisplay } from '@/lib/phoneValidation';
+import { validateOptionalPhoneNumber } from '@/lib/phoneValidation';
 import { CountryCode } from 'libphonenumber-js';
 import { trackPurchase, EcommerceItem, trackEvent, trackCheckoutStep, clearCheckoutStepKeys } from '@/lib/analytics/gtag';
 import { getGAClientId, getAttribution } from '@/lib/analytics/attribution';
@@ -134,6 +134,7 @@ function CheckoutContent() {
     const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
     const [editAddressData, setEditAddressData] = useState<any>(null);
     const editConfig = getAddressConfig(editAddressData?.country_code || 'IN');
+
     const [addressActionLoading, setAddressActionLoading] = useState<string | null>(null); // Stores the address_id being deleted/updated
     const [addressToDelete, setAddressToDelete] = useState<string | null>(null);
     const [mounted, setMounted] = useState(false);
@@ -147,16 +148,31 @@ function CheckoutContent() {
     const defaultCountryName = COUNTRIES.find(c => c.code === defaultCountryCode)?.name || '';
 
     const [newAddress, setNewAddress] = useState({
-        full_name: '', email: '', address_line1: '', address_line2: '', city: '', state: '', pincode: '', phone: '', country: defaultCountryName, country_code: defaultCountryCode
+        full_name: '', email: '', address_line1: '', address_line2: '', city: '', state: '', pincode: '', phone: '', country: defaultCountryName, country_code: defaultCountryCode, label: ''
     });
 
     const shippingConfig = getAddressConfig(newAddress.country_code || 'IN');
+
+    // Compute dial code for shipping address (matching /addresses page pattern)
+    const shippingDialCode = (() => {
+        const match = COUNTRY_CODES.find(c => c.code === newAddress.country_code);
+        const fallbackMatch = COUNTRY_CODES.find(c => c.code === defaultCountryCode);
+        return match ? match.dial_code : (fallbackMatch?.dial_code || '+1');
+    })();
+
+    // Compute dial code for editing address
+    const editDialCode = (() => {
+        const cc = editAddressData?.country_code || defaultCountryCode;
+        const match = COUNTRY_CODES.find(c => c.code === cc);
+        const fallbackMatch = COUNTRY_CODES.find(c => c.code === defaultCountryCode);
+        return match ? match.dial_code : (fallbackMatch?.dial_code || '+1');
+    })();
 
     // Billing address fields
     const [selectedBillingAddressId, setSelectedBillingAddressId] = useState<string | null>(null);
     const [useNewBillingAddress, setUseNewBillingAddress] = useState(false);
     const [newBillingAddress, setNewBillingAddress] = useState({
-        address_line1: '', address_line2: '', city: '', state: '', pincode: '', country: defaultCountryName, country_code: defaultCountryCode
+        address_line1: '', address_line2: '', city: '', state: '', pincode: '', country: defaultCountryName, country_code: defaultCountryCode, label: ''
     });
 
     const billingConfig = getAddressConfig(newBillingAddress.country_code || 'IN');
@@ -329,8 +345,8 @@ function CheckoutContent() {
 
             getLoyaltyWallet().then(res => {
                 if (res) setWallet(res);
-            }).catch(() => {});
-            
+            }).catch(() => { });
+
             // No email fallback needed, defaults to user.email or address.email
         } else {
             setUseNewAddress(true);
@@ -431,7 +447,7 @@ function CheckoutContent() {
         return () => clearTimeout(timer);
     }, [
         mounted, orderPlaced, step, maxStepReached, paymentMethod,
-        billingSameAsShipping, selectedAddressId, useNewAddress, newAddress, 
+        billingSameAsShipping, selectedAddressId, useNewAddress, newAddress,
         selectedBillingAddressId, useNewBillingAddress, newBillingAddress, redeemPoints,
         cartId, isAuthenticated
     ]);
@@ -557,11 +573,12 @@ function CheckoutContent() {
         const currentCountryCode = (address as any).country_code || 'IN';
         let phoneToEdit = address.phone || '';
 
+        // Strip dial code prefix to show only local number (matching /addresses page pattern)
         if (phoneToEdit) {
-            const formatRes = validateOptionalPhoneNumber(phoneToEdit, currentCountryCode);
-            if (formatRes.isValid && formatRes.normalized) {
-                // Keep the raw input or just the local part if international formatting applies
-                phoneToEdit = formatRes.normalized;
+            const matchCode = COUNTRY_CODES.find(c => c.code === currentCountryCode);
+            const dCode = matchCode ? matchCode.dial_code : '';
+            if (dCode && phoneToEdit.startsWith(dCode)) {
+                phoneToEdit = phoneToEdit.substring(dCode.length).trim();
             }
         }
 
@@ -576,6 +593,7 @@ function CheckoutContent() {
             phone: phoneToEdit,
             country: address.country || defaultCountryName,
             country_code: currentCountryCode,
+            label: address.label || '',
         });
         setFormErrors({});
     };
@@ -592,13 +610,11 @@ function CheckoutContent() {
 
         setAddressActionLoading(addressId);
         try {
-            // Normalize phone
+            // Prepend dial code to phone (matching /addresses page pattern)
             const updatedData = { ...editAddressData };
             if (updatedData.phone) {
-                const phoneRes = validateOptionalPhoneNumber(updatedData.phone, updatedData.country_code);
-                if (phoneRes.isValid && phoneRes.normalized) {
-                    updatedData.phone = phoneRes.normalized;
-                }
+                const phoneDigits = updatedData.phone.replace(/\D/g, '');
+                updatedData.phone = `${editDialCode}${phoneDigits}`;
             }
 
             const res = await updateAddress(user.id, addressId, updatedData);
@@ -790,11 +806,10 @@ function CheckoutContent() {
             let finalNewAddress = newAddress;
             if (useNewAddress || (billingSameAsShipping && useNewAddress) || (!billingSameAsShipping && useNewAddress)) {
                 if (newAddress.phone) {
-                    const currentShippingCountryCode = (newAddress.country_code || 'IN') as CountryCode;
-                    const addressPhoneResult = validateOptionalPhoneNumber(newAddress.phone, currentShippingCountryCode);
+                    const phoneDigits = newAddress.phone.replace(/\D/g, '');
                     finalNewAddress = {
                         ...newAddress,
-                        phone: addressPhoneResult.isValid ? (addressPhoneResult.normalized || newAddress.phone) : newAddress.phone
+                        phone: `${shippingDialCode}${phoneDigits}`
                     };
                 }
             }
@@ -997,14 +1012,13 @@ function CheckoutContent() {
                 errors[`${prefix}pincode`] = addrConfig.postalCode.error;
             }
         }
-        
+
         if (!addr.phone || !addr.phone.trim()) {
             errors[`${prefix}phone`] = 'Phone number is required';
         } else {
-            const currentCountryCode = (((addr as any).country_code) || 'IN') as CountryCode;
-            const phoneValidation = validateOptionalPhoneNumber(addr.phone, currentCountryCode);
-            if (!phoneValidation.isValid && phoneValidation.error) {
-                errors[`${prefix}phone`] = phoneValidation.error;
+            const phoneDigits = addr.phone.replace(/\D/g, '');
+            if (phoneDigits.length < 7 || phoneDigits.length > 12) {
+                errors[`${prefix}phone`] = 'Must be 7-12 digits';
             }
         }
 
@@ -1024,11 +1038,10 @@ function CheckoutContent() {
                 toast.error('Please fix address validation errors');
                 return;
             }
-            // Normalize Address Phone
-            const currentShippingCountryCode = (newAddress.country_code || 'IN') as CountryCode;
-            const addressPhoneResult = validateOptionalPhoneNumber(newAddress.phone, currentShippingCountryCode);
-            if (addressPhoneResult.isValid && addressPhoneResult.normalized) {
-                setNewAddress(prev => ({ ...prev, phone: addressPhoneResult.normalized! }));
+            // Prepend dial code to phone (matching /addresses page pattern)
+            if (newAddress.phone) {
+                const phoneDigits = newAddress.phone.replace(/\D/g, '');
+                setNewAddress(prev => ({ ...prev, phone: phoneDigits }));
             }
         } else if (!selectedAddressId) {
             toast.error('Please select a shipping address');
@@ -1130,7 +1143,7 @@ function CheckoutContent() {
                             Your sacred herbs and authentic formulations are being prepared with care. We&apos;ll notify you regarding the delivery schedule.
                         </p>
                         <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-                            <Link href="/products" className="cart-checkout-btn !w-auto bg-[#E8E4DC] !text-[#1A1A1A] hover:bg-[#D4CFC0] order-2 sm:order-1">
+                            <Link href="/products" className="cart-checkout-btn !w-auto bg-[#E8E4DC] hover:bg-[#D4CFC0] order-2 sm:order-1">
                                 Continue Exploring
                             </Link>
                             <Link href="/account" className="cart-checkout-btn !w-auto order-1 sm:order-2">
@@ -1250,21 +1263,47 @@ function CheckoutContent() {
                                                                     </div>
                                                                 </div>
                                                                 <div className="sm:col-span-2">
-                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Full Name *</label>
-                                                                    <input type="text" value={editAddressData.full_name} onChange={e => setEditAddressData({ ...editAddressData, full_name: e.target.value })} className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.full_name ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Full name" />
+                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Receiver&apos;s Name *</label>
+                                                                    <input type="text" value={editAddressData.full_name} onChange={e => setEditAddressData({ ...editAddressData, full_name: e.target.value })} className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.full_name ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Name" />
                                                                     {formErrors.full_name && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.full_name}</p>}
                                                                 </div>
                                                                 <div className="sm:col-span-2">
-                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Email</label>
-                                                                    <input type="email" value={editAddressData.email || ''} onChange={e => setEditAddressData({ ...editAddressData, email: e.target.value })} className="w-full rounded-lg border border-[#D4CFC0] px-3 py-2 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white" placeholder="Email address (optional)" />
+                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Phone Number *</label>
+                                                                    <div className="flex gap-2">
+                                                                        <div className="w-20 shrink-0">
+                                                                            <input
+                                                                                type="text"
+                                                                                disabled
+                                                                                value={editDialCode}
+                                                                                className="w-full rounded-lg border border-[#D4CFC0] bg-[#F5F4F0] px-3 py-2 text-sm text-[#6B6B60]"
+                                                                            />
+                                                                        </div>
+                                                                        <input
+                                                                            type="text"
+                                                                            maxLength={12}
+                                                                            value={editAddressData.phone}
+                                                                            onChange={e => {
+                                                                                const val = e.target.value.replace(/\D/g, '');
+                                                                                setEditAddressData({ ...editAddressData, phone: val });
+                                                                                if (val.length > 0 && (val.length < 7 || val.length > 12)) {
+                                                                                    setFormErrors(prev => ({ ...prev, phone: 'Must be 7-12 digits' }));
+                                                                                } else {
+                                                                                    setFormErrors(prev => { const copy = { ...prev }; delete copy.phone; return copy; });
+                                                                                }
+                                                                            }}
+                                                                            className={`flex-1 rounded-lg border px-3 py-2 text-sm focus:border-[#91C934] focus:outline-none bg-white ${formErrors.phone ? 'border-red-400' : 'border-[#D4CFC0]'}`}
+                                                                            placeholder="e.g., 9876543210"
+                                                                        />
+                                                                    </div>
+                                                                    {formErrors.phone && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.phone}</p>}
                                                                 </div>
                                                                 <div className="sm:col-span-2">
-                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Address Line 1 *</label>
+                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Path Line 1 (Street, Area) *</label>
                                                                     <input type="text" value={editAddressData.address_line1} onChange={e => setEditAddressData({ ...editAddressData, address_line1: e.target.value })} className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#91C934] focus:outline-none bg-white ${formErrors.address_line1 ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Street address" />
                                                                     {formErrors.address_line1 && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.address_line1}</p>}
                                                                 </div>
                                                                 <div className="sm:col-span-2">
-                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Address Line 2</label>
+                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Path Line 2 (Optional)</label>
                                                                     <input type="text" value={editAddressData.address_line2} onChange={e => setEditAddressData({ ...editAddressData, address_line2: e.target.value })} className="w-full rounded-lg border border-[#D4CFC0] px-3 py-2 text-sm focus:border-[#91C934] focus:outline-none bg-white" placeholder="Apartment, suite, etc." />
                                                                 </div>
                                                                 <div>
@@ -1282,32 +1321,14 @@ function CheckoutContent() {
                                                                     <input type="text" value={editAddressData.state} onChange={e => setEditAddressData({ ...editAddressData, state: e.target.value })} className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#91C934] focus:outline-none bg-white ${formErrors.state ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={editConfig.labels.state} />
                                                                     {formErrors.state && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.state}</p>}
                                                                 </div>
-                                                                <div>
-                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Mobile Phone *</label>
-                                                                    <input 
-                                                                        type="tel" 
-                                                                        value={editAddressData.phone} 
-                                                                        onChange={e => {
-                                                                            const sanitized = sanitizePhoneInput(e.target.value);
-                                                                            setEditAddressData({ ...editAddressData, phone: sanitized });
-                                                                            if (sanitized) {
-                                                                                const currentCountryCode = (editAddressData as any).country_code || 'IN';
-                                                                                const res = validateOptionalPhoneNumber(sanitized, currentCountryCode);
-                                                                                if (!res.isValid && res.error) setFormErrors(prev => ({ ...prev, phone: res.error! }));
-                                                                                else setFormErrors(prev => { const copy = { ...prev }; delete copy.phone; return copy; });
-                                                                            } else {
-                                                                                setFormErrors(prev => { const copy = { ...prev }; delete copy.phone; return copy; });
-                                                                            }
-                                                                        }}
-                                                                        className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[#91C934] focus:outline-none bg-white ${formErrors.phone ? 'border-red-400' : 'border-[#D4CFC0]'}`}
-                                                                        placeholder="e.g., 9876543210"
-                                                                    />
-                                                                    {formErrors.phone && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.phone}</p>}
+                                                                <div className="sm:col-span-2">
+                                                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Label (e.g., Home, Sanctuary)</label>
+                                                                    <input type="text" value={editAddressData.label || ''} onChange={e => setEditAddressData({ ...editAddressData, label: e.target.value })} className="w-full rounded-lg border border-[#D4CFC0] px-3 py-2 text-sm focus:border-[#91C934] focus:outline-none bg-white" placeholder="Home / Work / Temple" />
                                                                 </div>
                                                             </div>
                                                             <div className="mt-5 flex justify-end gap-3">
                                                                 <button type="button" onClick={() => { setEditingAddressId(null); setEditAddressData(null); setFormErrors({}); }} className="px-4 py-2 text-sm font-bold text-[#8B7A3D] bg-white border border-[#D4CFC0] rounded-lg hover:bg-[#F5F4F0] transition-colors">Cancel</button>
-                                                                <button type="button" onClick={() => handleSaveEditedAddress(addr.address_id)} disabled={addressActionLoading === addr.address_id} className="px-4 py-2 text-sm font-bold text-white bg-[#91C934] rounded-lg hover:bg-[#5A7A4E] transition-colors flex items-center gap-2">
+                                                                <button type="button" onClick={() => handleSaveEditedAddress(addr.address_id)} disabled={addressActionLoading === addr.address_id} className="px-4 py-2 text-sm font-bold text-white bg-[#91C934] rounded-lg hover:bg-[#91C934]/80 transition-colors flex items-center gap-2">
                                                                     {addressActionLoading === addr.address_id ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}
                                                                 </button>
                                                             </div>
@@ -1346,21 +1367,47 @@ function CheckoutContent() {
                                                 </div>
                                             </div>
                                             <div className="sm:col-span-2">
-                                                <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Full Name *</label>
-                                                <input type="text" value={newAddress.full_name} onChange={e => setNewAddress({ ...newAddress, full_name: e.target.value })} className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.full_name ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Full name" />
+                                                <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Receiver&apos;s Name *</label>
+                                                <input type="text" value={newAddress.full_name} onChange={e => setNewAddress({ ...newAddress, full_name: e.target.value })} className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white ${formErrors.full_name ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Name" />
                                                 {formErrors.full_name && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.full_name}</p>}
                                             </div>
                                             <div className="sm:col-span-2">
-                                                <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Email</label>
-                                                <input type="email" value={newAddress.email || ''} onChange={e => setNewAddress({ ...newAddress, email: e.target.value })} className="w-full rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-white" placeholder="Email address (optional)" />
+                                                <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Phone Number *</label>
+                                                <div className="flex gap-2">
+                                                    <div className="w-20 shrink-0">
+                                                        <input
+                                                            type="text"
+                                                            disabled
+                                                            value={shippingDialCode}
+                                                            className="w-full rounded-lg border border-[#D4CFC0] bg-[#F5F4F0] px-3 py-2.5 text-sm text-[#6B6B60]"
+                                                        />
+                                                    </div>
+                                                    <input
+                                                        type="text"
+                                                        maxLength={12}
+                                                        value={newAddress.phone}
+                                                        onChange={e => {
+                                                            const val = e.target.value.replace(/\D/g, '');
+                                                            setNewAddress({ ...newAddress, phone: val });
+                                                            if (val.length > 0 && (val.length < 7 || val.length > 12)) {
+                                                                setFormErrors(prev => ({ ...prev, phone: 'Must be 7-12 digits' }));
+                                                            } else {
+                                                                setFormErrors(prev => { const copy = { ...prev }; delete copy.phone; return copy; });
+                                                            }
+                                                        }}
+                                                        className={`flex-1 rounded-lg border px-4 py-2.5 text-sm focus:border-[#91C934] focus:outline-none bg-white ${formErrors.phone ? 'border-red-400' : 'border-[#D4CFC0]'}`}
+                                                        placeholder="e.g., 9876543210"
+                                                    />
+                                                </div>
+                                                {formErrors.phone && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.phone}</p>}
                                             </div>
                                             <div className="sm:col-span-2">
-                                                <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Address Line 1 *</label>
+                                                <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Path Line 1 (Street, Area) *</label>
                                                 <input type="text" value={newAddress.address_line1} onChange={e => setNewAddress({ ...newAddress, address_line1: e.target.value })} className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#91C934] focus:outline-none bg-white ${formErrors.address_line1 ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder="Street address" />
                                                 {formErrors.address_line1 && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.address_line1}</p>}
                                             </div>
                                             <div className="sm:col-span-2">
-                                                <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Address Line 2</label>
+                                                <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Path Line 2 (Optional)</label>
                                                 <input type="text" value={newAddress.address_line2} onChange={e => setNewAddress({ ...newAddress, address_line2: e.target.value })} className="w-full rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#91C934] focus:outline-none bg-white" placeholder="Apartment, suite, etc." />
                                             </div>
                                             <div>
@@ -1381,54 +1428,9 @@ function CheckoutContent() {
                                                 <input type="text" value={newAddress.state} onChange={e => { setNewAddress({ ...newAddress, state: e.target.value }); setManualEdits(prev => ({ ...prev, shipping_state: true })); }} className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#91C934] focus:outline-none bg-white ${formErrors.state ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={shippingConfig.labels.state} />
                                                 {formErrors.state && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.state}</p>}
                                             </div>
-                                            <div>
-                                                <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Mobile Phone *</label>
-                                                <input 
-                                                    type="tel" 
-                                                    value={newAddress.phone} 
-                                                    onChange={e => {
-                                                        const sanitized = sanitizePhoneInput(e.target.value);
-                                                        setNewAddress({ ...newAddress, phone: sanitized });
-                                                        if (sanitized) {
-                                                            const currentCountryCode = ((newAddress as any).country_code || 'IN') as CountryCode;
-                                                            const res = validateOptionalPhoneNumber(sanitized, currentCountryCode);
-                                                            if (!res.isValid && res.error) {
-                                                                setFormErrors(prev => ({ ...prev, phone: res.error! }));
-                                                            } else {
-                                                                setFormErrors(prev => {
-                                                                    const copy = { ...prev };
-                                                                    delete copy.phone;
-                                                                    return copy;
-                                                                });
-                                                            }
-                                                        } else {
-                                                            setFormErrors(prev => {
-                                                                const copy = { ...prev };
-                                                                delete copy.phone;
-                                                                return copy;
-                                                            });
-                                                        }
-                                                    }}
-                                                    onBlur={e => {
-                                                        const currentCountryCode = ((newAddress as any).country_code || 'IN') as CountryCode;
-                                                        const res = validateOptionalPhoneNumber(e.target.value, currentCountryCode);
-                                                        if (!res.isValid && res.error) {
-                                                            setFormErrors(prev => ({ ...prev, phone: res.error! }));
-                                                        } else {
-                                                            setFormErrors(prev => {
-                                                                const copy = { ...prev };
-                                                                delete copy.phone;
-                                                                return copy;
-                                                            });
-                                                            if (res.isValid && res.normalized) {
-                                                                setNewAddress(prev => ({ ...prev, phone: formatPhoneDisplay(res.normalized!, currentCountryCode) }));
-                                                            }
-                                                        }
-                                                    }}
-                                                    className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:border-[#91C934] focus:outline-none bg-white ${formErrors.phone ? 'border-red-400' : 'border-[#D4CFC0]'}`}
-                                                    placeholder="e.g., 9876543210"
-                                                />
-                                                {formErrors.phone && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.phone}</p>}
+                                            <div className="sm:col-span-2">
+                                                <label className="block text-[11px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1.5">Label (e.g., Home, Sanctuary)</label>
+                                                <input type="text" value={newAddress.label || ''} onChange={e => setNewAddress({ ...newAddress, label: e.target.value })} className="w-full rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#91C934] focus:outline-none bg-white" placeholder="Home / Work / Temple" />
                                             </div>
                                         </div>
                                     )}
@@ -1593,6 +1595,10 @@ function CheckoutContent() {
                                                             <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">{billingConfig.labels.state} *</label>
                                                             <input type="text" value={newBillingAddress.state} onChange={e => { setNewBillingAddress({ ...newBillingAddress, state: e.target.value }); setManualEdits(prev => ({ ...prev, billing_state: true })); }} className={`w-full rounded-lg border px-4 py-2 text-sm focus:border-[#91C934] focus:outline-none bg-white ${formErrors.billing_state ? 'border-red-400' : 'border-[#D4CFC0]'}`} placeholder={billingConfig.labels.state} />
                                                             {formErrors.billing_state && <p className="text-[9px] text-red-500 mt-0.5 font-bold">{formErrors.billing_state}</p>}
+                                                        </div>
+                                                        <div className="sm:col-span-2">
+                                                            <label className="block text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">Label (e.g., Home, Sanctuary)</label>
+                                                            <input type="text" value={newBillingAddress.label || ''} onChange={e => setNewBillingAddress({ ...newBillingAddress, label: e.target.value })} className="w-full rounded-lg border border-[#D4CFC0] px-4 py-2 text-sm focus:border-[#91C934] focus:outline-none bg-white" placeholder="Home / Work / Temple" />
                                                         </div>
                                                     </div>
                                                 )}

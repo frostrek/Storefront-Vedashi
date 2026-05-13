@@ -20,7 +20,6 @@ import RouteTracker from "@/components/RouteTracker";
 import GlobalErrorTracker from "@/components/GlobalErrorTracker";
 import MaintenancePage from "@/components/MaintenancePage";
 import { generateLocalBusinessJsonLd, generateOrganizationJsonLd, generateWebSiteJsonLd } from "@/lib/seo";
-
 import { API_URL } from "@/lib/api";
 
 const inter = Inter({
@@ -199,6 +198,7 @@ export default async function RootLayout({
 
                   <CookieBanner />
                   <LanguageSuggestionBanner />
+            
                 </WishlistProvider>
               </CartProvider>
             </AuthProvider>

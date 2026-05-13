@@ -144,13 +144,31 @@ export default function AccountPage() {
     const defaultCountryCode = getDefaultCountry();
     const defaultCountryName = COUNTRIES.find(c => c.code === defaultCountryCode)?.name || '';
 
+    const formatAddressPhone = (phone: string) => {
+        if (!phone) return '';
+        // Find the matching dial code from our master list
+        // Sort by length descending to ensure we match the most specific code (e.g., +91 over +9)
+        const sortedCodes = [...COUNTRY_CODES].sort((a, b) => b.dial_code.length - a.dial_code.length);
+        const match = sortedCodes.find(c => phone.startsWith(c.dial_code));
+
+        if (match) {
+            const dialCode = match.dial_code;
+            const rest = phone.slice(dialCode.length);
+            return `${dialCode} ${rest}`;
+        }
+
+        // Fallback for unexpected formats
+        return phone.startsWith('+') ? phone.replace(/^(\+\d{1,3})/, '$1 ') : phone;
+    };
+
     const [addresses, setAddresses] = useState<Address[]>([]);
     const [addressesLoading, setAddressesLoading] = useState(false);
+    const [phoneError, setPhoneError] = useState<string | null>(null);
     const [showAddressForm, setShowAddressForm] = useState(false);
     const [editingAddress, setEditingAddress] = useState<Address | null>(null);
     const [addressForm, setAddressForm] = useState({
         address_line1: '', address_line2: '', city: '', state: '', pincode: '',
-        country: defaultCountryName, country_code: defaultCountryCode, phone: '', label: '', is_default: false,
+        country: defaultCountryName, country_code: defaultCountryCode, phone: '', label: '', is_default: false, full_name: '',
     });
 
     const addressConfig = getAddressConfig(addressForm.country_code || 'IN');
@@ -1126,10 +1144,17 @@ export default function AccountPage() {
     };
 
     // ── Address handlers ─────────────────────────────────────────────
-    const handleAddressSubmit = async () => {
+    const handleAddressSubmit = async (e?: React.FormEvent) => {
+        e?.preventDefault();
         if (!user?.id) return;
-        if (!addressForm.address_line1 || !addressForm.city || !addressForm.state || !addressForm.pincode) {
+        if (!addressForm.full_name || !addressForm.address_line1 || !addressForm.city || !addressForm.state || !addressForm.pincode || !addressForm.phone) {
             toast.error('Please fill in all required fields');
+            return;
+        }
+
+        const phoneDigits = addressForm.phone.replace(/\D/g, '');
+        if (phoneDigits.length < 7 || phoneDigits.length > 12) {
+            toast.error('Phone number must be between 7 and 12 digits');
             return;
         }
 
@@ -1225,6 +1250,7 @@ export default function AccountPage() {
             phone: phoneVal,
             label: addr.label || '',
             is_default: addr.is_default || false,
+            full_name: addr.full_name || '',
         });
         setManualEdits({ city: true, state: true }); // Assume manual since it's existing data
         setShowAddressForm(true);
@@ -1235,7 +1261,7 @@ export default function AccountPage() {
         setEditingAddress(null);
         setAddressForm({
             address_line1: '', address_line2: '', city: '', state: '', pincode: '',
-            country: defaultCountryName, country_code: defaultCountryCode, phone: '', label: '', is_default: false,
+            country: defaultCountryName, country_code: defaultCountryCode, phone: '', label: '', is_default: false, full_name: '',
         });
         setManualEdits({ city: false, state: false });
     };
@@ -1330,7 +1356,7 @@ export default function AccountPage() {
     ];
     const identityAccessTabs = [
         { id: 'profile', label: 'Personal Profile', icon: User },
-        { id: 'addresses', label: 'Delivery Rituals', icon: MapPin, count: addresses.length },
+        { id: 'addresses', label: 'Manage Addresses', icon: MapPin, count: addresses.length },
         { id: 'support', label: 'Support & Enquiries', icon: MessageSquare, count: enquiries.length },
         { id: 'privacy', label: 'Privacy Sanctuary', icon: Shield },
     ];
@@ -1589,7 +1615,7 @@ export default function AccountPage() {
                                             onClick={() => fileInputRef.current?.click()}
                                             disabled={imageUploading}
                                             title="Upload Profile Photo"
-                                            className="absolute bottom-4 right-4 md:bottom-6 md:right-6 h-12 w-12 md:h-14 md:w-14 rounded-full bg-[#91c934] text-white flex items-center justify-center shadow-lg hover:bg-[#7ab52a] transition-transform hover:scale-110 disabled:opacity-50 z-20 group-hover:bg-[#D4A847] focus:outline-none focus:ring-4 focus:ring-[#D4A847]/30"
+                                            className="absolute bottom-4 right-4 md:bottom-6 md:right-6 h-12 w-12 md:h-14 md:w-14 rounded-full bg-[#91c934] text-white flex items-center justify-center shadow-lg hover:bg-[#7ab52a] transition-transform hover:scale-110 disabled:opacity-50 z-20 group-hover:bg-[#91C934] focus:outline-none focus:ring-4 focus:ring-[#91C934]/30"
                                         >
                                             <Camera className="h-5 w-5 md:h-6 md:w-6" />
                                         </button>
@@ -2238,7 +2264,7 @@ export default function AccountPage() {
                                                                         </span>
                                                                     </div>
                                                                     <div className="relative">
-                                                                        <p className="text-xs text-gray-900 line-clamp-2 italic leading-relaxed pl-3 border-l-2 border-[#D4A847]/40">
+                                                                        <p className="text-xs text-gray-900 line-clamp-2 italic leading-relaxed pl-3 border-l-2 border-[#91C934]/40">
                                                                             &quot;{ticket.message}&quot;
                                                                         </p>
                                                                     </div>
@@ -2657,14 +2683,14 @@ export default function AccountPage() {
 
                                     <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-12">
                                         <div className="max-w-xl">
-                                            <span className="inline-block bg-white border border-gray-100 rounded-full px-4 py-1.5 text-[10px] font-bold text-gray-900 uppercase tracking-widest mb-6">
-                                                Delivery Rituals
+                                            <span className="inline-block bg-white border border-[#91c934] rounded-full px-4 py-1.5 text-[10px] font-bold text-[#91c934] uppercase tracking-widest mb-6">
+                                                Manage Addresses
                                             </span>
                                             <h2 className="text-5xl font-bold text-gray-900 leading-tight mb-4">
-                                                Your Sacred <br className="hidden sm:block" /> Delivery Spaces
+                                                Your Addresses
                                             </h2>
                                             <p className="text-warm-gray text-base leading-relaxed">
-                                                Manage the destinations for your wellness rituals. Each address is a point of connection for your Ayurvedic journey.
+                                                Manage the destinations for your orders.
                                             </p>
                                         </div>
 
@@ -2677,8 +2703,7 @@ export default function AccountPage() {
                                                 <div className="h-16 w-16 bg-gray-50 rounded-3xl flex items-center justify-center mb-4 group-hover:bg-[#91c934] transition-colors">
                                                     <Plus className="h-7 w-7 text-gray-900 group-hover:text-white transition-colors" />
                                                 </div>
-                                                <p className="text-xl font-bold text-gray-900 mb-1">Add Ritual Space</p>
-                                                <p className="text-[10px] font-bold text-warm-gray uppercase tracking-widest">New Delivery Address</p>
+                                                <p className="text-xl font-bold text-gray-900 mb-1">Add New Address</p>
                                             </button>
                                         )}
                                     </div>
@@ -2690,126 +2715,149 @@ export default function AccountPage() {
                                         <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
                                             <div className="px-6 py-4 border-b border-light-border flex items-center justify-between">
                                                 <h3 className="text-xl font-bold text-charcoal">
-                                                    {editingAddress ? 'Revise Sanctuary Path' : 'Enshrine New Sanctuary'}
+                                                    {editingAddress ? 'Edit Address' : 'Add New Address'}
                                                 </h3>
                                                 <button onClick={() => setShowAddressForm(false)} className="text-warm-gray hover:text-charcoal"><X size={20} /></button>
                                             </div>
-                                            <form onSubmit={handleAddressSubmit} className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                    <div className="md:col-span-2">
-                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Label (e.g., Home, Sanctuary)</label>
-                                                        <input
-                                                            type="text"
-                                                            required
-                                                            value={addressForm.label}
-                                                            onChange={e => setAddressForm({ ...addressForm, label: e.target.value })}
-                                                            placeholder="Home / Work / Temple"
-                                                            className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
-                                                        />
-                                                    </div>
-                                                    <div className="md:col-span-2">
-                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Path Line 1 (Street, Area)</label>
-                                                        <input
-                                                            type="text"
-                                                            required
-                                                            value={addressForm.address_line1}
-                                                            onChange={e => setAddressForm({ ...addressForm, address_line1: e.target.value })}
-                                                            className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
-                                                        />
-                                                    </div>
-                                                    <div className="md:col-span-2">
-                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Path Line 2 (Optional)</label>
-                                                        <input
-                                                            type="text"
-                                                            value={addressForm.address_line2}
-                                                            onChange={e => setAddressForm({ ...addressForm, address_line2: e.target.value })}
-                                                            className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">{addressConfig.labels.postalCode}</label>
-                                                        <div className="relative">
+                                            <form onSubmit={handleAddressSubmit} className="flex flex-col flex-1 overflow-hidden">
+                                                <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <div className="md:col-span-2">
+                                                            <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Country</label>
+                                                            <Select
+                                                                options={countryOptions}
+                                                                styles={customSelectStyles}
+                                                                value={countryOptions.find(opt => opt.value === addressForm.country_code)}
+                                                                onChange={(opt: any) => setAddressForm({ ...addressForm, country: opt.name, country_code: opt.value })}
+                                                            />
+                                                        </div>
+                                                        <div className="md:col-span-2">
+                                                            <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Receiver's Name</label>
                                                             <input
                                                                 type="text"
                                                                 required
-                                                                value={addressForm.pincode}
-                                                                onChange={e => setAddressForm({ ...addressForm, pincode: e.target.value })}
+                                                                value={addressForm.full_name}
+                                                                onChange={e => setAddressForm({ ...addressForm, full_name: e.target.value })}
+                                                                placeholder="Name"
                                                                 className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
                                                             />
-                                                            {isLookupLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-burgundy" />}
                                                         </div>
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Sanctuary Domain (Country)</label>
-                                                        <Select
-                                                            options={countryOptions}
-                                                            styles={customSelectStyles}
-                                                            value={countryOptions.find(opt => opt.value === addressForm.country_code)}
-                                                            onChange={(opt: any) => setAddressForm({ ...addressForm, country: opt.name, country_code: opt.value })}
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">{addressConfig.labels.city}</label>
-                                                        <input
-                                                            type="text"
-                                                            required
-                                                            value={addressForm.city}
-                                                            onChange={e => {
-                                                                setManualEdits(prev => ({ ...prev, city: true }));
-                                                                setAddressForm({ ...addressForm, city: e.target.value });
-                                                            }}
-                                                            className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">{addressConfig.labels.state}</label>
-                                                        <input
-                                                            type="text"
-                                                            required
-                                                            value={addressForm.state}
-                                                            onChange={e => {
-                                                                setManualEdits(prev => ({ ...prev, state: true }));
-                                                                setAddressForm({ ...addressForm, state: e.target.value });
-                                                            }}
-                                                            className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
-                                                        />
-                                                    </div>
-                                                    <div className="md:col-span-2">
-                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Commune Number (Phone)</label>
-                                                        <div className="flex gap-2">
-                                                            <div className="w-24 shrink-0">
+                                                        <div className="md:col-span-2">
+                                                            <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Phone Number</label>
+                                                            <div className="flex gap-2">
+                                                                <div className="w-24 shrink-0">
+                                                                    <input
+                                                                        type="text"
+                                                                        disabled
+                                                                        value={addressDialCode}
+                                                                        className="w-full bg-cream rounded-xl px-3 py-3 text-sm border-transparent text-charcoal/50"
+                                                                    />
+                                                                </div>
                                                                 <input
                                                                     type="text"
-                                                                    disabled
-                                                                    value={addressDialCode}
-                                                                    className="w-full bg-cream rounded-xl px-3 py-3 text-sm border-transparent text-charcoal/50"
+                                                                    required
+                                                                    maxLength={12}
+                                                                    value={addressForm.phone}
+                                                                    onChange={e => {
+                                                                        const val = e.target.value.replace(/\D/g, '');
+                                                                        setAddressForm({ ...addressForm, phone: val });
+                                                                        if (val.length > 0 && (val.length < 7 || val.length > 12)) {
+                                                                            setPhoneError('Must be 7-12 digits');
+                                                                        } else {
+                                                                            setPhoneError(null);
+                                                                        }
+                                                                    }}
+                                                                    className={`flex-1 bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent ${phoneError ? 'border-red-500/50 focus:border-red-500' : 'focus:border-burgundy/20'}`}
                                                                 />
                                                             </div>
+                                                            {phoneError && <p className="text-[10px] text-red-500 mt-1 ml-1 font-medium">{phoneError}</p>}
+                                                        </div>
+                                                        <div className="md:col-span-2">
+                                                            <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Path Line 1 (Street, Area)</label>
                                                             <input
                                                                 type="text"
                                                                 required
-                                                                value={addressForm.phone}
-                                                                onChange={e => setAddressForm({ ...addressForm, phone: e.target.value.replace(/\D/g, '') })}
-                                                                className="flex-1 bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
+                                                                value={addressForm.address_line1}
+                                                                onChange={e => setAddressForm({ ...addressForm, address_line1: e.target.value })}
+                                                                className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
+                                                            />
+                                                        </div>
+                                                        <div className="md:col-span-2">
+                                                            <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Path Line 2 (Optional)</label>
+                                                            <input
+                                                                type="text"
+                                                                value={addressForm.address_line2}
+                                                                onChange={e => setAddressForm({ ...addressForm, address_line2: e.target.value })}
+                                                                className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">{addressConfig.labels.postalCode}</label>
+                                                            <div className="relative">
+                                                                <input
+                                                                    type="text"
+                                                                    required
+                                                                    value={addressForm.pincode}
+                                                                    onChange={e => setAddressForm({ ...addressForm, pincode: e.target.value })}
+                                                                    className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
+                                                                />
+                                                                {isLookupLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-burgundy" />}
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">{addressConfig.labels.city}</label>
+                                                            <input
+                                                                type="text"
+                                                                required
+                                                                value={addressForm.city}
+                                                                onChange={e => {
+                                                                    setManualEdits(prev => ({ ...prev, city: true }));
+                                                                    setAddressForm({ ...addressForm, city: e.target.value });
+                                                                }}
+                                                                className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
+                                                            />
+                                                        </div>
+                                                        <div className="md:col-span-2">
+                                                            <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">{addressConfig.labels.state}</label>
+                                                            <input
+                                                                type="text"
+                                                                required
+                                                                value={addressForm.state}
+                                                                onChange={e => {
+                                                                    setManualEdits(prev => ({ ...prev, state: true }));
+                                                                    setAddressForm({ ...addressForm, state: e.target.value });
+                                                                }}
+                                                                className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
+                                                            />
+                                                        </div>
+                                                        <div className="md:col-span-2">
+                                                            <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Label (e.g., Home, Sanctuary)</label>
+                                                            <input
+                                                                type="text"
+                                                                required
+                                                                value={addressForm.label}
+                                                                onChange={e => setAddressForm({ ...addressForm, label: e.target.value })}
+                                                                placeholder="Home / Work / Temple"
+                                                                className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
                                                             />
                                                         </div>
                                                     </div>
+                                                    <div className="flex items-center gap-2 pt-2 pb-2">
+                                                        <input
+                                                            type="checkbox"
+                                                            id="is_default"
+                                                            checked={addressForm.is_default}
+                                                            onChange={e => setAddressForm({ ...addressForm, is_default: e.target.checked })}
+                                                            className="w-4 h-4 rounded text-burgundy focus:ring-burgundy"
+                                                        />
+                                                        <label htmlFor="is_default" className="text-sm text-charcoal font-medium cursor-pointer select-none">Set as Principal Sanctuary (Default Address)</label>
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center gap-2 pt-2">
-                                                    <input
-                                                        type="checkbox"
-                                                        id="is_default"
-                                                        checked={addressForm.is_default}
-                                                        onChange={e => setAddressForm({ ...addressForm, is_default: e.target.checked })}
-                                                        className="w-4 h-4 rounded text-burgundy focus:ring-burgundy"
-                                                    />
-                                                    <label htmlFor="is_default" className="text-sm text-charcoal font-medium cursor-pointer select-none">Set as Principal Sanctuary (Default Address)</label>
-                                                </div>
-                                                <div className="flex gap-3 pt-4 sticky bottom-0 bg-white">
+                                                <div className="p-6 border-t border-light-border bg-gray-50 flex gap-3 shrink-0">
                                                     <button
                                                         type="button"
                                                         onClick={() => setShowAddressForm(false)}
-                                                        className="flex-1 py-3 text-sm font-semibold text-charcoal hover:bg-cream transition-colors rounded-xl border border-light-border"
+                                                        className="flex-1 py-3 text-sm font-semibold text-charcoal hover:bg-cream transition-colors rounded-xl border border-light-border bg-white"
                                                     >
                                                         Back
                                                     </button>
@@ -2817,7 +2865,7 @@ export default function AccountPage() {
                                                         type="submit"
                                                         className="flex-1 py-3 text-sm font-semibold text-white bg-[#91c934] hover:bg-[#7ab52a] transition-all rounded-xl shadow-lg border border-[#7ab52a]"
                                                     >
-                                                        {editingAddress ? 'Update Path' : 'Enshrine Path'}
+                                                        {editingAddress ? 'Save Changes' : 'Add Address'}
                                                     </button>
                                                 </div>
                                             </form>
@@ -2846,13 +2894,13 @@ export default function AccountPage() {
                                     <div className="grid gap-6 sm:grid-cols-2">
                                         {addresses.map(addr => (
                                             <div key={addr.address_id}
-                                                className={`group relative rounded-[2rem] border bg-white p-6 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:-translate-y-1 ${addr.is_default ? 'border-[#D4A847] ring-1 ring-[#D4A847]/20 shadow-md' : 'border-gray-100 shadow-[0_2px_10px_rgb(0,0,0,0.02)]'}`}
+                                                className={`group relative rounded-[2rem] border bg-white p-6 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:-translate-y-1 ${addr.is_default ? 'border-[#91c934] ring-1 ring-[#91c934]/20 shadow-md' : 'border-gray-100 shadow-[0_2px_10px_rgb(0,0,0,0.02)]'}`}
                                             >
                                                 {/* Default badge */}
                                                 {addr.is_default && (
                                                     <div className="absolute -top-3 left-6 flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[10px] font-bold text-white shadow-md"
                                                         style={{ background: 'linear-gradient(135deg, #91c934, #7ab52a)' }}>
-                                                        <Star className="h-3 w-3 fill-[#D4A847] text-[#D4A847]" /> PRIMARY RITUAL SPACE
+                                                        <Star className="h-3 w-3 fill-[#FFD801] text-[#FFD801]" /> PRIMARY RITUAL SPACE
                                                     </div>
                                                 )}
 
@@ -2869,7 +2917,8 @@ export default function AccountPage() {
                                                             )}
                                                         </div>
                                                         <div className="space-y-1">
-                                                            <p className="text-base font-bold text-gray-900 leading-tight">{addr.address_line1}</p>
+                                                            <p className="text-base font-bold text-gray-900 leading-tight">{addr.full_name}</p>
+                                                            <p className="text-sm text-warm-gray font-medium">{addr.address_line1}</p>
                                                             {addr.address_line2 && <p className="text-sm text-warm-gray font-medium">{addr.address_line2}</p>}
                                                             <p className="text-sm text-warm-gray font-medium tracking-wide">
                                                                 {addr.city}, {addr.state} {addr.pincode}
@@ -2882,7 +2931,7 @@ export default function AccountPage() {
                                                         {addr.phone && (
                                                             <div className="mt-5 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-100 w-fit">
                                                                 <Phone className="h-3 w-3 text-warm-gray" />
-                                                                <span className="text-xs font-bold text-gray-900">{addr.phone}</span>
+                                                                <span className="text-xs font-bold text-gray-900">{formatAddressPhone(addr.phone)}</span>
                                                             </div>
                                                         )}
                                                     </div>
@@ -2891,7 +2940,7 @@ export default function AccountPage() {
                                                         {!addr.is_default && (
                                                             <button onClick={() => handleSetDefault(addr)}
                                                                 title="Set as primary"
-                                                                className="h-9 w-9 flex items-center justify-center text-warm-gray hover:text-[#D4A847] transition-all bg-white rounded-xl border border-gray-100 hover:border-[#D4A847]/30 hover:shadow-sm">
+                                                                className="h-9 w-9 flex items-center justify-center text-warm-gray hover:text-[#91c934] transition-all bg-white rounded-xl border border-gray-100 hover:border-[#91c934]/30 hover:shadow-sm">
                                                                 <Star className="h-4 w-4" />
                                                             </button>
                                                         )}
@@ -3148,7 +3197,7 @@ export default function AccountPage() {
                                         </div>
 
                                         {/* Active Plan / Loyalty Status */}
-                                        <div className="bg-[#83BD2E] rounded-[2rem] p-6 text-white relative overflow-hidden shadow-lg border border-[#D4A847]/30 group hover:border-[#D4A847] transition-all duration-500">
+                                        <div className="bg-[#83BD2E] rounded-[2rem] p-6 text-white relative overflow-hidden shadow-lg border border-[#91C934]/30 group hover:border-[#91C934] transition-all duration-500">
                                             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                                                 <Star className="h-16 w-16 text-[#D4A847]" />
                                             </div>
@@ -3311,7 +3360,7 @@ export default function AccountPage() {
                                                                     value={enquiryReplyText}
                                                                     onChange={(e) => setEnquiryReplyText(e.target.value)}
                                                                     placeholder="Type your message here..."
-                                                                    className="w-full min-h-[120px] p-5 bg-gray-50 border border-gray-100 rounded-3xl text-sm focus:outline-none focus:border-[#D4A847]/40 transition-all resize-none placeholder:text-warm-gray/60"
+                                                                    className="w-full min-h-[120px] p-5 bg-gray-50 border border-gray-100 rounded-3xl text-sm focus:outline-none focus:border-[#91C934]/40 transition-all resize-none placeholder:text-warm-gray/60"
                                                                 />
                                                                 <div className="absolute bottom-4 right-4 flex items-center gap-3">
                                                                     <button
@@ -3999,7 +4048,7 @@ export default function AccountPage() {
                                         value={emailOtpCode}
                                         onChange={(e) => setEmailOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                                         placeholder="Enter the 6-digit code"
-                                        className="w-full bg-white border border-[#D4A847] rounded-xl px-4 py-3.5 text-center text-xl font-bold tracking-[0.5em] focus:outline-none shadow-[0_0_15px_rgba(212,168,71,0.15)] focus:border-[#C49A3C] focus:ring-1 focus:ring-[#C49A3C] transition-all placeholder:tracking-normal placeholder:font-normal placeholder:text-base placeholder:text-gray-300 text-[#374151]"
+                                        className="w-full bg-white border border-[#91C934] rounded-xl px-4 py-3.5 text-center text-xl font-bold tracking-[0.5em] focus:outline-none shadow-[0_0_15px_rgba(145,201,52,0.15)] focus:border-[#91C934] focus:ring-1 focus:ring-[#91C934] transition-all placeholder:tracking-normal placeholder:font-normal placeholder:text-base placeholder:text-gray-300 text-[#374151]"
                                     />
                                 </div>
                                 <div className="pt-2">

@@ -41,7 +41,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // 1. Loop through each country to generate localized entries
     for (const country of countries) {
         // Static Pages
-        const staticPages = ['', '/shop', '/about', '/contact', '/blog'];
+        const staticPages = ['', '/about', '/contact', '/blog'];
         staticPages.forEach(p => {
             const languages: Record<string, string> = {};
             countries.forEach(c => {
