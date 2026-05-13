@@ -10,10 +10,14 @@ import PerformanceStore from '@/lib/analytics/performance';
 import { isConsentGranted } from '@/lib/analytics/gtag';
 
 // Force IPv4 first on server to avoid 'localhost' resolving to '::1' if backend is only on 127.0.0.1
-if (typeof window === 'undefined') {
-    const dns = require('dns');
-    if (dns.setDefaultResultOrder) {
-        dns.setDefaultResultOrder('ipv4first');
+if (typeof window === 'undefined' && process.env.NEXT_RUNTIME === 'nodejs') {
+    try {
+        const dns = require('dns');
+        if (dns && dns.setDefaultResultOrder) {
+            dns.setDefaultResultOrder('ipv4first');
+        }
+    } catch (err) {
+        // Ignore error if dns module is not available (e.g. in certain restricted environments)
     }
 }
 
