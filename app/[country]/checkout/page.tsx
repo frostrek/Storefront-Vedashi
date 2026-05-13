@@ -1718,19 +1718,19 @@ function CheckoutContent() {
                                                     {(item as any).size_label && <p className="text-[#a4a9a4] text-xs">{(item as any).size_label}</p>}
                                                     <div className="ritual-summary-item-qty mt-0.5">Qty: {item.quantity}</div>
                                                 </div>
-                                                    <div className="flex flex-col items-end">
-                                                        <span className="ritual-summary-item-price">{formatPrice(lineTotal)}</span>
-                                                        {originalPrice > price && (
-                                                            <div className="flex items-center gap-1 mt-0.5">
-                                                                <span className="text-[10px] text-red-500 font-bold">
-                                                                    {Math.round((1 - price / originalPrice) * 100)}% OFF
-                                                                </span>
-                                                                <span className="text-[10px] text-gray-400 line-through">
-                                                                    {formatPrice(originalPrice * item.quantity)}
-                                                                </span>
-                                                            </div>
-                                                        )}
-                                                    </div>
+                                                <div className="flex flex-col items-end">
+                                                    <span className="ritual-summary-item-price">{formatPrice(lineTotal)}</span>
+                                                    {originalPrice > price && (
+                                                        <div className="flex items-center gap-1 mt-0.5">
+                                                            <span className="text-[10px] text-red-500 font-bold">
+                                                                {Math.round((1 - price / originalPrice) * 100)}% OFF
+                                                            </span>
+                                                            <span className="text-[10px] text-gray-400 line-through">
+                                                                {formatPrice(originalPrice * item.quantity)}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         );
                                     })}
@@ -1743,7 +1743,7 @@ function CheckoutContent() {
                                         <span className="label font-medium text-gray-900">Total MRP</span>
                                         <span className="value font-medium text-gray-900">{formatPrice(totalMrp)}</span>
                                     </div>
-                                    
+
                                     {mrpDiscount > 0 && (
                                         <div className="ritual-summary-row">
                                             <span className="label text-gray-600">Discount on MRP</span>

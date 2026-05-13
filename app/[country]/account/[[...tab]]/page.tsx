@@ -6,7 +6,7 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCart } from '@/context/CartContext';
-// ProductCard removed as it was unused
+import ProductCard from '@/components/ProductCard';
 import {
     getMyOrders, getAddresses, addAddress as apiAddAddress,
     updateAddress as apiUpdateAddress, deleteAddress as apiDeleteAddress,
@@ -2479,7 +2479,7 @@ export default function AccountPage() {
                                 ) : sortedWishlistItems.length === 0 ? (
                                     <div className="rounded-[30px] border border-gray-100 bg-white py-24 text-center">
                                         <Heart className="mx-auto h-16 w-16 text-warm-gray/30 mb-4" />
-                                        <p className="text-2xl font-bold text-gray-900">Your sanctuary is empty</p>
+                                        <p className="text-2xl font-bold text-gray-900">Your wishlist is empty</p>
                                         <p className="mt-2 text-warm-gray text-lg">{wishlistItems.length > 0 ? "No matches found for your current sort." : "Save your favorite organic rituals here."}</p>
                                         <button
                                             onClick={() => router.push(`/${country}`)}
@@ -2489,95 +2489,28 @@ export default function AccountPage() {
                                         </button>
                                     </div>
                                 ) : (
-                                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                                        {sortedWishlistItems.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((prod) => {
-                                            const product = prod;
-                                            const isSelected = selectedWishlistItems.has(product.product_id);
-                                            const stockStatus = (product.stock_status || '').toLowerCase();
-                                            const inStock = stockStatus === 'in_stock';
-
-
-                                            return (
-                                                <div key={product.product_id} className="group flex flex-col rounded-[2rem] border border-gray-100 bg-white p-4 transition-all hover:shadow-lg relative">
-                                                    {/* Individual Remove Button */}
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setConfirmingIndividualRemove(product.product_id);
-                                                        }}
-                                                        className="absolute top-6 right-6 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white text-warm-gray shadow-sm hover:text-red-500 hover:shadow-md transition-all border border-gray-100 opacity-0 group-hover:opacity-100"
-                                                        title="Remove from wishlist"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </button>
-
-                                                    {/* Checkbox Overlay */}
-                                                    <div className="absolute top-6 left-6 z-10">
-                                                        <div className="relative flex items-center justify-center">
-                                                            <input
-                                                                type="checkbox"
-                                                                className="peer appearance-none w-[22px] h-[22px] rounded-md bg-white border-2 border-white shadow-sm checked:bg-white checked:border-white transition-colors cursor-pointer"
-                                                                checked={isSelected}
-                                                                onChange={() => handleWishlistToggleItem(product.product_id)}
-                                                            />
-                                                            <div className="absolute inset-0 rounded-md border border-gray-100 peer-checked:border-white pointer-events-none"></div>
-                                                            <Check className="absolute h-3.5 w-3.5 text-gray-900 opacity-0 peer-checked:opacity-100 pointer-events-none" strokeWidth={3} />
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Product Image */}
-                                                    <div className="aspect-[4/5] w-full rounded-3xl overflow-hidden bg-gray-50 mb-5 relative cursor-pointer" onClick={() => router.push(`/products/${product.slug || product.product_id}`)}>
-                                                        {product.image_url ? (
-                                                            // eslint-disable-next-line @next/next/no-img-element
-                                                            <img src={product.image_url} alt={product.product_name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                                                        ) : (
-                                                            <div className="flex h-full items-center justify-center text-warm-gray/30"><Package className="h-12 w-12" /></div>
-                                                        )}
-                                                    </div>
-
-                                                    {/* Details */}
-                                                    <div className="flex flex-col flex-1 px-1">
-                                                        <div className="flex items-start justify-between gap-3 mb-1">
-                                                            <h3 className="text-base font-bold text-gray-900 leading-snug cursor-pointer hover:underline" onClick={() => router.push(`/products/${product.slug || product.product_id}`)}>
-                                                                {product.product_name}
-                                                            </h3>
-                                                            <span className="font-bold text-gray-900 whitespace-nowrap">${product.price}</span>
-                                                        </div>
-                                                        <div className="flex items-center gap-1.5 mb-2 mt-auto">
-                                                            {/* Status labels removed as per request */}
-                                                        </div>
-
-                                                        {/* Action */}
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.preventDefault();
-                                                                addCartItem(product.product_id, null, 1);
-                                                                removeWishlistItem(product.product_id);
-                                                                toast.success('Moved to cart');
-                                                            }}
-                                                            disabled={!inStock}
-                                                            className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#91c934] py-3 text-sm font-bold text-white shadow-md hover:bg-[#7ab52a] hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                                        >
-                                                            <ShoppingCart className="h-4 w-4" /> {inStock ? 'Add to Cart' : 'Out of Stock'}
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
+                                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                                        {sortedWishlistItems.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((product) => (
+                                            <ProductCard
+                                                key={product.product_id}
+                                                product={product}
+                                                listName="Wishlist"
+                                            />
+                                        ))}
 
                                         {/* Find More Treasures Tile */}
-                                        <div className="group flex flex-col justify-center items-center rounded-[2rem] border-2 border-dashed border-gray-100 bg-white p-8 transition-all hover:bg-gray-50 hover:border-transparent text-center cursor-pointer min-h-[400px]">
-                                            <div className="h-12 w-12 rounded-full border-2 border-gray-100 flex items-center justify-center bg-white group-hover:border-[#91c934] group-hover:text-gray-900 text-warm-gray transition-colors mb-6 shadow-sm">
+                                        <div
+                                            className="group flex flex-col justify-center items-center rounded-2xl border-2 border-dashed border-gray-100 bg-white p-6 transition-all hover:bg-gray-50 hover:border-transparent text-center cursor-pointer min-h-[320px]"
+                                            onClick={() => router.push(`/${country}`)}
+                                        >
+                                            <div className="h-12 w-12 rounded-full border-2 border-gray-100 flex items-center justify-center bg-white group-hover:border-[#91c934] group-hover:text-gray-900 text-warm-gray transition-colors mb-4 shadow-sm">
                                                 <Plus className="h-5 w-5" />
                                             </div>
-                                            <h3 className="text-xl font-bold text-gray-900 mb-2">Find More Treasures</h3>
-                                            <p className="text-xs text-warm-gray leading-relaxed mb-6 max-w-[200px]">Continue exploring our organic collections.</p>
-                                            <button
-                                                onClick={() => router.push(`/${country}`)}
-                                                className="rounded-xl border border-gray-100 px-6 py-2.5 text-xs font-bold text-gray-900 group-hover:bg-white group-hover:shadow-sm transition-all bg-white"
-                                            >
+                                            <h3 className="text-base font-bold text-gray-900 mb-1">Find More</h3>
+                                            <p className="text-xs text-warm-gray leading-relaxed mb-4">Explore our collections.</p>
+                                            <span className="rounded-xl border border-gray-100 px-4 py-2 text-xs font-bold text-gray-900 group-hover:bg-white group-hover:shadow-sm transition-all bg-white">
                                                 Browse Shop
-                                            </button>
+                                            </span>
                                         </div>
                                     </div>
                                 )}

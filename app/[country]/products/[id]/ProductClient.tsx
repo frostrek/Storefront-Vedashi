@@ -145,6 +145,14 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
         }
     };
 
+    const handleToggleWishlist = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (product) {
+            toggleItem(product);
+        }
+    };
+
     const handleShare = () => {
         const shareData = {
             title: product?.product_name || 'Vedashi Wellness',
@@ -479,13 +487,22 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                     </div>
                                 )}
                             </div>
-                            <button
-                                onClick={handleShare}
-                                className="p-2.5 rounded-full bg-white border border-gray-200 text-gray-500 hover:text-[#91C934] hover:border-[#91C934] hover:shadow-md transition-all group flex-shrink-0 mt-1"
-                                title="Share product"
-                            >
-                                <Share2 size={18} className="group-hover:scale-110 transition-transform" />
-                            </button>
+                            <div className="flex flex-col gap-2 mt-1 flex-shrink-0">
+                                <button
+                                    onClick={handleToggleWishlist}
+                                    className={`p-2.5 rounded-full border transition-all group ${wishlisted ? 'border-[#91C934] bg-[#91C934]/10' : 'border-gray-200 bg-white hover:border-[#91C934]/30 hover:bg-gray-50'} hover:shadow-md cursor-pointer`}
+                                    title={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                                >
+                                    <Heart size={18} className={`transition-transform group-hover:scale-110 ${wishlisted ? 'fill-[#91C934] text-[#91C934]' : 'text-gray-400 group-hover:text-[#91C934]'}`} />
+                                </button>
+                                <button
+                                    onClick={handleShare}
+                                    className="p-2.5 rounded-full border border-gray-200 bg-white text-gray-400 hover:text-[#91C934] hover:border-[#91C934]/30 hover:bg-gray-50 hover:shadow-md transition-all group cursor-pointer"
+                                    title="Share product"
+                                >
+                                    <Share2 size={18} className="group-hover:scale-110 transition-transform" />
+                                </button>
+                            </div>
                         </div>
 
                         {/* Short description under title */}
@@ -538,41 +555,50 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
 
 
                         {/* PRICE BLOCK */}
-                        <div className="p-5 rounded-2xl bg-[#FDFCFB] border border-[#E9ECEF] shadow-sm space-y-3">
+                        <div className="p-4 rounded-xl bg-white shadow-[inset_0_0_0_1px_#E9ECEF] space-y-1">
                             <div className="flex flex-col gap-1">
                                 {isDiscounted && (
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="bg-[#91C934] text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider">
-                                            {discountPercent}% OFF
-                                        </span>
-                                        <span className="text-[11px] font-bold text-[#91C934] uppercase tracking-wide">
-                                            Special Ritual Price
-                                        </span>
-                                    </div>
+                                    <>
+                                        <div className="text-[#1e3a8a] text-[13px] leading-none mb-1">
+                                            <span className="font-black">WOW!</span> <span className="font-semibold">Limited Time Offer</span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <span className="bg-[#C1262D] text-white text-xs font-bold px-2 py-0.5 rounded-sm">
+                                                {discountPercent}% OFF
+                                            </span>
+                                            <div className="flex items-center gap-1.5 text-sm">
+                                                <span className="text-gray-500">MRP</span>
+                                                <span className="text-gray-400 line-through">
+                                                    {formatPrice(originalPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </>
                                 )}
                                 <div className="flex items-baseline gap-2">
-                                    <span className="text-3xl lg:text-4xl font-black text-[#1A1A1A]">
+                                    <p className="text-3xl font-extrabold text-[#C1262D]">
                                         {formatPrice(displayPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
-                                    </span>
-                                    <span className="text-sm text-gray-500 font-medium">
-                                        Inclusive of all taxes
+                                    </p>
+                                    <span className="text-sm text-gray-500">
+                                        {selectedVariant?.size_label && selectedVariant.size_label.toLowerCase() !== 'standard'
+                                            ? `(${selectedVariant.size_label})`
+                                            : 'Inclusive of all taxes'}
                                     </span>
                                 </div>
                             </div>
-
-                            {isDiscounted && (
-                                <div className="pt-3 border-t border-dashed border-gray-200">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xs text-gray-500 font-bold uppercase tracking-tight">MRP</span>
-                                        <span className="text-lg font-bold text-gray-400 line-through">
-                                            {formatPrice(originalPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
-                                        </span>
-                                        <span className="text-xs font-bold text-[#FF0000]">
-                                            You save {formatPrice(originalPrice - displayPrice)}
-                                        </span>
-                                    </div>
-                                </div>
+                            {selectedVariant?.size_label && selectedVariant.size_label.toLowerCase() !== 'standard' && (
+                                <p className="text-sm text-gray-500">Inclusive of all taxes</p>
                             )}
+                            <hr className="border-gray-200" />
+                            <div className="pt-2">
+                                <p className="text-[11px] text-gray-400 uppercase tracking-tight leading-none mb-1">MRP</p>
+                                <div className="flex items-baseline gap-1.5">
+                                    <span className="text-xl font-bold text-black">
+                                        {formatPrice(originalPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
+                                    </span>
+                                    <span className="text-[12px] text-gray-400">(Inclusive of all taxes)</span>
+                                </div>
+                            </div>
                         </div>
 
                         {/* COUPON ROW */}
