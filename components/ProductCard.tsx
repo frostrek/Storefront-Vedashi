@@ -213,11 +213,13 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
         e.stopPropagation();
 
         if (!hasVariants) {
-            const maxStock = product.stock_quantity ?? 99;
-            if (maxStock <= 0) {
+            // Explicitly check for out-of-stock (stock_quantity === 0)
+            // When stock_quantity is undefined/null, we allow add (unknown stock)
+            if (product.stock_quantity !== null && product.stock_quantity !== undefined && product.stock_quantity <= 0) {
                 toast.error('This item is out of stock');
                 return;
             }
+            const maxStock = product.stock_quantity ?? 99;
 
             // Check if item already in cart at max stock
             const existingInCart = items.find(i => i.product_id === product.product_id);
@@ -278,6 +280,8 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
     const handleModalAddToCart = async (e: React.MouseEvent) => {
         if (hasVariants && !selectedVariant) return;
 
+        // When stock_quantity is undefined/null, use 99 as safe fallback (unknown stock)
+        // When stock_quantity is explicitly 0, it's out of stock
         const maxStock = hasVariants && selectedVariant
             ? (selectedVariant.stock_quantity ?? 99)
             : (product.stock_quantity ?? 99);
@@ -370,6 +374,13 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
     const isComingSoon = product.is_coming_soon ?? false;
     const isExpired = product.is_availability_expired ?? false;
     const isUnavailable = isComingSoon || isExpired;
+
+    // Out of stock: true only when stock_quantity is explicitly 0 (not undefined)
+    const isOutOfStock = !isUnavailable && (
+        product.stock_quantity !== null &&
+        product.stock_quantity !== undefined &&
+        product.stock_quantity <= 0
+    );
 
 
     const renderInlineOptions = () => {
@@ -885,7 +896,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
             <div className="relative group block h-full" ref={cardRef}>
                 {/* ═══════ FRONT OF CARD ═══════ */}
                 <div className={`h-full bg-white transition-all duration-300 ${isList ? 'overflow-hidden flex flex-row p-3 border border-gray-100 hover:bg-gray-50/50 hover:border-[#FF0000]/30 rounded-2xl gap-4 sm:gap-6 items-center shadow-sm hover:shadow-md' : 'flex flex-col rounded-2xl overflow-visible'}`}>
-                    <div className={`relative overflow-hidden bg-white ${isList ? 'w-[100px] h-[100px] sm:w-[150px] sm:h-[150px] rounded-xl flex-shrink-0 border border-gray-100/50' : 'rounded-t-2xl border-b border-gray-100'}`} style={isList ? {} : { aspectRatio: '5 / 4' }}>
+                    <div className={`relative overflow-hidden bg-white ${isList ? 'w-[100px] h-[100px] sm:w-[150px] sm:h-[150px] rounded-xl flex-shrink-0 border border-gray-100/50' : 'rounded-t-2xl border-b border-gray-100'} ${isOutOfStock && !hasVariants ? 'grayscale-[40%] opacity-75' : ''}`} style={isList ? {} : { aspectRatio: '5 / 4' }}>
                         <div className="absolute inset-0 flex items-center justify-center p-4">
                             {isBase64 ? (
                                 <img
@@ -952,6 +963,11 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                         {/* Product Badges (Top Left Stack) */}
                         <div className={`absolute ${isList ? 'left-2 top-2' : 'left-2 top-2'} flex flex-col gap-1 z-10`}>
 
+                            {isOutOfStock && !hasVariants && (
+                                <span className="rounded-full bg-gray-500 px-2 py-0.5 text-[8px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
+                                    Out of Stock
+                                </span>
+                            )}
                             {isExpired && !isComingSoon && (
                                 <span className="rounded-full bg-red-600 px-2 py-0.5 text-[8px] font-black tracking-[0.1em] text-white uppercase font-ui w-fit">
                                     Expired
@@ -979,9 +995,15 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                     {!isUnavailable && !isList && (
                         <div className="relative">
                             <div className="absolute bottom-6 right-4 translate-y-1/2 z-30">
-                                {/* Single variant: show ADD or quantity stepper */}
+                                {/* Single variant: show ADD, quantity stepper, or OUT OF STOCK */}
                                 {!hasVariants ? (
-                                    isInCart && currentItemInCart ? (
+                                    isOutOfStock ? (
+                                        /* ── Out of Stock indicator (single variant) ── */
+                                        <span className="inline-flex items-center px-2.5 py-1.5 bg-gray-100 border-2 border-gray-300 rounded-lg text-[11px] font-bold text-gray-400 tracking-wide cursor-not-allowed shadow-sm select-none">
+                                            <AlertTriangle className="h-3 w-3 mr-1" />
+                                            OUT
+                                        </span>
+                                    ) : isInCart && currentItemInCart ? (
                                         /* ── Quantity stepper pill ── */
                                         <div className="flex items-center bg-white rounded-lg shadow-[0_2px_12px_rgba(0,0,0,0.12)] border border-gray-200 overflow-hidden">
                                             <button
@@ -1143,7 +1165,17 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                         )}
 
                         {/* List view: inline action buttons */}
-                        {isList && !isUnavailable && (
+                        {/* Out of stock indicator for list layout (single-variant) */}
+                        {isList && isOutOfStock && !hasVariants && !isUnavailable && (
+                            <div className="mt-2.5 sm:mt-4 flex items-center gap-2 relative z-30">
+                                <span className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-bold text-gray-400 bg-gray-100 border border-gray-200 px-3 py-2 rounded-lg">
+                                    <AlertTriangle className="h-3.5 w-3.5" />
+                                    Out of Stock
+                                </span>
+                            </div>
+                        )}
+
+                        {isList && !isUnavailable && !(isOutOfStock && !hasVariants) && (
                             <div className="mt-2.5 sm:mt-4 flex flex-wrap items-center gap-2 sm:gap-3 relative z-30">
                                 {hasVariants ? (
                                     <button
