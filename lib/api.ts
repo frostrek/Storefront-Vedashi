@@ -17,7 +17,7 @@ if (typeof window === 'undefined' && process.env.NEXT_RUNTIME === 'nodejs') {
             dns.setDefaultResultOrder('ipv4first');
         }
     } catch (err) {
-        // Ignore error if dns module is not available (e.g. in certain restricted environments)
+        // Ignore error if dns module is not available (e.g. in certain restricted environment)
     }
 }
 
@@ -73,7 +73,7 @@ async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
             try {
                 const urlObj = new URL(url, window.location.origin);
                 const path = urlObj.pathname;
-                
+
                 // Sensitive endpoint filtering
                 if (!path.includes('/api/auth/') && !path.includes('/api/csrf-token') && !path.includes('/api/gdpr/')) {
                     // Throttling (100ms per endpoint)
@@ -81,13 +81,13 @@ async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
                     const lastSent = lastApiLatencies[path] || 0;
                     if (now - lastSent > 100) {
                         lastApiLatencies[path] = now;
-                        
+
                         // Storage for purchase correlation
                         PerformanceStore.recordApiLatency(latency);
-                        
+
                         // Push with category
                         const category = PerformanceStore.getPerformanceCategory(latency, 'api');
-                        
+
                         if ((window as any).dataLayer) {
                             (window as any).dataLayer.push({
                                 event: 'api_latency',
@@ -142,7 +142,7 @@ export async function authFetch(url: string, init?: RequestInit): Promise<Respon
     if (res.status === 401 && typeof window !== 'undefined') {
         const isAuthEndpoint = url.includes('/api/auth/login') || url.includes('/api/auth/register') || url.includes('/api/auth/refresh-token') || url.includes('/api/auth/initiate-registration');
         const isLoginPage = window.location.pathname.includes('/login');
-        
+
         if (!isAuthEndpoint && !isLoginPage) {
             const cloned = res.clone();
             try {
@@ -2228,7 +2228,7 @@ export async function trackOrder(orderId: string) {
 
 export async function getHeroSlides(): Promise<{ success: boolean; data: any[] }> {
     try {
-        const res = await apiFetch(`${API_URL}/api/media/hero/active`, { 
+        const res = await apiFetch(`${API_URL}/api/media/hero/active`, {
             cache: 'no-store',
             credentials: 'include'
         });
@@ -2246,7 +2246,7 @@ export async function getHeroSlides(): Promise<{ success: boolean; data: any[] }
 
 export async function getHeroSettings(): Promise<{ success: boolean; data: any }> {
     try {
-        const res = await apiFetch(`${API_URL}/api/media/hero/settings`, { 
+        const res = await apiFetch(`${API_URL}/api/media/hero/settings`, {
             cache: 'no-store',
             credentials: 'include'
         });
