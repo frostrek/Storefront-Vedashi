@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 
-// Brand entries: name, slug (for URL filtering), and logo image path
+// Brand entries: name, slug (for URL filtering), and logo image paths
 // Add your brand logos to /public/brands/ and update the list below
 const brands = [
   { name: 'minimalist', slug: 'minimalist', logo: '/brands/minimalist.webp' },
