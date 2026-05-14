@@ -124,7 +124,7 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="https://mc.yandex.ru" />
         
         {/* GA4 — Set default consent BEFORE any gtag scripts load */}
-        <script
+        <Script
           id="ga4-default-consent"
           dangerouslySetInnerHTML={{
             __html: `
