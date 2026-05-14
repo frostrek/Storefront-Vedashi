@@ -185,7 +185,7 @@ export default async function RootLayout({
                         border: '1px solid rgba(255, 255, 255, 0.5)',
                       },
                       success: {
-                        iconTheme: { primary: '#3d5c3a', secondary: '#fff' },
+                        iconTheme: { primary: '#91C934', secondary: '#fff' },
                       },
                       error: {
                         iconTheme: { primary: '#ef4444', secondary: '#fff' },

@@ -189,7 +189,7 @@ function LoginContent() {
 
     if (isLoading || (isAuthenticated && !isAdminRedirecting.current && !isAdminUser) || isRedirecting) {
         return (
-            <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0d1f0d]/90 backdrop-blur-md">
+            <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#FFFFFF]/95 backdrop-blur-md">
                 <div className="relative flex h-24 w-24 items-center justify-center">
                     <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#91C934] border-r-[#91C934]/50 animate-spin" />
                     <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#91C934]/20 animate-pulse">
@@ -197,7 +197,7 @@ function LoginContent() {
                     </div>
                 </div>
                 <div className="mt-8 flex flex-col items-center space-y-2">
-                    <h2 className="text-2xl font-bold text-white tracking-tight">
+                    <h2 className="text-2xl font-bold text-black tracking-tight drop-shadow-sm">
                         Securing your session
                     </h2>
                     <p className="text-sm font-medium text-[#91C934] animate-pulse">

@@ -25,7 +25,7 @@ export default function NotFound() {
             </div>
 
             {/* Right side: Typography and Actions */}
-            <div className="flex flex-col items-start max-w-md animate-fade-in-up" style={{ animationDelay: '150ms' }}>
+            <div className="flex flex-col justify-center items-center max-w-md animate-fade-in-up" style={{ animationDelay: '150ms' }}>
                 <h1 className="text-8xl md:text-9xl lg:text-[10rem] font-black text-[#2C2C2C] tracking-tighter mb-4 leading-none">
                     404
                 </h1>
@@ -36,7 +36,7 @@ export default function NotFound() {
 
                 <Link
                     href="/"
-                    className="inline-flex items-center justify-center px-8 py-4 rounded-full border-2 border-[#2C2C2C] text-[#2C2C2C] font-bold text-sm tracking-[0.2em] uppercase hover:bg-[#91C934] hover:border-[#91C934] hover:text-white transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+                    className="inline-flex items-center justify-center px-8 py-4 rounded-full border-2 border-[#2C2C2C] text-[#2C2C2C] font-bold text-sm tracking-[0.2em] uppercase bg-[#91C934] border-[#91C934] text-white transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
                 >
                     Return to Homepage
                 </Link>
