@@ -3,8 +3,11 @@
 import Link from 'next/link';
 import { ArrowRight, Leaf, ShieldCheck, MapPin, BookOpen, Globe, Rocket, ShoppingBag, TrendingUp } from 'lucide-react';
 import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
+import { useParams } from 'next/navigation';
 
 export default function AboutClientPage() {
+    const params = useParams();
+    const country = (params.country as string) || 'in';
     return (
         <div className="min-h-screen bg-[#FDFCFB] relative">
             {/* Background Texture */}
@@ -47,7 +50,7 @@ export default function AboutClientPage() {
                     <AnimateOnScroll animation="fadeUp" delay={0.4}>
                         <div className="mt-10 flex flex-wrap justify-center gap-4">
                             <Link
-                                href="/products"
+                                href={`/${country}/products`}
                                 className="inline-flex items-center gap-2.5 rounded-full bg-[#5F6F52] px-8 py-4 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:bg-[#4A5A3E] hover:-translate-y-0.5 hover:shadow-xl"
                             >
                                 Explore Collections

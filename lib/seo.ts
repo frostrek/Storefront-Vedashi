@@ -238,7 +238,8 @@ export function generateProductJsonLd(
     product: ProductSeoInput,
     shippingConfig?: any,
     returnConfig?: any,
-    currency: string = 'INR'
+    currency: string = 'INR',
+    country: string = 'in'
 ): Record<string, unknown> {
     const defaultVariant = product.variants?.find((v: any) => v.is_default) || product.variants?.[0];
     const price = defaultVariant?.price || product.price || 0;
@@ -258,7 +259,7 @@ export function generateProductJsonLd(
         sku,
         mpn: sku,
         image: Array.from(imageSet),
-        url: `${SITE_URL}/products/${product.slug || product.product_id}`,
+        url: `${SITE_URL}/${country}/products/${product.slug || product.product_id}`,
         brand: {
             '@type': 'Brand',
             name: product.brand || SITE_NAME
@@ -270,7 +271,7 @@ export function generateProductJsonLd(
             availability: inStock
                 ? 'https://schema.org/InStock'
                 : 'https://schema.org/OutOfStock',
-            url: `${SITE_URL}/products/${product.slug || product.product_id}`,
+            url: `${SITE_URL}/${country}/products/${product.slug || product.product_id}`,
             priceValidUntil: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
             itemCondition: 'https://schema.org/NewCondition',
             seller: {

@@ -133,6 +133,11 @@ function pathHasCountryPrefix(pathname: string): string | null {
 }
 
 function shouldSkip(pathname: string): boolean {
+  // Never skip Next.js RSC payload requests (.rsc or .txt prefetch)
+  if (pathname.endsWith('.rsc') || pathname.endsWith('.txt')) {
+    return false;
+  }
+
   return (
     pathname.startsWith('/api') ||
     pathname.startsWith('/_next') ||
@@ -261,6 +266,10 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
+    // Match all request paths except for the ones starting with API, static, images, and files with extensions
     '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)',
+    // Specifically match .rsc and .txt files for Next.js soft navigation in production
+    '/(.*\\.rsc)',
+    '/(.*\\.txt)',
   ],
 };
