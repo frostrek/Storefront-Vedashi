@@ -301,7 +301,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                     image_url: product.thumbnail_url || '',
                 };
                 sessionStorage.setItem('ksp_buy_now_item', JSON.stringify(buyNowItem));
-                router.push('/checkout?buyNow=true');
+                router.push(`/${country}/checkout?buyNow=true`);
             }, 300);
             return () => clearTimeout(timer);
         }
@@ -394,8 +394,8 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
 
         // If user is NOT signed in, redirect to login with a return URL
         if (!isAuthenticated) {
-            const returnUrl = `/products/${product.slug || product.product_id}?buyNow=true`;
-            router.push(`/login?redirect=${encodeURIComponent(returnUrl)}`);
+            const returnUrl = `/${country}/products/${product.slug || product.product_id}?buyNow=true`;
+            router.push(`/${country}/login?redirect=${encodeURIComponent(returnUrl)}`);
             return;
         }
 
@@ -412,7 +412,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
         };
         sessionStorage.setItem('ksp_buy_now_item', JSON.stringify(buyNowItem));
         sessionStorage.removeItem('vedashi_checkout_draft');
-        router.push('/checkout?buyNow=true');
+        router.push(`/${country}/checkout?buyNow=true`);
     };
 
     return (
@@ -421,13 +421,13 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
             <div className="border-b border-light-border bg-white py-1">
                 <div className="mx-auto max-w-[1440px] px-4 py-1">
                     <nav className="flex items-center gap-2 text-sm text-gray-500">
-                        <Link href="/">Home</Link>
+                        <Link href={`/${country}`}>Home</Link>
                         <ChevronRight className="h-3 w-3" />
-                        <Link href="/products">Shop</Link>
+                        <Link href={`/${country}/products`}>Shop</Link>
                         <ChevronRight className="h-3 w-3" />
                         {product.category && (
                             <>
-                                <Link href={`/products?category=${encodeURIComponent(product.category.toLowerCase().replace(/\s+/g, '-'))}`} className="hover:text-gray-900 transition-colors">
+                                <Link href={`/${country}/products?category=${encodeURIComponent(product.category.toLowerCase().replace(/\s+/g, '-'))}`} className="hover:text-gray-900 transition-colors">
                                     {product.category}
                                 </Link>
                                 <ChevronRight className="h-3 w-3" />
@@ -479,7 +479,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                 {product.brand && (
                                     <div className="mt-1">
                                         <Link
-                                            href={`/products?brand=${encodeURIComponent(product.brand)}`}
+                                            href={`/${country}/products?brand=${encodeURIComponent(product.brand)}`}
                                             className="text-sm font-semibold underline text-gray-500 hover:text-gray-700 transition-all"
                                         >
                                             {product.brand}

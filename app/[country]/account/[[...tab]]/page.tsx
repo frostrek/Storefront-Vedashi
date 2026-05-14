@@ -1713,7 +1713,7 @@ export default function AccountPage() {
 
                                             <div className="space-y-4">
                                                 {wishlistItems.slice(0, 4).map((item: any) => (
-                                                    <div key={item.product_id} className="flex gap-4 group cursor-pointer" onClick={() => router.push(`/products/${item.slug || item.product_id}`)}>
+                                                    <div key={item.product_id} className="flex gap-4 group cursor-pointer" onClick={() => router.push(`/${country}/products/${item.slug || item.product_id}`)}>
                                                         <div className="h-16 w-16 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-center p-2 flex-shrink-0 overflow-hidden">
                                                             {item.image_url ? (
                                                                 // eslint-disable-next-line @next/next/no-img-element

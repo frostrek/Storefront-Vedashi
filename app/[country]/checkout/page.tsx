@@ -3,7 +3,7 @@
 
 import { useState, useEffect, Suspense, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { getCart, clearCart as clearCartApi, checkoutOrder, getAddresses, updateAddress, deleteAddress, directCheckout, createPaymentOrder, verifyPayment, initiatePaymentCheckout, lookupPostalCode, getLoyaltyWallet, updateCheckoutDraft } from '@/lib/api';
@@ -98,6 +98,8 @@ function CheckoutContent() {
     const currentConfig = currencyConfigs.find(c => c.country_code === countryConfig.code.toUpperCase());
     const exchangeRate = currentConfig?.exchange_rate || 1;
     const router = useRouter();
+    const routeParams = useParams();
+    const routeCountry = (routeParams.country as string) || 'in';
     const searchParams = useSearchParams();
     const isBuyNow = searchParams.get('buyNow') === 'true';
     const { items, totalPrice, clearCart, cartId, couponCode, couponDiscount, couponType, removeCoupon, applyCoupon, totalItems, orderNotes, setOrderNotes } = useCart();
@@ -1150,10 +1152,10 @@ function CheckoutContent() {
                             Your sacred herbs and authentic formulations are being prepared with care. We&apos;ll notify you regarding the delivery schedule.
                         </p>
                         <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-                            <Link href="/products" className="cart-checkout-btn !w-auto bg-[#E8E4DC] hover:bg-[#D4CFC0] order-2 sm:order-1">
+                            <Link href={`/${routeCountry}/products`} className="cart-checkout-btn !w-auto bg-[#E8E4DC] hover:bg-[#D4CFC0] order-2 sm:order-1">
                                 Continue Exploring
                             </Link>
-                            <Link href="/account" className="cart-checkout-btn !w-auto order-1 sm:order-2">
+                            <Link href={`/${routeCountry}/account`} className="cart-checkout-btn !w-auto order-1 sm:order-2">
                                 Track Your Journey
                             </Link>
                         </div>
