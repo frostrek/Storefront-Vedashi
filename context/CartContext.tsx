@@ -70,7 +70,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const [cartId, setCartId] = useState<string | null>(null);
     const pendingQtyUpdates = useRef(0);
 
-    // DERIVED VALUES — single source of truth, can never desync from items
+    // DERIVED VALUE — single source of truth, can never desync from items
     const totalItems = useMemo(() => new Set(items.map(i => String(i.product_id))).size, [items]);
     const totalPrice = useMemo(() => items.reduce((s, i) => s + (i.price || 0) * i.quantity, 0), [items]);
     const [loading, setLoading] = useState(false);
@@ -372,8 +372,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
             }
             const freshCart = await fetchCart(activeCartId);
             const freshItems = freshCart ? (freshCart.items || []).map(flattenCartItem) : [];
-            const addedItem = freshItems.find(i => 
-                String(i.product_id) === String(productId) && 
+            const addedItem = freshItems.find(i =>
+                String(i.product_id) === String(productId) &&
                 (variantId ? String(i.variant_id) === String(variantId) : true)
             );
 
@@ -413,7 +413,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     const updateQuantity = useCallback(async (cartItemId: string, quantity: number) => {
         let snapshot: BackendCartItem[] = [];
-        
+
         // Optimistic UI Update Phase
         setItems(prev => {
             snapshot = prev;
@@ -538,7 +538,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         items.forEach(item => {
             const stock = item.stock_quantity ?? 0;
             if (stock > 0 && item.quantity > stock) {
-                updateQuantity(item.cart_item_id, stock).catch(() => {});
+                updateQuantity(item.cart_item_id, stock).catch(() => { });
                 import('react-hot-toast').then(({ default: toast }) => {
                     toast(`Quantity of ${item.product_name} reduced to ${stock} due to limited stock.`, { icon: '⚠️' });
                 });
@@ -547,7 +547,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
         // Poll cart every 30 seconds
         const pollInterval = setInterval(() => {
-            fetchCart(cartId).catch(() => {});
+            fetchCart(cartId).catch(() => { });
         }, 30000);
 
         return () => clearInterval(pollInterval);
