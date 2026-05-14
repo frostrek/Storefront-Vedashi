@@ -44,7 +44,7 @@ export default function NotFound() {
                 {/* CTA Buttons */}
                 <div className="flex flex-col sm:flex-row gap-3">
                     <Link
-                        href="/"
+                        href="/in"
                         className="inline-flex items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold text-white bg-[#3B5D3B] shadow-lg shadow-[#3B5D3B]/20 transition-all duration-300 hover:shadow-xl hover:shadow-[#3B5D3B]/30 hover:-translate-y-0.5"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -53,7 +53,7 @@ export default function NotFound() {
                         Back to Home
                     </Link>
                     <Link
-                        href="/products"
+                        href="/in/products"
                         className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-[#3B5D3B]/20 bg-[#FAF7F2] px-6 py-2.5 text-sm font-semibold text-[#3B5D3B] transition-all duration-300 hover:border-[#3B5D3B]/40 hover:bg-[#3B5D3B]/5 hover:-translate-y-0.5"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">

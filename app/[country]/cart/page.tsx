@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useCart } from '@/context/CartContext';
@@ -51,6 +51,8 @@ export default function CartPage() {
     } = useCart();
     const { isAuthenticated } = useAuth();
     const router = useRouter();
+    const params = useParams();
+    const country = (params.country as string) || 'in';
     const [itemToRemove, setItemToRemove] = useState<string | null>(null);
     const [couponInput, setCouponInput] = useState('');
     const [applyingCoupon, setApplyingCoupon] = useState(false);
@@ -101,7 +103,7 @@ export default function CartPage() {
                         Explore our sacred collection and add authentic Ayurvedic products to your wellness journey
                     </p>
                     <Link
-                        href="/products"
+                        href={`/${country}/products`}
                         className="cart-checkout-btn inline-flex mt-8"
                         style={{ width: 'auto', display: 'inline-flex' }}
                     >
@@ -124,13 +126,13 @@ export default function CartPage() {
                     </div>
                 </div>
                 <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12 relative z-10">
-                    <Link href="/products" className="inline-flex items-center gap-2 text-sm font-semibold text-[#91c934] hover:text-[#5A7A4E] mb-6 transition-colors uppercase tracking-wider">
+                    <Link href={`/${country}/products`} className="inline-flex items-center gap-2 text-sm font-semibold text-[#91c934] hover:text-[#5A7A4E] mb-6 transition-colors uppercase tracking-wider">
                         <ArrowLeft className="h-4 w-4 text-[#91c934]" /> Continue Shopping
                     </Link>
                     <div className="cart-item-card text-center py-10 mb-6">
                         <ShoppingCart className="h-8 w-8 text-[#8B7A3D] mx-auto mb-3" />
                         <p className="text-[#4A4A4A] font-medium">Your active cart is empty.</p>
-                        <Link href="/products" className="text-sm text-[#91c934] font-semibold hover:underline mt-2 inline-block">Browse Products</Link>
+                        <Link href={`/${country}/products`} className="text-sm text-[#91c934] font-semibold hover:underline mt-2 inline-block">Browse Products</Link>
                     </div>
                     <div>
                         <h3 className="cart-saved-section-title">
@@ -142,11 +144,11 @@ export default function CartPage() {
                                 const price = item.price ?? 0;
                                 return (
                                     <div key={item.cart_item_id} className="cart-item-card flex items-center gap-4 bg-[#FAFAFA]">
-                                        <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img w-16 h-16 rounded-lg flex-shrink-0">
+                                        <Link href={`/${country}/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img w-16 h-16 rounded-lg flex-shrink-0">
                                             {item.image_url ? <img src={item.image_url} alt="" /> : <span className="text-xl">🌿</span>}
                                         </Link>
                                         <div className="flex-1">
-                                            <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
+                                            <Link href={`/${country}/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
                                                 <h3 className="text-sm font-bold text-[#1A1A1A] hover:text-[#3d5c3a] transition-colors">{item.product_name || 'Product'}</h3>
                                             </Link>
                                             <p className="text-[#4A4A4A] mt-1">{formatPrice(price)}</p>
@@ -213,7 +215,7 @@ export default function CartPage() {
             {/* Main Content */}
             <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12 relative z-10">
                 {/* Back Link */}
-                <Link href="/products" className="inline-flex items-center gap-2 text-sm font-semibold text-[#91c934] hover:text-[#5A7A4E] mb-6 transition-colors uppercase tracking-wider">
+                <Link href={`/${country}/products`} className="inline-flex items-center gap-2 text-sm font-semibold text-[#91c934] hover:text-[#5A7A4E] mb-6 transition-colors uppercase tracking-wider">
                     <ArrowLeft className="h-4 w-4 text-[#91c934]" /> Continue Shopping
                 </Link>
 
@@ -262,7 +264,7 @@ export default function CartPage() {
                                     return (
                                         <div key={item.cart_item_id} className="cart-item-card flex flex-col sm:flex-row gap-6">
                                             {/* Image */}
-                                            <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img flex-shrink-0">
+                                            <Link href={`/${country}/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img flex-shrink-0">
                                                 {item.image_url ? (
                                                     <img src={item.image_url} alt={item.product_name || ''} />
                                                 ) : (
@@ -273,7 +275,7 @@ export default function CartPage() {
                                             <div className="flex-1 flex flex-col justify-between">
                                                 <div className="flex justify-between items-start">
                                                     <div>
-                                                        <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
+                                                        <Link href={`/${country}/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
                                                             <h3 className="cart-item-title text-lg font-bold">{item.product_name || 'Product'}</h3>
                                                         </Link>
                                                         {item.size_label && (
@@ -348,11 +350,11 @@ export default function CartPage() {
                                         const price = item.price ?? 0;
                                         return (
                                             <div key={item.cart_item_id} className="cart-item-card flex items-center gap-4 bg-[#FAFAFA]">
-                                                <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img w-16 h-16 rounded-lg flex-shrink-0">
+                                                <Link href={`/${country}/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img w-16 h-16 rounded-lg flex-shrink-0">
                                                     {item.image_url ? <img src={item.image_url} alt="" /> : <span className="text-xl">🌿</span>}
                                                 </Link>
                                                 <div className="flex-1">
-                                                    <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
+                                                    <Link href={`/${country}/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
                                                         <h3 className="text-sm font-bold text-[#1A1A1A] hover:text-[#3d5c3a] transition-colors">{item.product_name || 'Product'}</h3>
                                                     </Link>
                                                     <p className="text-[#4A4A4A] mt-1">{formatPrice(price)}</p>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useParams } from 'next/navigation';
 import { Search, X, Loader2 } from 'lucide-react';
 import { searchAutocomplete, type SearchSuggestion } from '@/lib/api';
 import { useCurrency } from '@/context/CurrencyContext';
@@ -22,6 +22,8 @@ export default function SearchAutocomplete({
 }: SearchAutocompleteProps) {
     const router = useRouter();
     const pathname = usePathname();
+    const params = useParams();
+    const country = (params.country as string) || 'in';
     const { formatPrice } = useCurrency();
     const [query, setQuery] = useState('');
     const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
@@ -102,11 +104,11 @@ export default function SearchAutocomplete({
 
     // ── Static Storefront Pages ──
     const storePages = [
-        { title: 'Home', path: '/' },
-        { title: 'All Products', path: '/products' },
-        { title: 'Categories', path: '/categories' },
-        { title: 'About Us', path: '/about' },
-        { title: 'Contact Support', path: '/contact' },
+        { title: 'Home', path: `/${country}` },
+        { title: 'All Products', path: `/${country}/products` },
+        { title: 'Categories', path: `/${country}/categories` },
+        { title: 'About Us', path: `/${country}/about` },
+        { title: 'Contact Support', path: `/${country}/contact` },
     ];
 
     const matchedPages = query.trim().length >= 2
@@ -122,7 +124,7 @@ export default function SearchAutocomplete({
         setIsOpen(false);
         setQuery('');
         onClose?.();
-        router.push(`/products/${id}`);
+        router.push(`/${country}/products/${id}`);
     };
 
     const goToPage = (path: string) => {
@@ -136,7 +138,7 @@ export default function SearchAutocomplete({
         if (!query.trim()) return;
         setIsOpen(false);
         onClose?.();
-        router.push(`/search?q=${encodeURIComponent(query.trim())}`);
+        router.push(`/${country}/search?q=${encodeURIComponent(query.trim())}`);
     };
 
     // ── Keyboard navigation ────────────────────────────────────

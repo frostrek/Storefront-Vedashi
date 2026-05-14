@@ -101,7 +101,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
         const shareData = {
             title: product.product_name,
             text: `Check out ${product.product_name} on Vedashi — Premium Ayurvedic Wellness.`,
-            url: `${window.location.origin}/products/${product.slug || product.product_id}`,
+            url: `${window.location.origin}/${params.country || 'in'}/products/${product.slug || product.product_id}`,
         };
 
         if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
@@ -128,7 +128,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
     const imageSrc = product.thumbnail_url || product.images?.[0] || '/herbal_placeholder.png';
     const isExternal = imageSrc.startsWith('http');
     const isBase64 = imageSrc.startsWith('data:');
-    const productUrl = `/products/${product.slug || product.product_id}`;
+    const productUrl = `/${params.country || 'in'}/products/${product.slug || product.product_id}`;
 
     const closeCartModal = useCallback((e?: React.MouseEvent) => {
         if (e) {
