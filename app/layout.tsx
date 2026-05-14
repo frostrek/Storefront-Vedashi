@@ -122,33 +122,37 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://vedashi-prod-assets.s3.ap-south-1.amazonaws.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://mc.yandex.ru" />
-      </head>
-      <body className={`min-h-screen flex flex-col ${inter.className}`} suppressHydrationWarning>
+        
         {/* GA4 — Set default consent BEFORE any gtag scripts load */}
-        <Script id="ga4-default-consent" strategy="beforeInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){window.dataLayer.push(arguments);}
-            gtag('consent', 'default', { analytics_storage: 'denied' });
-          `}
-        </Script>
-        <Script
+        <script
+          id="ga4-default-consent"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){window.dataLayer.push(arguments);}
+              gtag('consent', 'default', { analytics_storage: 'denied' });
+            `
+          }}
+        />
+        
+        {/* Structured Data */}
+        <script
           id="structured-data-organization"
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(generateOrganizationJsonLd()) }}
         />
-        <Script
+        <script
           id="structured-data-business"
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(generateLocalBusinessJsonLd()) }}
         />
-        <Script
+        <script
           id="structured-data-website"
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(generateWebSiteJsonLd()) }}
         />
-
-
+      </head>
+      <body className={`min-h-screen flex flex-col ${inter.className}`} suppressHydrationWarning>
         <>
           <Script
             src="https://challenges.cloudflare.com/turnstile/v0/api.js"
