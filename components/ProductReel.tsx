@@ -31,15 +31,27 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
 
     useEffect(() => {
         const ref = scrollRef.current;
+        let ticking = false;
+
+        const handleScroll = () => {
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    checkScroll();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        };
+
         if (ref) {
-            ref.addEventListener('scroll', checkScroll);
+            ref.addEventListener('scroll', handleScroll, { passive: true });
             checkScroll();
             // Also check on resize
-            window.addEventListener('resize', checkScroll);
+            window.addEventListener('resize', handleScroll, { passive: true });
         }
         return () => {
-            if (ref) ref.removeEventListener('scroll', checkScroll);
-            window.removeEventListener('resize', checkScroll);
+            if (ref) ref.removeEventListener('scroll', handleScroll);
+            window.removeEventListener('resize', handleScroll);
         };
     }, [products]);
 
@@ -58,16 +70,15 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
 
     return (
         <div className="relative group/reel py-8">
-            <div className="flex flex-col items-center mb-10 px-4 relative">
-                <div className="text-center">
-                    {title && <h2 className="text-4xl font-bold text-gray-900 mb-2">{title}</h2>}
-                    {subtitle && <p className="text-gray-500 font-medium italic mb-6">{subtitle}</p>}
-                    <div className="w-24 h-1 bg-[#8B7A3D] rounded-full mx-auto" />
+            <div className="flex flex-row items-center justify-center sm:justify-between mb-2 sm:mb-8 px-4 sm:px-6 lg:px-8 relative">
+                <div className="text-center sm:text-left">
+                    {title && <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2">{title}</h2>}
+                    {subtitle && <p className="hidden sm:block text-gray-500 font-medium italic">{subtitle}</p>}
                 </div>
 
                 {viewAllLink && (
-                    <div className="absolute bottom-0 right-4 sm:right-8">
-                        <Link href={viewAllLink} className="group flex items-center gap-2 text-sm font-bold text-[#3B5D3B] hover:text-[#8B7A3D] transition-colors">
+                    <div className="flex-shrink-0 hidden sm:block pb-1">
+                        <Link href={viewAllLink} className="group flex items-center gap-2 text-[13px] font-medium text-[#FF0000] hover:text-[#CC0000] transition-colors underline decoration-[#FF0000]/30 underline-offset-2 hover:decoration-[#FF0000]">
                             {viewAllText || 'Explore All'}
                             <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                         </Link>
@@ -75,13 +86,16 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
                 )}
             </div>
 
-            <div className="relative px-4 sm:px-8">
+
+
+            <div className="relative px-4 sm:px-6 lg:px-8">
                 {/* Navigation Arrows */}
                 {showLeftArrow && (
                     <button
                         onClick={() => scroll('left')}
-                        className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-30 p-3 rounded-full bg-white/90 shadow-xl border border-gray-100 text-[#3B5D3B] hover:bg-[#3B5D3B] hover:text-white transition-all duration-300 backdrop-blur-sm group-hover/reel:scale-110"
+                        className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-30 p-3 rounded-full bg-white/90 shadow-xl border border-gray-100 text-[#91CA35] hover:bg-[#91CA35] hover:text-white transition-all duration-300 backdrop-blur-sm group-hover/reel:scale-110"
                         aria-label="Scroll left"
+                        suppressHydrationWarning
                     >
                         <ChevronLeft className="h-6 w-6" />
                     </button>
@@ -89,8 +103,9 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
                 {showRightArrow && (
                     <button
                         onClick={() => scroll('right')}
-                        className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-30 p-3 rounded-full bg-white/90 shadow-xl border border-gray-100 text-[#3B5D3B] hover:bg-[#3B5D3B] hover:text-white transition-all duration-300 backdrop-blur-sm group-hover/reel:scale-110"
+                        className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-30 p-3 rounded-full bg-white/90 shadow-xl border border-gray-100 text-[#91CA35] hover:bg-[#91CA35] hover:text-white transition-all duration-300 backdrop-blur-sm group-hover/reel:scale-110"
                         aria-label="Scroll right"
+                        suppressHydrationWarning
                     >
                         <ChevronRight className="h-6 w-6" />
                     </button>
@@ -99,34 +114,39 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
                 {/* The Reel Container */}
                 <div
                     ref={scrollRef}
-                    className="flex overflow-x-auto hide-scrollbar gap-6 pb-8 snap-x snap-mandatory"
+                    className="flex overflow-x-auto no-scrollbar gap-6 pb-2 sm:pb-8 snap-x snap-mandatory overflow-y-hidden"
                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                     {loading ? (
                         Array.from({ length: 4 }).map((_, i) => (
-                            <div key={i} className="min-w-[280px] sm:min-w-[320px] aspect-[3/4] bg-gray-100 animate-pulse rounded-2xl" />
+                            <div key={i} className="w-[160px] sm:w-[240px] flex-shrink-0 aspect-[3/4] bg-gray-100 animate-pulse rounded-2xl" />
                         ))
                     ) : (
                         products.map((product, i) => (
-                            <motion.div
+                            <div
                                 key={product.product_id}
-                                className="min-w-[280px] sm:min-w-[320px] snap-center"
-                                initial={{ opacity: 0, y: 20 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                transition={{ delay: i * 0.05 }}
-                                viewport={{ once: true }}
+                                className="w-[160px] sm:w-[240px] flex-shrink-0 snap-center flex flex-col"
                             >
-                                <ProductCard 
-                                    product={product} 
+                                <ProductCard
+                                    product={product}
                                     listName={title || 'Product Reel'}
                                     listIndex={i + 1}
                                 />
-                            </motion.div>
+                            </div>
                         ))
                     )}
                     {/* Spacer for right padding in scroll */}
                     <div className="min-w-[20px] h-full" />
                 </div>
+
+                {/* Mobile View All Link - Moved below the reel */}
+                {viewAllLink && (
+                    <div className="sm:hidden flex justify-end mt-1">
+                        <Link href={viewAllLink} className="group flex items-center gap-2 text-[10px] font-medium text-[#FF0000] hover:text-[#CC0000] transition-colors underline decoration-[#FF0000]/30 underline-offset-2">
+                            {viewAllText || 'Explore All'}
+                        </Link>
+                    </div>
+                )}
             </div>
         </div>
     );

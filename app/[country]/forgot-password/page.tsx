@@ -46,68 +46,69 @@ function ForgotPasswordContent() {
     };
 
     return (
-        <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-4 py-12">
+        <div className="bg-white flex flex-col items-center pt-10 md:pt-16 px-4 pb-25 min-h-screen">
             <div className="w-full max-w-md">
 
-                <Link href="/login" className="inline-flex items-center gap-2 mb-8 text-sm font-medium text-warm-gray hover:text-burgundy transition-colors">
+                <Link href="/login" className="inline-flex items-center gap-2 mb-6 text-sm font-medium text-warm-gray hover:text-[#91C934] transition-colors">
                     <ArrowLeft className="w-4 h-4" />
                     Back to login
                 </Link>
 
-                <div className="text-center mb-8">
-                    <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-burgundy/10 flex items-center justify-center">
-                        <Mail className="w-8 h-8 text-burgundy" />
-                    </div>
-                    <h1 className="text-3xl font-bold text-charcoal">
-                        Forgot Password
-                    </h1>
-                    <p className="mt-2 text-sm text-warm-gray">
-                        {submitted
-                            ? "Check your email for the reset link"
-                            : "Enter your email and we'll send you a link to reset your password."}
-                    </p>
-                </div>
-
-                {submitted ? (
-                    <div className="rounded-2xl border border-light-border bg-white p-8 shadow-sm text-center">
-                        <p className="text-sm text-charcoal mb-6">
-                            We've sent an email to <strong className="font-semibold">{email}</strong> with a link to reset your password. It may take a few minutes to arrive.
-                        </p>
-                        <button
-                            onClick={() => router.push('/login')}
-                            className="w-full rounded-lg bg-charcoal py-3 text-sm font-semibold text-white transition-all hover:bg-gray-800"
-                        >
-                            Return to Login
-                        </button>
-                    </div>
-                ) : (
-                    <form
-                        onSubmit={handleSubmit}
-                        className="rounded-2xl border border-light-border bg-white p-8 shadow-sm"
-                    >
-                        <div className="mb-6">
-                            <label className="block text-sm font-medium text-charcoal mb-1">
-                                Email Address
-                            </label>
-                            <input
-                                type="email"
-                                value={email}
-                                onChange={e => setEmail(e.target.value)}
-                                className="w-full rounded-lg border border-light-border px-4 py-2.5 text-sm focus:border-burgundy focus:outline-none focus:ring-1 focus:ring-burgundy"
-                                placeholder="you@example.com"
-                                required
-                            />
+                <div className="rounded-2xl border border-light-border bg-white p-8 md:p-10 shadow-sm">
+                    <div className="text-center mb-8">
+                        <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-[#91C934]/10 flex items-center justify-center">
+                            <Mail className="w-8 h-8 text-[#91C934]" />
                         </div>
+                        <h1 className="text-3xl font-bold text-charcoal">
+                            Forgot Password
+                        </h1>
+                        <p className="mt-2 text-sm text-warm-gray">
+                            {submitted
+                                ? "Check your email for the reset link"
+                                : "Enter your email and we'll send you a link to reset your password."}
+                        </p>
+                    </div>
 
-                        <button
-                            type="submit"
-                            disabled={loading || !email}
-                            className="w-full rounded-lg bg-burgundy py-3 text-sm font-semibold text-white transition-all hover:bg-burgundy-dark disabled:opacity-50 disabled:cursor-not-allowed"
+                    {submitted ? (
+                        <div className="text-center">
+                            <p className="text-sm text-charcoal mb-6">
+                                We've sent an email to <strong className="font-semibold">{email}</strong> with a link to reset your password. It may take a few minutes to arrive.
+                            </p>
+                            <button
+                                onClick={() => router.push('/login')}
+                                className="w-full rounded-lg bg-[#91cA34] py-3 text-sm font-semibold text-white transition-all hover:opacity-90"
+                            >
+                                Return to Login
+                            </button>
+                        </div>
+                    ) : (
+                        <form
+                            onSubmit={handleSubmit}
                         >
-                            {loading ? 'Sending...' : 'Send Reset Link'}
-                        </button>
-                    </form>
-                )}
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium text-charcoal mb-1">
+                                    Email Address
+                                </label>
+                                <input
+                                    type="email"
+                                    value={email}
+                                    onChange={e => setEmail(e.target.value)}
+                                    className="w-full rounded-lg border border-light-border px-4 py-2.5 text-sm focus:border-[#91C934] focus:outline-none focus:ring-1 focus:ring-[#91C934]"
+                                    placeholder="you@example.com"
+                                    required
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={loading || !email}
+                                className="w-full rounded-lg bg-[#91cA34] py-3 text-sm font-semibold text-white transition-all hover:opacity-90 disabled:cursor-not-allowed"
+                            >
+                                {loading ? 'Sending...' : 'Send Reset Link'}
+                            </button>
+                        </form>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -116,8 +117,8 @@ function ForgotPasswordContent() {
 export default function ForgotPasswordPage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen bg-cream flex items-center justify-center px-4">
-                <div className="w-8 h-8 border-2 border-burgundy/30 border-t-burgundy rounded-full animate-spin" />
+            <div className="min-h-screen bg-white flex items-center justify-center px-4">
+                <div className="w-8 h-8 border-2 border-[#91C934]/30 border-t-[#91C934] rounded-full animate-spin" />
             </div>
         }>
             <ForgotPasswordContent />

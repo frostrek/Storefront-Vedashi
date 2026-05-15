@@ -82,7 +82,7 @@ export default function PrivacyDashboard() {
     return (
         <div className="space-y-6 max-w-3xl">
             <div className="flex items-center gap-3 border-b border-light-border pb-4">
-                <Shield className="h-6 w-6 text-burgundy" />
+                <Shield className="h-6 w-6 text-[#91C934]" />
                 <div>
                     <h2 className="text-xl font-bold text-charcoal">Privacy & Data Management</h2>
                     <p className="text-sm text-warm-gray">Control your personal data in compliance with GDPR guidelines.</p>
@@ -98,7 +98,7 @@ export default function PrivacyDashboard() {
                         Under the General Data Protection Regulation (GDPR), you have the right to access, rectify, port, and erase your personal information.
                         Use the tools below to execute these rights automatically.
                     </p>
-                    <a href="/privacy-policy" className="inline-flex items-center gap-1 mt-2 text-emerald-700 font-medium hover:underline">
+                    <a href="/privacy" className="inline-flex items-center gap-1 mt-2 text-emerald-700 font-medium hover:underline">
                         Read our Privacy Policy <ExternalLink className="h-3 w-3" />
                     </a>
                 </div>

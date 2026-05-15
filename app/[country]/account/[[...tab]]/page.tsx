@@ -4,16 +4,15 @@ import { createPortal } from 'react-dom';
 
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { useClerk } from '@clerk/nextjs';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCart } from '@/context/CartContext';
-// ProductCard removed as it was unused
+import ProductCard from '@/components/ProductCard';
 import {
     getMyOrders, getAddresses, addAddress as apiAddAddress,
     updateAddress as apiUpdateAddress, deleteAddress as apiDeleteAddress,
     getCustomerProfile, updateCustomerProfile, deactivateAccount,
     uploadProfileImage, getProfileImage, removeProfileImage, getOrderById,
-    cancelOrder as apiCancelOrder, downloadInvoice, getBestSellers,
+    cancelOrder as apiCancelOrder, downloadInvoice,
     getMyEnquiries, replyToEnquiry, changePassword,
     requestEmailChange, verifyEmailChangeProfile,
     requestPhoneChange, verifyPhoneChangeProfile,
@@ -42,6 +41,7 @@ import ExportOrdersModal from '@/components/account/ExportOrdersModal';
 import MyWallet from '@/components/account/MyWallet';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { COUNTRY_CODES } from '@/lib/country-codes';
+import { getAddressConfig, getDefaultCountry } from '@/lib/addressConfig';
 import { useCurrency } from '@/context/CurrencyContext';
 
 type Tab = 'overview' | 'orders' | 'wishlist' | 'addresses' | 'profile' | 'privacy' | 'support' | 'wallet' | 'notifications';
@@ -56,53 +56,14 @@ export default function AccountPage() {
     const urlOrderId = searchParams.get('orderId');
     const country = params?.country || 'in';
     const { user, isAuthenticated, isLoading, logout, updateUser } = useAuth();
-    const { signOut: clerkSignOut } = useClerk();
     const { items: wishlistItems, removeItem: removeWishlistItem, loading: wishlistLoading } = useWishlist();
-    const { addItem: addCartItem } = useCart();
+    const { addItem: addCartItem, items: cartItems, getItemInCart, loading: cartLoading } = useCart();
 
-    // Wishlist extra state
-    const [selectedWishlistItems, setSelectedWishlistItems] = useState<Set<string>>(new Set());
-    const [wishlistSort, setWishlistSort] = useState('recently_added');
-    const [recommendedProducts, setRecommendedProducts] = useState<any[]>([]);
-
-    const handleWishlistSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.checked) {
-            setSelectedWishlistItems(new Set(wishlistItems.map(item => item.product_id)));
-        } else {
-            setSelectedWishlistItems(new Set());
-        }
-    };
-
-    const handleWishlistToggleItem = (id: string) => {
-        const next = new Set(selectedWishlistItems);
-        if (next.has(id)) next.delete(id);
-        else next.add(id);
-        setSelectedWishlistItems(next);
-    };
-
-    const handleAddSelectedToCart = () => {
-        if (selectedWishlistItems.size === 0) return;
-        selectedWishlistItems.forEach(id => {
-            addCartItem(id, null, 1);
-            removeWishlistItem(id);
-        });
-        toast.success(`Moved ${selectedWishlistItems.size} items to cart`);
-        setSelectedWishlistItems(new Set());
-    };
-
-    const handleRemoveSelected = () => {
-        if (selectedWishlistItems.size === 0) return;
-        selectedWishlistItems.forEach(id => {
-            removeWishlistItem(id);
-        });
-        toast.success(`Removed ${selectedWishlistItems.size} items from wishlist`);
-        setSelectedWishlistItems(new Set());
-        setConfirmingBulkRemove(false);
-    };
+    // Wishlist state
 
     const [currentPage, setCurrentPage] = useState(1);
     const pageSize = 10;
-    const [confirmingBulkRemove, setConfirmingBulkRemove] = useState(false);
+
     const [confirmingIndividualRemove, setConfirmingIndividualRemove] = useState<string | null>(null);
 
     // Derive active tab from URL path segment, default to 'overview'
@@ -111,15 +72,7 @@ export default function AccountPage() {
         return slug && VALID_TABS.includes(slug) ? slug : 'overview';
     }, [params?.tab]);
 
-    useEffect(() => {
-        if (activeTab === 'wishlist' && wishlistItems.length > 0 && recommendedProducts.length === 0) {
-            getBestSellers({ limit: 4 }).then(res => {
-                if (res?.data) {
-                    setRecommendedProducts(res.data);
-                }
-            }).catch(err => console.error("Failed to fetch recommended products", err));
-        }
-    }, [activeTab, wishlistItems.length, recommendedProducts.length]);
+
 
     // Orders state
     const [orders, setOrders] = useState<Order[]>([]);
@@ -133,6 +86,8 @@ export default function AccountPage() {
     const [isTrackingLoading, setIsTrackingLoading] = useState(false);
     const [trackOrderStatus, setTrackOrderStatus] = useState<string | null>(null);
     const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
+    const [buyAgainLoading, setBuyAgainLoading] = useState(false);
+    const [reorderingOrderId, setReorderingOrderId] = useState<string | null>(null);
 
     // Orders Filtering State
     const [orderSearch, setOrderSearch] = useState('');
@@ -140,14 +95,43 @@ export default function AccountPage() {
     const [orderSort, setOrderSort] = useState('newest');
 
     // Addresses state
+    const defaultCountryCode = getDefaultCountry();
+    const defaultCountryName = COUNTRIES.find(c => c.code === defaultCountryCode)?.name || '';
+
+    const formatAddressPhone = (phone: string) => {
+        if (!phone) return '';
+        // Find the matching dial code from our master list
+        // Sort by length descending to ensure we match the most specific code (e.g., +91 over +9)
+        const sortedCodes = [...COUNTRY_CODES].sort((a, b) => b.dial_code.length - a.dial_code.length);
+        const match = sortedCodes.find(c => phone.startsWith(c.dial_code));
+
+        if (match) {
+            const dialCode = match.dial_code;
+            const rest = phone.slice(dialCode.length);
+            return `${dialCode} ${rest}`;
+        }
+
+        // Fallback for unexpected formats
+        return phone.startsWith('+') ? phone.replace(/^(\+\d{1,3})/, '$1 ') : phone;
+    };
+
     const [addresses, setAddresses] = useState<Address[]>([]);
     const [addressesLoading, setAddressesLoading] = useState(false);
+    const [phoneError, setPhoneError] = useState<string | null>(null);
     const [showAddressForm, setShowAddressForm] = useState(false);
     const [editingAddress, setEditingAddress] = useState<Address | null>(null);
     const [addressForm, setAddressForm] = useState({
         address_line1: '', address_line2: '', city: '', state: '', pincode: '',
-        country: 'India', country_code: 'IN', phone: '', label: '', is_default: false,
+        country: defaultCountryName, country_code: defaultCountryCode, phone: '', label: '', is_default: false, full_name: '',
     });
+
+    const addressConfig = getAddressConfig(addressForm.country_code || 'IN');
+    const addressDialCode = useMemo(() => {
+        const match = Array.isArray(COUNTRY_CODES) ? COUNTRY_CODES.find(c => c.code === addressForm.country_code) : null;
+        const fallbackMatch = COUNTRY_CODES.find(c => c.code === defaultCountryCode);
+        return match ? match.dial_code : (fallbackMatch?.dial_code || '+1');
+    }, [addressForm.country_code, defaultCountryCode]);
+
     const [isLookupLoading, setIsLookupLoading] = useState(false);
     const [manualEdits, setManualEdits] = useState({
         city: false,
@@ -163,11 +147,11 @@ export default function AccountPage() {
     const customSelectStyles = {
         control: (provided: any, state: any) => ({
             ...provided,
-            borderRadius: '8px',
-            borderColor: state.isFocused ? '#6B8F5E' : '#D4CFC0',
+            borderRadius: '12px',
+            borderColor: state.isFocused ? '#91c934' : '#e5e7eb',
             boxShadow: 'none',
             '&:hover': {
-                borderColor: '#6B8F5E',
+                borderColor: '#91c934',
             },
             backgroundColor: 'white',
             paddingLeft: '34px',
@@ -176,12 +160,28 @@ export default function AccountPage() {
         }),
         option: (provided: any, state: any) => ({
             ...provided,
-            backgroundColor: state.isSelected ? '#6B8F5E' : state.isFocused ? '#DFE5D9' : 'white',
-            color: state.isSelected ? 'white' : '#1A1A1A',
+            backgroundColor: state.isSelected ? '#91c934' : state.isFocused ? '#f3f4f6' : 'white',
+            color: state.isSelected ? 'white' : '#111827',
             '&:active': {
-                backgroundColor: '#6B8F5E',
+                backgroundColor: '#91c934',
             },
             fontSize: '14px',
+        }),
+        menuList: (provided: any) => ({
+            ...provided,
+            "::-webkit-scrollbar": {
+                width: "6px"
+            },
+            "::-webkit-scrollbar-track": {
+                background: "transparent"
+            },
+            "::-webkit-scrollbar-thumb": {
+                background: "#d1d5db",
+                borderRadius: "3px"
+            },
+            "::-webkit-scrollbar-thumb:hover": {
+                background: "#91c934"
+            }
         }),
     };
 
@@ -217,7 +217,11 @@ export default function AccountPage() {
     });
     const [originalEmail, setOriginalEmail] = useState('');
     const [originalPhone, setOriginalPhone] = useState('');
-    const [selectedCountryCode, setSelectedCountryCode] = useState('+91');
+    const defaultDialCode = useMemo(() => {
+        const match = COUNTRY_CODES.find(c => c.code === defaultCountryCode);
+        return match ? match.dial_code : '+1';
+    }, [defaultCountryCode]);
+    const [selectedCountryCode, setSelectedCountryCode] = useState(defaultDialCode);
 
     // Email OTP modal state
     const [showEmailOtpModal, setShowEmailOtpModal] = useState(false);
@@ -350,11 +354,11 @@ export default function AccountPage() {
 
     // Body scroll lock for all modals
     useEffect(() => {
-        const isAnyModalOpen = isTrackOrderModalOpen || showDeactivateModal || deletingAddressId || 
-                             cancellingOrderId || reviewModal || showNotificationOverlay || 
-                             showExportModal || showPasswordModal || showEmailOtpModal || 
-                              showNotificationModal || isZoomModalOpen || showPhoneOtpModal;
-        
+        const isAnyModalOpen = isTrackOrderModalOpen || showDeactivateModal || deletingAddressId ||
+            cancellingOrderId || reviewModal || showNotificationOverlay ||
+            showExportModal || showPasswordModal || showEmailOtpModal ||
+            showNotificationModal || isZoomModalOpen || showPhoneOtpModal;
+
         if (isAnyModalOpen) {
             document.body.style.overflow = 'hidden';
         } else {
@@ -363,8 +367,8 @@ export default function AccountPage() {
         return () => {
             document.body.style.overflow = 'unset';
         };
-    }, [isTrackOrderModalOpen, showDeactivateModal, deletingAddressId, cancellingOrderId, 
-        reviewModal, showNotificationOverlay, showExportModal, showPasswordModal, 
+    }, [isTrackOrderModalOpen, showDeactivateModal, deletingAddressId, cancellingOrderId,
+        reviewModal, showNotificationOverlay, showExportModal, showPasswordModal,
         showEmailOtpModal, showNotificationModal, isZoomModalOpen, showPhoneOtpModal]);
 
     useEffect(() => {
@@ -416,18 +420,7 @@ export default function AccountPage() {
         return result;
     }, [orders, orderStatusFilter, orderSearch, orderSort]);
 
-    // ── Derive Sorted Wishlist ─────────────────────────────────────
-    const sortedWishlistItems = useMemo(() => {
-        const result = [...wishlistItems];
-        if (wishlistSort === 'recently_added') {
-            result.sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
-        } else if (wishlistSort === 'price_low') {
-            result.sort((a, b) => (a.price || 0) - (b.price || 0));
-        } else if (wishlistSort === 'price_high') {
-            result.sort((a, b) => (b.price || 0) - (a.price || 0));
-        }
-        return result;
-    }, [wishlistItems, wishlistSort]);
+
 
     // ── Fetch orders ─────────────────────────────────────────────────
     const fetchOrders = useCallback(async () => {
@@ -470,13 +463,13 @@ export default function AccountPage() {
             const res = await getCustomerProfile(user.id);
             if (res.success && res.data) {
                 const fetchedEmail = res.data.email || '';
-                
+
                 // Important fix: handle truthy values explicitly or just rely on backend boolean.
                 // Assuming res.data.has_password is a boolean or 1/0
                 const hasPassword = Boolean(res.data.has_password);
-                
+
                 const phone = res.data.phone || '';
-                let countryCode = '+91';
+                let countryCode = defaultDialCode;
                 let localNumber = phone;
 
                 if (phone.startsWith('+')) {
@@ -524,7 +517,7 @@ export default function AccountPage() {
             const res = await getProfileImage(user.id);
             if (res.success && res.data) {
                 const { profile_image: base64Data, avatar_url: s3Url, mime_type: mimeType } = res.data;
-                
+
                 let parsedBase64 = base64Data;
                 if (base64Data && !base64Data.startsWith('data:')) {
                     const mime = mimeType || 'image/jpeg';
@@ -534,7 +527,7 @@ export default function AccountPage() {
                 setBase64Fallback(parsedBase64);
                 // Priority: S3 URL > Base64
                 setProfileImageUrl(s3Url || parsedBase64);
-                
+
                 // Keep global AuthContext user state synced
                 const finalUrl = s3Url || parsedBase64;
                 if (user?.avatar_url !== finalUrl) {
@@ -627,6 +620,90 @@ export default function AccountPage() {
         }
     };
 
+    /** Unified handler for reordering an entire order or specific items */
+    const handleReorder = async (orderId: string, itemsToAdd?: any[]) => {
+        setReorderingOrderId(orderId);
+        setBuyAgainLoading(true);
+        let items = itemsToAdd;
+
+        try {
+            if (!items) {
+                // Fetch the order full details if we don't have items
+                const response = await getOrderById(orderId);
+                if (response?.data?.items) {
+                    items = response.data.items;
+                } else {
+                    toast.error('Could not fetch order details for reordering.');
+                    return;
+                }
+            }
+
+            if (items?.length === 0) {
+                toast.error('No items found in this order.');
+                return;
+            }
+
+            const toastId = toast.loading('Checking cart and stock...');
+            let addedCount = 0;
+            let limitCount = 0;
+            let alreadyInCartCount = 0;
+
+            for (const item of items!) {
+                const productId = item.product_id || item.product?.product_id;
+                const variantId = item.variant_id || item.variant?.variant_id || null;
+                if (!productId) continue;
+
+                const existingItem = getItemInCart(productId, variantId);
+                const currentQtyInCart = existingItem?.quantity || 0;
+
+                // Get stock quantity (fallback to product stock if variant stock is null)
+                const stockQty = item.variant?.stock_quantity ?? item.product?.stock_quantity ?? null;
+                const requestedQty = item.quantity || 1;
+
+                const availableSpace = stockQty !== null ? Math.max(0, stockQty - currentQtyInCart) : Infinity;
+
+                if (availableSpace === 0) {
+                    if (stockQty !== null && currentQtyInCart >= stockQty) {
+                        alreadyInCartCount++;
+                    } else {
+                        limitCount++;
+                    }
+                    continue;
+                }
+
+                const qtyToAdd = Math.min(requestedQty, availableSpace);
+                if (qtyToAdd < requestedQty) {
+                    limitCount++;
+                }
+
+                try {
+                    await addCartItem(productId, variantId, qtyToAdd);
+                    addedCount++;
+                } catch (err) {
+                    console.error("Failed adding item to cart", err);
+                }
+            }
+
+            if (addedCount === 0 && alreadyInCartCount > 0) {
+                toast.error('All items are already in your cart at maximum limit.', { id: toastId });
+            } else if (addedCount === 0 && limitCount > 0) {
+                toast.error('All items are out of stock.', { id: toastId });
+            } else if (addedCount > 0 && limitCount > 0) {
+                toast.success(`Added ${addedCount} items. Some were limited/skipped due to stock.`, { id: toastId });
+            } else if (addedCount > 0) {
+                toast.success('Items successfully added to your cart!', { id: toastId });
+            } else {
+                toast.error('Could not add any items.', { id: toastId });
+            }
+        } catch (error) {
+            console.error("Reorder failed", error);
+            toast.error('An unexpected error occurred while reordering.');
+        } finally {
+            setReorderingOrderId(null);
+            setBuyAgainLoading(false);
+        }
+    };
+
     // Notifications state
     const [notifications, setNotifications] = useState<any[]>([]);
     const [notificationsLoading, setNotificationsLoading] = useState(false);
@@ -696,7 +773,7 @@ export default function AccountPage() {
     useEffect(() => {
         setCurrentPage(1);
         if (!user?.id) return;
-        
+
         // Always fetch profile details and image for the sidebar and header
         fetchProfile();
         fetchProfileImage();
@@ -795,10 +872,10 @@ export default function AccountPage() {
             // Note: email and phone are handled above. If we are here, it means they haven't changed 
             // from original OR they were just verified and fetchProfile was called (which updated originalEmail/originalPhone).
             const { has_password, is_email_verified, is_mobile_verified, email, created_at, phone, ...rest } = profileData;
-            
+
             const updateData: any = { ...rest };
             // DO NOT update phone or email here; they are managed by separate verification endpoints
-            
+
             const res = await updateCustomerProfile(user.id, updateData);
             if (res.success) {
                 toast.success('Profile updated successfully');
@@ -837,7 +914,7 @@ export default function AccountPage() {
             toast.error('Please enter the OTP');
             return;
         }
-        
+
         setPhoneOtpSubmitting(true);
         try {
             const res = await verifyPhoneChangeProfile(phoneOtpCode);
@@ -846,7 +923,7 @@ export default function AccountPage() {
                 setShowPhoneOtpModal(false);
                 setPhoneOtpCode('');
                 setPhoneOtpResendTimer(0);
-                
+
                 // Continue to update the rest of the profile if needed, but phone is already updated by backend
                 setProfileEditing(false);
                 fetchProfile();
@@ -862,7 +939,7 @@ export default function AccountPage() {
 
     const handleResendEmailOtp = async () => {
         if (emailOtpResendTimer > 0) return;
-        
+
         try {
             const reqRes = await requestEmailChange(profileData.email);
             if (reqRes.success) {
@@ -881,7 +958,7 @@ export default function AccountPage() {
             toast.error('Please enter the OTP');
             return;
         }
-        
+
         setEmailOtpSubmitting(true);
         try {
             const res = await verifyEmailChangeProfile(emailOtpCode);
@@ -890,18 +967,18 @@ export default function AccountPage() {
                 setShowEmailOtpModal(false);
                 setEmailOtpCode('');
                 setEmailOtpResendTimer(0);
-                
+
                 // Continue to update the rest of the profile if it was being edited
                 if (!user?.id) return;
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const { has_password, is_email_verified, is_mobile_verified, email, ...updateData } = profileData;
                 const profileRes = await updateCustomerProfile(user.id, updateData);
-                
+
                 if (profileRes.success) {
                     toast.success('Profile all updated');
                     setProfileEditing(false);
                 }
-                
+
                 fetchProfile();
             } else {
                 toast.error(res.message || 'Invalid or expired OTP');
@@ -915,7 +992,7 @@ export default function AccountPage() {
 
     const handlePasswordChange = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (profileData.has_password && passwords.current === passwords.new) {
             toast.error('New password cannot be the same as your current password');
             return;
@@ -1010,38 +1087,45 @@ export default function AccountPage() {
     };
 
     // ── Address handlers ─────────────────────────────────────────────
-    const handleAddressSubmit = async () => {
+    const handleAddressSubmit = async (e?: React.FormEvent) => {
+        e?.preventDefault();
         if (!user?.id) return;
-        if (!addressForm.address_line1 || !addressForm.city || !addressForm.state || !addressForm.pincode) {
+        if (!addressForm.full_name || !addressForm.address_line1 || !addressForm.city || !addressForm.state || !addressForm.pincode || !addressForm.phone) {
             toast.error('Please fill in all required fields');
             return;
         }
 
-        // Pincode format validation
+        const phoneDigits = addressForm.phone.replace(/\D/g, '');
+        if (phoneDigits.length < 7 || phoneDigits.length > 12) {
+            toast.error('Phone number must be between 7 and 12 digits');
+            return;
+        }
+
+        // Postal Code format validation
+        const config = getAddressConfig(addressForm.country_code || 'IN');
         const cleanPin = addressForm.pincode.toString().trim();
-        const isIndia = !addressForm.country || addressForm.country.toLowerCase() === 'india';
-        if (isIndia) {
-            if (!/^\d{6}$/.test(cleanPin)) {
-                toast.error('Pincode must be exactly 6 digits');
-                return;
-            }
-        } else {
-            if (!/^[a-zA-Z0-9\s\-]{3,10}$/.test(cleanPin)) {
-                toast.error('Postal code must be 3-10 alphanumeric characters');
+        if (config.postalCode) {
+            if (!config.postalCode.regex.test(cleanPin)) {
+                toast.error(config.postalCode.error);
                 return;
             }
         }
 
+        const payload = {
+            ...addressForm,
+            phone: addressForm.phone ? `${addressDialCode}${addressForm.phone.replace(/\D/g, '')}` : ''
+        };
+
         try {
             if (editingAddress) {
-                const res = await apiUpdateAddress(user.id, editingAddress.address_id, addressForm as unknown as Record<string, string>);
+                const res = await apiUpdateAddress(user.id, editingAddress.address_id, payload as unknown as Record<string, string>);
                 if (res.success) {
                     toast.success('Address updated');
                 } else {
                     toast.error(res.message || 'Failed to update address');
                 }
             } else {
-                const res = await apiAddAddress(user.id, addressForm as unknown as Record<string, string>);
+                const res = await apiAddAddress(user.id, payload as unknown as Record<string, string>);
                 if (res.success) {
                     toast.success('Address added');
                 } else {
@@ -1088,6 +1172,15 @@ export default function AccountPage() {
     };
 
     const startEditAddress = (addr: Address) => {
+        const cCode = (addr as any).country_code || 'IN';
+        const match = Array.isArray(COUNTRY_CODES) ? COUNTRY_CODES.find(c => c.code === cCode) : null;
+        const fallbackMatch = COUNTRY_CODES.find(c => c.code === defaultCountryCode);
+        const dCode = match ? match.dial_code : (fallbackMatch?.dial_code || '+1');
+        let phoneVal = addr.phone || '';
+        if (phoneVal.startsWith(dCode)) {
+            phoneVal = phoneVal.substring(dCode.length).trim();
+        }
+
         setEditingAddress(addr);
         setAddressForm({
             address_line1: addr.address_line1 || '',
@@ -1095,11 +1188,12 @@ export default function AccountPage() {
             city: addr.city || '',
             state: addr.state || '',
             pincode: addr.pincode || '',
-            country: addr.country || 'India',
-            country_code: (addr as any).country_code || 'IN',
-            phone: addr.phone || '',
+            country: addr.country || defaultCountryName,
+            country_code: cCode,
+            phone: phoneVal,
             label: addr.label || '',
             is_default: addr.is_default || false,
+            full_name: addr.full_name || '',
         });
         setManualEdits({ city: true, state: true }); // Assume manual since it's existing data
         setShowAddressForm(true);
@@ -1110,7 +1204,7 @@ export default function AccountPage() {
         setEditingAddress(null);
         setAddressForm({
             address_line1: '', address_line2: '', city: '', state: '', pincode: '',
-            country: 'India', country_code: 'IN', phone: '', label: '', is_default: false,
+            country: defaultCountryName, country_code: defaultCountryCode, phone: '', label: '', is_default: false, full_name: '',
         });
         setManualEdits({ city: false, state: false });
     };
@@ -1171,15 +1265,15 @@ export default function AccountPage() {
 
     if (isLoading || !isAuthenticated) {
         return (
-            <div className="min-h-screen bg-[#F8F5F0] flex items-center justify-center">
+            <div className="min-h-screen bg-white flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
                     <div className="relative">
-                        <div className="absolute inset-0 rounded-full border-4 border-[#36453A]/10 animate-pulse" />
-                        <Loader2 className="h-12 w-12 animate-spin text-[#36453A] relative z-10" />
+                        <div className="absolute inset-0 rounded-full border-4 border-[#91c934]/10 animate-pulse" />
+                        <Loader2 className="h-12 w-12 animate-spin text-[#91c934] relative z-10" />
                     </div>
                     <div className="flex flex-col items-center">
-                        <h2 className="text-[#36453A] font-serif text-xl font-medium tracking-tight">Vedashi Sanctuary</h2>
-                        <p className="text-[#36453A]/60 text-sm italic mt-1">Preparing your sacred space...</p>
+                        <h2 className="text-gray-900 font-serif text-xl font-medium tracking-tight">Vedashi Sanctuary</h2>
+                        <p className="text-gray-400 text-sm italic mt-1">Preparing your sacred space...</p>
                     </div>
                 </div>
             </div>
@@ -1205,29 +1299,28 @@ export default function AccountPage() {
     ];
     const identityAccessTabs = [
         { id: 'profile', label: 'Personal Profile', icon: User },
-        { id: 'addresses', label: 'Delivery Rituals', icon: MapPin, count: addresses.length },
+        { id: 'addresses', label: 'Manage Addresses', icon: MapPin, count: addresses.length },
         { id: 'support', label: 'Support & Enquiries', icon: MessageSquare, count: enquiries.length },
         { id: 'privacy', label: 'Privacy Sanctuary', icon: Shield },
     ];
 
     return (
-        <div className="flex flex-col lg:flex-row bg-[#F8F5F0] min-h-[calc(100vh-128px)]">
+        <div className="flex flex-col lg:flex-row bg-[#FFFFFF] min-h-[calc(100vh-128px)]">
             {/* Mobile Account Navigation (Visible only on < lg) */}
-            <nav className="lg:hidden sticky top-0 z-[100] bg-white border-b border-[#E8E1D5] overflow-x-auto custom-scrollbar flex items-center gap-1.5 px-4 py-3 whitespace-nowrap shadow-sm">
+            <nav className="lg:hidden sticky top-0 z-[100] bg-white/95 backdrop-blur-md border-b border-gray-100 overflow-x-auto shadow-sm custom-scrollbar flex items-center gap-1.5 px-4 py-3 whitespace-nowrap shadow-sm">
                 {[...coreExperienceTabs, ...identityAccessTabs].map(tab => (
                     <button
                         key={tab.id}
                         onClick={() => router.push(`/${country}/account/${tab.id}`)}
-                        className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-2 ${
-                            activeTab === tab.id 
-                            ? 'bg-[#1D351D] text-white shadow-md' 
-                            : 'bg-white text-[#36453A] border border-[#E8E1D5] hover:bg-gray-50'
-                        }`}
+                        className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-2 ${activeTab === tab.id
+                            ? 'bg-[#91c934] text-white shadow-md'
+                            : 'bg-white text-gray-700 border border-gray-100 hover:bg-gray-50'
+                            }`}
                     >
                         <tab.icon className={`h-3 w-3 ${activeTab === tab.id ? 'opacity-100' : 'opacity-60'}`} />
                         {tab.label}
                         {tab.count !== undefined && tab.count > 0 && (
-                            <span className={`text-[9px] px-1.5 rounded-full ${activeTab === tab.id ? 'bg-[#D4A847] text-[#36453A]' : 'bg-[#E8E1D5] text-[#36453A]'}`}>
+                            <span className={`text-[9px] px-1.5 rounded-full ${activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'}`}>
                                 {tab.count}
                             </span>
                         )}
@@ -1236,27 +1329,27 @@ export default function AccountPage() {
             </nav>
 
             {/* Left Sidebar (Desktop Only) */}
-            <aside className="hidden lg:flex w-[280px] bg-[#1D351D] text-white flex-col flex-shrink-0 relative z-20 shadow-[4px_0_24px_rgba(0,0,0,0.12)]">
+            <aside className="hidden lg:flex w-[280px] bg-white flex-col flex-shrink-0 relative z-20 border-r border-gray-100 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
                 <div className="flex-1 px-5 py-8">
                     {/* CORE EXPERIENCE */}
                     <div className="mb-8">
-                        <p className="text-[10px] font-bold tracking-[0.15em] text-white/50 mb-3 ml-3">CORE EXPERIENCE</p>
+                        <p className="text-[10px] font-bold tracking-[0.15em] text-gray-400 mb-3 ml-3">CORE EXPERIENCE</p>
                         <ul className="space-y-1">
                             {coreExperienceTabs.map(tab => (
                                 <li key={tab.id}>
                                     <button
                                         onClick={() => router.push(`/${country}/account/${tab.id}`)}
                                         className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === tab.id
-                                            ? 'bg-white/10 text-white shadow-sm'
-                                            : 'text-white/70 hover:text-white hover:bg-white/5'
+                                            ? 'bg-[#91c934] text-white shadow-sm'
+                                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">
-                                            <tab.icon className={`h-4 w-4 ${activeTab === tab.id ? 'opacity-100' : 'opacity-70'}`} />
+                                            <tab.icon className={`h-4 w-4 ${activeTab === tab.id ? 'opacity-100' : 'opacity-60'}`} />
                                             {tab.label}
                                         </div>
                                         {tab.count !== undefined && tab.count > 0 && (
-                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-[#D4A847] text-[#36453A]' : 'bg-white/10 text-white/90'
+                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'
                                                 }`}>
                                                 {tab.count}
                                             </span>
@@ -1269,23 +1362,23 @@ export default function AccountPage() {
 
                     {/* IDENTITY & ACCESS */}
                     <div>
-                        <p className="text-[10px] font-bold tracking-[0.15em] text-white/50 mb-3 ml-3">IDENTITY & ACCESS</p>
+                        <p className="text-[10px] font-bold tracking-[0.15em] text-gray-400 mb-3 ml-3">IDENTITY & ACCESS</p>
                         <ul className="space-y-1">
                             {identityAccessTabs.map(tab => (
                                 <li key={tab.id}>
                                     <button
                                         onClick={() => router.push(`/${country}/account/${tab.id}`)}
                                         className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === tab.id
-                                            ? 'bg-[#A8B28B]/20 text-[#DCDFB3] font-bold shadow-sm border border-[#A8B28B]/20'
-                                            : 'text-white/70 hover:text-white hover:bg-white/5'
+                                            ? 'bg-[#91c934] text-white shadow-sm'
+                                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">
-                                            <tab.icon className={`h-4 w-4 ${activeTab === tab.id ? 'opacity-100' : 'opacity-70'}`} />
+                                            <tab.icon className={`h-4 w-4 ${activeTab === tab.id ? 'opacity-100' : 'opacity-60'}`} />
                                             {tab.label}
                                         </div>
                                         {tab.count !== undefined && tab.count > 0 && (
-                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-[#D4A847] text-[#36453A]' : 'bg-white/10 text-white/90'
+                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'
                                                 }`}>
                                                 {tab.count}
                                             </span>
@@ -1298,36 +1391,36 @@ export default function AccountPage() {
                 </div>
 
                 {/* Bottom Elite Status Card */}
-                <div className="p-5 mt-auto border-t border-white/10">
-                    <div className="bg-white/5 rounded-xl border border-white/10 p-4 mb-4 relative overflow-hidden">
+                <div className="p-5 mt-auto border-t border-gray-100">
+                    <div className="bg-gradient-to-br from-[#91c934] to-[#7ab52a] rounded-3xl p-5 text-white mb-4 relative overflow-hidden shadow-lg shadow-[#91c934]/20">
                         <div className="absolute top-0 right-0 p-2 opacity-10">
                             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" className="text-white">
                                 <path d="M12 22C17.5228 22 22 17.5228 22 12" stroke="currentColor" strokeWidth="2" />
                             </svg>
                         </div>
                         <div className="flex items-center gap-2 mb-2">
-                            <span className="p-1.5 bg-white/10 rounded-full flex items-center justify-center">
-                                <Star className="h-3 w-3 text-[#D4A847] fill-[#D4A847]" />
+                            <span className="p-1.5 bg-white/15 rounded-full flex items-center justify-center">
+                                <Star className="h-3 w-3 text-[#FFD801] fill-[#FFD801]" />
                             </span>
                             <span className="text-[10px] font-bold tracking-wider text-white uppercase">{activeTier} STATUS</span>
                         </div>
-                        <p className="text-xs text-white/80 leading-relaxed mb-3">You currently possess the <strong className="text-white">{activeTier}</strong> ritualist rank.</p>
-                        <button 
+                        <p className="text-xs text-white leading-relaxed mb-3">You currently possess the <strong className="text-white">{activeTier}</strong> ritualist rank.</p>
+                        <button
                             onClick={() => router.push(`/${country}/account/wallet`)}
-                            className="text-[10px] uppercase font-bold text-[#D4A847] flex items-center gap-1 hover:text-white transition-colors"
+                            className="text-[10px] uppercase font-bold text-white flex items-center gap-1 hover:text-[#FFD801] transition-colors"
                         >
                             VIEW BENEFITS <ChevronRight className="h-3 w-3" />
                         </button>
                     </div>
 
                     {/* User Snippet */}
-                    <div className="flex items-center gap-3 p-3 bg-black/20 rounded-xl">
-                        <div className="h-9 w-9 rounded-full bg-white/10 flex items-center justify-center overflow-hidden border border-white/20">
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                        <div className="h-9 w-9 rounded-full bg-[#91c934] flex items-center justify-center overflow-hidden border-2 border-white shadow-sm">
                             {profileImageUrl ? (
                                 // eslint-disable-next-line @next/next/no-img-element
-                                <img 
-                                    src={profileImageUrl} 
-                                    alt="Profile" 
+                                <img
+                                    src={profileImageUrl}
+                                    alt="Profile"
                                     className="h-full w-full object-cover"
                                     onError={() => {
                                         if (base64Fallback && profileImageUrl !== base64Fallback) {
@@ -1342,9 +1435,9 @@ export default function AccountPage() {
                             )}
                         </div>
                         <div className="min-w-0">
-                            <p className="text-sm font-bold text-white truncate">{user?.name}</p>
-                            <p className="text-[10px] text-white/50 tracking-wider flex items-center gap-1">
-                                <Shield className="h-2.5 w-2.5 text-[#D4A847]" /> VERIFIED HUMAN
+                            <p className="text-sm font-bold text-gray-900 truncate">{user?.name}</p>
+                            <p className="text-[10px] text-gray-400 tracking-wider flex items-center gap-1">
+                                <Shield className="h-2.5 w-2.5 text-[#91c934]" /> VERIFIED MEMBER
                             </p>
                         </div>
                     </div>
@@ -1387,11 +1480,11 @@ export default function AccountPage() {
             {/* Main Content Area */}
             <main className="flex-1 flex flex-col h-full relative z-10 overflow-hidden">
                 {/* Header (Desktop Only Breadcrumb) */}
-                <header className="hidden lg:flex h-12 flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-[#E8E1D5] items-center justify-between px-8 xl:px-12 sticky top-0 z-20">
+                <header className="hidden lg:flex h-12 flex-shrink-0 bg-white/95 backdrop-blur-md border-b border-gray-100 items-center justify-between px-8 xl:px-12 sticky top-0 z-20">
                     <div className="flex items-center gap-3 text-sm font-medium">
-                        <button onClick={() => router.push('/account')} className="text-[#36453A]/60 hover:text-[#36453A] transition-colors">Account</button>
-                        <ChevronRight className="h-4 w-4 text-[#36453A]/30" />
-                        <span className="text-[#36453A] font-bold">
+                        <button onClick={() => router.push('/account')} className="text-gray-400 hover:text-gray-900 transition-colors">Account</button>
+                        <ChevronRight className="h-4 w-4 text-gray-300" />
+                        <span className="text-gray-900 font-bold">
                             {activeTab === 'profile' ? 'Profile Settings' :
                                 activeTab === 'addresses' ? 'Delivery Rituals' :
                                     activeTab === 'privacy' ? 'Privacy Sanctuary' :
@@ -1408,10 +1501,10 @@ export default function AccountPage() {
                         {activeTab === 'overview' && (
                             <div className="flex flex-col gap-6 w-full max-w-[1100px] mx-auto animate-fadeIn pb-12">
                                 {/* Top Welcome Section */}
-                                <div className="bg-white rounded-3xl border border-[#E8E1D5] p-8 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden shadow-sm">
+                                <div className="bg-white rounded-[2.5rem] border border-gray-100 p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
                                     <div className="flex-1 relative z-10">
-                                        <span className="inline-block bg-[#E8E1D5]/50 text-[#36453A] text-[10px] font-bold tracking-widest px-3 py-1 rounded-full mb-6 uppercase">Account Overview</span>
-                                        <h1 className="text-4xl md:text-5xl font-bold text-[#36453A] mb-4">
+                                        <span className="inline-block bg-gray-200/50 text-gray-900 text-[10px] font-bold tracking-widest px-3 py-1 rounded-full mb-6 uppercase">Account Overview</span>
+                                        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
                                             Namaste, {user?.name?.split(' ')[0] || 'Guest'}.
                                         </h1>
                                         <p className="text-warm-gray leading-relaxed max-w-md mb-8">
@@ -1420,13 +1513,13 @@ export default function AccountPage() {
                                         <div className="flex items-center gap-4">
                                             <button
                                                 onClick={() => router.push('/account/orders')}
-                                                className="bg-[#36453A] text-white px-6 py-3 rounded-xl text-sm font-bold shadow-md hover:bg-[#2A362D] transition-colors"
+                                                className="bg-[#91c934] text-white px-6 py-3 rounded-xl text-sm font-bold shadow-md shadow-[#91c934]/20 hover:bg-[#7ab52a] hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
                                             >
                                                 Track Latest Order
                                             </button>
                                             <button
                                                 onClick={() => router.push('/account/profile')}
-                                                className="bg-white border text-[#36453A] border-[#E8E1D5] px-6 py-3 rounded-xl text-sm font-bold hover:bg-[#F8F5F0] transition-colors"
+                                                className="bg-white border text-gray-900 border-gray-100 px-6 py-3 rounded-xl text-sm font-bold hover:bg-gray-50 transition-colors"
                                             >
                                                 Update Health Profile
                                             </button>
@@ -1436,7 +1529,7 @@ export default function AccountPage() {
                                     {/* Aesthetic Profile Image Sphere */}
                                     <div className="relative w-48 h-48 md:w-64 md:h-64 flex-shrink-0 z-10 group mt-6 md:mt-0 mx-auto md:mx-0">
                                         <div className="absolute inset-0 bg-gradient-radial from-white to-[#F8F5F0] rounded-full shadow-[0_0_40px_rgba(212,168,71,0.15)] blur-md"></div>
-                                        <div className="relative w-full h-full rounded-full border-4 border-white overflow-hidden shadow-xl bg-[#E8E1D5] flex items-center justify-center">
+                                        <div className="relative w-full h-full rounded-full border-4 border-white overflow-hidden shadow-xl bg-gray-200 flex items-center justify-center">
                                             {profileImageUrl ? (
                                                 // eslint-disable-next-line @next/next/no-img-element
                                                 <img
@@ -1451,7 +1544,7 @@ export default function AccountPage() {
                                                     }}
                                                 />
                                             ) : (
-                                                <span className="font-serif text-6xl md:text-8xl font-bold text-[#36453A]">
+                                                <span className="font-serif text-6xl md:text-8xl font-bold text-gray-900">
                                                     {user?.name?.charAt(0).toUpperCase() || 'U'}
                                                 </span>
                                             )}
@@ -1465,7 +1558,7 @@ export default function AccountPage() {
                                             onClick={() => fileInputRef.current?.click()}
                                             disabled={imageUploading}
                                             title="Upload Profile Photo"
-                                            className="absolute bottom-4 right-4 md:bottom-6 md:right-6 h-12 w-12 md:h-14 md:w-14 rounded-full bg-[#36453A] text-white flex items-center justify-center shadow-lg hover:bg-[#2A362D] transition-transform hover:scale-110 disabled:opacity-50 z-20 group-hover:bg-[#D4A847] focus:outline-none focus:ring-4 focus:ring-[#D4A847]/30"
+                                            className="absolute bottom-4 right-4 md:bottom-6 md:right-6 h-12 w-12 md:h-14 md:w-14 rounded-full bg-[#91c934] text-white flex items-center justify-center shadow-lg hover:bg-[#7ab52a] transition-transform hover:scale-110 disabled:opacity-50 z-20 group-hover:bg-[#91C934] focus:outline-none focus:ring-4 focus:ring-[#91C934]/30"
                                         >
                                             <Camera className="h-5 w-5 md:h-6 md:w-6" />
                                         </button>
@@ -1477,38 +1570,38 @@ export default function AccountPage() {
 
                                 {/* Stats Row */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <div className="bg-white p-6 rounded-2xl border border-[#E8E1D5] shadow-sm flex items-start gap-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push('/account/orders')}>
-                                        <div className="h-12 w-12 rounded-xl bg-[#F8F5F0] flex items-center justify-center flex-shrink-0">
-                                            <Package className="h-6 w-6 text-[#36453A]" />
+                                    <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-[0_2px_10px_rgb(0,0,0,0.02)] flex items-start gap-4 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 cursor-pointer" onClick={() => router.push('/account/orders')}>
+                                        <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center flex-shrink-0">
+                                            <Package className="h-6 w-6 text-gray-900" />
                                         </div>
                                         <div>
                                             <p className="text-xs font-bold text-warm-gray uppercase tracking-wider mb-1">Recent Orders</p>
-                                            <h3 className="text-2xl font-bold text-[#36453A] mb-1">{orders.length} Total</h3>
+                                            <h3 className="text-2xl font-bold text-gray-900 mb-1">{orders.length} Total</h3>
                                             <p className="text-[11px] text-[#A8B28B] font-medium">{orders.filter((o: any) => o.status === 'SHIPPED').length} currently in transit</p>
                                         </div>
                                     </div>
 
-                                    <div className="bg-white p-6 rounded-2xl border border-[#E8E1D5] shadow-sm flex items-start gap-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push(`/${country}/account/wishlist`)}>
-                                        <div className="h-12 w-12 rounded-xl bg-[#F8F5F0] flex items-center justify-center flex-shrink-0">
-                                            <Heart className="h-6 w-6 text-[#36453A]" />
+                                    <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-[0_2px_10px_rgb(0,0,0,0.02)] flex items-start gap-4 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 cursor-pointer" onClick={() => router.push(`/${country}/account/wishlist`)}>
+                                        <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center flex-shrink-0">
+                                            <Heart className="h-6 w-6 text-gray-900" />
                                         </div>
                                         <div>
                                             <p className="text-xs font-bold text-warm-gray uppercase tracking-wider mb-1">Saved Items</p>
-                                            <h3 className="text-2xl font-bold text-[#36453A] mb-1">{wishlistItems.length} Items</h3>
+                                            <h3 className="text-2xl font-bold text-gray-900 mb-1">{wishlistItems.length} Items</h3>
                                             <p className="text-[11px] text-warm-gray font-medium">Waitlisting {wishlistItems.filter((i: any) => (i.stock_status || '').toLowerCase() === 'out_of_stock').length} items</p>
                                         </div>
                                     </div>
 
-                                    <div className="bg-white p-6 rounded-2xl border border-[#E8E1D5] shadow-sm flex items-start gap-4 cursor-default relative overflow-hidden">
+                                    <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-[0_2px_10px_rgb(0,0,0,0.02)] flex items-start gap-4 cursor-default relative overflow-hidden">
                                         <div className="absolute top-0 right-0 p-4 opacity-5">
                                             <Star className="h-20 w-20 text-[#D4A847]" />
                                         </div>
-                                        <div className="h-12 w-12 rounded-xl bg-[#F8F5F0] flex items-center justify-center flex-shrink-0 relative z-10">
-                                            <Star className="h-6 w-6 text-[#36453A]" />
+                                        <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center flex-shrink-0 relative z-10">
+                                            <Star className="h-6 w-6 text-gray-900" />
                                         </div>
                                         <div className="relative z-10">
                                             <p className="text-xs font-bold text-warm-gray uppercase tracking-wider mb-1">Loyalty Points</p>
-                                            <h3 className="text-2xl font-bold text-[#36453A] mb-1">{activePoints} Pts</h3>
+                                            <h3 className="text-2xl font-bold text-gray-900 mb-1">{activePoints} Pts</h3>
                                             <p className="text-[11px] text-[#A8B28B] font-medium">{loyaltyData?.tier?.points_multiplier || 1}x</p>
                                         </div>
                                     </div>
@@ -1516,45 +1609,45 @@ export default function AccountPage() {
 
                                 {/* Common Actions Quick Links */}
                                 <div className="mt-2">
-                                    <h3 className="font-bold text-[#36453A] mb-4 text-sm tracking-wide">Common Actions</h3>
+                                    <h3 className="font-bold text-gray-900 mb-4 text-sm tracking-wide">Common Actions</h3>
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <button onClick={() => router.push(`/${country}/account/orders`)} className="bg-white border border-[#E8E1D5] p-4 rounded-2xl flex items-center justify-between hover:border-[#36453A]/30 transition-colors group">
+                                        <button onClick={() => router.push(`/${country}/account/orders`)} className="bg-white border border-gray-100 p-4 rounded-3xl flex items-center justify-between hover:border-[#91c934]/30 hover:shadow-md transition-all duration-300 group">
                                             <div className="flex items-center gap-4">
-                                                <div className="bg-[#F8F5F0] p-2.5 rounded-lg group-hover:bg-[#36453A] transition-colors">
-                                                    <List className="h-5 w-5 text-[#36453A] group-hover:text-white transition-colors" />
+                                                <div className="bg-gray-50 p-2.5 rounded-lg group-hover:bg-[#91c934] transition-colors">
+                                                    <List className="h-5 w-5 text-gray-900 group-hover:text-white transition-colors" />
                                                 </div>
                                                 <div className="text-left">
-                                                    <p className="text-sm font-bold text-[#36453A]">View All Orders</p>
+                                                    <p className="text-sm font-bold text-gray-900">View All Orders</p>
                                                     <p className="text-[10px] text-warm-gray">Check status & history</p>
                                                 </div>
                                             </div>
-                                            <ChevronRight className="h-4 w-4 text-warm-gray group-hover:text-[#36453A] transition-colors" />
+                                            <ChevronRight className="h-4 w-4 text-warm-gray group-hover:text-gray-900 transition-colors" />
                                         </button>
 
-                                        <button onClick={() => router.push(`/${country}/account/addresses`)} className="bg-white border border-[#E8E1D5] p-4 rounded-2xl flex items-center justify-between hover:border-[#36453A]/30 transition-colors group">
+                                        <button onClick={() => router.push(`/${country}/account/addresses`)} className="bg-white border border-gray-100 p-4 rounded-3xl flex items-center justify-between hover:border-[#91c934]/30 hover:shadow-md transition-all duration-300 group">
                                             <div className="flex items-center gap-4">
-                                                <div className="bg-[#F8F5F0] p-2.5 rounded-lg group-hover:bg-[#36453A] transition-colors">
-                                                    <MapPin className="h-5 w-5 text-[#36453A] group-hover:text-white transition-colors" />
+                                                <div className="bg-gray-50 p-2.5 rounded-lg group-hover:bg-[#91c934] transition-colors">
+                                                    <MapPin className="h-5 w-5 text-gray-900 group-hover:text-white transition-colors" />
                                                 </div>
                                                 <div className="text-left">
-                                                    <p className="text-sm font-bold text-[#36453A]">Manage Addresses</p>
+                                                    <p className="text-sm font-bold text-gray-900">Manage Addresses</p>
                                                     <p className="text-[10px] text-warm-gray">Add or edit delivery spots</p>
                                                 </div>
                                             </div>
-                                            <ChevronRight className="h-4 w-4 text-warm-gray group-hover:text-[#36453A] transition-colors" />
+                                            <ChevronRight className="h-4 w-4 text-warm-gray group-hover:text-gray-900 transition-colors" />
                                         </button>
 
-                                        <button onClick={() => router.push(`/${country}/account/profile`)} className="bg-white border border-[#E8E1D5] p-4 rounded-2xl flex items-center justify-between hover:border-[#36453A]/30 transition-colors group">
+                                        <button onClick={() => router.push(`/${country}/account/profile`)} className="bg-white border border-gray-100 p-4 rounded-3xl flex items-center justify-between hover:border-[#91c934]/30 hover:shadow-md transition-all duration-300 group">
                                             <div className="flex items-center gap-4">
-                                                <div className="bg-[#F8F5F0] p-2.5 rounded-lg group-hover:bg-[#36453A] transition-colors">
-                                                    <User className="h-5 w-5 text-[#36453A] group-hover:text-white transition-colors" />
+                                                <div className="bg-gray-50 p-2.5 rounded-lg group-hover:bg-[#91c934] transition-colors">
+                                                    <User className="h-5 w-5 text-gray-900 group-hover:text-white transition-colors" />
                                                 </div>
                                                 <div className="text-left">
-                                                    <p className="text-sm font-bold text-[#36453A]">Account Settings</p>
+                                                    <p className="text-sm font-bold text-gray-900">Account Settings</p>
                                                     <p className="text-[10px] text-warm-gray">Edit profile & privacy</p>
                                                 </div>
                                             </div>
-                                            <ChevronRight className="h-4 w-4 text-warm-gray group-hover:text-[#36453A] transition-colors" />
+                                            <ChevronRight className="h-4 w-4 text-warm-gray group-hover:text-gray-900 transition-colors" />
                                         </button>
                                     </div>
                                 </div>
@@ -1563,19 +1656,19 @@ export default function AccountPage() {
                                 <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8 mt-4">
 
                                     {/* Left: Recent Orders Table */}
-                                    <div className="bg-white rounded-3xl border border-[#E8E1D5] p-6 lg:p-8 shadow-sm h-fit">
-                                        <div className="flex items-center justify-between mb-8 border-b border-[#E8E1D5] pb-4">
+                                    <div className="bg-white rounded-[2rem] border border-gray-100 p-6 lg:p-8 shadow-[0_4px_20px_rgb(0,0,0,0.03)] h-fit">
+                                        <div className="flex items-center justify-between mb-8 border-b border-gray-100 pb-4">
                                             <div>
-                                                <h3 className="font-bold text-[#36453A] text-lg">Recent Orders Summary</h3>
+                                                <h3 className="font-bold text-gray-900 text-lg">Recent Orders Summary</h3>
                                                 <p className="text-xs text-warm-gray mt-1">Your latest transactions at Vedashi</p>
                                             </div>
-                                            <button onClick={() => router.push(`/${country}/account/orders`)} className="text-xs font-bold text-[#36453A] hover:underline hover:text-black">See Full History</button>
+                                            <button onClick={() => router.push(`/${country}/account/orders`)} className="text-xs font-bold text-gray-900 hover:underline hover:text-black">See Full History</button>
                                         </div>
 
                                         <div className="overflow-x-auto">
                                             <table className="w-full text-left border-collapse">
                                                 <thead>
-                                                    <tr className="border-b border-[#E8E1D5]">
+                                                    <tr className="border-b border-gray-100">
                                                         <th className="pb-3 text-xs font-bold text-warm-gray uppercase tracking-wider">Order ID</th>
                                                         <th className="pb-3 text-xs font-bold text-warm-gray uppercase tracking-wider">Date</th>
                                                         <th className="pb-3 text-xs font-bold text-warm-gray uppercase tracking-wider">Status</th>
@@ -1584,15 +1677,15 @@ export default function AccountPage() {
                                                 </thead>
                                                 <tbody>
                                                     {orders.slice(0, 5).map((order: any) => (
-                                                        <tr key={order.order_id} className="border-b border-[#F8F5F0] last:border-0 hover:bg-[#F8F5F0]/50 transition-colors">
-                                                            <td className="py-4 text-sm font-bold text-[#36453A]">{order.order_id.split('-')[0].toUpperCase()}</td>
+                                                        <tr key={order.order_id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors">
+                                                            <td className="py-4 text-sm font-bold text-gray-900">{order.order_id.split('-')[0].toUpperCase()}</td>
                                                             <td className="py-4 text-sm text-warm-gray">{new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
                                                             <td className="py-4">
                                                                 <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border border-current ${getStatusColor(order.order_status)}`}>
                                                                     {order.order_status || 'PENDING'}
                                                                 </span>
                                                             </td>
-                                                            <td className="py-4 text-sm font-bold text-[#36453A] text-right">{formatPrice(order.final_total || order.total_amount)}</td>
+                                                            <td className="py-4 text-sm font-bold text-gray-900 text-right">{formatPrice(order.final_total || order.total_amount)}</td>
                                                         </tr>
                                                     ))}
                                                     {orders.length === 0 && (
@@ -1609,19 +1702,19 @@ export default function AccountPage() {
                                     <div className="flex flex-col gap-6">
 
                                         {/* Wishlist Preview */}
-                                        <div className="bg-white rounded-3xl border border-[#E8E1D5] p-6 shadow-sm">
+                                        <div className="bg-white rounded-[2rem] border border-gray-100 p-6 shadow-sm">
                                             <div className="flex items-center justify-between mb-6">
-                                                <h3 className="font-bold text-[#36453A] text-sm flex items-center gap-2">
+                                                <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
                                                     <Heart className="h-4 w-4 text-red-500 fill-red-50" />
                                                     Wishlist Preview
                                                 </h3>
-                                                <span className="bg-[#36453A] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{wishlistItems.length}</span>
+                                                <span className="bg-[#91c934] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{wishlistItems.length}</span>
                                             </div>
 
                                             <div className="space-y-4">
                                                 {wishlistItems.slice(0, 4).map((item: any) => (
-                                                    <div key={item.product_id} className="flex gap-4 group cursor-pointer" onClick={() => router.push(`/products/${item.slug || item.product_id}`)}>
-                                                        <div className="h-16 w-16 bg-[#F8F5F0] rounded-xl border border-[#E8E1D5] flex items-center justify-center p-2 flex-shrink-0 overflow-hidden">
+                                                    <div key={item.product_id} className="flex gap-4 group cursor-pointer" onClick={() => router.push(`/${country}/products/${item.slug || item.product_id}`)}>
+                                                        <div className="h-16 w-16 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-center p-2 flex-shrink-0 overflow-hidden">
                                                             {item.image_url ? (
                                                                 // eslint-disable-next-line @next/next/no-img-element
                                                                 <img src={item.image_url} alt={item.product_name} className="h-full w-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500" />
@@ -1631,9 +1724,9 @@ export default function AccountPage() {
                                                         </div>
                                                         <div className="flex flex-col justify-center max-w-[150px]">
                                                             <p className="text-[9px] font-bold tracking-widest text-[#A8B28B] uppercase mb-0.5 truncate">{item.category_name || 'WELLNESS'}</p>
-                                                            <p className="text-xs font-bold text-[#36453A] line-clamp-2 leading-tight mb-1 group-hover:text-black">{item.product_name}</p>
+                                                            <p className="text-xs font-bold text-gray-900 line-clamp-2 leading-tight mb-1 group-hover:text-black">{item.product_name}</p>
                                                             <div className="flex items-center gap-2 mt-auto">
-                                                                <span className="text-xs font-bold text-[#36453A]">{formatPrice(item.price)}</span>
+                                                                <span className="text-xs font-bold text-gray-900">{formatPrice(item.price)}</span>
                                                                 {item.on_sale && <span className="text-[10px] bg-red-100 text-red-700 px-1 rounded font-bold uppercase">Sale</span>}
                                                             </div>
                                                         </div>
@@ -1641,20 +1734,20 @@ export default function AccountPage() {
                                                 ))}
 
                                                 {wishlistItems.length === 0 && (
-                                                    <div className="py-6 text-center border-2 border-dashed border-[#E8E1D5] rounded-xl bg-[#F8F5F0]/50">
+                                                    <div className="py-6 text-center border-2 border-dashed border-gray-100 rounded-xl bg-gray-50/50">
                                                         <Heart className="h-6 w-6 text-warm-gray/40 mx-auto mb-2" />
                                                         <p className="text-xs font-medium text-warm-gray">Your sanctuary is empty.</p>
                                                     </div>
                                                 )}
                                             </div>
 
-                                            <button onClick={() => router.push('/account/wishlist')} className="w-full mt-6 bg-[#F8F5F0] text-[#36453A] text-xs font-bold py-3 rounded-xl hover:bg-[#E8E1D5] transition-colors flex items-center justify-center gap-2">
+                                            <button onClick={() => router.push('/account/wishlist')} className="w-full mt-6 bg-gray-50 text-gray-900 text-xs font-bold py-3 rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-2">
                                                 Manage Full Wishlist <ChevronRight className="h-3 w-3" />
                                             </button>
                                         </div>
 
                                         {/* Vedashi Wallet Card */}
-                                        <div className="bg-[#36453A] rounded-3xl p-6 text-white relative flex flex-col justify-between overflow-hidden shadow-md h-40">
+                                        <div className="bg-[#91c934] rounded-[2rem] p-6 text-white relative flex flex-col justify-between overflow-hidden shadow-md h-40">
                                             {/* Decorative Background Leaf */}
                                             <div className="absolute -right-4 -bottom-4 opacity-10">
                                                 <svg width="120" height="120" viewBox="0 0 24 24" fill="currentColor">
@@ -1663,9 +1756,9 @@ export default function AccountPage() {
                                             </div>
 
                                             <div className="relative z-10">
-                                                <p className="text-[10px] font-bold tracking-widest text-[#D4A847] uppercase mb-1">Vedashi Wallet</p>
+                                                <p className="text-[10px] font-bold tracking-widest text-white uppercase mb-1">Vedashi Wallet</p>
                                                 <h3 className="text-3xl font-bold mb-1">${(Number(user?.wallet_balance || 0)).toFixed(2)}</h3>
-                                                <p className="text-[10px] text-white/70 tracking-wide">Available balance for quick checkout</p>
+                                                <p className="text-[10px] text-white tracking-wide">Available balance for quick checkout</p>
                                             </div>
                                         </div>
 
@@ -1676,15 +1769,15 @@ export default function AccountPage() {
 
                         {/* ═══════════════════ ORDERS TAB ═══════════════════ */}
                         {activeTab === 'orders' && (
-                            <div className="flex flex-col h-full bg-[#F8F5F0]">
+                            <div className="flex flex-col h-full bg-gray-50">
                                 {/* ── Orders Header ── */}
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                                     <div className="flex items-center gap-4">
-                                        <h2 className="text-3xl font-bold text-[#36453A]">Orders List</h2>
-                                        <span className="bg-[#E7F0E9] text-[#2D5A3A] text-xs font-bold px-3 py-1 rounded-full">
+                                        <h2 className="text-3xl font-bold text-gray-900">Orders List</h2>
+                                        <span className="bg-[#f0fdf4] text-[#2D5A3A] text-xs font-bold px-3 py-1 rounded-full">
                                             {filteredAndSortedOrders.length} {filteredAndSortedOrders.length !== orders.length ? `of ${orders.length}` : ''} Total
                                         </span>
-                                    </div> 
+                                    </div>
                                 </div>
 
                                 <div className="flex flex-col lg:flex-row gap-8 items-start">
@@ -1693,15 +1786,15 @@ export default function AccountPage() {
                                         {/* Search & Filter Bar */}
                                         <div className="flex flex-col md:flex-row md:items-center gap-4">
                                             <div className="relative flex-1 group">
-                                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-warm-gray group-focus-within:text-[#36453A] transition-colors" />
+                                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-warm-gray group-focus-within:text-gray-900 transition-colors" />
                                                 <input
                                                     type="text"
                                                     placeholder="Search by Order ID or Product Name..."
                                                     value={orderSearch}
                                                     onChange={e => setOrderSearch(e.target.value)}
-                                                    className="w-full bg-white border border-[#E8E1D5] rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-[#36453A]/40 focus:ring-1 focus:ring-[#36453A]/20 transition-all text-[#36453A] placeholder:text-warm-gray/70 shadow-sm"
+                                                    className="w-full bg-white border border-gray-100 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-[#91c934]/40 focus:ring-1 focus:ring-[#91c934]/20 transition-all text-gray-900 placeholder:text-warm-gray/70 shadow-sm"
                                                 />
-                                            </div>  
+                                            </div>
                                         </div>
 
                                         {/* Status Filters & Sort */}
@@ -1713,8 +1806,8 @@ export default function AccountPage() {
                                                         onClick={() => setOrderStatusFilter(status)}
                                                         className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm border
                                                         ${orderStatusFilter === status
-                                                                ? 'bg-[#36453A] text-white border-[#36453A]'
-                                                                : 'bg-white text-[#36453A] border-[#E8E1D5] hover:bg-[#F8F5F0]'
+                                                                ? 'bg-[#91c934] text-white border-[#91c934]'
+                                                                : 'bg-white text-gray-900 border-gray-100 hover:bg-gray-50'
                                                             }`}
                                                     >
                                                         {status}
@@ -1727,14 +1820,14 @@ export default function AccountPage() {
                                                 <select
                                                     value={orderSort}
                                                     onChange={(e) => setOrderSort(e.target.value)}
-                                                    className="text-sm font-bold text-[#36453A] bg-transparent focus:outline-none appearance-none cursor-pointer pr-4"
+                                                    className="text-sm font-bold text-gray-900 bg-transparent focus:outline-none appearance-none cursor-pointer pr-4"
                                                 >
                                                     <option value="newest">Newest First</option>
                                                     <option value="oldest">Oldest First</option>
                                                     <option value="highest">Amount: High to Low</option>
                                                     <option value="lowest">Amount: Low to High</option>
                                                 </select>
-                                                <ChevronRight className="h-4 w-4 text-[#36453A] pointer-events-none rotate-90 -ml-5" />
+                                                <ChevronRight className="h-4 w-4 text-gray-900 pointer-events-none rotate-90 -ml-5" />
                                             </div>
                                         </div>
 
@@ -1742,17 +1835,17 @@ export default function AccountPage() {
                                         <div className="space-y-4">
                                             {ordersLoading && (
                                                 <div className="flex justify-center py-16">
-                                                    <Loader2 className="h-8 w-8 animate-spin text-[#36453A]" />
+                                                    <Loader2 className="h-8 w-8 animate-spin text-gray-900" />
                                                 </div>
                                             )}
                                             {!ordersLoading && filteredAndSortedOrders.length === 0 && (
-                                                <div className="rounded-3xl border border-[#E8E1D5] bg-white py-16 text-center shadow-sm">
+                                                <div className="rounded-[2rem] border border-gray-100 bg-white py-16 text-center shadow-sm">
                                                     <Package className="mx-auto h-12 w-12 text-warm-gray/30 mb-4" />
-                                                    <p className="text-xl font-bold text-[#36453A]">No orders yet</p>
+                                                    <p className="text-xl font-bold text-gray-900">No orders yet</p>
                                                     <p className="mt-2 text-sm text-warm-gray mb-6">{orderSearch || orderStatusFilter !== 'All' ? 'Try adjusting your filters.' : "You haven't placed any orders yet."}</p>
                                                     <button
-                                                        onClick={() => router.push(`/${country}/shop`)}
-                                                        className="rounded-xl bg-[#36453A] px-10 py-3 text-sm font-bold text-white shadow-md hover:bg-[#2A362D] transition-all"
+                                                        onClick={() => router.push(`/${country}`)}
+                                                        className="rounded-xl bg-[#91c934] px-10 py-3 text-sm font-bold text-white shadow-md hover:bg-[#7ab52a] transition-all"
                                                     >
                                                         Browse Shop
                                                     </button>
@@ -1775,38 +1868,38 @@ export default function AccountPage() {
                                                     <div
                                                         key={order.order_id}
                                                         onClick={() => handleViewOrderDetails(order.order_id)}
-                                                        className={`rounded-3xl border transition-all cursor-pointer shadow-sm relative overflow-hidden flex flex-col
+                                                        className={`rounded-[2rem] border transition-all cursor-pointer shadow-sm relative overflow-hidden flex flex-col
                                                         ${isSelected
-                                                                ? 'bg-white border-[#36453A] ring-1 ring-[#36453A]/20'
-                                                                : 'bg-white border-[#E8E1D5] hover:border-[#36453A]/30 hover:shadow-md'
+                                                                ? 'bg-white border-[#91c934] ring-1 ring-[#91c934]/20'
+                                                                : 'bg-white border-gray-100 hover:border-[#91c934]/30 hover:shadow-md'
                                                             }`}
                                                     >
                                                         {/* Header Row */}
-                                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#F8F5F0]/60 border-b border-[#E8E1D5] px-4 py-3 sm:px-6">
+                                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-50/60 border-b border-gray-100 px-4 py-3 sm:px-6">
                                                             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 w-full sm:w-auto">
                                                                 <div className="flex flex-col">
                                                                     <span className="text-[10px] uppercase tracking-widest text-warm-gray font-bold mb-0.5">Order ID</span>
-                                                                    <span className="text-sm font-bold text-[#36453A] flex items-center gap-1.5 line-clamp-1">
+                                                                    <span className="text-sm font-bold text-gray-900 flex items-center gap-1.5 line-clamp-1">
                                                                         #{order.order_id.split('-')[0].toUpperCase()}
                                                                     </span>
                                                                 </div>
-                                                                <div className="hidden sm:block w-px h-6 bg-[#E8E1D5]"></div>
+                                                                <div className="hidden sm:block w-px h-6 bg-gray-200"></div>
                                                                 <div className="flex flex-col">
                                                                     <span className="text-[10px] uppercase tracking-widest text-warm-gray font-bold mb-0.5">Date Placed</span>
-                                                                    <span className="text-sm font-bold text-[#36453A] flex items-center gap-1.5">
+                                                                    <span className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
                                                                         {dtDate}
                                                                     </span>
                                                                 </div>
-                                                                <div className="hidden sm:block w-px h-6 bg-[#E8E1D5]"></div>
+                                                                <div className="hidden sm:block w-px h-6 bg-gray-200"></div>
                                                                 <div className="flex flex-col">
                                                                     <span className="text-[10px] uppercase tracking-widest text-warm-gray font-bold mb-0.5">Total Amount</span>
-                                                                    <span className="text-sm font-bold text-[#36453A]">
+                                                                    <span className="text-sm font-bold text-gray-900">
                                                                         {formatPrice(order.final_total || order.total_amount)}
                                                                     </span>
                                                                 </div>
                                                             </div>
                                                             <div className="mt-3 sm:mt-0">
-                                                                <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest border border-[#E8E1D5]
+                                                                <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest border border-gray-100
                                                                     ${order.order_status === 'DELIVERED' ? 'bg-[#F2F4EB] text-[#4A5D23]' :
                                                                         order.order_status === 'SHIPPED' ? 'bg-[#EEF2F6] text-[#2C4B7D]' :
                                                                             order.order_status === 'CANCELLED' ? 'bg-[#FCEAE8] text-[#9E2A2B]' :
@@ -1822,10 +1915,10 @@ export default function AccountPage() {
                                                         {/* Main Content */}
                                                         <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 p-4 sm:p-6 items-start sm:items-center relative">
                                                             {/* Selected state overlay hint */}
-                                                            {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#36453A]"></div>}
-                                                            
+                                                            {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#91c934]"></div>}
+
                                                             {/* Image */}
-                                                            <div className="relative h-20 w-20 sm:h-24 sm:w-24 rounded-2xl bg-[#F8F5F0] border border-[#E8E1D5] flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                                            <div className="relative h-20 w-20 sm:h-24 sm:w-24 rounded-3xl bg-gray-50 border border-gray-100 flex-shrink-0 flex items-center justify-center overflow-hidden">
                                                                 {prodImg ? (
                                                                     // eslint-disable-next-line @next/next/no-img-element
                                                                     <img src={prodImg} alt="Product" className="h-full w-full object-cover mix-blend-multiply" />
@@ -1833,10 +1926,10 @@ export default function AccountPage() {
                                                                     <Package className="h-8 w-8 text-warm-gray/40" />
                                                                 )}
                                                             </div>
-                                                            
+
                                                             {/* Info */}
                                                             <div className="flex-1 w-full min-w-0 flex flex-col justify-center">
-                                                                <p className="text-base font-bold text-[#36453A] line-clamp-2">{prodName}</p>
+                                                                <p className="text-base font-bold text-gray-900 line-clamp-2">{prodName}</p>
                                                                 {itemCount > 1 && (
                                                                     <p className="text-sm font-semibold text-warm-gray mt-1">
                                                                         and {itemCount - 1} more item(s)
@@ -1844,13 +1937,13 @@ export default function AccountPage() {
                                                                 )}
                                                                 <p className="text-xs font-medium text-warm-gray mt-2">Sold by Vedashi</p>
                                                             </div>
-                                                            
+
                                                             {/* Actions */}
-                                                            <div className="flex flex-wrap sm:flex-col gap-2 w-full sm:w-auto shrink-0 mt-4 sm:mt-0 border-t sm:border-t-0 sm:border-l border-[#E8E1D5] pt-4 sm:pt-0 sm:pl-6 justify-center">
+                                                            <div className="flex flex-wrap sm:flex-col gap-2 w-full sm:w-auto shrink-0 mt-4 sm:mt-0 border-t sm:border-t-0 sm:border-l border-gray-100 pt-4 sm:pt-0 sm:pl-6 justify-center">
                                                                 <button
                                                                     onClick={(e) => { e.stopPropagation(); handleViewOrderDetails(order.order_id); }}
                                                                     className={`rounded-xl px-5 py-2 text-xs font-bold transition-all whitespace-nowrap border overflow-hidden
-                                                                        ${isSelected ? 'bg-[#36453A] text-white border-[#36453A]' : 'bg-[#36453A] text-white border-[#36453A] hover:bg-[#2A362D]'}
+                                                                        ${isSelected ? 'bg-[#91c934] text-white border-[#91c934]' : 'bg-[#91c934] text-white border-[#91c934] hover:bg-[#7ab52a]'}
                                                                     `}
                                                                 >
                                                                     {isOrderLoading && selectedOrderDetails?.order_id === order.order_id ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : 'View Details'}
@@ -1858,11 +1951,13 @@ export default function AccountPage() {
                                                                 <button
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
-                                                                        toast.success("Items added to cart.");
+                                                                        handleReorder(order.order_id);
                                                                     }}
-                                                                    className="rounded-xl px-5 py-2 text-xs font-bold bg-white text-[#36453A] border border-[#E8E1D5] hover:border-[#36453A]/40 hover:bg-[#F8F5F0] transition-all whitespace-nowrap"
+                                                                    disabled={reorderingOrderId === order.order_id}
+                                                                    className="rounded-xl px-5 py-2 text-xs font-bold bg-white text-gray-900 border border-gray-100 hover:border-[#91c934]/40 hover:bg-gray-50 transition-all whitespace-nowrap disabled:opacity-50 flex items-center justify-center gap-1.5"
                                                                 >
-                                                                    Reorder
+                                                                    {reorderingOrderId === order.order_id ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+                                                                    {reorderingOrderId === order.order_id ? 'Reordering...' : 'Reorder'}
                                                                 </button>
                                                                 {order.order_status === 'PENDING' && (
                                                                     <button
@@ -1884,35 +1979,35 @@ export default function AccountPage() {
 
                                         {/* Pagination Bottom */}
                                         {!ordersLoading && filteredAndSortedOrders.length > pageSize && (
-                                            <div className="flex items-center justify-between pt-6 border-t border-[#E8E1D5]">
+                                            <div className="flex items-center justify-between pt-6 border-t border-gray-100">
                                                 <span className="text-sm font-medium text-warm-gray">
-                                                    Showing <strong className="text-[#36453A]">
+                                                    Showing <strong className="text-gray-900">
                                                         {Math.min((currentPage - 1) * pageSize + 1, filteredAndSortedOrders.length)}-{Math.min(currentPage * pageSize, filteredAndSortedOrders.length)}
-                                                    </strong> of <strong className="text-[#36453A]">{filteredAndSortedOrders.length}</strong> orders
+                                                    </strong> of <strong className="text-gray-900">{filteredAndSortedOrders.length}</strong> orders
                                                 </span>
                                                 <div className="flex items-center gap-2">
-                                                    <button 
+                                                    <button
                                                         onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                                         disabled={currentPage === 1}
-                                                        className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === 1 ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-[#F8F5F0]'}`}
+                                                        className={`px-4 py-2 text-sm font-bold rounded-xl border border-gray-100 transition-colors ${currentPage === 1 ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-gray-900 bg-white hover:bg-gray-50'}`}
                                                     >
                                                         Previous
                                                     </button>
-                                                    
+
                                                     {Array.from({ length: Math.ceil(filteredAndSortedOrders.length / pageSize) }).map((_, i) => (
-                                                        <button 
+                                                        <button
                                                             key={i}
                                                             onClick={() => setCurrentPage(i + 1)}
-                                                            className={`h-9 w-9 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center transition-all ${currentPage === i + 1 ? 'bg-[#36453A] text-white' : 'bg-white text-[#36453A] border border-[#E8E1D5] hover:bg-[#F8F5F0]'}`}
+                                                            className={`h-9 w-9 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center transition-all ${currentPage === i + 1 ? 'bg-[#91c934] text-white' : 'bg-white text-gray-900 border border-gray-100 hover:bg-gray-50'}`}
                                                         >
                                                             {i + 1}
                                                         </button>
                                                     ))}
 
-                                                    <button 
+                                                    <button
                                                         onClick={() => setCurrentPage(p => Math.min(Math.ceil(filteredAndSortedOrders.length / pageSize), p + 1))}
                                                         disabled={currentPage === Math.ceil(filteredAndSortedOrders.length / pageSize)}
-                                                        className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === Math.ceil(filteredAndSortedOrders.length / pageSize) ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-[#F8F5F0]'}`}
+                                                        className={`px-4 py-2 text-sm font-bold rounded-xl border border-gray-100 transition-colors ${currentPage === Math.ceil(filteredAndSortedOrders.length / pageSize) ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-gray-900 bg-white hover:bg-gray-50'}`}
                                                     >
                                                         Next
                                                     </button>
@@ -1924,15 +2019,15 @@ export default function AccountPage() {
                                     {/* ── Right Column: Order Details Side Panel ── */}
                                     {selectedOrderDetails ? (
                                         <div className="w-full lg:w-[400px] flex-shrink-0 animate-in fade-in slide-in-from-right-4 duration-300">
-                                            <div className="bg-white rounded-3xl border border-[#E8E1D5] shadow-sm overflow-hidden sticky top-32">
+                                            <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden sticky top-32">
 
                                                 {/* Header Bar */}
-                                                <div className="px-6 py-5 border-b border-[#E8E1D5] flex items-center justify-between">
+                                                <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
                                                     <div>
-                                                        <h3 className="text-xl font-bold text-[#36453A]">Order Details</h3>
+                                                        <h3 className="text-xl font-bold text-gray-900">Order Details</h3>
                                                         <p className="text-xs font-medium text-warm-gray mt-1">Order ID: {selectedOrderDetails.order_id.split('-')[0].toUpperCase()}</p>
                                                     </div>
-                                                    <button onClick={() => setSelectedOrderDetails(null)} className="p-2 text-warm-gray hover:text-[#36453A] hover:bg-[#F8F5F0] rounded-full transition-colors">
+                                                    <button onClick={() => setSelectedOrderDetails(null)} className="p-2 text-warm-gray hover:text-gray-900 hover:bg-gray-50 rounded-full transition-colors">
                                                         <X className="h-5 w-5" />
                                                     </button>
                                                 </div>
@@ -1940,7 +2035,7 @@ export default function AccountPage() {
                                                 <div className="p-6 space-y-6">
 
                                                     {/* Track Shipment Card */}
-                                                    <div className="bg-[#36453A] rounded-[24px] p-6 text-white relative overflow-hidden shadow-md">
+                                                    <div className="bg-[#91c934] rounded-[24px] p-6 text-white relative overflow-hidden shadow-md">
                                                         {/* Abstract truck graphic hint */}
                                                         <Package className="absolute -right-4 -bottom-4 h-28 w-28 text-white opacity-5 mix-blend-overlay" />
 
@@ -1953,9 +2048,9 @@ export default function AccountPage() {
                                                         <div className="mb-6 relative z-10">
                                                             <p className="text-xs font-medium opacity-70 mb-1">
                                                                 {selectedOrderDetails.order_status === 'DELIVERED' ? 'Delivered On' :
-                                                                 selectedOrderDetails.order_status === 'SHIPPED' ? 'Shipped On' :
-                                                                 selectedOrderDetails.order_status === 'CONFIRMED' ? 'Confirmed On' :
-                                                                 'Ordered On'}
+                                                                    selectedOrderDetails.order_status === 'SHIPPED' ? 'Shipped On' :
+                                                                        selectedOrderDetails.order_status === 'CONFIRMED' ? 'Confirmed On' :
+                                                                            'Ordered On'}
                                                             </p>
                                                             <p className="text-2xl font-bold">
                                                                 {selectedOrderDetails.order_status === 'DELIVERED'
@@ -1966,7 +2061,7 @@ export default function AccountPage() {
                                                         </div>
                                                         <button
                                                             onClick={() => handleTrackOrder(selectedOrderDetails.order_id)}
-                                                            className="w-full bg-white text-[#36453A] rounded-xl py-3 text-sm font-bold shadow-sm hover:bg-[#F8F5F0] transition-colors flex items-center justify-center gap-2 relative z-10"
+                                                            className="w-full bg-white text-gray-900 rounded-xl py-3 text-sm font-bold shadow-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 relative z-10"
                                                         >
                                                             Track Order <ChevronRight className="h-4 w-4" />
                                                         </button>
@@ -1974,15 +2069,15 @@ export default function AccountPage() {
 
                                                     {/* Items Summary */}
                                                     <div>
-                                                        <h4 className="text-[11px] font-bold tracking-widest text-[#36453A] uppercase mb-4">Items Summary</h4>
-                                                        <div className="rounded-2xl border border-[#E8E1D5] bg-[#F8F5F0]/50 divide-y divide-[#E8E1D5]">
+                                                        <h4 className="text-[11px] font-bold tracking-widest text-gray-900 uppercase mb-4">Items Summary</h4>
+                                                        <div className="rounded-3xl border border-gray-100 bg-gray-50/50 divide-y divide-[#e5e7eb]">
                                                             {(selectedOrderDetails.items || []).map((item: any) => {
                                                                 const prodImg = item.thumbnail_url || item.product?.thumbnail_url || item.product?.primary_image_url || item.product?.images?.[0] || null;
                                                                 const prodName = item.product?.product_name || item.product_name || 'Product';
                                                                 return (
                                                                     <div key={item.order_item_id} className="p-4 flex items-center justify-between gap-4">
                                                                         <div className="flex items-center gap-4 min-w-0">
-                                                                            <div className="h-10 w-10 bg-white rounded-lg border border-[#E8E1D5] flex items-center justify-center p-1 flex-shrink-0">
+                                                                            <div className="h-10 w-10 bg-white rounded-lg border border-gray-100 flex items-center justify-center p-1 flex-shrink-0">
                                                                                 {prodImg ? (
                                                                                     // eslint-disable-next-line @next/next/no-img-element
                                                                                     <img src={prodImg} alt={prodName} className="h-full w-full object-contain mix-blend-multiply" />
@@ -1991,11 +2086,11 @@ export default function AccountPage() {
                                                                                 )}
                                                                             </div>
                                                                             <div className="min-w-0">
-                                                                                <p className="text-xs font-bold text-[#36453A] truncate">{prodName}</p>
+                                                                                <p className="text-xs font-bold text-gray-900 truncate">{prodName}</p>
                                                                                 <p className="text-[10px] font-medium text-warm-gray mt-0.5">Qty: {item.quantity}</p>
                                                                             </div>
                                                                         </div>
-                                                                        <span className="text-xs font-bold text-[#36453A] whitespace-nowrap">
+                                                                        <span className="text-xs font-bold text-gray-900 whitespace-nowrap">
                                                                             {formatPrice(item.price || item.unit_price)}
                                                                         </span>
                                                                     </div>
@@ -2006,13 +2101,13 @@ export default function AccountPage() {
 
                                                     {/* Shipping Address */}
                                                     <div>
-                                                        <h4 className="text-[11px] font-bold tracking-widest text-[#36453A] uppercase mb-4">Shipping Address</h4>
-                                                        <div className="rounded-2xl border border-[#E8E1D5] bg-[#F8F5F0]/50 p-4 flex items-start gap-3">
-                                                            <div className="mt-0.5 text-[#36453A]/60">
+                                                        <h4 className="text-[11px] font-bold tracking-widest text-gray-900 uppercase mb-4">Shipping Address</h4>
+                                                        <div className="rounded-3xl border border-gray-100 bg-gray-50/50 p-4 flex items-start gap-3">
+                                                            <div className="mt-0.5 text-gray-900/60">
                                                                 <MapPin className="h-4 w-4" />
                                                             </div>
                                                             <div>
-                                                                <p className="text-sm font-bold text-[#36453A] mb-1">
+                                                                <p className="text-sm font-bold text-gray-900 mb-1">
                                                                     {selectedOrderDetails.shipping_address?.full_name || user?.name || 'Customer Name'}
                                                                 </p>
                                                                 <p className="text-xs text-warm-gray leading-relaxed max-w-[250px]">
@@ -2026,27 +2121,27 @@ export default function AccountPage() {
 
                                                     {/* Payment Info */}
                                                     <div>
-                                                        <h4 className="text-[11px] font-bold tracking-widest text-[#36453A] uppercase mb-4">Payment Info</h4>
+                                                        <h4 className="text-[11px] font-bold tracking-widest text-gray-900 uppercase mb-4">Payment Info</h4>
                                                         <div className="space-y-3">
                                                             <div className="flex items-center justify-between text-xs text-warm-gray font-medium">
                                                                 <span>Subtotal</span>
-                                                                <span className="text-[#36453A] font-bold">{formatPrice(selectedOrderDetails.total_amount || 0)}</span>
+                                                                <span className="text-gray-900 font-bold">{formatPrice(selectedOrderDetails.total_amount || 0)}</span>
                                                             </div>
                                                             <div className="flex items-center justify-between text-xs text-warm-gray font-medium">
                                                                 <span>Eco-Shipping</span>
-                                                                <span className="text-[#36453A] font-bold">FREE</span>
+                                                                <span className="text-gray-900 font-bold">FREE</span>
                                                             </div>
 
 
-                                                            <div className="pt-3 border-t border-[#E8E1D5] flex items-center justify-between">
-                                                                <span className="text-sm font-bold text-[#36453A]">Total</span>
-                                                                <span className="text-lg font-bold text-[#36453A]">{formatPrice(selectedOrderDetails.final_total || selectedOrderDetails.total_amount || 0)}</span>
+                                                            <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
+                                                                <span className="text-sm font-bold text-gray-900">Total</span>
+                                                                <span className="text-lg font-bold text-gray-900">{formatPrice(selectedOrderDetails.final_total || selectedOrderDetails.total_amount || 0)}</span>
                                                             </div>
                                                         </div>
                                                     </div>
 
                                                     {/* Action Buttons */}
-                                                    <div className="flex gap-3 pt-6 border-t border-[#E8E1D5]">
+                                                    <div className="flex gap-3 pt-6 border-t border-gray-100">
                                                         <button
                                                             onClick={async () => {
                                                                 if (isDownloadingInvoice) return;
@@ -2061,7 +2156,7 @@ export default function AccountPage() {
                                                                 }
                                                             }}
                                                             disabled={isDownloadingInvoice}
-                                                            className={`flex-1 flex justify-center items-center gap-2 border border-[#E8E1D5] bg-white rounded-xl py-2.5 text-xs font-bold text-[#36453A] transition-colors shadow-sm ${isDownloadingInvoice ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#F8F5F0]'}`}
+                                                            className={`flex-1 flex justify-center items-center gap-2 border border-gray-100 bg-white rounded-xl py-2.5 text-xs font-bold text-gray-900 transition-colors shadow-sm ${isDownloadingInvoice ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
                                                         >
                                                             {isDownloadingInvoice ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />} {isDownloadingInvoice ? 'Downloading...' : 'Invoice'}
                                                         </button>
@@ -2070,14 +2165,14 @@ export default function AccountPage() {
                                                             return linkedTicket ? (
                                                                 <button
                                                                     onClick={() => router.push(`/${country}/help-center/support/${linkedTicket._ticket_id}`)}
-                                                                    className="flex-1 flex justify-center items-center gap-2 border border-[#36453A]/20 bg-[#F8F5F0] rounded-xl py-2.5 text-xs font-bold text-[#36453A] hover:bg-white transition-colors shadow-sm"
+                                                                    className="flex-1 flex justify-center items-center gap-2 border border-[#91c934]/20 bg-gray-50 rounded-xl py-2.5 text-xs font-bold text-gray-900 hover:bg-white transition-colors shadow-sm"
                                                                 >
                                                                     <MessageSquare className="h-3.5 w-3.5" /> View Ticket
                                                                 </button>
                                                             ) : (
                                                                 <button
                                                                     onClick={() => router.push(`/${country}/help-center/support?orderId=${selectedOrderDetails.order_id.split('-')[0].toUpperCase()}`)}
-                                                                    className="flex-1 flex justify-center items-center gap-2 border border-[#E8E1D5] bg-white rounded-xl py-2.5 text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors shadow-sm"
+                                                                    className="flex-1 flex justify-center items-center gap-2 border border-gray-100 bg-white rounded-xl py-2.5 text-xs font-bold text-gray-900 hover:bg-gray-50 transition-colors shadow-sm"
                                                                 >
                                                                     <Mail className="h-3.5 w-3.5" /> Support
                                                                 </button>
@@ -2097,29 +2192,28 @@ export default function AccountPage() {
                                                     {(() => {
                                                         const ticket = enquiries.find(e => e._order_id === selectedOrderDetails.order_id && e._source === 'ticket');
                                                         return ticket ? (
-                                                            <div className="pt-6 border-t border-[#E8E1D5]">
-                                                                <h4 className="text-[11px] font-bold tracking-widest text-[#36453A] uppercase mb-4 flex items-center gap-2">
+                                                            <div className="pt-6 border-t border-gray-100">
+                                                                <h4 className="text-[11px] font-bold tracking-widest text-gray-900 uppercase mb-4 flex items-center gap-2">
                                                                     <MessageCircle className="h-3.5 w-3.5 text-[#D4A847]" /> Inquiry Correspondence
                                                                 </h4>
-                                                                <div className="rounded-2xl border border-[#E8E1D5] bg-[#F8F5F0]/30 p-4 space-y-3">
+                                                                <div className="rounded-3xl border border-gray-100 bg-gray-50/30 p-4 space-y-3">
                                                                     <div className="flex justify-between items-center">
-                                                                        <span className="text-[10px] font-bold text-[#36453A] uppercase">#{ticket._ticket_number || ticket.feedback_id.slice(0, 8)}</span>
-                                                                        <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
-                                                                            ticket.status === 'resolved' || ticket.status === 'closed' ? 'bg-green-100 text-green-700' :
+                                                                        <span className="text-[10px] font-bold text-gray-900 uppercase">#{ticket._ticket_number || ticket.feedback_id.slice(0, 8)}</span>
+                                                                        <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${ticket.status === 'resolved' || ticket.status === 'closed' ? 'bg-green-100 text-green-700' :
                                                                             ticket.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
-                                                                            'bg-amber-100 text-amber-700'
-                                                                        }`}>
+                                                                                'bg-amber-100 text-amber-700'
+                                                                            }`}>
                                                                             {ticket.status}
                                                                         </span>
                                                                     </div>
                                                                     <div className="relative">
-                                                                        <p className="text-xs text-[#36453A] line-clamp-2 italic leading-relaxed pl-3 border-l-2 border-[#D4A847]/40">
+                                                                        <p className="text-xs text-gray-900 line-clamp-2 italic leading-relaxed pl-3 border-l-2 border-[#91C934]/40">
                                                                             &quot;{ticket.message}&quot;
                                                                         </p>
                                                                     </div>
                                                                     <button
                                                                         onClick={() => router.push(`/${country}/help-center/support/${ticket._ticket_id}`)}
-                                                                        className="w-full text-[10px] font-black uppercase tracking-[0.1em] text-[#36453A] hover:text-black flex items-center justify-center gap-1.5 mt-2 py-2 rounded-lg bg-white/50 border border-white hover:border-[#E8E1D5] transition-all group"
+                                                                        className="w-full text-[10px] font-black uppercase tracking-[0.1em] text-gray-900 hover:text-black flex items-center justify-center gap-1.5 mt-2 py-2 rounded-lg bg-white/50 border border-white hover:border-gray-100 transition-all group"
                                                                     >
                                                                         Access All Messages <ChevronRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
                                                                     </button>
@@ -2129,29 +2223,12 @@ export default function AccountPage() {
                                                     })()}
 
                                                     <button
-                                                        className="w-full bg-[#36453A] text-white rounded-xl py-3 text-sm font-bold flex items-center justify-center gap-2 hover:bg-[#2A362D] transition-colors shadow-sm"
-                                                        onClick={async () => {
-                                                            const items = selectedOrderDetails.items || [];
-                                                            if (items.length === 0) {
-                                                                toast.error('No items found in this order.');
-                                                                return;
-                                                            }
-                                                            const toastId = toast.loading('Adding items to cart...');
-                                                            try {
-                                                                for (const item of items) {
-                                                                    const productId = item.product_id || item.product?.product_id;
-                                                                    const variantId = item.variant_id || item.variant?.variant_id || null;
-                                                                    if (productId) {
-                                                                        await addCartItem(productId, variantId, item.quantity || 1);
-                                                                    }
-                                                                }
-                                                                toast.success('All items added to cart!', { id: toastId });
-                                                            } catch {
-                                                                toast.error('Failed to add some items to cart.', { id: toastId });
-                                                            }
-                                                        }}
+                                                        className="w-full bg-[#91c934] text-white rounded-xl py-3 text-sm font-bold flex items-center justify-center gap-2 hover:bg-[#7ab52a] transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        onClick={() => handleReorder(selectedOrderDetails.order_id, selectedOrderDetails.items)}
+                                                        disabled={buyAgainLoading || reorderingOrderId === selectedOrderDetails.order_id}
                                                     >
-                                                        <ShoppingCart className="h-4 w-4" /> Buy These Items Again
+                                                        {reorderingOrderId === selectedOrderDetails.order_id ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingCart className="h-4 w-4" />}
+                                                        {reorderingOrderId === selectedOrderDetails.order_id ? 'Adding to Cart...' : 'Buy These Items Again'}
                                                     </button>
                                                 </div>
                                             </div>
@@ -2159,9 +2236,9 @@ export default function AccountPage() {
                                     ) : (
                                         <div className="hidden lg:block w-[400px] flex-shrink-0">
                                             {/* Empty detail state placeholder to preserve grid mapping */}
-                                            <div className="bg-[#F8F5F0] border-2 border-dashed border-[#E8E1D5] rounded-3xl h-[600px] flex flex-col items-center justify-center text-center p-8 opacity-70 sticky top-32">
+                                            <div className="bg-gray-50 border-2 border-dashed border-gray-100 rounded-[2rem] h-[600px] flex flex-col items-center justify-center text-center p-8 opacity-70 sticky top-32">
                                                 <Package className="h-12 w-12 text-warm-gray/30 mb-4" />
-                                                <h3 className="text-xl font-bold text-[#36453A] mb-2">Select an Order</h3>
+                                                <h3 className="text-xl font-bold text-gray-900 mb-2">Select an Order</h3>
                                                 <p className="text-sm text-warm-gray leading-relaxed">Choose an order from the list to view tracking, items, and billing details here.</p>
                                             </div>
                                         </div>
@@ -2173,7 +2250,7 @@ export default function AccountPage() {
                         {/* ─── Cancel Order Confirmation Modal ─── */}
                         {isMounted && cancellingOrderId && createPortal(
                             <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-                                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                                <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                                     <div className="p-6">
                                         <div className="flex items-center justify-between mb-4">
                                             <h3 className="text-xl font-bold text-charcoal">Cancel Order</h3>
@@ -2210,7 +2287,7 @@ export default function AccountPage() {
                         {/* ─── Verified Purchase Review Modal ─── */}
                         {reviewModal && (
                             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-                                <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
+                                <div className="bg-white rounded-3xl shadow-xl w-full max-w-lg overflow-hidden">
                                     <div className="h-1" style={{ background: 'linear-gradient(90deg, #10b981, #D4A847)' }} />
                                     <div className="p-6">
                                         <div className="flex items-center justify-between mb-4">
@@ -2250,17 +2327,17 @@ export default function AccountPage() {
                             <div className="max-w-[1200px] space-y-12 pb-16">
 
                                 {/* ── Sanctuary Header ── */}
-                                <div className="rounded-[40px] bg-[#F8F5F0] overflow-hidden relative shadow-sm border border-[#E8E1D5] py-16 px-12">
+                                <div className="rounded-[40px] bg-gray-50 overflow-hidden relative shadow-sm border border-gray-100 py-16 px-12">
                                     {/* Abstract background shapes matching mockup */}
                                     <div className="absolute top-0 right-0 w-[60%] h-full bg-white opacity-40 mix-blend-overlay rounded-bl-[100px] pointer-events-none -mr-12 -mt-12"></div>
                                     <div className="absolute bottom-0 left-[20%] w-[30%] h-[30%] bg-white opacity-30 mix-blend-overlay rounded-tr-[100px] pointer-events-none"></div>
 
                                     <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-12">
                                         <div className="max-w-xl">
-                                            <span className="inline-block bg-white border border-[#E8E1D5] rounded-full px-4 py-1.5 text-[10px] font-bold text-[#36453A] uppercase tracking-widest mb-6">
+                                            <span className="inline-block bg-white border border-gray-100 rounded-full px-4 py-1.5 text-[10px] font-bold text-gray-900 uppercase tracking-widest mb-6">
                                                 My Sanctuary
                                             </span>
-                                            <h2 className="text-5xl font-bold text-[#36453A] leading-tight mb-4">
+                                            <h2 className="text-5xl font-bold text-gray-900 leading-tight mb-4">
                                                 Your Personal Wellness <br className="hidden sm:block" /> Wishlist
                                             </h2>
                                             <p className="text-warm-gray text-base leading-relaxed">
@@ -2269,216 +2346,93 @@ export default function AccountPage() {
                                         </div>
 
                                         {/* Total Items Saved Card */}
-                                        <div className="bg-white rounded-3xl shadow-md border border-[#E8E1D5]/50 p-8 flex flex-col items-center justify-center min-w-[200px] relative z-20">
-                                            <div className="h-16 w-16 bg-[#F8F5F0] rounded-2xl flex items-center justify-center mb-4">
-                                                <Heart className="h-7 w-7 text-[#36453A]" />
+                                        <div className="bg-white rounded-[2rem] shadow-md border border-gray-100/50 p-8 flex flex-col items-center justify-center min-w-[200px] relative z-20">
+                                            <div className="h-16 w-16 bg-gray-50 rounded-3xl flex items-center justify-center mb-4">
+                                                <Heart className="h-7 w-7 text-gray-900" />
                                             </div>
-                                            <p className="text-4xl font-bold text-[#36453A] mb-1">{wishlistItems.length}</p>
+                                            <p className="text-4xl font-bold text-gray-900 mb-1">{wishlistItems.length}</p>
                                             <p className="text-[10px] font-bold text-warm-gray uppercase tracking-widest">TOTAL ITEMS SAVED</p>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* ── Actions Bar ── */}
-                                <div className="border-b border-[#E8E1D5] pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                    <div className="flex items-center gap-6">
-                                        <label className="flex items-center gap-3 cursor-pointer group">
-                                            <div className="relative flex items-center justify-center">
-                                                <input
-                                                    type="checkbox"
-                                                    className="peer appearance-none w-5 h-5 rounded-md border-2 border-[#E8E1D5] checked:bg-[#36453A] checked:border-[#36453A] transition-colors cursor-pointer"
-                                                    onChange={handleWishlistSelectAll}
-                                                    checked={wishlistItems.length > 0 && selectedWishlistItems.size === wishlistItems.length}
-                                                />
-                                                <Check className="absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100 pointer-events-none" />
-                                            </div>
-                                            <span className="text-sm font-bold text-[#36453A] group-hover:text-[#2A362D] transition-colors">Select All</span>
-                                        </label>
 
-                                        <div className="w-px h-5 bg-[#E8E1D5]"></div>
-
-                                        <button
-                                            onClick={handleAddSelectedToCart}
-                                            disabled={selectedWishlistItems.size === 0}
-                                            className="flex items-center gap-2 text-sm font-bold text-[#36453A] hover:text-[#2A362D] disabled:opacity-30 transition-colors"
-                                        >
-                                            <ShoppingCart className="h-4 w-4" /> Add Selected to Cart
-                                        </button>
-
-                                        <button
-                                            onClick={() => setConfirmingBulkRemove(true)}
-                                            disabled={selectedWishlistItems.size === 0}
-                                            className="flex items-center gap-2 text-sm font-bold text-warm-gray hover:text-red-500 disabled:opacity-30 transition-colors"
-                                        >
-                                            <Trash2 className="h-4 w-4" /> Remove
-                                        </button>
-                                    </div>
-
-                                    <div className="flex items-center gap-6 self-end sm:self-auto">
-                                        {/* View Toggles */}
-                                        <div className="flex items-center gap-2 border border-[#E8E1D5] rounded-full p-1 bg-white">
-                                            <button className="p-1.5 rounded-full bg-[#F8F5F0] text-[#36453A] shadow-sm"><LayoutGrid className="h-4 w-4" /></button>
-                                            <button className="p-1.5 rounded-full text-warm-gray hover:text-[#36453A]"><List className="h-4 w-4" /></button>
-                                        </div>
-
-                                        {/* Sort */}
-                                        <div className="flex items-center gap-3 bg-white border border-[#E8E1D5] rounded-full px-4 py-2">
-                                            <span className="text-[10px] font-bold text-warm-gray tracking-widest uppercase">SORT BY:</span>
-                                            <select
-                                                value={wishlistSort}
-                                                onChange={(e) => setWishlistSort(e.target.value)}
-                                                className="text-sm font-bold text-[#36453A] bg-transparent focus:outline-none appearance-none cursor-pointer pr-4 uppercase"
-                                            >
-                                                <option value="recently_added">Recently Added</option>
-                                                <option value="price_low">Price: Low to High</option>
-                                                <option value="price_high">Price: High to Low</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
 
                                 {wishlistLoading ? (
-                                    <div className="flex flex-col items-center justify-center py-24 rounded-[30px] border border-[#E8E1D5] bg-white">
-                                        <Loader2 className="h-10 w-10 text-[#36453A] animate-spin mb-4" />
-                                        <p className="text-xl font-bold text-[#36453A]">Opening your sanctuary...</p>
+                                    <div className="flex flex-col items-center justify-center py-24 rounded-[30px] border border-gray-100 bg-white">
+                                        <Loader2 className="h-10 w-10 text-gray-900 animate-spin mb-4" />
+                                        <p className="text-xl font-bold text-gray-900">Opening your sanctuary...</p>
                                     </div>
-                                ) : sortedWishlistItems.length === 0 ? (
-                                    <div className="rounded-[30px] border border-[#E8E1D5] bg-white py-24 text-center">
+                                ) : wishlistItems.length === 0 ? (
+                                    <div className="rounded-[30px] border border-gray-100 bg-white py-24 text-center">
                                         <Heart className="mx-auto h-16 w-16 text-warm-gray/30 mb-4" />
-                                        <p className="text-2xl font-bold text-[#36453A]">Your sanctuary is empty</p>
+                                        <p className="text-2xl font-bold text-gray-900">Your wishlist is empty</p>
                                         <p className="mt-2 text-warm-gray text-lg">{wishlistItems.length > 0 ? "No matches found for your current sort." : "Save your favorite organic rituals here."}</p>
                                         <button
-                                            onClick={() => router.push(`/${country}/shop`)}
-                                            className="mt-8 rounded-xl bg-[#36453A] px-10 py-3 text-sm font-bold text-white shadow-md hover:bg-[#2A362D] transition-all"
+                                            onClick={() => router.push(`/${country}`)}
+                                            className="mt-8 rounded-xl bg-[#91c934] px-10 py-3 text-sm font-bold text-white shadow-md hover:bg-[#7ab52a] transition-all"
                                         >
                                             Browse Shop
                                         </button>
                                     </div>
                                 ) : (
-                                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                                         {sortedWishlistItems.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((prod) => {
-                                            const product = prod;
-                                            const isSelected = selectedWishlistItems.has(product.product_id);
-                                            const stockStatus = (product.stock_status || '').toLowerCase();
-                                            const inStock = stockStatus === 'in_stock';
-
-
-                                            return (
-                                                <div key={product.product_id} className="group flex flex-col rounded-3xl border border-[#E8E1D5] bg-white p-4 transition-all hover:shadow-lg relative">
-                                                    {/* Individual Remove Button */}
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setConfirmingIndividualRemove(product.product_id);
-                                                        }}
-                                                        className="absolute top-6 right-6 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white text-warm-gray shadow-sm hover:text-red-500 hover:shadow-md transition-all border border-[#E8E1D5] opacity-0 group-hover:opacity-100"
-                                                        title="Remove from wishlist"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </button>
-
-                                                    {/* Checkbox Overlay */}
-                                                    <div className="absolute top-6 left-6 z-10">
-                                                        <div className="relative flex items-center justify-center">
-                                                            <input
-                                                                type="checkbox"
-                                                                className="peer appearance-none w-[22px] h-[22px] rounded-md bg-white border-2 border-white shadow-sm checked:bg-white checked:border-white transition-colors cursor-pointer"
-                                                                checked={isSelected}
-                                                                onChange={() => handleWishlistToggleItem(product.product_id)}
-                                                            />
-                                                            <div className="absolute inset-0 rounded-md border border-[#E8E1D5] peer-checked:border-white pointer-events-none"></div>
-                                                            <Check className="absolute h-3.5 w-3.5 text-[#36453A] opacity-0 peer-checked:opacity-100 pointer-events-none" strokeWidth={3} />
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Product Image */}
-                                                    <div className="aspect-[4/5] w-full rounded-2xl overflow-hidden bg-[#F8F5F0] mb-5 relative cursor-pointer" onClick={() => router.push(`/products/${product.slug || product.product_id}`)}>
-                                                        {product.image_url ? (
-                                                            // eslint-disable-next-line @next/next/no-img-element
-                                                            <img src={product.image_url} alt={product.product_name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                                                        ) : (
-                                                            <div className="flex h-full items-center justify-center text-warm-gray/30"><Package className="h-12 w-12" /></div>
-                                                        )}
-                                                    </div>
-
-                                                    {/* Details */}
-                                                    <div className="flex flex-col flex-1 px-1">
-                                                        <div className="flex items-start justify-between gap-3 mb-1">
-                                                            <h3 className="text-base font-bold text-[#36453A] leading-snug cursor-pointer hover:underline" onClick={() => router.push(`/products/${product.slug || product.product_id}`)}>
-                                                                {product.product_name}
-                                                            </h3>
-                                                            <span className="font-bold text-[#36453A] whitespace-nowrap">${product.price}</span>
-                                                        </div>
-                                                        <div className="flex items-center gap-1.5 mb-2 mt-auto">
-                                                            {/* Status labels removed as per request */}
-                                                        </div>
-
-                                                        {/* Action */}
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.preventDefault();
-                                                                addCartItem(product.product_id, null, 1);
-                                                                removeWishlistItem(product.product_id);
-                                                                toast.success('Moved to cart');
-                                                            }}
-                                                            disabled={!inStock}
-                                                            className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#36453A] py-3 text-sm font-bold text-white shadow-md hover:bg-[#2A362D] hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                                        >
-                                                            <ShoppingCart className="h-4 w-4" /> {inStock ? 'Add to Cart' : 'Out of Stock'}
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
+                                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                                        {wishlistItems.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((product) => (
+                                            <ProductCard
+                                                key={product.product_id}
+                                                product={product}
+                                                listName="Wishlist"
+                                            />
+                                        ))}
 
                                         {/* Find More Treasures Tile */}
-                                        <div className="group flex flex-col justify-center items-center rounded-3xl border-2 border-dashed border-[#E8E1D5] bg-white p-8 transition-all hover:bg-[#F8F5F0] hover:border-transparent text-center cursor-pointer min-h-[400px]">
-                                            <div className="h-12 w-12 rounded-full border-2 border-[#E8E1D5] flex items-center justify-center bg-white group-hover:border-[#36453A] group-hover:text-[#36453A] text-warm-gray transition-colors mb-6 shadow-sm">
+                                        <div
+                                            className="group flex flex-col justify-center items-center rounded-2xl border-2 border-dashed border-gray-100 bg-white p-6 transition-all hover:bg-gray-50 hover:border-transparent text-center cursor-pointer min-h-[320px]"
+                                            onClick={() => router.push(`/${country}`)}
+                                        >
+                                            <div className="h-12 w-12 rounded-full border-2 border-gray-100 flex items-center justify-center bg-white group-hover:border-[#91c934] group-hover:text-gray-900 text-warm-gray transition-colors mb-4 shadow-sm">
                                                 <Plus className="h-5 w-5" />
                                             </div>
-                                            <h3 className="text-xl font-bold text-[#36453A] mb-2">Find More Treasures</h3>
-                                            <p className="text-xs text-warm-gray leading-relaxed mb-6 max-w-[200px]">Continue exploring our organic collections.</p>
-                                            <button
-                                                onClick={() => router.push('/shop')}
-                                                className="rounded-xl border border-[#E8E1D5] px-6 py-2.5 text-xs font-bold text-[#36453A] group-hover:bg-white group-hover:shadow-sm transition-all bg-white"
-                                            >
+                                            <h3 className="text-base font-bold text-gray-900 mb-1">Find More</h3>
+                                            <p className="text-xs text-warm-gray leading-relaxed mb-4">Explore our collections.</p>
+                                            <span className="rounded-xl border border-gray-100 px-4 py-2 text-xs font-bold text-gray-900 group-hover:bg-white group-hover:shadow-sm transition-all bg-white">
                                                 Browse Shop
-                                            </button>
+                                            </span>
                                         </div>
                                     </div>
                                 )}
 
                                 {/* Wishlist Pagination Bottom */}
-                                {sortedWishlistItems.length > pageSize && (
-                                    <div className="flex items-center justify-between pt-6 border-t border-[#E8E1D5]">
+                                {wishlistItems.length > pageSize && (
+                                    <div className="flex items-center justify-between pt-6 border-t border-gray-100">
                                         <span className="text-sm font-medium text-warm-gray">
-                                            Showing <strong className="text-[#36453A]">
-                                                {Math.min((currentPage - 1) * pageSize + 1, sortedWishlistItems.length)}-{Math.min(currentPage * pageSize, sortedWishlistItems.length)}
-                                            </strong> of <strong className="text-[#36453A]">{sortedWishlistItems.length}</strong> items
+                                            Showing <strong className="text-gray-900">
+                                                {Math.min((currentPage - 1) * pageSize + 1, wishlistItems.length)}-{Math.min(currentPage * pageSize, wishlistItems.length)}
+                                            </strong> of <strong className="text-gray-900">{wishlistItems.length}</strong> items
                                         </span>
                                         <div className="flex items-center gap-2">
-                                            <button 
+                                            <button
                                                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                                 disabled={currentPage === 1}
-                                                className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === 1 ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-[#F8F5F0]'}`}
+                                                className={`px-4 py-2 text-sm font-bold rounded-xl border border-gray-100 transition-colors ${currentPage === 1 ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-gray-900 bg-white hover:bg-gray-50'}`}
                                             >
                                                 Previous
                                             </button>
-                                            
-                                            {Array.from({ length: Math.ceil(sortedWishlistItems.length / pageSize) }).map((_, i) => (
-                                                <button 
+
+                                            {Array.from({ length: Math.ceil(wishlistItems.length / pageSize) }).map((_, i) => (
+                                                <button
                                                     key={i}
                                                     onClick={() => setCurrentPage(i + 1)}
-                                                    className={`h-9 w-9 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center transition-all ${currentPage === i + 1 ? 'bg-[#36453A] text-white' : 'bg-white text-[#36453A] border border-[#E8E1D5] hover:bg-[#F8F5F0]'}`}
+                                                    className={`h-9 w-9 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center transition-all ${currentPage === i + 1 ? 'bg-[#91c934] text-white' : 'bg-white text-gray-900 border border-gray-100 hover:bg-gray-50'}`}
                                                 >
                                                     {i + 1}
                                                 </button>
                                             ))}
 
-                                            <button 
-                                                onClick={() => setCurrentPage(p => Math.min(Math.ceil(sortedWishlistItems.length / pageSize), p + 1))}
-                                                disabled={currentPage === Math.ceil(sortedWishlistItems.length / pageSize)}
-                                                className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === Math.ceil(sortedWishlistItems.length / pageSize) ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-[#F8F5F0]'}`}
+                                            <button
+                                                onClick={() => setCurrentPage(p => Math.min(Math.ceil(wishlistItems.length / pageSize), p + 1))}
+                                                disabled={currentPage === Math.ceil(wishlistItems.length / pageSize)}
+                                                className={`px-4 py-2 text-sm font-bold rounded-xl border border-gray-100 transition-colors ${currentPage === Math.ceil(wishlistItems.length / pageSize) ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-gray-900 bg-white hover:bg-gray-50'}`}
                                             >
                                                 Next
                                             </button>
@@ -2486,55 +2440,7 @@ export default function AccountPage() {
                                     </div>
                                 )}
 
-                                {/* ── Recommended Rituals ── */}
-                                {wishlistItems.length > 0 && (
-                                    <div className="pt-12 border-t border-[#E8E1D5]">
-                                        <div className="flex items-end justify-between mb-8">
-                                            <div>
-                                                <h3 className="text-2xl font-bold text-[#36453A] mb-1">Recommended Rituals</h3>
-                                                <p className="text-sm font-medium text-warm-gray">Based on your saved wellness essentials</p>
-                                            </div>
-                                            <button className="text-[11px] font-bold text-[#36453A] uppercase tracking-widest flex items-center gap-1 hover:opacity-70 transition-opacity">
-                                                See All Recommendations <ChevronRight className="h-3.5 w-3.5" />
-                                            </button>
-                                        </div>
 
-                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                                            {recommendedProducts.map(product => (
-                                                <div key={product.product_id} className="group relative flex flex-col rounded-[20px] bg-white transition-all hover:shadow-md cursor-pointer overflow-hidden p-2" onClick={() => router.push(`/products/${product.slug || product.product_id}`)}>
-                                                    {/* Product Image Box */}
-                                                    <div className="aspect-[4/5] w-full rounded-[14px] overflow-hidden bg-[#F8F5F0] relative">
-                                                        {product.images && product.images[0] ? (
-                                                            // eslint-disable-next-line @next/next/no-img-element
-                                                            <img src={product.images[0]} alt={product.product_name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                                                        ) : (
-                                                            <div className="flex h-full items-center justify-center text-warm-gray/30"><Package className="h-10 w-10" /></div>
-                                                        )}
-                                                        {/* Quick Add Plus Icon Overlay */}
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                addCartItem(product.product_id, null, 1);
-                                                                toast.success('Added to cart');
-                                                            }}
-                                                            className="absolute bottom-3 right-3 h-7 w-7 rounded-sm bg-[#36453A] text-white flex items-center justify-center shadow-md hover:bg-[#2A362D] transition-colors"
-                                                        >
-                                                            <Plus className="h-4 w-4" />
-                                                        </button>
-                                                    </div>
-
-                                                    {/* Details */}
-                                                    <div className="pt-3 px-1">
-                                                        <h4 className="text-[13px] font-bold text-[#36453A] leading-snug line-clamp-2 min-h-[38px]">
-                                                            {product.product_name}
-                                                        </h4>
-                                                        <p className="font-bold text-[#36453A] text-xs mt-1">${product.price}</p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
                             </div>
                         )}
 
@@ -2542,21 +2448,21 @@ export default function AccountPage() {
                         {activeTab === 'addresses' && (
                             <div className="max-w-[1200px] space-y-12 pb-16">
                                 {/* ── Rituals Header ── */}
-                                <div className="rounded-[40px] bg-[#F8F5F0] overflow-hidden relative shadow-sm border border-[#E8E1D5] py-16 px-12">
+                                <div className="rounded-[40px] bg-gray-50 overflow-hidden relative shadow-sm border border-gray-100 py-16 px-12">
                                     {/* Abstract background shapes matching sanctuary aesthetic */}
                                     <div className="absolute top-0 right-0 w-[60%] h-full bg-white opacity-40 mix-blend-overlay rounded-bl-[100px] pointer-events-none -mr-12 -mt-12" />
                                     <div className="absolute bottom-0 left-[20%] w-[30%] h-[30%] bg-white opacity-30 mix-blend-overlay rounded-tr-[100px] pointer-events-none" />
 
                                     <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-12">
                                         <div className="max-w-xl">
-                                            <span className="inline-block bg-white border border-[#E8E1D5] rounded-full px-4 py-1.5 text-[10px] font-bold text-[#36453A] uppercase tracking-widest mb-6">
-                                                Delivery Rituals
+                                            <span className="inline-block bg-white border border-[#91c934] rounded-full px-4 py-1.5 text-[10px] font-bold text-[#91c934] uppercase tracking-widest mb-6">
+                                                Manage Addresses
                                             </span>
-                                            <h2 className="text-5xl font-bold text-[#36453A] leading-tight mb-4">
-                                                Your Sacred <br className="hidden sm:block" /> Delivery Spaces
+                                            <h2 className="text-5xl font-bold text-gray-900 leading-tight mb-4">
+                                                Your Addresses
                                             </h2>
                                             <p className="text-warm-gray text-base leading-relaxed">
-                                                Manage the destinations for your wellness rituals. Each address is a point of connection for your Ayurvedic journey.
+                                                Manage the destinations for your orders.
                                             </p>
                                         </div>
 
@@ -2564,13 +2470,12 @@ export default function AccountPage() {
                                         {!showAddressForm && (
                                             <button
                                                 onClick={() => { resetAddressForm(); setShowAddressForm(true); }}
-                                                className="bg-white rounded-3xl shadow-md border border-[#E8E1D5]/50 p-8 flex flex-col items-center justify-center min-w-[200px] relative z-20 group hover:border-[#36453A]/30 transition-all hover:shadow-lg"
+                                                className="bg-white rounded-[2rem] shadow-md border border-gray-100/50 p-8 flex flex-col items-center justify-center min-w-[200px] relative z-20 group hover:border-[#91c934]/30 transition-all hover:shadow-lg"
                                             >
-                                                <div className="h-16 w-16 bg-[#F8F5F0] rounded-2xl flex items-center justify-center mb-4 group-hover:bg-[#36453A] transition-colors">
-                                                    <Plus className="h-7 w-7 text-[#36453A] group-hover:text-white transition-colors" />
+                                                <div className="h-16 w-16 bg-gray-50 rounded-3xl flex items-center justify-center mb-4 group-hover:bg-[#91c934] transition-colors">
+                                                    <Plus className="h-7 w-7 text-gray-900 group-hover:text-white transition-colors" />
                                                 </div>
-                                                <p className="text-xl font-bold text-[#36453A] mb-1">Add Ritual Space</p>
-                                                <p className="text-[10px] font-bold text-warm-gray uppercase tracking-widest">New Delivery Address</p>
+                                                <p className="text-xl font-bold text-gray-900 mb-1">Add New Address</p>
                                             </button>
                                         )}
                                     </div>
@@ -2579,137 +2484,160 @@ export default function AccountPage() {
                                 {/* Address Form (animated) */}
                                 {isMounted && showAddressForm && createPortal(
                                     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-                                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+                                        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
                                             <div className="px-6 py-4 border-b border-light-border flex items-center justify-between">
                                                 <h3 className="text-xl font-bold text-charcoal">
-                                                    {editingAddress ? 'Revise Sanctuary Path' : 'Enshrine New Sanctuary'}
+                                                    {editingAddress ? 'Edit Address' : 'Add New Address'}
                                                 </h3>
                                                 <button onClick={() => setShowAddressForm(false)} className="text-warm-gray hover:text-charcoal"><X size={20} /></button>
                                             </div>
-                                            <form onSubmit={handleAddressSubmit} className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                    <div className="md:col-span-2">
-                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Label (e.g., Home, Sanctuary)</label>
-                                                        <input
-                                                            type="text"
-                                                            required
-                                                            value={addressForm.label}
-                                                            onChange={e => setAddressForm({ ...addressForm, label: e.target.value })}
-                                                            placeholder="Home / Work / Temple"
-                                                            className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
-                                                        />
-                                                    </div>
-                                                    <div className="md:col-span-2">
-                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Path Line 1 (Street, Area)</label>
-                                                        <input
-                                                            type="text"
-                                                            required
-                                                            value={addressForm.address_line1}
-                                                            onChange={e => setAddressForm({ ...addressForm, address_line1: e.target.value })}
-                                                            className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
-                                                        />
-                                                    </div>
-                                                    <div className="md:col-span-2">
-                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Path Line 2 (Optional)</label>
-                                                        <input
-                                                            type="text"
-                                                            value={addressForm.address_line2}
-                                                            onChange={e => setAddressForm({ ...addressForm, address_line2: e.target.value })}
-                                                            className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Postal Code (Pincode)</label>
-                                                        <div className="relative">
+                                            <form onSubmit={handleAddressSubmit} className="flex flex-col flex-1 overflow-hidden">
+                                                <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <div className="md:col-span-2">
+                                                            <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Country</label>
+                                                            <Select
+                                                                options={countryOptions}
+                                                                styles={customSelectStyles}
+                                                                value={countryOptions.find(opt => opt.value === addressForm.country_code)}
+                                                                onChange={(opt: any) => setAddressForm({ ...addressForm, country: opt.name, country_code: opt.value })}
+                                                            />
+                                                        </div>
+                                                        <div className="md:col-span-2">
+                                                            <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Receiver's Name</label>
                                                             <input
                                                                 type="text"
                                                                 required
-                                                                value={addressForm.pincode}
-                                                                onChange={e => setAddressForm({ ...addressForm, pincode: e.target.value })}
+                                                                value={addressForm.full_name}
+                                                                onChange={e => setAddressForm({ ...addressForm, full_name: e.target.value })}
+                                                                placeholder="Name"
                                                                 className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
                                                             />
-                                                            {isLookupLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-burgundy" />}
                                                         </div>
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Sanctuary Domain (Country)</label>
-                                                        <Select
-                                                            options={countryOptions}
-                                                            styles={customSelectStyles}
-                                                            value={countryOptions.find(opt => opt.value === addressForm.country_code)}
-                                                            onChange={(opt: any) => setAddressForm({ ...addressForm, country: opt.name, country_code: opt.value })}
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">City</label>
-                                                        <input
-                                                            type="text"
-                                                            required
-                                                            value={addressForm.city}
-                                                            onChange={e => {
-                                                                setManualEdits(prev => ({ ...prev, city: true }));
-                                                                setAddressForm({ ...addressForm, city: e.target.value });
-                                                            }}
-                                                            className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Province (State)</label>
-                                                        <input
-                                                            type="text"
-                                                            required
-                                                            value={addressForm.state}
-                                                            onChange={e => {
-                                                                setManualEdits(prev => ({ ...prev, state: true }));
-                                                                setAddressForm({ ...addressForm, state: e.target.value });
-                                                            }}
-                                                            className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
-                                                        />
-                                                    </div>
-                                                    <div className="md:col-span-2">
-                                                        <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Commune Number (Phone)</label>
-                                                        <div className="flex gap-2">
-                                                            <div className="w-24 shrink-0">
+                                                        <div className="md:col-span-2">
+                                                            <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Phone Number</label>
+                                                            <div className="flex gap-2">
+                                                                <div className="w-24 shrink-0">
+                                                                    <input
+                                                                        type="text"
+                                                                        disabled
+                                                                        value={addressDialCode}
+                                                                        className="w-full bg-cream rounded-xl px-3 py-3 text-sm border-transparent text-charcoal/50"
+                                                                    />
+                                                                </div>
                                                                 <input
                                                                     type="text"
-                                                                    disabled
-                                                                    value={selectedCountryCode}
-                                                                    className="w-full bg-cream rounded-xl px-3 py-3 text-sm border-transparent text-charcoal/50"
+                                                                    required
+                                                                    maxLength={12}
+                                                                    value={addressForm.phone}
+                                                                    onChange={e => {
+                                                                        const val = e.target.value.replace(/\D/g, '');
+                                                                        setAddressForm({ ...addressForm, phone: val });
+                                                                        if (val.length > 0 && (val.length < 7 || val.length > 12)) {
+                                                                            setPhoneError('Must be 7-12 digits');
+                                                                        } else {
+                                                                            setPhoneError(null);
+                                                                        }
+                                                                    }}
+                                                                    className={`flex-1 bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent ${phoneError ? 'border-red-500/50 focus:border-red-500' : 'focus:border-burgundy/20'}`}
                                                                 />
                                                             </div>
+                                                            {phoneError && <p className="text-[10px] text-red-500 mt-1 ml-1 font-medium">{phoneError}</p>}
+                                                        </div>
+                                                        <div className="md:col-span-2">
+                                                            <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Path Line 1 (Street, Area)</label>
                                                             <input
                                                                 type="text"
                                                                 required
-                                                                value={addressForm.phone}
-                                                                onChange={e => setAddressForm({ ...addressForm, phone: e.target.value.replace(/\D/g, '') })}
-                                                                className="flex-1 bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
+                                                                value={addressForm.address_line1}
+                                                                onChange={e => setAddressForm({ ...addressForm, address_line1: e.target.value })}
+                                                                className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
+                                                            />
+                                                        </div>
+                                                        <div className="md:col-span-2">
+                                                            <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Path Line 2 (Optional)</label>
+                                                            <input
+                                                                type="text"
+                                                                value={addressForm.address_line2}
+                                                                onChange={e => setAddressForm({ ...addressForm, address_line2: e.target.value })}
+                                                                className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">{addressConfig.labels.postalCode}</label>
+                                                            <div className="relative">
+                                                                <input
+                                                                    type="text"
+                                                                    required
+                                                                    value={addressForm.pincode}
+                                                                    onChange={e => setAddressForm({ ...addressForm, pincode: e.target.value })}
+                                                                    className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
+                                                                />
+                                                                {isLookupLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-burgundy" />}
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">{addressConfig.labels.city}</label>
+                                                            <input
+                                                                type="text"
+                                                                required
+                                                                value={addressForm.city}
+                                                                onChange={e => {
+                                                                    setManualEdits(prev => ({ ...prev, city: true }));
+                                                                    setAddressForm({ ...addressForm, city: e.target.value });
+                                                                }}
+                                                                className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
+                                                            />
+                                                        </div>
+                                                        <div className="md:col-span-2">
+                                                            <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">{addressConfig.labels.state}</label>
+                                                            <input
+                                                                type="text"
+                                                                required
+                                                                value={addressForm.state}
+                                                                onChange={e => {
+                                                                    setManualEdits(prev => ({ ...prev, state: true }));
+                                                                    setAddressForm({ ...addressForm, state: e.target.value });
+                                                                }}
+                                                                className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
+                                                            />
+                                                        </div>
+                                                        <div className="md:col-span-2">
+                                                            <label className="block text-[11px] font-bold text-warm-gray tracking-widest uppercase mb-1.5 ml-1">Label (e.g., Home, Sanctuary)</label>
+                                                            <input
+                                                                type="text"
+                                                                required
+                                                                value={addressForm.label}
+                                                                onChange={e => setAddressForm({ ...addressForm, label: e.target.value })}
+                                                                placeholder="Home / Work / Temple"
+                                                                className="w-full bg-cream rounded-xl px-4 py-3 text-sm focus:outline-none border border-transparent focus:border-burgundy/20"
                                                             />
                                                         </div>
                                                     </div>
+                                                    <div className="flex items-center gap-2 pt-2 pb-2">
+                                                        <input
+                                                            type="checkbox"
+                                                            id="is_default"
+                                                            checked={addressForm.is_default}
+                                                            onChange={e => setAddressForm({ ...addressForm, is_default: e.target.checked })}
+                                                            className="w-4 h-4 rounded text-burgundy focus:ring-burgundy"
+                                                        />
+                                                        <label htmlFor="is_default" className="text-sm text-charcoal font-medium cursor-pointer select-none">Set as Principal Sanctuary (Default Address)</label>
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center gap-2 pt-2">
-                                                    <input
-                                                        type="checkbox"
-                                                        id="is_default"
-                                                        checked={addressForm.is_default}
-                                                        onChange={e => setAddressForm({ ...addressForm, is_default: e.target.checked })}
-                                                        className="w-4 h-4 rounded text-burgundy focus:ring-burgundy"
-                                                    />
-                                                    <label htmlFor="is_default" className="text-sm text-charcoal font-medium cursor-pointer select-none">Set as Principal Sanctuary (Default Address)</label>
-                                                </div>
-                                                <div className="flex gap-3 pt-4 sticky bottom-0 bg-white">
+                                                <div className="p-6 border-t border-light-border bg-gray-50 flex gap-3 shrink-0">
                                                     <button
                                                         type="button"
                                                         onClick={() => setShowAddressForm(false)}
-                                                        className="flex-1 py-3 text-sm font-semibold text-charcoal hover:bg-cream transition-colors rounded-xl border border-light-border"
+                                                        className="flex-1 py-3 text-sm font-semibold text-charcoal hover:bg-cream transition-colors rounded-xl border border-light-border bg-white"
                                                     >
                                                         Back
                                                     </button>
                                                     <button
                                                         type="submit"
-                                                        className="flex-1 py-3 text-sm font-semibold text-[#E8D5A3] bg-[#1C2B1A] hover:bg-[#2A3B28] transition-all rounded-xl shadow-lg border border-[#3A4B38]"
+                                                        className="flex-1 py-3 text-sm font-semibold text-white bg-[#91c934] hover:bg-[#7ab52a] transition-all rounded-xl shadow-lg border border-[#7ab52a]"
                                                     >
-                                                        {editingAddress ? 'Update Path' : 'Enshrine Path'}
+                                                        {editingAddress ? 'Save Changes' : 'Add Address'}
                                                     </button>
                                                 </div>
                                             </form>
@@ -2720,16 +2648,16 @@ export default function AccountPage() {
 
                                 {addressesLoading ? (
                                     <div className="flex justify-center py-24">
-                                        <Loader2 className="h-12 w-12 animate-spin text-[#36453A]" />
+                                        <Loader2 className="h-12 w-12 animate-spin text-gray-900" />
                                     </div>
                                 ) : addresses.length === 0 && !showAddressForm ? (
-                                    <div className="rounded-[30px] border border-[#E8E1D5] bg-white py-24 text-center">
+                                    <div className="rounded-[30px] border border-gray-100 bg-white py-24 text-center">
                                         <MapPin className="mx-auto h-16 w-16 text-warm-gray/30 mb-4" />
-                                        <p className="text-2xl font-bold text-[#36453A]">No saved rituals</p>
+                                        <p className="text-2xl font-bold text-gray-900">No saved rituals</p>
                                         <p className="mt-2 text-warm-gray text-lg">Define your first delivery space to begin your journey.</p>
                                         <button
                                             onClick={() => { resetAddressForm(); setShowAddressForm(true); }}
-                                            className="mt-8 rounded-xl bg-[#36453A] px-10 py-3 text-sm font-bold text-white shadow-md hover:bg-[#2A362D] transition-all"
+                                            className="mt-8 rounded-xl bg-[#91c934] px-10 py-3 text-sm font-bold text-white shadow-md hover:bg-[#7ab52a] transition-all"
                                         >
                                             <Plus className="inline h-4 w-4 mr-2" strokeWidth={3} /> Add Address
                                         </button>
@@ -2738,43 +2666,44 @@ export default function AccountPage() {
                                     <div className="grid gap-6 sm:grid-cols-2">
                                         {addresses.map(addr => (
                                             <div key={addr.address_id}
-                                                className={`group relative rounded-[24px] border bg-white p-6 transition-all hover:shadow-lg ${addr.is_default ? 'border-[#D4A847] ring-1 ring-[#D4A847]/20 shadow-sm' : 'border-[#E8E1D5]'}`}
+                                                className={`group relative rounded-[2rem] border bg-white p-6 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:-translate-y-1 ${addr.is_default ? 'border-[#91c934] ring-1 ring-[#91c934]/20 shadow-md' : 'border-gray-100 shadow-[0_2px_10px_rgb(0,0,0,0.02)]'}`}
                                             >
                                                 {/* Default badge */}
                                                 {addr.is_default && (
                                                     <div className="absolute -top-3 left-6 flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[10px] font-bold text-white shadow-md"
-                                                        style={{ background: 'linear-gradient(135deg, #36453A, #4A5D23)' }}>
-                                                        <Star className="h-3 w-3 fill-[#D4A847] text-[#D4A847]" /> PRIMARY RITUAL SPACE
+                                                        style={{ background: 'linear-gradient(135deg, #91c934, #7ab52a)' }}>
+                                                        <Star className="h-3 w-3 fill-[#FFD801] text-[#FFD801]" /> PRIMARY RITUAL SPACE
                                                     </div>
                                                 )}
 
                                                 <div className="flex justify-between items-start">
                                                     <div className="pt-2">
                                                         <div className="flex items-center gap-3 mb-4">
-                                                            <div className="h-10 w-10 rounded-xl bg-[#F8F5F0] flex items-center justify-center border border-[#E8E1D5]">
-                                                                <MapPin className="h-5 w-5 text-[#36453A]" />
+                                                            <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center border border-gray-100">
+                                                                <MapPin className="h-5 w-5 text-gray-900" />
                                                             </div>
                                                             {addr.label && (
-                                                                <span className="bg-[#36453A]/10 text-[#36453A] px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                                                                <span className="bg-[#91c934]/10 text-gray-900 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
                                                                     {addr.label}
                                                                 </span>
                                                             )}
                                                         </div>
                                                         <div className="space-y-1">
-                                                            <p className="text-base font-bold text-[#36453A] leading-tight">{addr.address_line1}</p>
+                                                            <p className="text-base font-bold text-gray-900 leading-tight">{addr.full_name}</p>
+                                                            <p className="text-sm text-warm-gray font-medium">{addr.address_line1}</p>
                                                             {addr.address_line2 && <p className="text-sm text-warm-gray font-medium">{addr.address_line2}</p>}
                                                             <p className="text-sm text-warm-gray font-medium tracking-wide">
                                                                 {addr.city}, {addr.state} {addr.pincode}
                                                             </p>
-                                                            {addr.country && addr.country !== 'India' && (
+                                                            {addr.country && (
                                                                 <p className="text-sm text-warm-gray font-medium">{addr.country}</p>
                                                             )}
                                                         </div>
 
                                                         {addr.phone && (
-                                                            <div className="mt-5 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#F8F5F0] border border-[#E8E1D5] w-fit">
+                                                            <div className="mt-5 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-100 w-fit">
                                                                 <Phone className="h-3 w-3 text-warm-gray" />
-                                                                <span className="text-xs font-bold text-[#36453A]">{addr.phone}</span>
+                                                                <span className="text-xs font-bold text-gray-900">{formatAddressPhone(addr.phone)}</span>
                                                             </div>
                                                         )}
                                                     </div>
@@ -2783,18 +2712,18 @@ export default function AccountPage() {
                                                         {!addr.is_default && (
                                                             <button onClick={() => handleSetDefault(addr)}
                                                                 title="Set as primary"
-                                                                className="h-9 w-9 flex items-center justify-center text-warm-gray hover:text-[#D4A847] transition-all bg-white rounded-xl border border-[#E8E1D5] hover:border-[#D4A847]/30 hover:shadow-sm">
+                                                                className="h-9 w-9 flex items-center justify-center text-warm-gray hover:text-[#91c934] transition-all bg-white rounded-xl border border-gray-100 hover:border-[#91c934]/30 hover:shadow-sm">
                                                                 <Star className="h-4 w-4" />
                                                             </button>
                                                         )}
                                                         <button onClick={() => startEditAddress(addr)}
                                                             title="Edit Details"
-                                                            className="h-9 w-9 flex items-center justify-center text-warm-gray hover:text-[#36453A] transition-all bg-white rounded-xl border border-[#E8E1D5] hover:border-[#36453A]/30 hover:shadow-sm">
+                                                            className="h-9 w-9 flex items-center justify-center text-warm-gray hover:text-gray-900 transition-all bg-white rounded-xl border border-gray-100 hover:border-[#91c934]/30 hover:shadow-sm">
                                                             <Pencil className="h-4 w-4" />
                                                         </button>
                                                         <button onClick={() => setDeletingAddressId(addr.address_id)}
                                                             title="Delete Space"
-                                                            className="h-9 w-9 flex items-center justify-center text-warm-gray hover:text-red-500 transition-all bg-white rounded-xl border border-[#E8E1D5] hover:border-red-200 hover:shadow-sm">
+                                                            className="h-9 w-9 flex items-center justify-center text-warm-gray hover:text-red-500 transition-all bg-white rounded-xl border border-gray-100 hover:border-red-200 hover:shadow-sm">
                                                             <Trash2 className="h-4 w-4" />
                                                         </button>
                                                     </div>
@@ -2810,9 +2739,9 @@ export default function AccountPage() {
                         {activeTab === 'profile' && (
                             <div className="max-w-[1000px] space-y-8 pb-12">
                                 {/* ── Top User Card ── */}
-                                <div className="rounded-3xl bg-white shadow-sm border border-[#E8E1D5] p-8 flex flex-col md:flex-row md:items-center justify-between gap-8 relative overflow-hidden">
+                                <div className="rounded-[2rem] bg-white shadow-sm border border-gray-100 p-8 flex flex-col md:flex-row md:items-center justify-between gap-8 relative overflow-hidden">
                                     <div className="absolute top-0 right-0 w-64 h-full pointer-events-none opacity-[0.03]">
-                                        <svg viewBox="0 0 100 100" className="w-full h-full text-[#36453A] fill-current">
+                                        <svg viewBox="0 0 100 100" className="w-full h-full text-gray-900 fill-current">
                                             <path d="M50 0C50 0 100 20 100 50C100 80 50 100 50 100C50 100 0 80 0 50C0 20 50 0 50 0Z" />
                                         </svg>
                                     </div>
@@ -2833,7 +2762,7 @@ export default function AccountPage() {
                                                         }}
                                                     />
                                                 ) : (
-                                                    <span className="text-3xl font-bold text-[#36453A]">
+                                                    <span className="text-3xl font-bold text-gray-900">
                                                         {user?.name?.charAt(0).toUpperCase()}
                                                     </span>
                                                 )}
@@ -2858,7 +2787,7 @@ export default function AccountPage() {
                                                 <button
                                                     onClick={() => fileInputRef.current?.click()}
                                                     disabled={imageUploading}
-                                                    className="h-8 w-8 rounded-full bg-[#36453A] text-white flex items-center justify-center shadow-md hover:bg-[#2A362D] transition-transform hover:scale-110 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#36453A]/30"
+                                                    className="h-8 w-8 rounded-full bg-[#91c934] text-white flex items-center justify-center shadow-md hover:bg-[#7ab52a] transition-transform hover:scale-110 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#91c934]/30"
                                                     title="Upload Photo"
                                                 >
                                                     <Camera className="h-3.5 w-3.5" />
@@ -2867,7 +2796,7 @@ export default function AccountPage() {
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-3 mb-1">
-                                                <h2 className="text-3xl font-bold text-[#36453A]">{profileData.full_name || user?.name}</h2>
+                                                <h2 className="text-3xl font-bold text-gray-900">{profileData.full_name || user?.name}</h2>
                                                 <span className="bg-[#D4A847]/20 text-[#B38720] text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
                                                     Lifetime Member
                                                 </span>
@@ -2877,18 +2806,18 @@ export default function AccountPage() {
                                     </div>
                                     <div className="flex items-center gap-8 relative z-10">
                                         <div className="text-center">
-                                            <p className="text-3xl font-bold text-[#36453A] mb-1">{orderCount}</p>
+                                            <p className="text-3xl font-bold text-gray-900 mb-1">{orderCount}</p>
                                             <p className="text-[10px] font-bold text-warm-gray tracking-widest uppercase">Rituals Done</p>
                                         </div>
-                                        <div className="w-px h-12 bg-[#E8E1D5]"></div>
+                                        <div className="w-px h-12 bg-gray-200"></div>
                                         <div className="text-center">
-                                            <p className="text-3xl font-bold text-[#36453A] mb-1">{reviewsCount}</p>
+                                            <p className="text-3xl font-bold text-gray-900 mb-1">{reviewsCount}</p>
                                             <p className="text-[10px] font-bold text-warm-gray tracking-widest uppercase">Soulful Reviews</p>
                                         </div>
-                                        <div className="w-px h-12 bg-[#E8E1D5]"></div>
+                                        <div className="w-px h-12 bg-gray-200"></div>
                                         <div className="text-center">
-                                            <p className="text-3xl font-bold text-[#D4A847] mb-1">{activePoints}</p>
-                                            <p className="text-[10px] font-bold text-[#D4A847]/70 tracking-widest uppercase flex items-center gap-1 justify-center">
+                                            <p className="text-3xl font-bold text-[#FFD801] mb-1">{activePoints}</p>
+                                            <p className="text-[10px] font-bold text-[#FFD801] tracking-widest uppercase flex items-center gap-1 justify-center">
                                                 <Star className="h-2.5 w-2.5" /> Seed Points
                                             </p>
                                         </div>
@@ -2901,22 +2830,22 @@ export default function AccountPage() {
                                     {/* Left Column (Forms) */}
                                     <div className="lg:col-span-2 space-y-8">
                                         {/* Personal Essence */}
-                                        <section className="bg-white rounded-3xl p-8 border border-[#E8E1D5] shadow-sm relative overflow-hidden">
-                                            <div className="absolute top-0 right-0 w-32 h-32 bg-[#F8F5F0] rounded-bl-full opacity-50 pointer-events-none"></div>
-                                            <h3 className="text-xl font-bold text-[#36453A] mb-6 flex items-center gap-2">
-                                                <span className="w-1.5 h-6 bg-[#36453A] rounded-full inline-block"></span>
+                                        <section className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm relative overflow-hidden">
+                                            <div className="absolute top-0 right-0 w-32 h-32 bg-gray-50 rounded-bl-full opacity-50 pointer-events-none"></div>
+                                            <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                                                <span className="w-1.5 h-6 bg-[#91c934] rounded-full inline-block"></span>
                                                 Personal Essence
                                             </h3>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
                                                 <div>
                                                     <label className="block flex items-center gap-1.5 text-[11px] font-bold text-warm-gray uppercase tracking-widest mb-2"><User className="h-3 w-3" /> Full Identity</label>
                                                     <input type="text" value={profileData.full_name} onChange={e => setProfileData({ ...profileData, full_name: e.target.value })}
-                                                        className="w-full bg-[#F8F5F0] border border-[#E8E1D5] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#36453A] focus:ring-1 focus:ring-[#36453A]/20 transition-all font-medium text-[#36453A]" />
+                                                        className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#91c934] focus:ring-1 focus:ring-[#91c934]/20 transition-all font-medium text-gray-900" />
                                                 </div>
                                                 <div>
                                                     <label className="block flex items-center gap-1.5 text-[11px] font-bold text-warm-gray uppercase tracking-widest mb-2"><Mail className="h-3 w-3" /> Soulful Mail</label>
                                                     <input type="email" value={profileData.email} onChange={e => setProfileData({ ...profileData, email: e.target.value })}
-                                                        className="w-full bg-[#F8F5F0] border border-[#E8E1D5] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#36453A] focus:ring-1 focus:ring-[#36453A]/20 transition-all font-medium text-[#36453A]" />
+                                                        className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#91c934] focus:ring-1 focus:ring-[#91c934]/20 transition-all font-medium text-gray-900" />
                                                 </div>
                                                 <div>
                                                     <label className="block flex items-center gap-1.5 text-[11px] font-bold text-warm-gray uppercase tracking-widest mb-2"><Phone className="h-3 w-3" /> Mobile Number</label>
@@ -2953,7 +2882,7 @@ export default function AccountPage() {
                                                                     setProfileData({ ...profileData, phone: val });
                                                                 }}
                                                                 placeholder="98765 43210"
-                                                                className="w-full bg-[#F8F5F0] border border-[#E8E1D5] rounded-xl px-4 py-[9px] text-sm focus:outline-none focus:border-[#36453A] focus:ring-1 focus:ring-[#36453A]/20 transition-all font-medium text-[#36453A]" />
+                                                                className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-[9px] text-sm focus:outline-none focus:border-[#91c934] focus:ring-1 focus:ring-[#91c934]/20 transition-all font-medium text-gray-900" />
                                                         </div>
                                                     </div>
                                                 </div>
@@ -2961,7 +2890,7 @@ export default function AccountPage() {
                                                     <label className="block flex items-center gap-1.5 text-[11px] font-bold text-warm-gray uppercase tracking-widest mb-2"><Calendar className="h-3 w-3" /> Date of Birth</label>
                                                     <input type="date" value={profileData.date_of_birth} onChange={e => setProfileData({ ...profileData, date_of_birth: e.target.value })}
                                                         max={new Date().toISOString().split("T")[0]}
-                                                        className="w-full bg-[#F8F5F0] border border-[#E8E1D5] rounded-xl px-4 py-[9px] text-sm focus:outline-none focus:border-[#36453A] focus:ring-1 focus:ring-[#36453A]/20 transition-all font-medium text-[#36453A] min-h-[44px]" />
+                                                        className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-[9px] text-sm focus:outline-none focus:border-[#91c934] focus:ring-1 focus:ring-[#91c934]/20 transition-all font-medium text-gray-900 min-h-[44px]" />
                                                 </div>
                                                 <div className="md:col-span-2">
                                                     <label className="block flex items-center gap-1.5 text-[11px] font-bold text-warm-gray uppercase tracking-widest mb-2"><MapPin className="h-3 w-3" /> Current Location</label>
@@ -2973,7 +2902,7 @@ export default function AccountPage() {
                                                                 const addr = addresses.find(a => a.is_default) || addresses[0];
                                                                 return addr ? `${addr.city}, ${addr.state}, ${addr.country} - ${addr.pincode}` : 'No Address Added';
                                                             })()}
-                                                            className="w-full bg-[#F8F5F0] border border-[#E8E1D5] rounded-xl px-4 py-3 text-sm focus:outline-none transition-all font-medium text-warm-gray cursor-not-allowed"
+                                                            className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm focus:outline-none transition-all font-medium text-warm-gray cursor-not-allowed"
                                                             title="Location is derived from your Default Delivery Address"
                                                         />
                                                     </div>
@@ -2984,16 +2913,16 @@ export default function AccountPage() {
                                         {/* Security Sanctuary & Notification Harmony Row */}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                             {/* Security Sanctuary */}
-                                            <section className="bg-white rounded-3xl p-8 border border-[#E8E1D5] shadow-sm relative overflow-hidden">
-                                                <div className="absolute top-0 right-0 w-24 h-24 bg-[#F8F5F0] rounded-bl-full opacity-50 pointer-events-none"></div>
-                                                <h3 className="text-xl font-bold text-[#36453A] mb-4 flex items-center gap-2">
-                                                    <span className="w-1.5 h-6 bg-[#36453A] rounded-full inline-block"></span>
+                                            <section className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm relative overflow-hidden">
+                                                <div className="absolute top-0 right-0 w-24 h-24 bg-gray-50 rounded-bl-full opacity-50 pointer-events-none"></div>
+                                                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                                    <span className="w-1.5 h-6 bg-[#91c934] rounded-full inline-block"></span>
                                                     Security Sanctuary
                                                 </h3>
                                                 <p className="text-sm text-warm-gray mb-6 leading-relaxed">Protect your inner sanctum with a strong, mindful password.</p>
                                                 <button
                                                     onClick={() => setShowPasswordModal(true)}
-                                                    className="w-full rounded-xl border border-[#E8E1D5] py-3.5 text-sm font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors flex items-center justify-center gap-2 mb-2"
+                                                    className="w-full rounded-xl border border-gray-100 py-3.5 text-sm font-bold text-gray-900 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 mb-2"
                                                 >
                                                     {profileData.has_password ? 'Modify Access Password' : 'Set Access Password'} <ChevronRight className="h-4 w-4" />
                                                 </button>
@@ -3001,16 +2930,16 @@ export default function AccountPage() {
                                             </section>
 
                                             {/* Notification Harmony */}
-                                            <section className="bg-white rounded-3xl p-8 border border-[#E8E1D5] shadow-sm relative overflow-hidden group hover:border-[#36453A] transition-all duration-300">
-                                                <div className="absolute top-0 right-0 w-24 h-24 bg-[#F8F5F0] rounded-bl-full opacity-50 pointer-events-none group-hover:bg-[#E7F0E9] transition-colors"></div>
-                                                <h3 className="text-xl font-bold text-[#36453A] mb-4 flex items-center gap-2">
-                                                    <span className="w-1.5 h-6 bg-[#36453A] rounded-full inline-block"></span>
+                                            <section className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm relative overflow-hidden group hover:border-[#91c934] transition-all duration-300">
+                                                <div className="absolute top-0 right-0 w-24 h-24 bg-gray-50 rounded-bl-full opacity-50 pointer-events-none group-hover:bg-[#f0fdf4] transition-colors"></div>
+                                                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                                    <span className="w-1.5 h-6 bg-[#91c934] rounded-full inline-block"></span>
                                                     Notification Harmony
                                                 </h3>
                                                 <p className="text-sm text-warm-gray mb-6 leading-relaxed">Tune your alerts and stay synchronous with your wellness journey.</p>
                                                 <button
                                                     onClick={() => setShowNotificationModal(true)}
-                                                    className="w-full rounded-xl border border-[#E8E1D5] py-3.5 text-sm font-bold text-[#36453A] hover:bg-[#F8F5F0] hover:border-[#36453A]/30 transition-all flex items-center justify-center gap-2 group-hover:shadow-sm"
+                                                    className="w-full rounded-xl border border-gray-100 py-3.5 text-sm font-bold text-gray-900 hover:bg-gray-50 hover:border-[#91c934]/30 transition-all flex items-center justify-center gap-2 group-hover:shadow-sm"
                                                 >
                                                     <BellRing className="h-4 w-4" /> Manage Notifications <ChevronRight className="h-4 w-4" />
                                                 </button>
@@ -3022,31 +2951,31 @@ export default function AccountPage() {
                                     <div className="space-y-8">
 
                                         {/* Actions */}
-                                        <div className="bg-white rounded-3xl p-6 border border-[#E8E1D5] shadow-sm text-center">
+                                        <div className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] text-center">
                                             <button
                                                 disabled={profileSaving}
                                                 onClick={handleProfileSave}
-                                                className="w-full bg-[#36453A] text-white rounded-xl py-4 text-sm font-bold shadow-md hover:bg-[#2A362D] hover:shadow-lg transition-all flex items-center justify-center gap-2 mb-4"
+                                                className="w-full bg-[#91c934] text-white rounded-xl py-4 text-sm font-bold shadow-md hover:bg-[#7ab52a] hover:shadow-lg transition-all flex items-center justify-center gap-2 mb-4"
                                             >
                                                 {profileSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                                                 SAVE ALL CHANGES
                                             </button>
                                             <button
                                                 onClick={() => { fetchProfile(); toast.success('Modifications discarded'); }}
-                                                className="text-xs font-bold text-warm-gray hover:text-[#36453A] transition-colors border-b border-warm-gray/30 pb-0.5 hover:border-[#36453A]"
+                                                className="text-xs font-bold text-warm-gray hover:text-gray-900 transition-colors border-b border-warm-gray/30 pb-0.5 hover:border-[#91c934]"
                                             >
                                                 Discard Modifications
                                             </button>
                                         </div>
 
                                         {/* Active Plan / Loyalty Status */}
-                                        <div className="bg-[#1A2E1A] rounded-3xl p-6 text-white relative overflow-hidden shadow-lg border border-[#D4A847]/30 group hover:border-[#D4A847] transition-all duration-500">
+                                        <div className="bg-[#83BD2E] rounded-[2rem] p-6 text-white relative overflow-hidden shadow-lg border border-[#91C934]/30 group hover:border-[#91C934] transition-all duration-500">
                                             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                                                 <Star className="h-16 w-16 text-[#D4A847]" />
                                             </div>
-                                            <p className="text-[10px] font-bold tracking-[0.2em] text-[#D4A847]/60 mb-2 uppercase">ACTIVE PLAN</p>
-                                            <h3 className="text-2xl font-bold text-[#D4A847] mb-2">{activeTier} Ritualist</h3>
-                                            <p className="text-sm text-white/70 leading-relaxed mb-6">
+                                            <p className="text-[10px] font-bold tracking-[0.2em] text-white mb-2 uppercase">ACTIVE PLAN</p>
+                                            <h3 className="text-2xl font-bold text-[#FFD801] mb-2">{activeTier} Ritualist</h3>
+                                            <p className="text-sm text-white leading-relaxed mb-6">
                                                 {loyaltyData?.tier?.benefits && Array.isArray(loyaltyData?.tier?.benefits) && loyaltyData?.tier?.benefits.length > 0
                                                     ? loyaltyData?.tier?.benefits.join(', ')
                                                     : "Enhance your aura with every ritual to unlock exotic benefits and golden boons."
@@ -3054,20 +2983,20 @@ export default function AccountPage() {
                                             </p>
                                             <button
                                                 onClick={() => router.push(`/${country}/account/wallet`)}
-                                                className="w-full rounded-xl bg-[#D4A847] text-[#1A2E1A] py-3 text-sm font-bold hover:bg-white transition-all transform active:scale-95 shadow-lg"
+                                                className="w-full rounded-xl bg-[#FFD801] text-[#1f2937] py-3 text-sm font-bold hover:bg-[#FFD801]/80 transition-all transform active:scale-95 shadow-lg"
                                             >
                                                 Manage Rewards
                                             </button>
                                         </div>
 
                                         {/* Account Status */}
-                                        <div className="bg-white rounded-3xl p-6 border border-[#E8E1D5] shadow-sm">
+                                        <div className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)]">
                                             <p className="text-[10px] font-bold tracking-widest text-warm-gray mb-4">ACCOUNT STATUS</p>
                                             <div className="space-y-4 mb-6">
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-2">
-                                                        <Mail className="h-4 w-4 text-[#36453A]" />
-                                                        <span className="text-sm font-medium text-[#36453A]">Email</span>
+                                                        <Mail className="h-4 w-4 text-gray-900" />
+                                                        <span className="text-sm font-medium text-gray-900">Email</span>
                                                     </div>
                                                     {profileData.is_email_verified ? (
                                                         <span className="text-xs font-bold text-green-600 bg-green-50 px-2.5 py-1 rounded-full flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Verified</span>
@@ -3077,8 +3006,8 @@ export default function AccountPage() {
                                                 </div>
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-2">
-                                                        <Phone className="h-4 w-4 text-[#36453A]" />
-                                                        <span className="text-sm font-medium text-[#36453A]">Mobile</span>
+                                                        <Phone className="h-4 w-4 text-gray-900" />
+                                                        <span className="text-sm font-medium text-gray-900">Mobile</span>
                                                     </div>
                                                     {profileData.is_mobile_verified ? (
                                                         <span className="text-xs font-bold text-green-600 bg-green-50 px-2.5 py-1 rounded-full flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Verified</span>
@@ -3087,7 +3016,7 @@ export default function AccountPage() {
                                                     )}
                                                 </div>
                                             </div>
-                                            <div className="border-t border-[#E8E1D5] pt-5">
+                                            <div className="border-t border-gray-100 pt-5">
                                                 <button
                                                     onClick={() => { setDeactivatePassword(''); setShowDeactivateModal(true); }}
                                                     className="w-full flex items-center justify-center gap-2 text-sm font-bold text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl py-3 transition-colors"
@@ -3107,18 +3036,18 @@ export default function AccountPage() {
                             <div className="flex flex-col gap-6 w-full max-w-[1100px] mx-auto animate-fadeIn pb-12">
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-4">
-                                        <div className="h-12 w-12 rounded-xl bg-white border border-[#E8E1D5] flex items-center justify-center shadow-sm">
-                                            <MessageSquare className="h-6 w-6 text-[#36453A]" />
+                                        <div className="h-12 w-12 rounded-xl bg-white border border-gray-100 flex items-center justify-center shadow-sm">
+                                            <MessageSquare className="h-6 w-6 text-gray-900" />
                                         </div>
                                         <div>
-                                            <h1 className="text-3xl font-bold text-[#36453A]">Support & Enquiries</h1>
+                                            <h1 className="text-3xl font-bold text-gray-900">Support & Enquiries</h1>
                                             <p className="text-sm text-warm-gray">View and manage your support tickets and enquiries</p>
                                         </div>
                                     </div>
                                     {selectedEnquiry && (
                                         <button
                                             onClick={() => setSelectedEnquiry(null)}
-                                            className="px-4 py-2 bg-white border border-[#E8E1D5] rounded-xl text-sm font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors"
+                                            className="px-4 py-2 bg-white border border-gray-100 rounded-xl text-sm font-bold text-gray-900 hover:bg-gray-50 transition-colors"
                                         >
                                             Back to List
                                         </button>
@@ -3131,23 +3060,23 @@ export default function AccountPage() {
                                         {/* Main Conversation Area */}
                                         <div className="space-y-6">
                                             {/* Original Issue Card */}
-                                            <div className="bg-white rounded-3xl border border-[#E8E1D5] shadow-sm overflow-hidden">
-                                                <div className="p-6 md:p-8 bg-[#36453A]/5 border-b border-[#E8E1D5]">
+                                            <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
+                                                <div className="p-6 md:p-8 bg-[#91c934]/5 border-b border-gray-100">
                                                     <div className="flex items-start justify-between gap-4 mb-4">
                                                         <div>
                                                             <div className="flex items-center gap-2 mb-1">
-                                                                <span className="text-[10px] uppercase font-bold tracking-widest text-[#36453A]/60">{selectedEnquiry.type || 'Inquiry'}</span>
-                                                                <span className="h-1 w-1 rounded-full bg-[#E8E1D5]"></span>
+                                                                <span className="text-[10px] uppercase font-bold tracking-widest text-gray-900/60">{selectedEnquiry.type || 'Inquiry'}</span>
+                                                                <span className="h-1 w-1 rounded-full bg-gray-200"></span>
                                                                 <span className="text-[10px] font-bold text-warm-gray uppercase tracking-widest">{new Date(selectedEnquiry.created_at).toLocaleDateString()}</span>
                                                             </div>
-                                                            <h2 className="text-2xl font-bold text-[#36453A] capitalize">{selectedEnquiry.subject || 'No Subject'}</h2>
+                                                            <h2 className="text-2xl font-bold text-gray-900 capitalize">{selectedEnquiry.subject || 'No Subject'}</h2>
                                                         </div>
                                                         <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${selectedEnquiry.status === 'resolved' ? 'bg-green-100 text-green-700' : 'bg-[#D4A847]/20 text-[#B38720]'
                                                             }`}>
                                                             {selectedEnquiry.status || 'Pending'}
                                                         </span>
                                                     </div>
-                                                    <div className="prose prose-sm max-w-none text-[#36453A] leading-relaxed">
+                                                    <div className="prose prose-sm max-w-none text-gray-900 leading-relaxed">
                                                         <p className="whitespace-pre-wrap">{selectedEnquiry.message}</p>
                                                     </div>
                                                 </div>
@@ -3156,37 +3085,37 @@ export default function AccountPage() {
                                                 <div className="p-6 md:p-8 space-y-8">
                                                     <div className="space-y-8 relative">
                                                         {/* Vertical Timeline Line */}
-                                                        <div className="absolute left-[19px] top-4 bottom-4 w-0.5 bg-[#E8E1D5] hidden md:block"></div>
+                                                        <div className="absolute left-[19px] top-4 bottom-4 w-0.5 bg-gray-200 hidden md:block"></div>
 
                                                         {(!selectedEnquiry.replies || selectedEnquiry.replies.length === 0) ? (
                                                             <div className="text-center py-10">
-                                                                <div className="h-16 w-16 rounded-full bg-[#F8F5F0] flex items-center justify-center mx-auto mb-4 border border-[#E8E1D5]">
+                                                                <div className="h-16 w-16 rounded-full bg-white flex items-center justify-center mx-auto mb-4 border border-gray-100">
                                                                     <Clock className="h-8 w-8 text-warm-gray" />
                                                                 </div>
-                                                                <p className="text-sm font-bold text-[#36453A]">Awaiting Admin Response</p>
+                                                                <p className="text-sm font-bold text-gray-900">Awaiting Admin Response</p>
                                                                 <p className="text-xs text-warm-gray mt-1 max-w-[240px] mx-auto leading-relaxed">Our support team has received your enquiry and will respond within 24-48 hours.</p>
                                                             </div>
                                                         ) : (
                                                             selectedEnquiry.replies.map((reply: any, idx: number) => (
                                                                 <div key={idx} className={`relative flex flex-col md:flex-row gap-4 items-start ${reply.author_type === 'admin' ? 'justify-start' : 'justify-end md:flex-row-reverse'}`}>
                                                                     {/* Avatar or Icon */}
-                                                                    <div className={`h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0 z-10 border-2 border-white shadow-sm ${reply.author_type === 'admin' ? 'bg-[#36453A] text-white' : 'bg-[#D4A847] text-white'}`}>
+                                                                    <div className={`h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0 z-10 border-2 border-white shadow-sm ${reply.author_type === 'admin' ? 'bg-[#91c934] text-white' : 'bg-[#D4A847] text-white'}`}>
                                                                         {reply.author_type === 'admin' ? <Shield className="h-5 w-5" /> : <User2 className="h-5 w-5" />}
                                                                     </div>
 
-                                                                    <div className={`flex-1 w-full p-5 rounded-2xl border ${reply.author_type === 'admin'
-                                                                        ? 'bg-[#F8F5F0] border-[#E8E1D5] rounded-tl-none'
-                                                                        : 'bg-white border-[#E8E1D5] rounded-tr-none'
+                                                                    <div className={`flex-1 w-full p-5 rounded-3xl border ${reply.author_type === 'admin'
+                                                                        ? 'bg-gray-50 border-gray-100 rounded-tl-none'
+                                                                        : 'bg-white border-gray-100 rounded-tr-none'
                                                                         }`}>
                                                                         <div className="flex items-center justify-between gap-4 mb-2">
-                                                                            <span className="text-[10px] font-bold text-[#36453A] uppercase tracking-widest">
+                                                                            <span className="text-[10px] font-bold text-gray-900 uppercase tracking-widest">
                                                                                 {reply.author_type === 'admin' ? 'Support Specialist' : 'You'}
                                                                             </span>
                                                                             <span className="text-[10px] font-medium text-warm-gray">
                                                                                 {new Date(reply.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
                                                                             </span>
                                                                         </div>
-                                                                        <div className="text-sm text-[#36453A] leading-relaxed whitespace-pre-wrap">
+                                                                        <div className="text-sm text-gray-900 leading-relaxed whitespace-pre-wrap">
                                                                             {reply.message}
                                                                         </div>
                                                                     </div>
@@ -3197,19 +3126,19 @@ export default function AccountPage() {
 
                                                     {/* User Reply Box (Continuous Chatting) */}
                                                     {selectedEnquiry.status !== 'resolved' && selectedEnquiry.status !== 'dismissed' && (
-                                                        <div className="mt-8 pt-8 border-t border-[#F8F5F0]">
+                                                        <div className="mt-8 pt-8 border-t border-gray-100">
                                                             <div className="relative">
                                                                 <textarea
                                                                     value={enquiryReplyText}
                                                                     onChange={(e) => setEnquiryReplyText(e.target.value)}
                                                                     placeholder="Type your message here..."
-                                                                    className="w-full min-h-[120px] p-5 bg-[#F8F5F0] border border-[#E8E1D5] rounded-2xl text-sm focus:outline-none focus:border-[#D4A847]/40 transition-all resize-none placeholder:text-warm-gray/60"
+                                                                    className="w-full min-h-[120px] p-5 bg-gray-50 border border-gray-100 rounded-3xl text-sm focus:outline-none focus:border-[#91C934]/40 transition-all resize-none placeholder:text-warm-gray/60"
                                                                 />
                                                                 <div className="absolute bottom-4 right-4 flex items-center gap-3">
                                                                     <button
                                                                         onClick={handleSendEnquiryReply}
                                                                         disabled={isSendingEnquiryReply || !enquiryReplyText.trim()}
-                                                                        className="bg-[#36453A] text-white p-3 rounded-xl hover:bg-[#2A362D] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md group"
+                                                                        className="bg-[#91c934] text-white p-3 rounded-xl hover:bg-[#7ab52a] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md group"
                                                                     >
                                                                         <Send className={`h-5 w-5 transition-transform ${isSendingEnquiryReply ? 'animate-pulse' : 'group-hover:translate-x-0.5 group-hover:-translate-y-0.5'}`} />
                                                                     </button>
@@ -3222,7 +3151,7 @@ export default function AccountPage() {
                                             </div>
 
                                             {/* Quick Actions Card */}
-                                            <div className="bg-[#36453A] rounded-3xl p-8 text-white relative overflow-hidden shadow-lg">
+                                            <div className="bg-[#91c934] rounded-[2rem] p-8 text-white relative overflow-hidden shadow-lg">
                                                 <div className="absolute top-0 right-0 p-6 opacity-10">
                                                     <MessageCircle className="h-20 w-20" />
                                                 </div>
@@ -3233,7 +3162,7 @@ export default function AccountPage() {
                                                     </div>
                                                     <button
                                                         onClick={() => router.push(`/${country}/help-center/support`)}
-                                                        className="bg-[#D4A847] text-[#36453A] px-8 py-3 rounded-xl text-sm font-bold shadow-md hover:bg-[#B38720] transition-colors whitespace-nowrap"
+                                                        className="bg-[#D4A847] text-gray-900 px-8 py-3 rounded-xl text-sm font-bold shadow-md hover:bg-[#B38720] transition-colors whitespace-nowrap"
                                                     >
                                                         Submit New Enquiry
                                                     </button>
@@ -3243,36 +3172,36 @@ export default function AccountPage() {
 
                                         {/* Sidebar Info Area */}
                                         <div className="space-y-6">
-                                            <div className="bg-white rounded-3xl border border-[#E8E1D5] p-6 shadow-sm">
-                                                <h3 className="text-lg font-bold text-[#36453A] mb-4">Ticket Insight</h3>
+                                            <div className="bg-white rounded-[2rem] border border-gray-100 p-6 shadow-sm">
+                                                <h3 className="text-lg font-bold text-gray-900 mb-4">Ticket Insight</h3>
                                                 <div className="space-y-4">
-                                                    <div className="flex justify-between items-center text-xs pb-3 border-b border-[#F8F5F0]">
+                                                    <div className="flex justify-between items-center text-xs pb-3 border-b border-gray-100">
                                                         <span className="text-warm-gray font-medium">Ticket ID</span>
-                                                        <span className="font-bold text-[#36453A] uppercase">#{selectedEnquiry.feedback_id.slice(0, 8)}</span>
+                                                        <span className="font-bold text-gray-900 uppercase">#{selectedEnquiry.feedback_id.slice(0, 8)}</span>
                                                     </div>
-                                                    <div className="flex justify-between items-center text-xs pb-3 border-b border-[#F8F5F0]">
+                                                    <div className="flex justify-between items-center text-xs pb-3 border-b border-gray-100">
                                                         <span className="text-warm-gray font-medium">Requested On</span>
-                                                        <span className="font-bold text-[#36453A]">{new Date(selectedEnquiry.created_at).toLocaleDateString()}</span>
+                                                        <span className="font-bold text-gray-900">{new Date(selectedEnquiry.created_at).toLocaleDateString()}</span>
                                                     </div>
-                                                    <div className="flex justify-between items-center text-xs pb-3 border-b border-[#F8F5F0]">
+                                                    <div className="flex justify-between items-center text-xs pb-3 border-b border-gray-100">
                                                         <span className="text-warm-gray font-medium">Priority Range</span>
                                                         <span className="font-bold text-amber-600">Standard</span>
                                                     </div>
                                                     <div className="flex justify-between items-center text-xs">
                                                         <span className="text-warm-gray font-medium">Category</span>
-                                                        <span className="font-bold text-[#36453A] capitalize">{selectedEnquiry.type || 'General'}</span>
+                                                        <span className="font-bold text-gray-900 capitalize">{selectedEnquiry.type || 'General'}</span>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <div className="bg-white rounded-3xl border border-[#E8E1D5] p-6 shadow-sm">
-                                                <h3 className="text-lg font-bold text-[#36453A] mb-4">Support Philosophy</h3>
+                                            <div className="bg-white rounded-[2rem] border border-gray-100 p-6 shadow-sm">
+                                                <h3 className="text-lg font-bold text-gray-900 mb-4">Support Philosophy</h3>
                                                 <p className="text-[11px] leading-relaxed text-warm-gray mb-4">
                                                     At Vedashi, we treat every enquiry with the same mindfulness as our product crafting. Thank you for your patience as we provide a soulful solution.
                                                 </p>
                                                 <button
                                                     onClick={() => router.push(`/${country}/help-center`)}
-                                                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-[#E8E1D5] text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors"
+                                                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-gray-100 text-xs font-bold text-gray-900 hover:bg-gray-50 transition-colors"
                                                 >
                                                     <FileText className="h-3.5 w-3.5" /> View Help Center
                                                 </button>
@@ -3281,10 +3210,10 @@ export default function AccountPage() {
                                     </div>
                                 ) : (
                                     /* ENQUIRY LIST VIEW */
-                                    <div className="bg-white rounded-3xl border border-[#E8E1D5] shadow-sm overflow-hidden animate-fadeIn">
-                                        <div className="p-6 md:p-8 border-b border-[#E8E1D5] flex items-center justify-between bg-[#36453A]/5">
+                                    <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden animate-fadeIn">
+                                        <div className="p-6 md:p-8 border-b border-gray-100 flex items-center justify-between bg-[#91c934]/5">
                                             <div>
-                                                <h2 className="text-xl font-bold text-[#36453A]">Harmony Support History</h2>
+                                                <h2 className="text-xl font-bold text-gray-900">Harmony Support History</h2>
                                                 <p className="text-xs text-warm-gray mt-1">Timeline of your past interactions and resolutions</p>
                                             </div>
                                             <div className="flex items-center gap-4">
@@ -3293,28 +3222,28 @@ export default function AccountPage() {
                                                     <input
                                                         type="text"
                                                         placeholder="Search enquiries..."
-                                                        className="bg-white border border-[#E8E1D5] rounded-full pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-[#36453A]/40 transition-all w-48"
+                                                        className="bg-white border border-gray-100 rounded-full pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-[#91c934]/40 transition-all w-48"
                                                     />
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="divide-y divide-[#F8F5F0]">
+                                        <div className="divide-y divide-gray-100">
                                             {enquiriesLoading ? (
                                                 <div className="py-20 flex flex-col items-center justify-center">
-                                                    <Loader2 className="h-10 w-10 animate-spin text-[#36453A] mb-4" />
+                                                    <Loader2 className="h-10 w-10 animate-spin text-gray-900 mb-4" />
                                                     <p className="text-sm font-medium text-warm-gray uppercase tracking-widest">Recalling your history...</p>
                                                 </div>
                                             ) : enquiries.length === 0 ? (
                                                 <div className="py-20 text-center">
-                                                    <div className="h-20 w-20 rounded-full bg-[#F8F5F0] flex items-center justify-center mx-auto mb-6 border border-[#E8E1D5]">
+                                                    <div className="h-20 w-20 rounded-full bg-white flex items-center justify-center mx-auto mb-6 border border-gray-100">
                                                         <MessageSquare className="h-10 w-10 text-warm-gray/40" />
                                                     </div>
-                                                    <h3 className="text-2xl font-bold text-[#36453A] mb-2">No Past Enquiries</h3>
+                                                    <h3 className="text-2xl font-bold text-gray-900 mb-2">No Past Enquiries</h3>
                                                     <p className="text-sm text-warm-gray max-w-xs mx-auto mb-8">Your path has been smooth! If you ever need help, our support team is just a message away.</p>
                                                     <button
                                                         onClick={() => router.push('/help-center/support')}
-                                                        className="bg-[#36453A] text-white px-8 py-3 rounded-xl text-sm font-bold shadow-md hover:bg-[#2A362D] transition-colors"
+                                                        className="bg-[#91c934] text-white px-8 py-3 rounded-xl text-sm font-bold shadow-md hover:bg-[#7ab52a] transition-colors"
                                                     >
                                                         Create New Ticket
                                                     </button>
@@ -3336,7 +3265,7 @@ export default function AccountPage() {
                                                                 setSelectedEnquiry(enquiry);
                                                             }
                                                         }}
-                                                        className="p-6 transition-all hover:bg-[#F8F5F0] cursor-pointer group"
+                                                        className="p-6 transition-all hover:bg-gray-50 cursor-pointer group"
                                                     >
                                                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                                             <div className="flex-1 min-w-0">
@@ -3346,18 +3275,17 @@ export default function AccountPage() {
                                                                             Ticket
                                                                         </span>
                                                                     )}
-                                                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${
-                                                                        enquiry.status === 'resolved' || enquiry.status === 'closed' ? 'bg-green-100 text-green-700' :
+                                                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${enquiry.status === 'resolved' || enquiry.status === 'closed' ? 'bg-green-100 text-green-700' :
                                                                         enquiry.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
-                                                                        'bg-[#D4A847]/20 text-[#B38720]'
-                                                                    }`}>
+                                                                            'bg-[#D4A847]/20 text-[#B38720]'
+                                                                        }`}>
                                                                         {enquiry.status || 'Pending'}
                                                                     </span>
                                                                     <span className="text-[10px] font-bold text-warm-gray uppercase tracking-widest">
                                                                         {new Date(enquiry.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
                                                                     </span>
                                                                 </div>
-                                                                <h3 className="text-lg font-bold text-[#36453A] group-hover:text-black transition-colors truncate capitalize">
+                                                                <h3 className="text-lg font-bold text-gray-900 group-hover:text-black transition-colors truncate capitalize">
                                                                     {enquiry._source === 'ticket' && enquiry._ticket_number ? `${enquiry._ticket_number} — ` : ''}{enquiry.subject || 'Standard Enquiry'}
                                                                 </h3>
                                                                 <p className="text-sm text-warm-gray truncate mt-1">
@@ -3367,12 +3295,12 @@ export default function AccountPage() {
 
                                                             <div className="flex items-center gap-6 flex-shrink-0">
                                                                 <div className="text-center hidden md:block">
-                                                                    <p className="text-xl font-bold text-[#36453A]">{enquiry._source === 'ticket' ? (enquiry._message_count || 0) : (enquiry.replies?.length || 0)}</p>
+                                                                    <p className="text-xl font-bold text-gray-900">{enquiry._source === 'ticket' ? (enquiry._message_count || 0) : (enquiry.replies?.length || 0)}</p>
                                                                     <p className="text-[10px] font-bold text-warm-gray uppercase tracking-widest">Messages</p>
                                                                 </div>
                                                                 <div className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${enquiry.replies?.some((r: any) => r.type === 'admin')
                                                                     ? 'bg-amber-100 text-amber-600'
-                                                                    : 'bg-[#F8F5F0] text-warm-gray group-hover:bg-[#36453A] group-hover:text-white'
+                                                                    : 'bg-gray-50 text-warm-gray group-hover:bg-[#91c934] group-hover:text-white'
                                                                     }`}>
                                                                     <ChevronRight className="h-5 w-5" />
                                                                 </div>
@@ -3396,7 +3324,7 @@ export default function AccountPage() {
                         {isMounted && showDeactivateModal && createPortal(
                             <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4" style={{ animation: 'fadeIn 0.3s ease-out' }}>
                                 <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowDeactivateModal(false)} />
-                                <div className="relative w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl border border-light-border" style={{ animation: 'slideUp 0.35s ease-out' }}>
+                                <div className="relative w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl border border-light-border" style={{ animation: 'slideUp 0.35s ease-out' }}>
                                     <div className="absolute top-0 left-0 right-0 h-1.5 rounded-t-2xl" style={{ background: 'linear-gradient(90deg, #6B2737, #D4A847)' }} />
                                     <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full" style={{ background: 'rgba(107, 39, 55, 0.1)' }}>
                                         <ShieldOff className="h-7 w-7" style={{ color: '#6B2737' }} />
@@ -3429,7 +3357,6 @@ export default function AccountPage() {
                                                     const res = await deactivateAccount(deactivatePassword);
                                                     if (res.success) {
                                                         setShowDeactivateModal(false);
-                                                        clerkSignOut().catch(()=>{});
                                                         logout();
                                                         toast.success('Account deactivated. You can reactivate anytime.');
                                                         router.push('/');
@@ -3458,7 +3385,7 @@ export default function AccountPage() {
                         {deletingAddressId && (
                             <div className="fixed inset-0 z-50 flex items-center justify-center px-4" style={{ animation: 'fadeIn 0.2s ease-out' }}>
                                 <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setDeletingAddressId(null)} />
-                                <div className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl border border-light-border" style={{ animation: 'slideUp 0.25s ease-out' }}>
+                                <div className="relative w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl border border-light-border" style={{ animation: 'slideUp 0.25s ease-out' }}>
                                     <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
                                         <Trash2 className="h-5 w-5 text-red-500" />
                                     </div>
@@ -3492,18 +3419,18 @@ export default function AccountPage() {
                             <div className="max-w-[900px] animate-fadeIn pb-12">
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                                     <div className="flex items-center gap-4">
-                                        <div className="h-12 w-12 rounded-xl bg-white border border-[#E8E1D5] flex items-center justify-center shadow-sm">
-                                            <BellRing className="h-6 w-6 text-[#36453A]" />
+                                        <div className="h-12 w-12 rounded-xl bg-white border border-gray-100 flex items-center justify-center shadow-sm">
+                                            <BellRing className="h-6 w-6 text-gray-900" />
                                         </div>
                                         <div>
-                                            <h1 className="text-3xl font-bold text-[#36453A]">Your Notifications</h1>
+                                            <h1 className="text-3xl font-bold text-gray-900">Your Notifications</h1>
                                             <p className="text-sm text-warm-gray">Security alerts and update rituals</p>
                                         </div>
                                     </div>
                                     {notifications.length > 0 && (
                                         <button
                                             onClick={handleMarkAllRead}
-                                            className="px-4 py-2 bg-white border border-[#E8E1D5] rounded-xl text-xs font-bold text-[#36453A] hover:bg-[#F8F5F0] transition-colors flex items-center gap-2"
+                                            className="px-4 py-2 bg-white border border-[#91C934] rounded-xl text-xs font-bold text-[#91C934] hover:bg-gray-50 transition-colors flex items-center gap-2"
                                         >
                                             <Check className="h-3.5 w-3.5" /> Mark All as Read
                                         </button>
@@ -3512,14 +3439,14 @@ export default function AccountPage() {
 
                                 {notificationsLoading ? (
                                     <div className="py-24 flex justify-center">
-                                        <Loader2 className="h-10 w-10 animate-spin text-[#36453A]" />
+                                        <Loader2 className="h-10 w-10 animate-spin text-gray-900" />
                                     </div>
                                 ) : notifications.length === 0 ? (
-                                    <div className="bg-white rounded-[30px] border border-[#E8E1D5] py-20 px-6 text-center">
-                                        <div className="h-20 w-20 rounded-full bg-[#F8F5F0] border border-[#E8E1D5] flex items-center justify-center mx-auto mb-6">
+                                    <div className="bg-white rounded-[30px] border border-gray-100 py-20 px-6 text-center">
+                                        <div className="h-20 w-20 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center mx-auto mb-6">
                                             <BellRing className="h-10 w-10 text-warm-gray/30" />
                                         </div>
-                                        <h3 className="text-2xl font-bold text-[#36453A] mb-2">Inner Peace</h3>
+                                        <h3 className="text-2xl font-bold text-gray-900 mb-2">Inner Peace</h3>
                                         <p className="text-warm-gray text-sm max-w-xs mx-auto">You have no new notifications at this moment. Stay mindful and enjoy your wellness journey.</p>
                                     </div>
                                 ) : (
@@ -3527,16 +3454,16 @@ export default function AccountPage() {
                                         {notifications.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((n) => (
                                             <div
                                                 key={n.notification_id}
-                                                className={`group flex items-start gap-4 p-5 rounded-2xl border transition-all ${n.is_read
-                                                    ? 'bg-white/60 border-[#E8E1D5] opacity-75'
-                                                    : 'bg-white border-[#36453A]/20 shadow-sm border-l-4 border-l-[#36453A]'}`}
+                                                className={`group flex items-start gap-4 p-5 rounded-3xl border transition-all ${n.is_read
+                                                    ? 'bg-white/60 border-gray-100 opacity-75'
+                                                    : 'bg-white border-[#91c934]/20 shadow-sm border-l-4 border-l-[#91c934]'}`}
                                             >
-                                                <div className={`mt-1 h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 ${n.is_read ? 'bg-warm-gray/10' : 'bg-[#36453A]/10'}`}>
+                                                <div className={`mt-1 h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 ${n.is_read ? 'bg-warm-gray/10' : 'bg-[#91c934]/10'}`}>
                                                     {n.type === 'security' || n.category === 'security_alerts' ? <Shield className="h-5 w-5 text-red-500" /> : <Sparkles className="h-5 w-5 text-[#D4A847]" />}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center justify-between gap-2 mb-1">
-                                                        <h4 className={`text-sm font-bold ${n.is_read ? 'text-[#36453A]/60' : 'text-[#36453A]'}`}>{n.title}</h4>
+                                                        <h4 className={`text-sm font-bold ${n.is_read ? 'text-gray-900/60' : 'text-gray-900'}`}>{n.title}</h4>
                                                         <span className="text-[10px] font-medium text-warm-gray whitespace-nowrap">
                                                             {new Date(n.created_at).toLocaleDateString()}
                                                         </span>
@@ -3548,7 +3475,7 @@ export default function AccountPage() {
                                                         {n.link_url && (
                                                             <button
                                                                 onClick={() => router.push(n.link_url as any)}
-                                                                className="text-[10px] font-black uppercase tracking-widest text-[#36453A] hover:underline"
+                                                                className="text-[10px] font-black uppercase tracking-widest text-gray-900 hover:underline"
                                                             >
                                                                 View Details
                                                             </button>
@@ -3560,13 +3487,13 @@ export default function AccountPage() {
                                                                     fetchNotificationsData();
                                                                     window.dispatchEvent(new CustomEvent('notifications-updated'));
                                                                 }}
-                                                                className="text-[10px] font-black uppercase tracking-widest transition-colors text-[#D4A847] hover:text-[#B38720]"
+                                                                className="text-[10px] font-black uppercase tracking-widest transition-colors text-[#91C934] hover:underline"
                                                             >
                                                                 Mark as Read
                                                             </button>
                                                         )}
                                                         {n.is_read && (
-                                                            <span className="text-[10px] font-black uppercase tracking-widest text-[#36453A]/30 flex items-center gap-1.5">
+                                                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-900/30 flex items-center gap-1.5">
                                                                 <Check className="h-3 w-3" /> Seen
                                                             </span>
                                                         )}
@@ -3583,35 +3510,35 @@ export default function AccountPage() {
 
                                         {/* Notifications Pagination Bottom */}
                                         {notifications.length > pageSize && (
-                                            <div className="flex items-center justify-between pt-6 border-t border-[#E8E1D5]">
+                                            <div className="flex items-center justify-between pt-6 border-t border-gray-100">
                                                 <span className="text-sm font-medium text-warm-gray">
-                                                    Showing <strong className="text-[#36453A]">
+                                                    Showing <strong className="text-gray-900">
                                                         {Math.min((currentPage - 1) * pageSize + 1, notifications.length)}-{Math.min(currentPage * pageSize, notifications.length)}
-                                                    </strong> of <strong className="text-[#36453A]">{notifications.length}</strong> notifications
+                                                    </strong> of <strong className="text-gray-900">{notifications.length}</strong> notifications
                                                 </span>
                                                 <div className="flex items-center gap-2">
-                                                    <button 
+                                                    <button
                                                         onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                                         disabled={currentPage === 1}
-                                                        className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === 1 ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-[#F8F5F0]'}`}
+                                                        className={`px-4 py-2 text-sm font-bold rounded-xl border border-gray-100 transition-colors ${currentPage === 1 ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-gray-900 bg-white hover:bg-gray-50'}`}
                                                     >
                                                         Previous
                                                     </button>
-                                                    
+
                                                     {Array.from({ length: Math.ceil(notifications.length / pageSize) }).map((_, i) => (
-                                                        <button 
+                                                        <button
                                                             key={i}
                                                             onClick={() => setCurrentPage(i + 1)}
-                                                            className={`h-9 w-9 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center transition-all ${currentPage === i + 1 ? 'bg-[#36453A] text-white' : 'bg-white text-[#36453A] border border-[#E8E1D5] hover:bg-[#F8F5F0]'}`}
+                                                            className={`h-9 w-9 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center transition-all ${currentPage === i + 1 ? 'bg-[#91c934] text-white' : 'bg-white text-gray-900 border border-gray-100 hover:bg-gray-50'}`}
                                                         >
                                                             {i + 1}
                                                         </button>
                                                     ))}
 
-                                                    <button 
+                                                    <button
                                                         onClick={() => setCurrentPage(p => Math.min(Math.ceil(notifications.length / pageSize), p + 1))}
                                                         disabled={currentPage === Math.ceil(notifications.length / pageSize)}
-                                                        className={`px-4 py-2 text-sm font-bold rounded-xl border border-[#E8E1D5] transition-colors ${currentPage === Math.ceil(notifications.length / pageSize) ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-[#36453A] bg-white hover:bg-[#F8F5F0]'}`}
+                                                        className={`px-4 py-2 text-sm font-bold rounded-xl border border-gray-100 transition-colors ${currentPage === Math.ceil(notifications.length / pageSize) ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-gray-900 bg-white hover:bg-gray-50'}`}
                                                     >
                                                         Next
                                                     </button>
@@ -3627,8 +3554,8 @@ export default function AccountPage() {
                         {isMounted && isTrackOrderModalOpen && createPortal(
                             <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4" style={{ animation: 'fadeIn 0.2s ease-out' }}>
                                 <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsTrackOrderModalOpen(false)} />
-                                <div className="relative w-full max-w-md rounded-2xl bg-[#FAFAF5] p-8 shadow-2xl border border-[#E8E1D5] text-center" style={{ animation: 'slideUp 0.25s ease-out' }}>
-                                    
+                                <div className="relative w-full max-w-md rounded-3xl bg-[#FFFFFF] p-8 shadow-2xl border border-gray-100 text-center" style={{ animation: 'slideUp 0.25s ease-out' }}>
+
                                     {/* Botanical Icon */}
                                     {(() => {
                                         const s = (trackOrderStatus || 'PENDING').toUpperCase();
@@ -3658,67 +3585,66 @@ export default function AccountPage() {
                                         );
                                     })()}
 
-                                    <h3 className="text-2xl font-bold text-[#2E4A32] mb-2">Track Order</h3>
-                                    <p className="font-mono text-sm font-semibold text-[#8B7E6A] mb-1">#{trackOrderId?.split('-')[0].toUpperCase()}</p>
+                                    <h3 className="text-2xl font-bold text-[#374151] mb-2">Track Order</h3>
+                                    <p className="font-mono text-sm font-semibold text-[#6b7280] mb-1">#{trackOrderId?.split('-')[0].toUpperCase()}</p>
                                     {trackOrderStatus && (
-                                        <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-4 ${
-                                            trackOrderStatus === 'DELIVERED' ? 'bg-[#E8F5E9] text-[#2E7D32]' :
+                                        <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-4 ${trackOrderStatus === 'DELIVERED' ? 'bg-[#E8F5E9] text-[#2E7D32]' :
                                             trackOrderStatus === 'SHIPPED' ? 'bg-[#E0F2F1] text-[#00695C]' :
-                                            trackOrderStatus === 'CONFIRMED' ? 'bg-[#F1F8E9] text-[#558B2F]' :
-                                            trackOrderStatus === 'CANCELLED' ? 'bg-[#FBE9E7] text-[#BF360C]' :
-                                            'bg-[#FFF8E1] text-[#F9A825]'
-                                        }`}>{trackOrderStatus}</span>
+                                                trackOrderStatus === 'CONFIRMED' ? 'bg-[#F1F8E9] text-[#558B2F]' :
+                                                    trackOrderStatus === 'CANCELLED' ? 'bg-[#FBE9E7] text-[#BF360C]' :
+                                                        'bg-[#FFF8E1] text-[#F9A825]'
+                                            }`}>{trackOrderStatus}</span>
                                     )}
 
                                     {/* Growth Progress Bar */}
                                     {trackOrderStatus && trackOrderStatus !== 'CANCELLED' && (
                                         <div className="flex items-center justify-between px-2 mb-5">
                                             {['PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED'].map((step, idx) => {
-                                                const statusOrder = ['PENDING','CONFIRMED','SHIPPED','DELIVERED'];
+                                                const statusOrder = ['PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED'];
                                                 const currentIdx = statusOrder.indexOf(trackOrderStatus || 'PENDING');
                                                 const isActive = idx <= currentIdx;
                                                 return (
                                                     <div key={step} className="flex items-center flex-1 last:flex-none">
-                                                        <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-black transition-all ${isActive ? 'bg-[#4A7C59] text-white shadow-sm' : 'bg-[#E8E1D5] text-[#B5A88A]'}`}>
+                                                        <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-black transition-all ${isActive ? 'bg-[#91c934] text-white shadow-sm' : 'bg-gray-200 text-[#d1d5db]'}`}>
                                                             {idx === 0 ? '🌱' : idx === 1 ? '🌿' : idx === 2 ? '🍃' : '🌸'}
                                                         </div>
-                                                        {idx < 3 && <div className={`h-0.5 flex-1 mx-1 rounded transition-all ${idx < currentIdx ? 'bg-[#4A7C59]' : 'bg-[#E8E1D5]'}`} />}
+                                                        {idx < 3 && <div className={`h-0.5 flex-1 mx-1 rounded transition-all ${idx < currentIdx ? 'bg-[#91c934]' : 'bg-gray-200'}`} />}
                                                     </div>
                                                 );
                                             })}
                                         </div>
                                     )}
 
-                                    <div className="bg-[#F0EDE6] rounded-xl p-4 mb-6 relative overflow-hidden text-left min-h-[120px]">
-                                        <div className="absolute top-0 left-0 w-1 h-full" style={{ backgroundColor: trackOrderStatus === 'CANCELLED' ? '#BF360C' : '#4A7C59' }}></div>
+                                    <div className="bg-white border border-gray-100 shadow-sm rounded-3xl p-5 mb-6 relative overflow-hidden text-left min-h-[120px]">
+                                        <div className="absolute top-0 left-0 w-1 h-full" style={{ backgroundColor: trackOrderStatus === 'CANCELLED' ? '#BF360C' : '#91c934' }}></div>
                                         {isTrackingLoading ? (
-                                            <div className="flex flex-col items-center justify-center h-full text-[#8B7E6A] py-6">
+                                            <div className="flex flex-col items-center justify-center h-full text-[#6b7280] py-6">
                                                 <Loader2 className="h-6 w-6 animate-spin mb-2" />
                                                 <p className="text-xs font-medium">Fetching logistics data...</p>
                                             </div>
                                         ) : trackingData ? (
                                             <div className="space-y-4">
-                                                <div className="flex justify-between items-center bg-white p-3 rounded-lg border border-[#E8E1D5]">
+                                                <div className="flex justify-between items-center bg-white p-3 rounded-lg border border-gray-100">
                                                     <div>
-                                                        <p className="text-[10px] font-black tracking-widest text-[#8B7E6A] uppercase">Current Status</p>
-                                                        <p className="font-bold text-[#2E4A32]">{trackingData.shipment_track?.[0]?.current_status || 'Processing'}</p>
+                                                        <p className="text-[10px] font-black tracking-widest text-[#6b7280] uppercase">Current Status</p>
+                                                        <p className="font-bold text-[#374151]">{trackingData.shipment_track?.[0]?.current_status || 'Processing'}</p>
                                                     </div>
                                                     {trackingData.track_url && (
-                                                        <a href={trackingData.track_url} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-[#4A7C59] bg-[#E8F5E9] hover:bg-[#4A7C59] hover:text-white px-3 py-1.5 rounded-full transition-colors flex items-center gap-1">
+                                                        <a href={trackingData.track_url} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-[#91c934] bg-[#E8F5E9] hover:bg-[#91c934] hover:text-white px-3 py-1.5 rounded-full transition-colors flex items-center gap-1">
                                                             Live Map <ChevronRight className="h-3 w-3" />
                                                         </a>
                                                     )}
                                                 </div>
-                                                
+
                                                 {trackingData.shipment_track && trackingData.shipment_track.length > 0 && (
-                                                    <div className="relative pl-4 space-y-4 before:content-[''] before:absolute before:left-1.5 before:top-2 before:bottom-0 before:w-0.5 before:bg-[#E8E1D5]">
+                                                    <div className="relative pl-4 space-y-4 before:content-[''] before:absolute before:left-1.5 before:top-2 before:bottom-0 before:w-0.5 before:bg-gray-200">
                                                         {trackingData.shipment_track.slice(0, 3).map((track: any, idx: number) => (
                                                             <div key={idx} className="relative">
-                                                                <div className={`absolute -left-[19px] top-1.5 w-3 h-3 rounded-full border-2 border-[#FAFAF5] ${idx === 0 ? 'bg-[#4A7C59]' : 'bg-[#B5A88A]'}`} />
-                                                                <p className="text-xs font-bold text-[#2E4A32]">{track.activity || track.current_status}</p>
+                                                                <div className={`absolute -left-[19px] top-1.5 w-3 h-3 rounded-full border-2 border-[#FFFFFF] ${idx === 0 ? 'bg-[#91c934]' : 'bg-[#d1d5db]'}`} />
+                                                                <p className="text-xs font-bold text-[#374151]">{track.activity || track.current_status}</p>
                                                                 <div className="flex items-center gap-2 mt-0.5">
-                                                                    <p className="text-[10px] text-[#8B7E6A] font-medium flex items-center gap-1"><Calendar className="h-3 w-3" /> {track.date}</p>
-                                                                    {track.location && <p className="text-[10px] text-[#8B7E6A] font-medium flex items-center gap-1"><MapPin className="h-3 w-3" /> {track.location}</p>}
+                                                                    <p className="text-[10px] text-[#6b7280] font-medium flex items-center gap-1"><Calendar className="h-3 w-3" /> {track.date}</p>
+                                                                    {track.location && <p className="text-[10px] text-[#6b7280] font-medium flex items-center gap-1"><MapPin className="h-3 w-3" /> {track.location}</p>}
                                                                 </div>
                                                             </div>
                                                         ))}
@@ -3728,20 +3654,20 @@ export default function AccountPage() {
                                         ) : (
                                             <div className="flex flex-col items-center justify-center py-6">
                                                 <svg width="32" height="32" viewBox="0 0 64 64" fill="none" className="mb-2 opacity-40">
-                                                    <rect x="8" y="44" rx="4" width="48" height="12" fill="#8B6914" opacity="0.3"/>
-                                                    <ellipse cx="32" cy="38" rx="6" ry="8" fill="#8B6914" opacity="0.4"/>
+                                                    <rect x="8" y="44" rx="4" width="48" height="12" fill="#8B6914" opacity="0.3" />
+                                                    <ellipse cx="32" cy="38" rx="6" ry="8" fill="#8B6914" opacity="0.4" />
                                                 </svg>
-                                                <p className="text-[#2E4A32] text-sm leading-relaxed font-medium">
+                                                <p className="text-[#374151] text-sm leading-relaxed font-medium">
                                                     Your order is being prepared.
                                                 </p>
-                                                <p className="text-xs text-[#8B7E6A] mt-1">The seed has been sown. Check back for updates.</p>
+                                                <p className="text-xs text-[#6b7280] mt-1">The seed has been sown. Check back for updates.</p>
                                             </div>
                                         )}
                                     </div>
                                     <button
                                         onClick={() => setIsTrackOrderModalOpen(false)}
                                         className="w-full rounded-xl py-3 text-sm font-semibold text-white transition-all shadow-md hover:shadow-lg hover:opacity-90"
-                                        style={{ backgroundColor: '#36453A' }}
+                                        style={{ backgroundColor: '#91c934' }}
                                     >
                                         Close
                                     </button>
@@ -3755,7 +3681,7 @@ export default function AccountPage() {
                             <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6" style={{ animation: 'fadeIn 0.3s ease-out' }}>
                                 <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowNotificationOverlay(false)} />
 
-                                <div className="relative w-full max-w-3xl max-h-[90vh] flex flex-col rounded-2xl bg-white shadow-2xl overflow-hidden" style={{ animation: 'slideUp 0.35s ease-out' }}>
+                                <div className="relative w-full max-w-3xl max-h-[90vh] flex flex-col rounded-3xl bg-white shadow-2xl overflow-hidden" style={{ animation: 'slideUp 0.35s ease-out' }}>
                                     {/* Header Stripe */}
                                     <div className="flex-shrink-0 h-1.5 w-full shrink-0" style={{ background: 'linear-gradient(90deg, #6B2737, #D4A847)' }} />
 
@@ -3823,16 +3749,6 @@ export default function AccountPage() {
             </main>
 
             {/* Confirm modals */}
-            <ConfirmModal
-                isOpen={confirmingBulkRemove}
-                title="Remove Items"
-                message={`Are you sure you want to remove ${selectedWishlistItems.size} items from your sanctuary?`}
-                confirmText="Remove"
-                cancelText="Cancel"
-                isDestructive={true}
-                onConfirm={handleRemoveSelected}
-                onCancel={() => setConfirmingBulkRemove(false)}
-            />
 
             <ConfirmModal
                 isOpen={!!confirmingIndividualRemove}
@@ -3870,14 +3786,14 @@ export default function AccountPage() {
             {isMounted && showEmailOtpModal && createPortal(
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-charcoal/40 backdrop-blur-sm" onClick={() => setShowEmailOtpModal(false)}></div>
-                    <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-light-border overflow-hidden animate-fadeIn">
-                        <div className="h-1.5" style={{ background: 'linear-gradient(90deg, #36453A, #D4A847, #36453A)' }}></div>
+                    <div className="relative w-full max-w-md bg-white rounded-[2rem] shadow-2xl border border-light-border overflow-hidden animate-fadeIn">
+                        <div className="h-1.5" style={{ background: 'linear-gradient(90deg, #91c934, #D4A847, #91c934)' }}></div>
                         <div className="p-8">
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-2xl font-bold text-[#36453A]">
+                                <h3 className="text-2xl font-bold text-gray-900">
                                     Verify Email Change
                                 </h3>
-                                <button onClick={() => setShowEmailOtpModal(false)} className="p-2 rounded-full hover:bg-cream/50 transition-colors text-warm-gray hover:text-[#36453A]">
+                                <button onClick={() => setShowEmailOtpModal(false)} className="p-2 rounded-full hover:bg-cream/50 transition-colors text-warm-gray hover:text-gray-900">
                                     <X className="h-5 w-5" />
                                 </button>
                             </div>
@@ -3894,16 +3810,16 @@ export default function AccountPage() {
                                         value={emailOtpCode}
                                         onChange={(e) => setEmailOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                                         placeholder="Enter the 6-digit code"
-                                        className="w-full bg-white border border-[#D4A847] rounded-xl px-4 py-3.5 text-center text-xl font-bold tracking-[0.5em] focus:outline-none shadow-[0_0_15px_rgba(212,168,71,0.15)] focus:border-[#C49A3C] focus:ring-1 focus:ring-[#C49A3C] transition-all placeholder:tracking-normal placeholder:font-normal placeholder:text-base placeholder:text-gray-300 text-[#1C2B1A]"
+                                        className="w-full bg-white border border-[#91C934] rounded-xl px-4 py-3.5 text-center text-xl font-bold tracking-[0.5em] focus:outline-none shadow-[0_0_15px_rgba(145,201,52,0.15)] focus:border-[#91C934] focus:ring-1 focus:ring-[#91C934] transition-all placeholder:tracking-normal placeholder:font-normal placeholder:text-base placeholder:text-gray-300 text-[#374151]"
                                     />
                                 </div>
                                 <div className="pt-2">
                                     <button
                                         onClick={handleEmailOtpSubmit}
                                         disabled={emailOtpSubmitting || emailOtpCode.length < 4}
-                                        className="w-full bg-[#1C2B1A] text-[#E8D5A3] rounded-xl py-3.5 text-sm font-bold shadow-xl hover:bg-[#2A3B28] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed border border-[#3A4B38]"
+                                        className="w-full bg-[#91c934] text-white rounded-xl py-3.5 text-sm font-bold shadow-xl hover:bg-[#7ab52a] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed border border-[#7ab52a]"
                                     >
-                                        {emailOtpSubmitting ? <Loader2 className="h-4 w-4 animate-spin text-[#E8D5A3]" /> : <Check className="h-4 w-4 text-[#E8D5A3]" />}
+                                        {emailOtpSubmitting ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : <Check className="h-4 w-4 text-white" />}
                                         Verify & Save
                                     </button>
                                 </div>
@@ -3928,14 +3844,14 @@ export default function AccountPage() {
             {isMounted && showPhoneOtpModal && createPortal(
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-charcoal/40 backdrop-blur-sm" onClick={() => setShowPhoneOtpModal(false)}></div>
-                    <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-light-border overflow-hidden animate-fadeIn">
-                        <div className="h-1.5" style={{ background: 'linear-gradient(90deg, #1C2B1A, #6B8F5E, #1C2B1A)' }}></div>
+                    <div className="relative w-full max-w-md bg-white rounded-[2rem] shadow-2xl border border-light-border overflow-hidden animate-fadeIn">
+                        <div className="h-1.5" style={{ background: 'linear-gradient(90deg, #374151, #91c934, #374151)' }}></div>
                         <div className="p-8">
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-2xl font-bold text-[#1C2B1A]">
+                                <h3 className="text-2xl font-bold text-[#374151]">
                                     Verify Mobile Number
                                 </h3>
-                                <button onClick={() => setShowPhoneOtpModal(false)} className="p-2 rounded-full hover:bg-cream/50 transition-colors text-warm-gray hover:text-[#1C2B1A]">
+                                <button onClick={() => setShowPhoneOtpModal(false)} className="p-2 rounded-full hover:bg-cream/50 transition-colors text-warm-gray hover:text-[#374151]">
                                     <X className="h-5 w-5" />
                                 </button>
                             </div>
@@ -3952,16 +3868,16 @@ export default function AccountPage() {
                                         value={phoneOtpCode}
                                         onChange={(e) => setPhoneOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                                         placeholder="000000"
-                                        className="w-full bg-white border border-[#6B8F5E] rounded-xl px-4 py-3.5 text-center text-xl font-bold tracking-[0.5em] focus:outline-none shadow-[0_0_15px_rgba(107,143,94,0.15)] focus:border-[#4A6341] focus:ring-1 focus:ring-[#4A6341] transition-all placeholder:tracking-normal placeholder:font-normal placeholder:text-base placeholder:text-gray-300 text-[#1C2B1A]"
+                                        className="w-full bg-white border border-[#91c934] rounded-xl px-4 py-3.5 text-center text-xl font-bold tracking-[0.5em] focus:outline-none shadow-[0_0_15px_rgba(107,143,94,0.15)] focus:border-[#4A6341] focus:ring-1 focus:ring-[#4A6341] transition-all placeholder:tracking-normal placeholder:font-normal placeholder:text-base placeholder:text-gray-300 text-[#374151]"
                                     />
                                 </div>
                                 <div className="pt-2">
                                     <button
                                         onClick={handlePhoneOtpSubmit}
                                         disabled={phoneOtpSubmitting || phoneOtpCode.length < 4}
-                                        className="w-full bg-[#1C2B1A] text-[#E8D5A3] rounded-xl py-3.5 text-sm font-bold shadow-xl hover:bg-[#2A3B28] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed border border-[#3A4B38]"
+                                        className="w-full bg-[#91c934] text-white rounded-xl py-3.5 text-sm font-bold shadow-xl hover:bg-[#7ab52a] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed border border-[#7ab52a]"
                                     >
-                                        {phoneOtpSubmitting ? <Loader2 className="h-4 w-4 animate-spin text-[#E8D5A3]" /> : <CheckCircle2 className="h-4 w-4 text-[#E8D5A3]" />}
+                                        {phoneOtpSubmitting ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : <CheckCircle2 className="h-4 w-4 text-white" />}
                                         Verify & Update
                                     </button>
                                 </div>
@@ -3970,7 +3886,7 @@ export default function AccountPage() {
                                         type="button"
                                         onClick={handleResendPhoneOtp}
                                         disabled={phoneOtpResendTimer > 0}
-                                        className={`text-sm font-semibold transition-all ${phoneOtpResendTimer > 0 ? 'text-warm-gray/70 cursor-not-allowed' : 'text-[#6B8F5E] hover:text-[#4A6341] hover:underline'}`}
+                                        className={`text-sm font-semibold transition-all ${phoneOtpResendTimer > 0 ? 'text-warm-gray/70 cursor-not-allowed' : 'text-[#91c934] hover:text-[#6b7341] hover:underline'}`}
                                     >
                                         {phoneOtpResendTimer > 0 ? `Resend SMS in ${phoneOtpResendTimer}s` : 'Resend Verification SMS'}
                                     </button>
@@ -3986,14 +3902,14 @@ export default function AccountPage() {
             {isMounted && showPasswordModal && createPortal(
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-charcoal/40 backdrop-blur-sm" onClick={() => setShowPasswordModal(false)}></div>
-                    <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-light-border overflow-hidden animate-fadeIn">
-                        <div className="h-1.5" style={{ background: 'linear-gradient(90deg, #36453A, #D4A847, #36453A)' }}></div>
+                    <div className="relative w-full max-w-md bg-white rounded-[2rem] shadow-2xl border border-light-border overflow-hidden animate-fadeIn">
+                        <div className="h-1.5" style={{ background: 'linear-gradient(90deg, #91c934, #D4A847, #91c934)' }}></div>
                         <div className="p-8">
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-2xl font-bold text-[#36453A]">
+                                <h3 className="text-2xl font-bold text-gray-900">
                                     {profileData.has_password ? 'Modify Password' : 'Set Password'}
                                 </h3>
-                                <button onClick={() => setShowPasswordModal(false)} className="p-2 rounded-full hover:bg-cream/50 transition-colors text-warm-gray hover:text-[#36453A]">
+                                <button onClick={() => setShowPasswordModal(false)} className="p-2 rounded-full hover:bg-cream/50 transition-colors text-warm-gray hover:text-gray-900">
                                     <X className="h-5 w-5" />
                                 </button>
                             </div>
@@ -4014,7 +3930,7 @@ export default function AccountPage() {
                                             <button
                                                 type="button"
                                                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-warm-gray hover:text-[#36453A] transition-colors"
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-warm-gray hover:text-gray-900 transition-colors"
                                             >
                                                 {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                             </button>
@@ -4036,7 +3952,7 @@ export default function AccountPage() {
                                             <button
                                                 type="button"
                                                 onClick={() => setShowNewPassword(!showNewPassword)}
-                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-warm-gray hover:text-[#36453A] transition-colors"
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-warm-gray hover:text-gray-900 transition-colors"
                                             >
                                                 {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                             </button>
@@ -4053,22 +3969,22 @@ export default function AccountPage() {
                                                 className="w-full rounded-xl border border-light-border bg-cream/20 pl-4 pr-12 py-3 text-sm focus:border-burgundy/40 focus:outline-none transition-all"
                                                 placeholder="••••••••"
                                             />
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-warm-gray hover:text-[#36453A] transition-colors"
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-warm-gray hover:text-gray-900 transition-colors"
                                             >
                                                 {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                             </button>
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div className="pt-6">
                                     <button
                                         type="submit"
                                         disabled={passwordChanging}
-                                        className="w-full bg-[#36453A] text-white rounded-xl py-4 text-sm font-bold shadow-md hover:bg-[#2A362D] transition-all flex items-center justify-center gap-2"
+                                        className="w-full bg-[#91c934] text-white rounded-xl py-4 text-sm font-bold shadow-md hover:bg-[#7ab52a] transition-all flex items-center justify-center gap-2"
                                     >
                                         {passwordChanging ? (
                                             <>
@@ -4093,15 +4009,15 @@ export default function AccountPage() {
             {/* ── Notification Preferences Modal ── */}
             {isMounted && showNotificationModal && createPortal(
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-[#1A2E1A]/40 backdrop-blur-sm" onClick={() => setShowNotificationModal(false)}></div>
-                    <div className="relative w-full max-w-2xl bg-[#FBF9F6] rounded-[40px] shadow-2xl overflow-hidden border border-[#E8E1D5] animate-in fade-in zoom-in duration-300">
-                        <div className="bg-[#1A2E1A] p-8 text-white relative">
+                    <div className="absolute inset-0 bg-[#1f2937]/40 backdrop-blur-sm" onClick={() => setShowNotificationModal(false)}></div>
+                    <div className="relative w-full max-w-2xl bg-[#ffffff] rounded-[40px] shadow-2xl overflow-hidden border border-gray-100 animate-in fade-in zoom-in duration-300">
+                        <div className="bg-[#1f2937] p-8 text-white relative">
                             {/* Decorative elements */}
                             <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-full pointer-events-none"></div>
-                            
+
                             <div className="flex items-center justify-between relative z-10">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-inner">
+                                    <div className="w-14 h-14 rounded-3xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-inner">
                                         <BellRing className="h-7 w-7 text-[#D4A847]" />
                                     </div>
                                     <div>
@@ -4109,24 +4025,24 @@ export default function AccountPage() {
                                         <p className="text-white/60 text-xs font-medium uppercase tracking-widest mt-0.5">Customise your mindful alerts</p>
                                     </div>
                                 </div>
-                                <button onClick={() => setShowNotificationModal(false)} className="p-3 rounded-2xl hover:bg-white/10 transition-all text-white/50 hover:text-white border border-transparent hover:border-white/10 group">
+                                <button onClick={() => setShowNotificationModal(false)} className="p-3 rounded-3xl hover:bg-white/10 transition-all text-white/50 hover:text-white border border-transparent hover:border-white/10 group">
                                     <X className="h-6 w-6 group-hover:rotate-90 transition-transform duration-300" />
                                 </button>
                             </div>
                         </div>
-                        
+
                         <div className="p-8 max-h-[70vh] overflow-y-auto custom-scrollbar bg-white/80 backdrop-blur-md">
-                            <div className="mb-6 bg-[#F8F5F0] p-4 rounded-2xl border border-[#E8E1D5]/50">
-                                <p className="text-sm text-[#36453A] flex items-center gap-2">
+                            <div className="mb-6 bg-gray-50 p-4 rounded-3xl border border-gray-100/50">
+                                <p className="text-sm text-gray-900 flex items-center gap-2">
                                     <Sparkles className="h-4 w-4 text-[#D4A847]" /> Master your periodic presence through mindful alerts.
                                 </p>
                             </div>
                             <NotificationPreferences hideHeader={true} isMobileVerified={profileData.is_mobile_verified} />
                         </div>
-                        <div className="p-6 bg-[#F8F5F0] border-t border-[#E8E1D5] text-center">
-                            <button 
+                        <div className="p-6 bg-gray-50 border-t border-gray-100 text-center">
+                            <button
                                 onClick={() => setShowNotificationModal(false)}
-                                className="px-12 py-3.5 bg-[#36453A] text-white rounded-xl text-sm font-bold shadow-lg hover:bg-[#2A362D] transition-all transform active:scale-95"
+                                className="px-12 py-3.5 bg-[#91c934] text-white rounded-xl text-sm font-bold shadow-lg hover:bg-[#7ab52a] transition-all transform active:scale-95"
                             >
                                 DONE
                             </button>

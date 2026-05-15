@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.com';
 
 export default function robots(): MetadataRoute.Robots {
     const isProduction = process.env.NODE_ENV === 'production';
@@ -24,13 +24,13 @@ export default function robots(): MetadataRoute.Robots {
             allow: '/',
             disallow: [
                 '/admin/',
-                '/cart/',
-                '/checkout/',
-                '/account/',
+                '/*/cart/',
+                '/*/checkout/',
+                '/*/account/',
                 '/api/',
-                '/search?*',
-                '/login/',
-                '/verify-*',
+                '/*/search?*',
+                '/*/login/',
+                '/*/verify-*',
             ],
         },
         sitemap: `${SITE_URL}/sitemap.xml`,

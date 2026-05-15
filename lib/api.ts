@@ -9,7 +9,25 @@ import { env } from '@/lib/env';
 import PerformanceStore from '@/lib/analytics/performance';
 import { isConsentGranted } from '@/lib/analytics/gtag';
 
+// Force IPv4 first on server to avoid 'localhost' resolving to '::1' if backend is only on 127.0.0.1
+if (typeof window === 'undefined' && process.env.NEXT_RUNTIME === 'nodejs') {
+    try {
+        const dns = require('dns');
+        if (dns && dns.setDefaultResultOrder) {
+            dns.setDefaultResultOrder('ipv4first');
+        }
+    } catch (err) {
+        // Ignore error if dns module is not available (e.g. in certain restricted environment)
+    }
+}
+
 export let API_URL = env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+// Normalize API_URL: remove trailing slash
+if (API_URL.endsWith('/')) {
+    API_URL = API_URL.slice(0, -1);
+}
+
 if (typeof window !== 'undefined' && (API_URL.includes('localhost') || API_URL.includes('127.0.0.1'))) {
     API_URL = `${window.location.protocol}//${window.location.hostname}:5000`;
 }
@@ -55,7 +73,7 @@ async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
             try {
                 const urlObj = new URL(url, window.location.origin);
                 const path = urlObj.pathname;
-                
+
                 // Sensitive endpoint filtering
                 if (!path.includes('/api/auth/') && !path.includes('/api/csrf-token') && !path.includes('/api/gdpr/')) {
                     // Throttling (100ms per endpoint)
@@ -63,13 +81,13 @@ async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
                     const lastSent = lastApiLatencies[path] || 0;
                     if (now - lastSent > 100) {
                         lastApiLatencies[path] = now;
-                        
+
                         // Storage for purchase correlation
                         PerformanceStore.recordApiLatency(latency);
-                        
+
                         // Push with category
                         const category = PerformanceStore.getPerformanceCategory(latency, 'api');
-                        
+
                         if ((window as any).dataLayer) {
                             (window as any).dataLayer.push({
                                 event: 'api_latency',
@@ -123,7 +141,9 @@ export async function authFetch(url: string, init?: RequestInit): Promise<Respon
     // ── Inactivity session expiry interceptors ──────────────────────────
     if (res.status === 401 && typeof window !== 'undefined') {
         const isAuthEndpoint = url.includes('/api/auth/login') || url.includes('/api/auth/register') || url.includes('/api/auth/refresh-token') || url.includes('/api/auth/initiate-registration');
-        if (!isAuthEndpoint) {
+        const isLoginPage = window.location.pathname.includes('/login');
+
+        if (!isAuthEndpoint && !isLoginPage) {
             const cloned = res.clone();
             try {
                 const data = await cloned.json();
@@ -505,6 +525,28 @@ export async function getNewArrivals(params?: {
     } catch (error) {
         console.warn('[API] Failed to fetch new arrivals:', error);
         return { data: [], meta: { total_count: 0, page: 1, limit: 12, total_pages: 0, has_next_page: false, has_prev_page: false, filters_applied: {}, sort: 'new_arrivals', cache_hit: false } };
+    }
+}
+
+/* ─── Dynamic Product Enums (Form & Speciality) ─── */
+
+export async function getFormEnumOptions(): Promise<string[]> {
+    try {
+        const res = await fetch(`${API_URL}/api/products/enums/forms`, { credentials: 'include' });
+        const json = await res.json();
+        return json.success && Array.isArray(json.data) ? json.data : [];
+    } catch {
+        return [];
+    }
+}
+
+export async function getSpecialityEnumOptions(): Promise<string[]> {
+    try {
+        const res = await fetch(`${API_URL}/api/products/enums/specialities`, { credentials: 'include' });
+        const json = await res.json();
+        return json.success && Array.isArray(json.data) ? json.data : [];
+    } catch {
+        return [];
     }
 }
 
@@ -1077,6 +1119,7 @@ export async function directCheckout(data: {
     redeem_points?: number;
     ga_client_id?: string;
     attribution?: TrafficSource | null;
+    currency?: string;
 }) {
     try {
         const res = await authFetch(`${API_URL}/api/orders/direct`, {
@@ -1172,6 +1215,9 @@ export async function checkoutOrder(data: {
     order_notes?: string;
     payment_method?: string;
     redeem_points?: number;
+    currency?: string;
+    ga_client_id?: string;
+    attribution?: any;
 }) {
     try {
         const res = await authFetch(`${API_URL}/api/orders/checkout`, {
@@ -2175,5 +2221,43 @@ export async function trackOrder(orderId: string) {
     } catch (error) {
         console.warn('[API] trackOrder failed:', error);
         return { success: false, message: 'Network error' };
+    }
+}
+
+/* ─── Hero Slides & Settings ─── */
+
+export async function getHeroSlides(): Promise<{ success: boolean; data: any[] }> {
+    try {
+        const res = await apiFetch(`${API_URL}/api/media/hero/active`, {
+            cache: 'no-store',
+            credentials: 'include'
+        });
+        if (!res.ok) return { success: false, data: [] };
+        const json = await res.json();
+        return {
+            success: json.success || false,
+            data: Array.isArray(json.data) ? json.data : []
+        };
+    } catch (error) {
+        console.warn('[API] Failed to fetch hero slides:', error);
+        return { success: false, data: [] };
+    }
+}
+
+export async function getHeroSettings(): Promise<{ success: boolean; data: any }> {
+    try {
+        const res = await apiFetch(`${API_URL}/api/media/hero/settings`, {
+            cache: 'no-store',
+            credentials: 'include'
+        });
+        if (!res.ok) return { success: false, data: null };
+        const json = await res.json();
+        return {
+            success: json.success || false,
+            data: json.data || null
+        };
+    } catch (error) {
+        console.warn('[API] Failed to fetch hero settings:', error);
+        return { success: false, data: null };
     }
 }

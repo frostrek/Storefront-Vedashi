@@ -44,13 +44,13 @@ export default function CollectionPage() {
 
     if (loading) {
         return (
-            <div className="bg-cream min-h-screen">
+            <div className="bg-white min-h-screen">
                 <div className="mx-auto max-w-7xl px-4 py-12">
                     {/* Skeleton hero */}
                     <div className="animate-pulse mb-12">
-                        <div className="h-6 w-32 bg-cream-dark rounded mb-6" />
-                        <div className="h-10 w-64 bg-cream-dark rounded mb-3" />
-                        <div className="h-5 w-96 bg-cream-dark/60 rounded" />
+                        <div className="h-6 w-32 bg-gray-100 rounded mb-6" />
+                        <div className="h-10 w-64 bg-gray-100 rounded mb-3" />
+                        <div className="h-5 w-96 bg-gray-100/60 rounded" />
                     </div>
                     <SkeletonProductGrid count={8} />
                 </div>
@@ -60,7 +60,7 @@ export default function CollectionPage() {
 
     if (!collection) {
         return (
-            <div className="bg-cream min-h-screen">
+            <div className="bg-white min-h-screen">
                 <div className="mx-auto max-w-7xl px-4 py-20 text-center">
                     <Layers className="mx-auto h-16 w-16 text-warm-gray/30 mb-4" />
                     <h1 className="text-2xl font-bold text-charcoal">Collection Not Found</h1>
@@ -76,16 +76,16 @@ export default function CollectionPage() {
     const hasMore = collection.products.length < collection.total_products;
 
     return (
-        <div className="bg-cream min-h-screen">
+        <div className="bg-white min-h-screen">
             {/* Hero */}
             <section className="relative overflow-hidden">
                 {collection.image_url ? (
                     <div className="absolute inset-0">
                         <img src={collection.image_url} alt="" className="h-full w-full object-cover" />
-                        <div className="absolute inset-0 bg-gradient-to-b from-charcoal/70 via-charcoal/50 to-cream" />
+                        <div className="absolute inset-0 bg-gradient-to-b from-charcoal/70 via-charcoal/50 to-white" />
                     </div>
                 ) : (
-                    <div className="absolute inset-0 bg-gradient-to-b from-cream-dark to-cream" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-gray-100 to-white" />
                 )}
 
                 <div className="relative mx-auto max-w-7xl px-4 py-16 sm:py-24">

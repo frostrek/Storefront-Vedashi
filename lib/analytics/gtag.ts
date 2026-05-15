@@ -15,6 +15,7 @@ export type EcommerceEventName =
   | 'view_item'
   | 'view_item_list'
   | 'select_item'
+  | 'view_cart'
   | 'add_to_cart'
   | 'remove_from_cart'
   | 'begin_checkout'

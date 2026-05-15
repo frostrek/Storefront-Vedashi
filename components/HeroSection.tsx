@@ -64,7 +64,7 @@ export default function HeroSection() {
                             style={{ animationDelay: '0.3s' }}
                         >
                             <Link
-                                href="/shop"
+                                href="/"
                                 className="inline-flex items-center gap-2.5 rounded-lg bg-[#3B5D3B] px-7 py-3.5 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:bg-[#2D4A2D] hover:-translate-y-0.5 hover:shadow-xl font-ui"
                             >
                                 Shop Remedies

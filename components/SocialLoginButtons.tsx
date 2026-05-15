@@ -1,23 +1,7 @@
 'use client';
 
-import { useSignIn, useSignUp } from '@clerk/nextjs/legacy';
-import { useClerk } from '@clerk/nextjs';
-import { useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-
-/**
- * Social Login Buttons
- *
- * Uses Clerk ONLY for OAuth (Google, Facebook, Apple).
- * 
- * Key: Uses signUp.authenticateWithRedirect (NOT signIn) because:
- *   - signIn fails if user doesn't have a Clerk account → shows Clerk's sign-up form
- *   - signUp with OAuth strategy goes DIRECTLY to Google (no Clerk form)
- *   - If user already has a Clerk account, Clerk auto-detects and transfers to signIn
- * 
- * Fix: Bypasses the redirect flow if a Clerk session already exists to avoid "You're already signed in" errors.
- */
 
 interface SocialLoginButtonsProps {
     onLoadingChange?: (loading: boolean) => void;
@@ -33,122 +17,63 @@ const GoogleIcon = () => (
     </svg>
 );
 
-const FacebookIcon = () => (
-    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#1877F2">
-        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-    </svg>
-);
-
-const AppleIcon = () => (
-    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
-    </svg>
-);
-
 export default function SocialLoginButtons({ onLoadingChange, disabled }: SocialLoginButtonsProps) {
-    const { signIn, isLoaded: signInLoaded } = useSignIn();
-    const { signUp, isLoaded: signUpLoaded } = useSignUp();
-    const { session } = useClerk();
     const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
-    const params = useParams();
-    const country = (params?.country as string) || 'in';
 
-    const isReady = signInLoaded && signUpLoaded;
-
-    const handleSocialLogin = async (strategy: 'oauth_google' | 'oauth_facebook' | 'oauth_apple') => {
-        if (!isReady || !signUp || !signIn) {
-            toast.error('Social login is not ready. Please wait a moment.');
-            return;
-        }
-
-        const providerName = strategy.replace('oauth_', '');
-        setLoadingProvider(providerName);
+    // ── Direct Google OAuth (no Clerk) ────────────────────────────────
+    const handleGoogleLogin = () => {
+        setLoadingProvider('google');
         onLoadingChange?.(true);
 
-        const currentPath = window.location.pathname; // e.g. /in/login
-        const baseUrl = window.location.origin;
+        const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+        const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI;
 
-        // If there's an active Clerk session but our custom backend doesn't think so,
-        // we can simply use the existing Clerk session to log them back into Vedashi.
-        // This avoids the "You're already signed in" error entirely.
-        if (session) {
-            window.location.href = currentPath + '/sso-complete';
+        if (!clientId || !redirectUri) {
+            toast.error('Google login is not configured. Please contact support.');
+            setLoadingProvider(null);
+            onLoadingChange?.(false);
             return;
         }
 
-        try {
-            // Use signUp.authenticateWithRedirect for OAuth:
-            // - For NEW users: creates Clerk account via OAuth (goes DIRECTLY to Google)
-            // - For EXISTING users: Clerk auto-detects and transfers to signIn
-            // This avoids Clerk's hosted sign-up form entirely
-            await signUp.authenticateWithRedirect({
-                strategy,
-                redirectUrl: baseUrl + currentPath + '/sso-callback',
-                redirectUrlComplete: baseUrl + currentPath + '/sso-complete',
-            });
-        } catch (err: any) {
-            // If already signed in, just try to go to the callback page
-            const message = err?.message || '';
-            if (message.includes('signed in') || message.toLowerCase().includes('already')) {
-                window.location.href = currentPath + '/sso-callback';
-                return;
-            }
+        const oauthParams = new URLSearchParams({
+            client_id: clientId,
+            redirect_uri: redirectUri,
+            response_type: 'code',
+            scope: 'openid email profile',
+            access_type: 'offline',
+            prompt: 'select_account',
+        });
 
-            // If user already exists in Clerk, fall back to signIn
-            const clerkError = err as { errors?: Array<{ code: string }> };
-            if (clerkError?.errors?.[0]?.code === 'form_identifier_exists') {
-                try {
-                    await signIn.authenticateWithRedirect({
-                        strategy,
-                        redirectUrl: baseUrl + currentPath + '/sso-callback',
-                        redirectUrlComplete: baseUrl + currentPath + '/sso-complete',
-                    });
-                    return;
-                } catch (signInErr: any) {
-                    const msg = signInErr?.message || '';
-                    if (msg.includes('signed in') || msg.toLowerCase().includes('already')) {
-                        window.location.href = currentPath + '/sso-callback';
-                        return;
-                    }
-                    console.error(`[Social Login] signIn fallback failed:`, signInErr);
-                }
-            }
-
-            console.error(`[Social Login] ${providerName} error:`, err);
-            const displayMessage = err instanceof Error ? err.message : 'Social login failed';
-            toast.error(displayMessage);
-            setLoadingProvider(null);
-            onLoadingChange?.(false);
-        }
+        window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${oauthParams.toString()}`;
     };
 
-    const providers = [
-        { key: 'oauth_google' as const, label: 'Google', icon: <GoogleIcon />, bg: 'bg-white hover:bg-gray-50 border-gray-300 text-gray-700' },
-        { key: 'oauth_facebook' as const, label: 'Facebook', icon: <FacebookIcon />, bg: 'bg-[#1877F2] hover:bg-[#166FE5] border-[#1877F2] text-white' },
-        { key: 'oauth_apple' as const, label: 'Apple', icon: <AppleIcon />, bg: 'bg-black hover:bg-gray-900 border-black text-white' },
-    ];
+    // Listen for custom trigger events from parent
+    useEffect(() => {
+        const handleExternalTrigger = (e: any) => {
+            const provider = e.detail;
+            if (provider === 'google') handleGoogleLogin();
+        };
+
+        window.addEventListener('trigger-social-login', handleExternalTrigger);
+        return () => window.removeEventListener('trigger-social-login', handleExternalTrigger);
+    }, []);
 
     return (
         <div className="space-y-3">
-            <div id="clerk-captcha" />
-
-            {providers.map(({ key, label, icon, bg }) => (
-                <button
-                    key={key}
-                    type="button"
-                    data-social={label.toLowerCase()}
-                    onClick={() => handleSocialLogin(key)}
-                    disabled={disabled || !isReady || !!loadingProvider}
-                    className={`w-full flex items-center justify-center gap-3 rounded-lg border px-4 py-3 text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${bg}`}
-                >
-                    {loadingProvider === key.replace('oauth_', '') ? (
-                        <div className="w-5 h-5 border-2 border-current/30 border-t-current rounded-full animate-spin" />
-                    ) : (
-                        icon
-                    )}
-                    <span>Continue with {label}</span>
-                </button>
-            ))}
+            <button
+                type="button"
+                data-social="google"
+                onClick={handleGoogleLogin}
+                disabled={disabled || !!loadingProvider}
+                className="w-full flex items-center justify-center gap-3 rounded-lg border px-4 py-3 text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-white hover:bg-gray-50 border-gray-300 text-gray-700"
+            >
+                {loadingProvider === 'google' ? (
+                    <div className="w-5 h-5 border-2 border-current/30 border-t-current rounded-full animate-spin" />
+                ) : (
+                    <GoogleIcon />
+                )}
+                <span>Continue with Google</span>
+            </button>
         </div>
     );
 }

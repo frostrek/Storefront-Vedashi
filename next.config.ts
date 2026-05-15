@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  turbopack: {},
   images: {
     remotePatterns: [
       {
@@ -33,13 +34,49 @@ const nextConfig: NextConfig = {
         port: '5000',
         pathname: '/**',
       },
-      {
-        protocol: 'https',
-        hostname: 'd15o8yv09tizyc.cloudfront.net',
-        port: '',
-        pathname: '/**',
-      },
     ],
+  },
+  async redirects() {
+    return [
+      {
+        source: '/sitemap-in.xml',
+        destination: '/sitemap.xml',
+        permanent: true,
+      },
+      {
+        source: '/sitemap-ru.xml',
+        destination: '/sitemap.xml',
+        permanent: true,
+      },
+      {
+        source: '/sitemap-kr.xml',
+        destination: '/sitemap.xml',
+        permanent: true,
+      },
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'www.vedashi.com',
+          },
+        ],
+        destination: 'https://vedashi.com/:path*',
+        permanent: true,
+      },
+      {
+        source: '/:country/categories/:slug',
+        destination: '/:country/products?category=:slug',
+        permanent: true,
+      },
+    ];
+  },
+  webpack: (config, { dev, isServer }) => {
+    if (dev && !isServer) {
+      // Reduce memory usage in dev by disabling source maps for node_modules
+      config.devtool = 'eval-cheap-module-source-map';
+    }
+    return config;
   },
 };
 

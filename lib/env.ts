@@ -24,11 +24,9 @@ function optionalEnv(value: string | undefined, defaultValue: string = ''): stri
 export const env = {
   // Required — build will fail without these
   NEXT_PUBLIC_API_URL: requireEnv(process.env.NEXT_PUBLIC_API_URL, 'NEXT_PUBLIC_API_URL'),
-  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: requireEnv(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY, 'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY'),
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: requireEnv(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY, 'NEXT_PUBLIC_TURNSTILE_SITE_KEY'),
 
   // Server-only — optional (degrade gracefully if missing)
-  CLERK_SECRET_KEY: optionalEnv(process.env.CLERK_SECRET_KEY),
   TURNSTILE_SECRET_KEY: optionalEnv(process.env.TURNSTILE_SECRET_KEY),
   IPINFO_TOKEN: optionalEnv(process.env.IPINFO_TOKEN),
 };

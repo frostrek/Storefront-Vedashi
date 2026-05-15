@@ -11,9 +11,8 @@ interface AuthContextType {
     isLoading: boolean;
     login: (email: string, password: string, rememberMe?: boolean, turnstileToken?: string) => Promise<{ success: boolean; error?: string; code?: string; role?: string; access_token?: string; requireCaptcha?: boolean; blocked?: boolean; retryAfter?: number }>;
     register: (name: string, email: string, password: string, turnstileToken?: string) => Promise<RegisterResponse>;
-    /** Log-in the user directly from verification data (after OTP verified and accounts created) */
+    /** Log-in the user directly from verification data (after OTP verified and account created) */
     loginFromVerification: (customerData: Record<string, unknown>) => void;
-    socialLogin: (clerkToken: string) => Promise<{ success: boolean; error?: string; is_new_user?: boolean; account_linked?: boolean; pending_verification?: boolean; customer_id?: string; email?: string; full_name?: string }>;
     logout: () => void;
     /** Update partial user info (like avatar_url) dynamically in cache and context */
     updateUser: (updates: Partial<UserInfo>) => void;
@@ -93,6 +92,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         listenersRef.current.forEach(cb => cb(event, u));
     }, []);
 
+    // ── Automatically set user properties when user state changes ──
+    useEffect(() => {
+        if (user && typeof window !== 'undefined' && window.gtag) {
+            window.gtag('set', 'user_properties', {
+                loyalty_tier: user.loyalty_tier || 'Bronze',
+                is_returning_customer: 'true'
+            });
+        }
+    }, [user]);
+
     // ── Listen for session-expired event (from authFetch interceptor) ──
     useEffect(() => {
         if (typeof window === 'undefined') return;
@@ -131,7 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     .then(json => {
                         if (json.success && json.data) {
                             const updatedUser = toUserInfo(json.data);
-                            
+
                             // ── SECURITY ROLE CHECK ──────────────────────────
                             // Prevent admins from using the storefront app as a user
                             if (['admin', 'Super Admin', 'owner'].includes(updatedUser.role || '')) {
@@ -141,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                                 notifyListeners('logout', null);
                                 return;
                             }
-                            
+
                             setUser(updatedUser);
                             localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
                             // Re-push user_id with verified data
@@ -163,9 +172,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setIsLoading(false);
             }
         } else {
-             // ── SILENT RECOVERY CHECK ──────────────────────────
-             // If no local storage but cookies exist, try to restore customer session
-             authFetch(`${API_URL}/api/auth/me`)
+            // ── SILENT RECOVERY CHECK ──────────────────────────
+            // If no local storage but cookies exist, try to restore customer session
+            authFetch(`${API_URL}/api/auth/me`)
                 .then(res => res.json())
                 .then(json => {
                     if (json.success && json.data) {
@@ -179,7 +188,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         }
                     }
                 })
-                .catch(() => {})
+                .catch(() => { })
                 .finally(() => {
                     setIsLoading(false);
                 });
@@ -201,7 +210,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const json = await res.json();
             if (res.ok && json.success && json.data?.customer) {
                 const u = toUserInfo(json.data.customer);
-                
+
                 // ── SECURITY ROLE CHECK ──────────────────────────
                 // Prevent admins from being authenticated as customers in the storefront state
                 if (['admin', 'Super Admin', 'owner'].includes(u.role || '')) {
@@ -210,7 +219,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     // but we DO NOT call setUser(u) or store the user locally.
                     return { success: true, role: u.role };
                 }
-                
+
                 setUser(u);
                 localStorage.setItem(USER_KEY, JSON.stringify(u));
                 // SECURITY: No token stored — access token is in HttpOnly cookie
@@ -299,55 +308,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         notifyListeners('logout', null);
     }, [notifyListeners, pushClearUserId]);
 
-    /** Social login via Clerk token → backend JWT (or pending OTP for new users) */
-    const socialLogin = useCallback(async (clerkToken: string) => {
-        try {
-            const res = await authFetch(`${API_URL}/api/auth/social/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ clerk_token: clerkToken }),
-            });
-            const json = await res.json();
-
-            // New user → pending OTP verification (no JWT yet)
-            if (res.ok && json.success && json.pending_verification) {
-                return {
-                    success: true,
-                    pending_verification: true,
-                    customer_id: json.data.customer_id,
-                    email: json.data.email,
-                    full_name: json.data.full_name,
-                };
-            }
-
-            // Returning user → JWT issued as HttpOnly cookie
-            if (res.ok && json.success && json.data?.customer) {
-                const u = toUserInfo(json.data.customer);
-                setUser(u);
-                localStorage.setItem(USER_KEY, JSON.stringify(u));
-                // SECURITY: No token stored — access token is in HttpOnly cookie
-                sessionStorage.setItem('justSignedIn', String(Date.now()));
-                pushUserId(u.id);
-                notifyListeners('login', u);
-                return {
-                    success: true,
-                    is_new_user: json.data.is_new_user,
-                    account_linked: json.data.account_linked,
-                };
-            }
-            return { success: false, error: json.message || 'Social login failed' };
-        } catch (err) {
-            console.error('[Auth] Social login error:', err);
-            return { success: false, error: 'Social login failed. Please try again.' };
-        }
-    }, [notifyListeners]);
-
 
     return (
         <AuthContext.Provider value={{
             user, isAuthenticated: !!user, isLoading,
-            login, register, loginFromVerification, socialLogin, logout, updateUser, onAuthChange,
+            login, register, loginFromVerification, logout, updateUser, onAuthChange,
         }}>
             {children}
         </AuthContext.Provider>

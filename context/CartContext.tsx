@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, useEffect, ReactNode, useRef } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useMemo, ReactNode, useRef } from 'react';
 import { BackendCartItem, BackendCart } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { trackEcommerce } from '@/lib/analytics/gtag';
@@ -42,6 +42,8 @@ interface CartContextType {
     removeCoupon: () => void;
     orderNotes: string;
     setOrderNotes: (notes: string) => void;
+    /** Find a cart item by productId + optional variantId. Returns the item or undefined. */
+    getItemInCart: (productId: string, variantId?: string | null) => BackendCartItem | undefined;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -66,8 +68,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const [items, setItems] = useState<BackendCartItem[]>([]);
     const [savedItems, setSavedItems] = useState<BackendCartItem[]>([]);
     const [cartId, setCartId] = useState<string | null>(null);
-    const [totalItems, setTotalItems] = useState(0);
-    const [totalPrice, setTotalPrice] = useState(0);
+    const pendingQtyUpdates = useRef(0);
+
+    // DERIVED VALUE — single source of truth, can never desync from items
+    const totalItems = useMemo(() => new Set(items.map(i => String(i.product_id))).size, [items]);
+    const totalPrice = useMemo(() => items.reduce((s, i) => s + (i.price || 0) * i.quantity, 0), [items]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [couponCode, setCouponCode] = useState<string | null>(null);
@@ -98,8 +103,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 const cart = res.data as BackendCart;
                 const flatItems = (cart.items || []).map(flattenCartItem);
                 setItems(flatItems);
-                setTotalItems(cart.summary?.item_count ?? cart.total_items ?? flatItems.reduce((s: number, i: BackendCartItem) => s + i.quantity, 0));
-                setTotalPrice(cart.summary?.grand_total || cart.total_amount || flatItems.reduce((s: number, i: BackendCartItem) => s + (i.price || 0) * i.quantity, 0));
+                // totalItems and totalPrice are derived via useMemo — no manual set needed
                 await fetchSavedItems(cId);
                 return cart;
             }
@@ -130,8 +134,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 setCartId(cart.cart_id);
                 const flatItems = (cart.items || []).map(flattenCartItem);
                 setItems(flatItems);
-                setTotalItems(cart.summary?.item_count ?? cart.total_items ?? flatItems.reduce((s: number, i: BackendCartItem) => s + i.quantity, 0));
-                setTotalPrice(cart.summary?.grand_total ?? cart.total_amount ?? flatItems.reduce((s: number, i: BackendCartItem) => s + (i.price || 0) * i.quantity, 0));
                 await fetchSavedItems(cart.cart_id);
             } else {
                 const createRes = await apiCreateCart(customerId);
@@ -139,8 +141,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
                     setCartId(createRes.data.cart_id);
                     setItems([]);
                     setSavedItems([]);
-                    setTotalItems(0);
-                    setTotalPrice(0);
                 }
             }
         } catch (err) {
@@ -165,8 +165,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 setCartId(cart.cart_id);
                 const flatItems = (cart.items || []).map(flattenCartItem);
                 setItems(flatItems);
-                setTotalItems(cart.summary?.item_count ?? cart.total_items ?? flatItems.reduce((s: number, i: BackendCartItem) => s + i.quantity, 0));
-                setTotalPrice(cart.summary?.grand_total ?? cart.total_amount ?? flatItems.reduce((s: number, i: BackendCartItem) => s + (i.price || 0) * i.quantity, 0));
                 await fetchSavedItems(cart.cart_id);
             } else {
                 // Guest cart expired or deleted — clean up
@@ -200,8 +198,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setCartId(null);
         setItems([]);
         setSavedItems([]);
-        setTotalItems(0);
-        setTotalPrice(0);
         setError(null);
         setCouponCode(null);
         setCouponDiscount(0);
@@ -376,8 +372,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
             }
             const freshCart = await fetchCart(activeCartId);
             const freshItems = freshCart ? (freshCart.items || []).map(flattenCartItem) : [];
-            const addedItem = freshItems.find(i => 
-                String(i.product_id) === String(productId) && 
+            const addedItem = freshItems.find(i =>
+                String(i.product_id) === String(productId) &&
                 (variantId ? String(i.variant_id) === String(variantId) : true)
             );
 
@@ -416,29 +412,51 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }, [cartId, fetchCart, isAuthenticated, user, ensureGuestCart]);
 
     const updateQuantity = useCallback(async (cartItemId: string, quantity: number) => {
-        if (quantity <= 0) {
-            await apiRemoveCartItem(cartItemId);
-            if (cartId) await fetchCart(cartId);
-            return;
-        }
-        setLoading(true);
+        let snapshot: BackendCartItem[] = [];
+
+        // Optimistic UI Update Phase
+        setItems(prev => {
+            snapshot = prev;
+            if (quantity <= 0) {
+                return prev.filter(i => i.cart_item_id !== cartItemId);
+            }
+            return prev.map(item => item.cart_item_id === cartItemId ? { ...item, quantity } : item);
+        });
+
         setError(null);
+        pendingQtyUpdates.current += 1;
+
         try {
-            await apiUpdateCartItem(cartItemId, quantity);
-            if (cartId) await fetchCart(cartId);
+            if (quantity <= 0) {
+                await apiRemoveCartItem(cartItemId);
+            } else {
+                await apiUpdateCartItem(cartItemId, quantity);
+            }
         } catch (err) {
             console.error('[CartContext] updateQuantity error:', err);
+            setItems(snapshot); // Revert on failure
             setError('Failed to update quantity');
+            throw err;
         } finally {
-            setLoading(false);
+            pendingQtyUpdates.current -= 1;
+            // Only perform a full backend sync when all rapid clicks have resolved to avoid screen flickering
+            if (pendingQtyUpdates.current === 0 && cartId) {
+                fetchCart(cartId); // Background sync, does not block the UI
+            }
         }
     }, [cartId, fetchCart]);
 
     const removeItem = useCallback(async (cartItemId: string) => {
         // Capture item data BEFORE removal for the GA4 event
         const removedItem = items.find(i => i.cart_item_id === cartItemId);
+        let snapshot: BackendCartItem[] = [];
 
-        setLoading(true);
+        // Optimistic UI Removal
+        setItems(prev => {
+            snapshot = prev;
+            return prev.filter(i => i.cart_item_id !== cartItemId);
+        });
+
         setError(null);
         try {
             await apiRemoveCartItem(cartItemId);
@@ -459,9 +477,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
             }
         } catch (err) {
             console.error('[CartContext] removeItem error:', err);
+            setItems(snapshot); // Revert on failure
             setError('Failed to remove item');
-        } finally {
-            setLoading(false);
+            throw err;
         }
     }, [cartId, fetchCart, items]);
 
@@ -484,6 +502,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setError(null);
         try {
             await apiMoveToCart(cartItemId);
+            // fetchCart sets items via setItems → totalItems auto-recalculates via useMemo
             if (cartId) await fetchCart(cartId);
         } catch (err) {
             console.error('[CartContext] moveToCart error:', err);
@@ -503,8 +522,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 }
             }
             setItems([]);
-            setTotalItems(0);
-            setTotalPrice(0);
+            // totalItems and totalPrice auto-reset to 0 via useMemo when items is []
         } catch (err) {
             console.error('[CartContext] clearCart error:', err);
         } finally {
@@ -520,7 +538,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         items.forEach(item => {
             const stock = item.stock_quantity ?? 0;
             if (stock > 0 && item.quantity > stock) {
-                updateQuantity(item.cart_item_id, stock).catch(() => {});
+                updateQuantity(item.cart_item_id, stock).catch(() => { });
                 import('react-hot-toast').then(({ default: toast }) => {
                     toast(`Quantity of ${item.product_name} reduced to ${stock} due to limited stock.`, { icon: '⚠️' });
                 });
@@ -529,11 +547,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
         // Poll cart every 30 seconds
         const pollInterval = setInterval(() => {
-            fetchCart(cartId).catch(() => {});
+            fetchCart(cartId).catch(() => { });
         }, 30000);
 
         return () => clearInterval(pollInterval);
     }, [cartId, items, fetchCart, updateQuantity]);
+
+    /** Find a cart item by productId + optional variantId */
+    const getItemInCart = useCallback((productId: string, variantId?: string | null): BackendCartItem | undefined => {
+        return items.find(i =>
+            String(i.product_id) === String(productId) &&
+            (variantId ? String(i.variant_id) === String(variantId) : true)
+        );
+    }, [items]);
 
     return (
         <CartContext.Provider value={{
@@ -543,6 +569,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             couponCode, couponDiscount, couponType, couponError,
             applyCoupon, removeCoupon,
             orderNotes, setOrderNotes,
+            getItemInCart,
         }}>
             {children}
         </CartContext.Provider>

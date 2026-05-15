@@ -56,12 +56,12 @@ export default function RangeSlider({
     return (
         <div className="space-y-3">
             {/* Track */}
-            <div className="relative h-2 mt-1">
+            <div className="relative h-[3px] mt-2 mb-2">
                 {/* Background track */}
-                <div className="absolute inset-0 rounded-full bg-cream-dark" />
+                <div className="absolute inset-0 rounded-full bg-gray-200" />
                 {/* Active track */}
                 <div
-                    className="absolute top-0 bottom-0 rounded-full bg-gradient-to-r from-burgundy to-burgundy-light"
+                    className="absolute top-0 bottom-0 rounded-full bg-[#91C934]"
                     style={{ left: `${minPercent}%`, right: `${100 - maxPercent}%` }}
                 />
                 {/* Min slider */}
@@ -87,12 +87,12 @@ export default function RangeSlider({
             </div>
 
             {/* Labels */}
-            <div className="flex items-center justify-between text-xs text-warm-gray">
-                <span className="rounded bg-cream-dark px-2 py-1 font-medium text-charcoal/80">
+            <div className="flex items-center justify-between text-xs text-gray-400">
+                <span className="rounded bg-gray-100 px-2.5 py-1.5 font-semibold text-gray-700">
                     {formatLabel(localValue[0])}
                 </span>
-                <span className="text-warm-gray/50">—</span>
-                <span className="rounded bg-cream-dark px-2 py-1 font-medium text-charcoal/80">
+                <span className="text-gray-300">—</span>
+                <span className="rounded bg-gray-100 px-2.5 py-1.5 font-semibold text-gray-700">
                     {formatLabel(localValue[1])}
                 </span>
             </div>

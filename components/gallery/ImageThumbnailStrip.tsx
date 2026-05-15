@@ -10,12 +10,11 @@ interface ThumbnailStripProps {
     onHover?: (index: number) => void;
 }
 
-/**
- * ImageThumbnailStrip
- * Desktop: vertical strip on the left (scrollable).
- * Mobile: horizontal scrollable strip below the main image.
- * Highlights the active thumbnail and preloads the next image on hover.
- */
+ /**
+  * ImageThumbnailStrip
+  * Displays a horizontal scrollable strip of thumbnails below the main image.
+  * Highlights the active thumbnail and preloads the next image on hover.
+  */
 function ImageThumbnailStripInner({
     images,
     activeIndex,

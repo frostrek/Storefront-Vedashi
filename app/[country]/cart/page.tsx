@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useCart } from '@/context/CartContext';
@@ -11,7 +11,7 @@ import { useCurrency } from '@/context/CurrencyContext';
 import toast from 'react-hot-toast';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 
-/* ─── Step Indicator ─────────────────────────────────────────── */
+/* ─── Step Indicators ─────────────────────────────────────────── */
 
 const STEPS = ['BAG', 'SHIPPING', 'PAYMENT', 'REVIEW'] as const;
 
@@ -51,6 +51,8 @@ export default function CartPage() {
     } = useCart();
     const { isAuthenticated } = useAuth();
     const router = useRouter();
+    const params = useParams();
+    const country = (params.country as string) || 'in';
     const [itemToRemove, setItemToRemove] = useState<string | null>(null);
     const [couponInput, setCouponInput] = useState('');
     const [applyingCoupon, setApplyingCoupon] = useState(false);
@@ -62,7 +64,23 @@ export default function CartPage() {
 
     useEffect(() => {
         setIsMounted(true);
-    }, []);
+        if (items.length > 0) {
+            const inStock = items.filter(i => (i.stock_quantity ?? 0) > 0);
+            const total = inStock.reduce((sum, item) => sum + (item.price ?? 0) * item.quantity, 0);
+            import('@/lib/analytics/gtag').then(({ trackEcommerce }) => {
+                trackEcommerce('view_cart', {
+                    currency: 'INR',
+                    value: total,
+                    items: items.map(item => ({
+                        item_id: item.product_id || '',
+                        item_name: item.product_name || '',
+                        price: item.price || 0,
+                        quantity: item.quantity
+                    }))
+                });
+            });
+        }
+    }, [items.length]);
 
     if (loading && items.length === 0) {
         return (
@@ -85,7 +103,7 @@ export default function CartPage() {
                         Explore our sacred collection and add authentic Ayurvedic products to your wellness journey
                     </p>
                     <Link
-                        href="/products"
+                        href={`/${country}/products`}
                         className="cart-checkout-btn inline-flex mt-8"
                         style={{ width: 'auto', display: 'inline-flex' }}
                     >
@@ -108,17 +126,17 @@ export default function CartPage() {
                     </div>
                 </div>
                 <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12 relative z-10">
-                    <Link href="/products" className="inline-flex items-center gap-2 text-sm font-semibold text-[#6B8F5E] hover:text-[#5A7A4E] mb-6 transition-colors uppercase tracking-wider">
-                        <ArrowLeft className="h-4 w-4" /> Continue Shopping
+                    <Link href={`/${country}/products`} className="inline-flex items-center gap-2 text-sm font-semibold text-[#91c934] hover:text-[#5A7A4E] mb-6 transition-colors uppercase tracking-wider">
+                        <ArrowLeft className="h-4 w-4 text-[#91c934]" /> Continue Shopping
                     </Link>
                     <div className="cart-item-card text-center py-10 mb-6">
                         <ShoppingCart className="h-8 w-8 text-[#8B7A3D] mx-auto mb-3" />
                         <p className="text-[#4A4A4A] font-medium">Your active cart is empty.</p>
-                        <Link href="/products" className="text-sm text-[#6B8F5E] font-semibold hover:underline mt-2 inline-block">Browse Products</Link>
+                        <Link href={`/${country}/products`} className="text-sm text-[#91c934] font-semibold hover:underline mt-2 inline-block">Browse Products</Link>
                     </div>
                     <div>
                         <h3 className="cart-saved-section-title">
-                            <Bookmark className="h-5 w-5 text-[#8B7A3D]" />
+                            <Bookmark className="h-5 w-5 text-[#91C934]" />
                             Saved for Later ({savedItems.length})
                         </h3>
                         <div className="space-y-4">
@@ -126,11 +144,11 @@ export default function CartPage() {
                                 const price = item.price ?? 0;
                                 return (
                                     <div key={item.cart_item_id} className="cart-item-card flex items-center gap-4 bg-[#FAFAFA]">
-                                        <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img w-16 h-16 rounded-lg flex-shrink-0">
+                                        <Link href={`/${country}/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img w-16 h-16 rounded-lg flex-shrink-0">
                                             {item.image_url ? <img src={item.image_url} alt="" /> : <span className="text-xl">🌿</span>}
                                         </Link>
                                         <div className="flex-1">
-                                            <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
+                                            <Link href={`/${country}/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
                                                 <h3 className="text-sm font-bold text-[#1A1A1A] hover:text-[#3d5c3a] transition-colors">{item.product_name || 'Product'}</h3>
                                             </Link>
                                             <p className="text-[#4A4A4A] mt-1">{formatPrice(price)}</p>
@@ -197,8 +215,8 @@ export default function CartPage() {
             {/* Main Content */}
             <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12 relative z-10">
                 {/* Back Link */}
-                <Link href="/products" className="inline-flex items-center gap-2 text-sm font-semibold text-[#6B8F5E] hover:text-[#5A7A4E] mb-6 transition-colors uppercase tracking-wider">
-                    <ArrowLeft className="h-4 w-4" /> Continue Shopping
+                <Link href={`/${country}/products`} className="inline-flex items-center gap-2 text-sm font-semibold text-[#91c934] hover:text-[#5A7A4E] mb-6 transition-colors uppercase tracking-wider">
+                    <ArrowLeft className="h-4 w-4 text-[#91c934]" /> Continue Shopping
                 </Link>
 
                 <div className="lg:grid lg:grid-cols-[1fr_400px] lg:gap-10">
@@ -214,7 +232,7 @@ export default function CartPage() {
 
                             {outOfStockItems.length > 0 && (
                                 <div className="mb-4 rounded-xl p-4 text-sm flex items-start gap-3 bg-[#FFF3CD] border border-[#FFEEBA] text-[#856404]">
-                                    <span className="mt-0.5">⚠️</span> 
+                                    <span className="mt-0.5">⚠️</span>
                                     <div>
                                         <p className="font-bold">Inventory Update</p>
                                         <p>Some items in your cart are out of stock. They won&apos;t be included in your order and will be saved for later when you checkout.</p>
@@ -223,7 +241,7 @@ export default function CartPage() {
                             )}
                             {hasInsufficientStock && (
                                 <div className="mb-4 rounded-xl p-4 text-sm flex items-start gap-3 bg-[#FFF3CD] border border-[#FFEEBA] text-[#856404]">
-                                    <span className="mt-0.5">⚠️</span> 
+                                    <span className="mt-0.5">⚠️</span>
                                     <div>
                                         <p className="font-bold">Stock Limited</p>
                                         <p>One or more items exceed available stock. Please adjust the quantity to proceed.</p>
@@ -241,11 +259,12 @@ export default function CartPage() {
                                     const unitPrice = item.original_price ?? price;
                                     const isOutOfStock = (item.stock_quantity ?? 0) === 0;
                                     const hasInsufficientStock = !isOutOfStock && item.quantity > (item.stock_quantity ?? 0);
-                                    
+                                    const isAtStockLimit = !isOutOfStock && item.quantity >= (item.stock_quantity ?? Infinity);
+
                                     return (
                                         <div key={item.cart_item_id} className="cart-item-card flex flex-col sm:flex-row gap-6">
                                             {/* Image */}
-                                            <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img flex-shrink-0">
+                                            <Link href={`/${country}/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img flex-shrink-0">
                                                 {item.image_url ? (
                                                     <img src={item.image_url} alt={item.product_name || ''} />
                                                 ) : (
@@ -256,7 +275,7 @@ export default function CartPage() {
                                             <div className="flex-1 flex flex-col justify-between">
                                                 <div className="flex justify-between items-start">
                                                     <div>
-                                                        <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
+                                                        <Link href={`/${country}/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
                                                             <h3 className="cart-item-title text-lg font-bold">{item.product_name || 'Product'}</h3>
                                                         </Link>
                                                         {item.size_label && (
@@ -269,12 +288,26 @@ export default function CartPage() {
                                                             <p className="text-xs mt-2 text-[#D35400] font-bold">Only {item.stock_quantity} left in stock</p>
                                                         )}
                                                     </div>
-                                                    <div className="text-right">
-                                                        <div className="text-lg font-bold text-[#1A1A1A]">
-                                                            {formatPrice(price * item.quantity)}
+                                                        <div className="text-right">
+                                                            <div className="text-lg font-bold text-[#1A1A1A]">
+                                                                {formatPrice(price * item.quantity)}
+                                                            </div>
+                                                            {unitPrice > price && (
+                                                                <div className="flex items-center justify-end gap-1.5 mt-0.5">
+                                                                    <span className="text-red-500 font-bold text-xs">
+                                                                        {Math.round((1 - price / unitPrice) * 100)}% OFF
+                                                                    </span>
+                                                                    <span className="text-gray-400 line-through text-xs">
+                                                                        {formatPrice(unitPrice * item.quantity)}
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                            {item.quantity > 1 && (
+                                                                <div className="text-[10px] text-gray-400 mt-1 uppercase tracking-tight">
+                                                                    {formatPrice(price)} each
+                                                                </div>
+                                                            )}
                                                         </div>
-                                                        <div className="text-xs text-[#8B7A3D] mt-1">{formatPrice(price)} each</div>
-                                                    </div>
                                                 </div>
 
                                                 <div className="flex items-center justify-between mt-4">
@@ -284,13 +317,13 @@ export default function CartPage() {
                                                             <Minus className="h-3 w-3" />
                                                         </button>
                                                         <span className="cart-qty-value">{item.quantity}</span>
-                                                        <button onClick={() => updateQuantity(item.cart_item_id, item.quantity + 1)} disabled={loading || isOutOfStock || hasInsufficientStock} className="cart-qty-btn disabled:opacity-50">
+                                                        <button onClick={() => { if (isAtStockLimit) { toast('Maximum stock reached', { icon: '⚠️' }); return; } updateQuantity(item.cart_item_id, item.quantity + 1); }} disabled={loading || isOutOfStock || isAtStockLimit} className="cart-qty-btn disabled:opacity-50">
                                                             <Plus className="h-3 w-3" />
                                                         </button>
                                                     </div>
 
                                                     <div className="flex items-center gap-2">
-                                                        <button onClick={() => { saveForLater(item.cart_item_id); toast.success('Saved for later'); }} disabled={loading} className="text-[#8B7A3D] text-[13px] font-semibold hover:underline px-2">
+                                                        <button onClick={() => { saveForLater(item.cart_item_id); toast.success('Saved for later'); }} disabled={loading} className="text-[#] text-[13px] font-semibold hover:underline px-2">
                                                             Save for Later
                                                         </button>
                                                         <button onClick={() => setItemToRemove(item.cart_item_id)} disabled={loading} className="cart-remove-btn">
@@ -309,7 +342,7 @@ export default function CartPage() {
                         {savedItems.length > 0 && (
                             <div className="mt-4">
                                 <h3 className="cart-saved-section-title">
-                                    <Bookmark className="h-5 w-5 text-[#8B7A3D]" />
+                                    <Bookmark className="h-5 w-5 text-[#91c934]" />
                                     Saved for Later ({savedItems.length})
                                 </h3>
                                 <div className="space-y-4">
@@ -317,17 +350,17 @@ export default function CartPage() {
                                         const price = item.price ?? 0;
                                         return (
                                             <div key={item.cart_item_id} className="cart-item-card flex items-center gap-4 bg-[#FAFAFA]">
-                                                <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img w-16 h-16 rounded-lg flex-shrink-0">
+                                                <Link href={`/${country}/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img w-16 h-16 rounded-lg flex-shrink-0">
                                                     {item.image_url ? <img src={item.image_url} alt="" /> : <span className="text-xl">🌿</span>}
                                                 </Link>
                                                 <div className="flex-1">
-                                                    <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
+                                                    <Link href={`/${country}/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
                                                         <h3 className="text-sm font-bold text-[#1A1A1A] hover:text-[#3d5c3a] transition-colors">{item.product_name || 'Product'}</h3>
                                                     </Link>
                                                     <p className="text-[#4A4A4A] mt-1">{formatPrice(price)}</p>
                                                 </div>
                                                 <div className="flex flex-col items-end gap-2">
-                                                    <button onClick={() => { moveToCart(item.cart_item_id); toast.success('Moved to cart'); }} disabled={loading} className="bg-[#6B8F5E] text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-[#5A7A4E]">
+                                                    <button onClick={() => { moveToCart(item.cart_item_id); toast.success('Moved to cart'); }} disabled={loading} className="bg-[#91C934] text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-[#7faf27]">
                                                         Move to Bag
                                                     </button>
                                                     <button onClick={() => setItemToRemove(item.cart_item_id)} disabled={loading} className="text-[#C0392B] text-[11px] uppercase tracking-wider font-semibold hover:underline">
@@ -347,8 +380,8 @@ export default function CartPage() {
                                 {/* Ayurvedic Practitioner Notes */}
                                 <div className="cart-item-card p-6 border-l-4 border-l-[#2D3B2D]">
                                     <div className="flex items-center gap-2 mb-3">
-                                        <FileText className="h-5 w-5 text-[#2D3B2D]" />
-                                        <h4 className="text-lg font-bold text-[#1A1A1A]">Order Notes <span className="text-[#8B7A3D] font-normal text-xs">(optional)</span></h4>
+                                        <FileText className="h-5 w-5 text-[#91C934]" />
+                                        <h4 className="text-lg font-bold text-[#1A1A1A]">Order Notes <span className="text-[#6B6B60] font-normal text-xs">(optional)</span></h4>
                                     </div>
                                     <p className="text-[13px] text-[#6B6B60] mb-4">Add any specific allergies, preferences, or delivery instructions for our practitioners.</p>
                                     <textarea
@@ -363,80 +396,49 @@ export default function CartPage() {
                                 </div>
 
                                 <div className="grid sm:grid-cols-2 gap-4">
-                                <div className="cart-item-card p-6 border-t-4 border-t-[#8B7A3D]">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <Ticket className="h-5 w-5 text-[#8B7A3D]" />
-                                        <h4 className="text-lg font-bold text-[#1A1A1A]">Promo Offering</h4>
-                                    </div>
-                                    <p className="text-[13px] text-[#6B6B60] mb-4">Have a sacred promo code? Enter it below.</p>
-                                    {couponCode ? (
-                                        <div className="ritual-coupon-applied">
-                                            <div className="coupon-info text-[#1A1A1A] font-semibold text-sm">
-                                                {couponCode} <span className="text-[#6B8F5E]">(-{formatPrice(couponDiscount)})</span>
+                                    <div className="cart-item-card p-6 border-t-4 border-t-[#91C934]">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <Ticket className="h-5 w-5 text-[#91C934]" />
+                                            <h4 className="text-lg font-bold text-[#1A1A1A]">Promo Offering</h4>
+                                        </div>
+                                        <p className="text-[13px] text-[#6B6B60] mb-4">Have a sacred promo code? Enter it below.</p>
+                                        {couponCode ? (
+                                            <div className="ritual-coupon-applied">
+                                                <div className="coupon-info text-[#1A1A1A] font-semibold text-sm">
+                                                    {couponCode} <span className="text-[#6B8F5E]">(-{formatPrice(couponDiscount)})</span>
+                                                </div>
+                                                <button onClick={() => { removeCoupon(); toast.success('Coupon removed'); }} className="text-[#C0392B] text-xs font-semibold uppercase hover:underline">Remove</button>
                                             </div>
-                                            <button onClick={() => { removeCoupon(); toast.success('Coupon removed'); }} className="text-[#C0392B] text-xs font-semibold uppercase hover:underline">Remove</button>
-                                        </div>
-                                    ) : (
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                placeholder="Enter code"
-                                                value={couponInput}
-                                                onChange={e => setCouponInput(e.target.value.toUpperCase())}
-                                                className="flex-1 rounded-lg border border-[#D4CFC0] px-4 py-2 text-sm focus:border-[#8B7A3D] focus:outline-none bg-[#F5F4F0] font-mono uppercase"
-                                            />
-                                            <button
-                                                onClick={async () => {
-                                                    if (!couponInput.trim()) return;
-                                                    setApplyingCoupon(true);
-                                                    const ok = await applyCoupon(couponInput.trim());
-                                                    if (ok) { toast.success('Coupon applied!'); setCouponInput(''); }
-                                                    setApplyingCoupon(false);
-                                                }}
-                                                disabled={applyingCoupon || !couponInput.trim()}
-                                                className="bg-[#2D3B2D] text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-[#1F291F] transition-colors disabled:opacity-50 tracking-wide"
-                                            >
-                                                {applyingCoupon ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Apply'}
-                                            </button>
-                                        </div>
-                                    )}
-                                    {couponError && <p className="mt-2 text-xs text-[#C0392B]">{couponError}</p>}
-                                </div>
-
-                                <div className="cart-item-card p-6 border-t-4 border-t-[#6B8F5E]">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <MapPin className="h-5 w-5 text-[#6B8F5E]" />
-                                        <h4 className="text-lg font-bold text-[#1A1A1A]">Shipping Sanctuary</h4>
+                                        ) : (
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Enter code"
+                                                    value={couponInput}
+                                                    onChange={e => setCouponInput(e.target.value.toUpperCase())}
+                                                    className="flex-1 rounded-lg border border-[#D4CFC0] px-4 py-2 text-sm focus:border-[#8B7A3D] focus:outline-none bg-[#F5F4F0] font-mono uppercase"
+                                                />
+                                                <button
+                                                    onClick={async () => {
+                                                        if (!couponInput.trim()) return;
+                                                        setApplyingCoupon(true);
+                                                        const ok = await applyCoupon(couponInput.trim());
+                                                        if (ok) { toast.success('Coupon applied!'); setCouponInput(''); }
+                                                        setApplyingCoupon(false);
+                                                    }}
+                                                    disabled={applyingCoupon || !couponInput.trim()}
+                                                    className="bg-[#91c934] text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-[#1F291F] transition-colors disabled:opacity-50 tracking-wide"
+                                                >
+                                                    {applyingCoupon ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Apply'}
+                                                </button>
+                                            </div>
+                                        )}
+                                        {couponError && <p className="mt-2 text-xs text-[#C0392B]">{couponError}</p>}
                                     </div>
-                                    <p className="text-[13px] text-[#6B6B60] mb-4">Estimate delivery to your location.</p>
-                                    <div className="space-y-3">
-                                        <select
-                                            value={shippingCountry}
-                                            onChange={(e) => setShippingCountry(e.target.value)}
-                                            className="w-full rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-[#F5F4F0]"
-                                        >
-                                            <option value="India">India</option>
-                                            <option value="USA">United States</option>
-                                            <option value="UK">United Kingdom</option>
-                                        </select>
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                placeholder="Zip / Postal Code"
-                                                value={shippingZip}
-                                                onChange={(e) => setShippingZip(e.target.value)}
-                                                className="flex-1 rounded-lg border border-[#D4CFC0] px-4 py-2.5 text-sm focus:border-[#6B8F5E] focus:outline-none bg-[#F5F4F0]"
-                                            />
-                                            <button className="bg-[#E8E4DC] text-[#1A1A1A] px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-[#D4CFC0] transition-colors tracking-wide">
-                                                Update
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
                                 </div>
                             </div>
                         )}
-                        
+
                     </div>
 
                     {/* ─── Ritual Summary Sidebar ─── */}
@@ -444,8 +446,8 @@ export default function CartPage() {
                         <div className="sticky top-28">
                             <div className="ritual-summary">
                                 <div className="ritual-summary-title">
-                                    <div className="w-8 h-8 rounded-full bg-[rgba(255,255,255,0.1)] flex items-center justify-center mr-2">
-                                        <Leaf className="w-4 h-4 text-white" />
+                                    <div className="w-8 h-8 rounded-full bg-[#F5F4F0] flex items-center justify-center mr-2 border border-[#E8E4DC]">
+                                        <Leaf className="w-4 h-4 text-[#91C934]" />
                                     </div>
                                     Investment Summary
                                     <span className="ritual-summary-badge">{inStockItemCount} Item{inStockItemCount !== 1 ? 's' : ''}</span>
@@ -471,7 +473,14 @@ export default function CartPage() {
                                                     {item.product_name || 'Product'}
                                                     <div className="ritual-summary-item-qty mt-0.5">Qty: {item.quantity}</div>
                                                 </div>
-                                                <span className="ritual-summary-item-price">{formatPrice(lineTotal)}</span>
+                                                <div className="flex flex-col items-end">
+                                                    <span className="ritual-summary-item-price">{formatPrice(lineTotal)}</span>
+                                                    {((item as any).original_price ?? 0) > price && (
+                                                        <span className="text-[10px] text-[rgba(255,255,255,0.4)] line-through">
+                                                            {formatPrice(((item as any).original_price || 0) * item.quantity)}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                         );
                                     })}
@@ -479,33 +488,44 @@ export default function CartPage() {
 
                                 <div className="ritual-summary-divider" />
 
-                                <div className="space-y-2">
+                                <div className="space-y-2.5">
                                     <div className="ritual-summary-row">
-                                        <span className="label">Bundle Subtotal</span>
+                                        <span className="label">Total MRP</span>
                                         <span className="value">{formatPrice(totalMRP)}</span>
                                     </div>
                                     {saleDiscount > 0 && (
                                         <div className="ritual-summary-row">
-                                            <span className="label">Vedic Discount</span>
+                                            <span className="label">Discount on MRP</span>
                                             <span className="value !text-[#86EFAC]">- {formatPrice(saleDiscount)}</span>
                                         </div>
                                     )}
                                     {couponDiscount > 0 && (
                                         <div className="ritual-summary-row">
-                                            <span className="label">Promo Discount</span>
+                                            <span className="label">Coupon Discount</span>
                                             <span className="value !text-[#86EFAC]">- {formatPrice(couponDiscount)}</span>
                                         </div>
                                     )}
                                     <div className="ritual-summary-row">
-                                        <span className="label">Vedic Shipping <span className="text-[9px] uppercase tracking-wider opacity-70 ml-1">(Standard)</span></span>
-                                        <span className="value">{deliveryFee === 0 ? 'FREE' : formatPrice(deliveryFee)}</span>
+                                        <span className="label">Platform Fee</span>
+                                        <span className="value !text-[#86EFAC] uppercase font-bold text-[10px] tracking-wider">FREE</span>
                                     </div>
-
+                                    <div className="ritual-summary-row">
+                                        <span className="label">Shipping Fee</span>
+                                        <span className="value">{deliveryFee === 0 ? <span className="text-[#86EFAC] font-bold uppercase tracking-wider">FREE</span> : formatPrice(deliveryFee)}</span>
+                                    </div>
                                 </div>
+
+                                {(saleDiscount + couponDiscount) > 0 && (
+                                    <div className="mt-4 p-3 bg-white/10 rounded-xl border border-white/10 text-center">
+                                        <p className="text-[10px] font-bold text-[#86EFAC] uppercase tracking-widest">
+                                            Total Savings: {formatPrice(saleDiscount + couponDiscount)}
+                                        </p>
+                                    </div>
+                                )}
 
                                 <div className="ritual-summary-total">
                                     <div>
-                                        <div className="ritual-summary-total-label">Total Investment</div>
+                                        <div className="ritual-summary-total-label">Total Amount</div>
                                         <div className="ritual-summary-total-value mt-1">{formatPrice(grandTotal)}</div>
                                     </div>
                                     <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.05)]">
@@ -539,7 +559,7 @@ export default function CartPage() {
                                 >
                                     {isAuthenticated ? 'Confirm & Complete Ritual' : 'Sign In to Checkout'}
                                 </button>
-                                
+
                                 <div className="mt-5 flex items-center justify-center gap-4 text-[9px] text-[rgba(255,255,255,0.5)] font-bold tracking-[1.5px] uppercase">
                                     <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full border border-[rgba(255,255,255,0.5)] flex items-center justify-center"><div className="w-0.5 h-0.5 bg-white rounded-full"></div></div> Secure Transaction</span>
                                     <span>•</span>

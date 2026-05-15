@@ -17,7 +17,7 @@ export default function ToggleSwitch({ label, checked, onChange }: ToggleSwitchP
                 role="switch"
                 aria-checked={checked}
                 onClick={() => onChange(!checked)}
-                className={`relative inline-flex h-[22px] w-[40px] items-center rounded-full transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-burgundy focus-visible:ring-offset-2 ${checked ? 'bg-burgundy' : 'bg-warm-gray/30'
+                className={`relative inline-flex h-[22px] w-[40px] items-center rounded-full transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-herbal-green focus-visible:ring-offset-2 ${checked ? 'bg-herbal-green' : 'bg-warm-gray/30'
                     }`}
             >
                 <span

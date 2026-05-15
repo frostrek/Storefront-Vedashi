@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname, useParams } from 'next/navigation';
 import { Search, X, Loader2 } from 'lucide-react';
 import { searchAutocomplete, type SearchSuggestion } from '@/lib/api';
 import { useCurrency } from '@/context/CurrencyContext';
@@ -13,7 +13,7 @@ interface SearchAutocompleteProps {
     placeholder?: string;
     /** Additional wrap per classes */
     className?: string;
-} 
+}
 
 export default function SearchAutocomplete({
     onClose,
@@ -21,6 +21,9 @@ export default function SearchAutocomplete({
     className = '',
 }: SearchAutocompleteProps) {
     const router = useRouter();
+    const pathname = usePathname();
+    const params = useParams();
+    const country = (params.country as string) || 'in';
     const { formatPrice } = useCurrency();
     const [query, setQuery] = useState('');
     const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
@@ -44,6 +47,11 @@ export default function SearchAutocomplete({
         try {
             const results = await searchAutocomplete(term);
             setSuggestions(results);
+            if (results.length === 0) {
+                import('@/lib/analytics/gtag').then(({ trackEvent }) => {
+                    trackEvent('zero_results_search', { search_term: term });
+                });
+            }
         } catch {
             setSuggestions([]);
         } finally {
@@ -81,14 +89,26 @@ export default function SearchAutocomplete({
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+ 
+    // ── Scroll lock when open (mobile) ────────────────────────
+    useEffect(() => {
+        if (isOpen && window.innerWidth < 768) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [isOpen]);
 
     // ── Static Storefront Pages ──
     const storePages = [
-        { title: 'Home', path: '/' },
-        { title: 'All Products', path: '/products' },
-        { title: 'Categories', path: '/categories' },
-        { title: 'About Us', path: '/about' },
-        { title: 'Contact Support', path: '/contact' },
+        { title: 'Home', path: `/${country}` },
+        { title: 'All Products', path: `/${country}/products` },
+        { title: 'Categories', path: `/${country}/categories` },
+        { title: 'About Us', path: `/${country}/about` },
+        { title: 'Contact Support', path: `/${country}/contact` },
     ];
 
     const matchedPages = query.trim().length >= 2
@@ -104,7 +124,7 @@ export default function SearchAutocomplete({
         setIsOpen(false);
         setQuery('');
         onClose?.();
-        router.push(`/products/${id}`);
+        router.push(`/${country}/products/${id}`);
     };
 
     const goToPage = (path: string) => {
@@ -118,7 +138,7 @@ export default function SearchAutocomplete({
         if (!query.trim()) return;
         setIsOpen(false);
         onClose?.();
-        router.push(`/search?q=${encodeURIComponent(query.trim())}`);
+        router.push(`/${country}/search?q=${encodeURIComponent(query.trim())}`);
     };
 
     // ── Keyboard navigation ────────────────────────────────────
@@ -162,16 +182,21 @@ export default function SearchAutocomplete({
         <div ref={containerRef} className={`relative ${className}`}>
             {/* ─── Search Input ─── */}
             <div className="relative flex items-center">
-                <Search className="absolute left-4 h-4 w-4 text-gray-400 pointer-events-none" />
+                <Search className="absolute left-4 h-5 w-5 text-gray-400 pointer-events-none" />
                 <input
                     ref={inputRef}
                     type="text"
                     value={query}
                     onChange={e => {
-                        setQuery(e.target.value);
+                        const val = e.target.value;
+                        setQuery(val);
                         setActiveIndex(-1);
-                        if (e.target.value.trim().length >= 2 && !isOpen) {
+                        if (val.trim().length >= 2 && !isOpen) {
                             setIsOpen(true);
+                        }
+                        // If they clear the search string manually while on the search page, send them back to home
+                        if (val.trim().length === 0 && pathname.endsWith('/search')) {
+                            router.push('/');
                         }
                     }}
                     onFocus={() => {
@@ -181,10 +206,10 @@ export default function SearchAutocomplete({
                     placeholder={placeholder}
                     autoComplete="off"
                     className="
-            w-full pl-11 pr-9 py-2 rounded-full
-            bg-gray-100 border border-gray-200
-            text-sm text-gray-800 placeholder-gray-400
-            focus:outline-none focus:ring-2 focus:ring-[#4b0f1a]/30 focus:border-[#4b0f1a]/40
+            w-full pl-11 pr-10 py-[10px] rounded-full
+            bg-gray-100 border border-gray-300
+            text-sm text-gray-800 placeholder-gray-00
+            focus:outline-none focus:ring-2 focus:ring-[#e6e3e4]/30 focus:border-[#4b0f1a]/40
             transition-all duration-200
           "
                 />
@@ -196,13 +221,16 @@ export default function SearchAutocomplete({
                             setSuggestions([]);
                             setIsOpen(false);
                             inputRef.current?.focus();
+                            if (pathname.endsWith('/search')) {
+                                router.push('/');
+                            }
                         }}
-                        className="absolute right-3 p-0.5 text-gray-400 hover:text-gray-600 transition-colors"
+                        className="absolute right-4 p-0.5 text-gray-400 hover:text-gray-600 transition-colors"
                     >
                         {isLoading ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <Loader2 className="h-5 w-5 animate-spin" />
                         ) : (
-                            <X className="h-4 w-4" />
+                            <X className="h-5 w-5" />
                         )}
                     </button>
                 )}
@@ -211,9 +239,10 @@ export default function SearchAutocomplete({
             {/* ─── Dropdown Panel ─── */}
             {isOpen && query.trim().length >= 2 && (
                 <div className="
-          absolute top-full left-0 right-0 mt-1.5 z-[300]
-          bg-white rounded-xl shadow-2xl border border-gray-100
-          max-h-[420px] overflow-y-auto
+          fixed md:absolute top-[56px] md:top-full left-1/2 -translate-x-1/2 md:left-0 md:translate-x-0 
+          w-[96vw] md:w-full z-[300]
+          bg-white rounded-b-2xl shadow-[0_25px_70px_rgba(0,0,0,0.2)] border border-gray-100
+          max-h-[55vh] md:max-h-[420px] overflow-y-auto
           animate-in fade-in slide-in-from-top-1 duration-200
         ">
                     {/* Pages Section */}
@@ -262,13 +291,13 @@ export default function SearchAutocomplete({
                                         onClick={() => goToProduct(item.product_id)}
                                         onMouseEnter={() => setActiveIndex(globalIndex)}
                                         className={`
-                      w-full flex items-center gap-3 px-4 py-3 text-left
+                      w-full flex items-center gap-3 px-3 py-2 sm:px-4 sm:py-3 text-left
                       transition-colors duration-100 border-b border-gray-50 last:border-b-0
                       ${activeIndex === globalIndex ? 'bg-[#fdf6ee]' : 'hover:bg-gray-50'}
                     `}
                                     >
                                         {/* Thumbnail */}
-                                        <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gray-100 overflow-hidden">
+                                        <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gray-100 overflow-hidden">
                                             {item.thumbnail_url ? (
                                                 <img
                                                     src={item.thumbnail_url}
@@ -284,18 +313,18 @@ export default function SearchAutocomplete({
                                         </div>
 
                                         {/* Text */}
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium text-gray-900 truncate">
+                                        <div className="flex-1 min-w-0 py-0.5">
+                                            <p className="text-[13px] sm:text-sm font-bold text-gray-900 leading-tight mb-0.5">
                                                 {item.product_name}
                                             </p>
-                                            <p className="text-xs text-gray-500 truncate">
+                                            <p className="text-[10px] sm:text-xs text-gray-500 truncate uppercase tracking-wider font-medium">
                                                 {[item.brand, item.category].filter(Boolean).join(' · ')}
                                             </p>
                                         </div>
-
+ 
                                         {/* Price */}
                                         {item.price != null && (
-                                            <span className="flex-shrink-0 text-sm font-semibold text-[#4b0f1a]">
+                                            <span className="flex-shrink-0 text-[13px] sm:text-sm font-black text-[#4b0f1a] bg-gray-50 px-1.5 py-0.5 rounded-md">
                                                 {formatPrice(item.price)}
                                             </span>
                                         )}

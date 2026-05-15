@@ -35,6 +35,7 @@ export default function RegionSwitcher({ upward = false }: { upward?: boolean })
 
     // Set cookies (7 days)
     document.cookie = `geo_country=${newCountry}; max-age=${7 * 24 * 60 * 60}; path=/`;
+    document.cookie = `geo_manual=true; max-age=${7 * 24 * 60 * 60}; path=/`;
     const currencyMap: Record<string, string> = { in: 'INR', us: 'USD', gb: 'GBP', ae: 'AED', ca: 'CAD', au: 'AUD', ru: 'RUB', kr: 'KRW' };
     document.cookie = `geo_currency=${currencyMap[newCountry] || 'USD'}; max-age=${7 * 24 * 60 * 60}; path=/`;
 
@@ -68,16 +69,22 @@ export default function RegionSwitcher({ upward = false }: { upward?: boolean })
         suppressHydrationWarning
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 p-2 rounded-lg hover:bg-gray-100 transition-colors group"
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all duration-200 group ${
+          upward 
+            ? 'border-white/20 hover:border-white/40' 
+            : 'border-gray-200 hover:border-gray-300 shadow-sm'
+        }`}
         aria-expanded={isOpen}
       >
-        <span className="text-base leading-none">{currentCountryConfig.flag}</span>
-        <span className="text-xs font-bold text-gray-700 uppercase">{currentCountryConfig.currency}</span>
-        <ChevronDown className={`h-3.5 w-3.5 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <img src={`https://flagcdn.com/w40/${country}.png`} alt={currentCountryConfig.name} className={`h-4 w-6 object-cover rounded-sm border ${upward ? 'border-white/10' : 'border-gray-100'}`} />
+        <span className={`text-xs font-bold uppercase tracking-wide ${upward ? 'text-white' : 'text-gray-900'}`}>
+          {currentCountryConfig.currency} {currentCountryConfig.symbol}
+        </span>
+        <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isOpen ? 'rotate-180' : ''} ${upward ? 'text-gray-300' : 'text-gray-500'}`} />
       </button>
 
       {isOpen && (
-        <div className={`absolute left-0 sm:left-auto sm:right-0 w-48 rounded-xl bg-white shadow-xl ring-1 ring-black/5 z-50 overflow-hidden ${upward ? 'bottom-full mb-2 origin-bottom-left sm:origin-bottom-right' : 'mt-2 origin-top-left sm:origin-top-right'} animate-in fade-in ${upward ? 'slide-in-from-bottom-2' : 'slide-in-from-top-2'} duration-200`}>
+        <div className={`absolute left-0 sm:left-auto sm:right-0 w-48 rounded-xl bg-white shadow-xl ring-1 ring-black/5 z-[9999] overflow-hidden ${upward ? 'bottom-full mb-2 origin-bottom-left sm:origin-bottom-right' : 'mt-2 origin-top-left sm:origin-top-right'} animate-in fade-in ${upward ? 'slide-in-from-bottom-2' : 'slide-in-from-top-2'} duration-200`}>
           <div className="p-1">
             {Object.entries(SUPPORTED_COUNTRIES).map(([code, config]) => (
               <button
@@ -89,8 +96,8 @@ export default function RegionSwitcher({ upward = false }: { upward?: boolean })
                   }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <span className="text-base">{config.flag}</span>
-                  <span>{config.name}</span>
+                  <img src={`https://flagcdn.com/w40/${code}.png`} alt={config.name} className="h-4 w-6 object-cover rounded-sm" />
+                  <span>{config.currency} {config.symbol}</span>
                 </div>
                 <span className={`text-[10px] tracking-widest uppercase ${country === code ? 'text-[#3B5D3B]' : 'text-gray-400'}`}>
                   {config.currency}

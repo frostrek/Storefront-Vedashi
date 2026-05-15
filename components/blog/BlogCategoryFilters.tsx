@@ -21,11 +21,10 @@ export default function BlogCategoryFilters({
             <div className="flex flex-wrap items-center gap-2">
                 <button
                     onClick={() => onCategoryChange('All')}
-                    className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
-                        activeCategory === 'All'
-                            ? 'bg-[#8B9F8B] text-white shadow-md'
-                            : 'bg-white border border-light-border text-warm-gray hover:border-[#8B9F8B]/50 hover:text-[#8B9F8B]'
-                    }`}
+                    className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${activeCategory === 'All'
+                        ? 'bg-[#91C934] text-white shadow-md'
+                        : 'bg-white border border-[#91C934]/50 text-warm-gray hover:border-[#91C934]/50 hover:text-[#91C934]'
+                        }`}
                 >
                     All
                 </button>
@@ -33,11 +32,10 @@ export default function BlogCategoryFilters({
                     <button
                         key={cat}
                         onClick={() => onCategoryChange(cat)}
-                        className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
-                            activeCategory === cat
-                                ? 'bg-[#8B9F8B] text-white shadow-md'
-                                : 'bg-white border border-light-border text-warm-gray hover:border-[#8B9F8B]/50 hover:text-[#8B9F8B]'
-                        }`}
+                        className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${activeCategory === cat
+                            ? 'bg-[#91C934] text-white shadow-md'
+                            : 'bg-white border border-[#91C934]/50 text-warm-gray hover:border-[#91C934]/50 hover:text-[#91C934]'
+                            }`}
                     >
                         {cat}
                     </button>

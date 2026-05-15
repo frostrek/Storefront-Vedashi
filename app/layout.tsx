@@ -10,33 +10,36 @@ import PromoBanner from "@/components/PromoBanner";
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { AuthProvider } from "@/context/AuthContext";
-import { ClerkProvider } from "@clerk/nextjs";
+
 import { Toaster } from "react-hot-toast";
 import { CookieConsentProvider } from "@/context/CookieConsentContext";
 import CookieBanner from "@/components/CookieBanner";
 import LanguageSuggestionBanner from "@/components/LanguageSuggestionBanner";
 import DynamicScriptLoader from "@/components/DynamicScriptLoader";
 import RouteTracker from "@/components/RouteTracker";
+import GlobalErrorTracker from "@/components/GlobalErrorTracker";
 import MaintenancePage from "@/components/MaintenancePage";
-import { generateOrganizationJsonLd, generateWebSiteJsonLd } from "@/lib/seo";
-import ButterflyEffect from "@/components/animations/ButterflyEffect";
+import { generateLocalBusinessJsonLd, generateOrganizationJsonLd, generateWebSiteJsonLd } from "@/lib/seo";
 import { API_URL } from "@/lib/api";
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
   display: "swap",
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "600"],
 });
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
   variable: "--font-serif",
   display: "swap",
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["600", "700"],
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.com';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Vedashi — Premium Ayurvedic Wellness",
     template: "%s | Vedashi",
@@ -55,11 +58,20 @@ export const metadata: Metadata = {
     siteName: "Vedashi",
     title: "Vedashi — Premium Ayurvedic Wellness",
     description: "Experience the healing power of authentic Ayurvedic remedies crafted from nature.",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Vedashi | Premium Ayurvedic Wellness",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Vedashi — Premium Ayurvedic Wellness",
     description: "Experience the healing power of authentic Ayurvedic remedies crafted from nature.",
+    images: ["/opengraph-image"],
   },
 };
 
@@ -68,18 +80,28 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Check global maintenance status
+  // Check global maintenance status with a tight timeout to prevent site hangs
   let isMaintenance = false;
   let maintenanceMessage = "";
+  
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 2500); // 2.5s ceiling for health check
+  
   try {
-    const res = await fetch(`${API_URL}/health`, { next: { revalidate: 10 } });
+    const res = await fetch(`${API_URL}/health`, { 
+      signal: controller.signal,
+      next: { revalidate: 10 } 
+    });
     const data = await res.json();
     if (data?.maintenance?.enabled) {
       isMaintenance = true;
       maintenanceMessage = data.maintenance.message || "The Vedashi experience is currently undergoing routine maintenance.";
     }
   } catch (error) {
-    // Ignore network errors her
+    // If the health check times out or fails, we assume the site is NOT in maintenance
+    // This prioritizes speed and prevents the "TimeoutError" crash in dev
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   if (isMaintenance) {
@@ -94,31 +116,47 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
-      <body className={`min-h-screen flex flex-col ${inter.className}`} suppressHydrationWarning>
+      <head>
+        {/* Preconnect to CDN & API origins — saves ~100-200ms per domain on mobile */}
+        <link rel="preconnect" href="https://d15o8yv09tizyc.cloudfront.net" />
+        <link rel="preconnect" href="https://vedashi-prod-assets.s3.ap-south-1.amazonaws.com" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="https://mc.yandex.ru" />
+        
         {/* GA4 — Set default consent BEFORE any gtag scripts load */}
-        <Script id="ga4-default-consent" strategy="beforeInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){window.dataLayer.push(arguments);}
-            gtag('consent', 'default', { analytics_storage: 'denied' });
-          `}
-        </Script>
         <Script
+          id="ga4-default-consent"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){window.dataLayer.push(arguments);}
+              gtag('consent', 'default', { analytics_storage: 'denied' });
+            `
+          }}
+        />
+        
+        {/* Structured Data */}
+        <script
           id="structured-data-organization"
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(generateOrganizationJsonLd()) }}
         />
-        <Script
+        <script
+          id="structured-data-business"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(generateLocalBusinessJsonLd()) }}
+        />
+        <script
           id="structured-data-website"
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(generateWebSiteJsonLd()) }}
         />
-
-
-        <ClerkProvider>
+      </head>
+      <body className={`min-h-screen flex flex-col ${inter.className}`} suppressHydrationWarning>
+        <>
           <Script
             src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-            strategy="afterInteractive"
+            strategy="lazyOnload"
           />
           <Script
             src="https://checkout.razorpay.com/v1/checkout.js"
@@ -129,6 +167,7 @@ export default async function RootLayout({
             <Suspense fallback={null}>
               <RouteTracker />
             </Suspense>
+            <GlobalErrorTracker />
             <AuthProvider>
               <CartProvider>
                 <WishlistProvider>
@@ -150,7 +189,7 @@ export default async function RootLayout({
                         border: '1px solid rgba(255, 255, 255, 0.5)',
                       },
                       success: {
-                        iconTheme: { primary: '#3d5c3a', secondary: '#fff' },
+                        iconTheme: { primary: '#91C934', secondary: '#fff' },
                       },
                       error: {
                         iconTheme: { primary: '#ef4444', secondary: '#fff' },
@@ -158,17 +197,17 @@ export default async function RootLayout({
                     }}
                   />
                   <Navbar />
-                  <PromoBanner />
                   <main className="flex-1">{children}</main>
                   <Footer />
-                  <ButterflyEffect />
+
                   <CookieBanner />
                   <LanguageSuggestionBanner />
+            
                 </WishlistProvider>
               </CartProvider>
             </AuthProvider>
           </CookieConsentProvider>
-        </ClerkProvider>
+        </>
       </body>
     </html>
   );
