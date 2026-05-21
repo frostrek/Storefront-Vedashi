@@ -6,8 +6,16 @@ import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 
-const FROSTY_API_URL = process.env.NEXT_PUBLIC_FROSTY_API_URL ?? "https://dashboard.vedashi.com";
-const FROSTY_EMBED_KEY = process.env.NEXT_PUBLIC_FROSTY_EMBED_KEY ?? "GZWbbJ6J4hQ-MTLEo321NAT_t-_Pmwt6VxYhDedULUU";
+const FROSTY_API_ORIGIN = (
+  process.env.NEXT_PUBLIC_FROSTY_API_URL ?? "https://ai.vedashi.com"
+)
+  .trim()
+  .replace(/\/$/, "")
+  .replace(/\/widget\.js$/i, "");
+
+const FROSTY_EMBED_KEY = process.env.NEXT_PUBLIC_FROSTY_EMBED_KEY ?? "EQds2N5t9tlytTmLFZd0u_gTjy3Tt8jb05Ng82qDrKI";
+const FROSTY_TENANT_ID =
+  process.env.NEXT_PUBLIC_FROSTY_TENANT_ID ?? "1ccc64c6-b4c0-4a2e-b10b-e0abf32d7e87";
 
 function toProductIds(items: Array<{ productId?: string; product_id?: string; id?: string }>): string[] {
     const seen = new Set<string>();
@@ -71,6 +79,13 @@ function FrostyShopBridge() {
 }
 
 export default function FrostyWidget() {
+    if (!FROSTY_EMBED_KEY) {
+        if (process.env.NODE_ENV === "development") {
+            console.warn("[Frosty] Missing NEXT_PUBLIC_FROSTY_EMBED_KEY");
+        }
+        return null;
+    }
+
     // language=js
     const initScript = `
 (function(){
@@ -103,10 +118,10 @@ export default function FrostyWidget() {
                 dangerouslySetInnerHTML={{ __html: initScript }}
             />
             <FrostyShopBridge />
-            <script
+            <Script
                 src="https://ai.vedashi.com/widget.js"
-                data-api-url={FROSTY_API_URL}
-                data-tenant-id="1ccc64c6-b4c0-4a2e-b10b-e0abf32d7e87"
+                data-api-url={FROSTY_API_ORIGIN}
+                data-tenant-id={FROSTY_TENANT_ID}
                 data-embed-key={FROSTY_EMBED_KEY}
                 data-bot-name="Veda"
                 data-primary-color="#91ca35"
@@ -114,8 +129,8 @@ export default function FrostyWidget() {
                 data-theme="default"
                 data-position="bottom-right"
                 data-show-product-images="true"
-                defer
-            ></script>
+                strategy="afterInteractive"
+            />
         </>
     );
 }
