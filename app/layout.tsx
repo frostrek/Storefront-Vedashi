@@ -5,12 +5,10 @@ import { Suspense } from "react";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-
-import PromoBanner from "@/components/PromoBanner";
+import FrostyWidget from "@/components/FrostyWidget"
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { AuthProvider } from "@/context/AuthContext";
-
 import { Toaster } from "react-hot-toast";
 import { CookieConsentProvider } from "@/context/CookieConsentContext";
 import CookieBanner from "@/components/CookieBanner";
@@ -83,14 +81,14 @@ export default async function RootLayout({
   // Check global maintenance status with a tight timeout to prevent site hangs
   let isMaintenance = false;
   let maintenanceMessage = "";
-  
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 2500); // 2.5s ceiling for health check
-  
+
   try {
-    const res = await fetch(`${API_URL}/health`, { 
+    const res = await fetch(`${API_URL}/health`, {
       signal: controller.signal,
-      next: { revalidate: 10 } 
+      next: { revalidate: 10 }
     });
     const data = await res.json();
     if (data?.maintenance?.enabled) {
@@ -122,7 +120,7 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://vedashi-prod-assets.s3.ap-south-1.amazonaws.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://mc.yandex.ru" />
-        
+
         {/* GA4 — Set default consent BEFORE any gtag scripts load */}
         <Script
           id="ga4-default-consent"
@@ -134,7 +132,7 @@ export default async function RootLayout({
             `
           }}
         />
-        
+
         {/* Structured Data */}
         <script
           id="structured-data-organization"
@@ -202,7 +200,7 @@ export default async function RootLayout({
 
                   <CookieBanner />
                   <LanguageSuggestionBanner />
-            
+                  <FrostyWidget />
                 </WishlistProvider>
               </CartProvider>
             </AuthProvider>
