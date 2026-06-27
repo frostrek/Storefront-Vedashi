@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Facebook, Instagram, Twitter, Youtube, Linkedin, Globe, MapPin, Phone, Mail, Leaf, Truck, RotateCcw, ShieldCheck } from 'lucide-react';
+import { Facebook, Instagram, Twitter, Youtube, Linkedin, Globe, MapPin, Phone, Mail, Leaf, Truck, RotateCcw, ShieldCheck, FileText } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import RegionSwitcher from './RegionSwitcher';
 import GoogleTranslateWidget from './GoogleTranslateWidget';
@@ -329,10 +329,20 @@ export default function Footer() {
 
                                     <div className="flex items-center gap-2">
                                         <Mail className="text-gray-500 h-3 w-3 flex-shrink-0" />
-                                        <a href={`mailto:${data?.contact?.email || 'info@vedashi.com'}`} className="text-[11.5px] text-gray-400 hover:text-[#91C934] transition-colors">
-                                            {data?.contact?.email || 'info@vedashi.com'}
+                                        <a href={`mailto:${isRussia ? 'info@vedashiherbals.com' : (data?.contact?.email || 'info@vedashi.com')}`} className="text-[11.5px] text-gray-400 hover:text-[#91C934] transition-colors">
+                                            {isRussia ? 'info@vedashiherbals.com' : (data?.contact?.email || 'info@vedashi.com')}
                                         </a>
                                     </div>
+                                    {isRussia && (
+                                        <div className="flex items-start gap-2 mt-0.5">
+                                            <FileText className="text-gray-500 h-3 w-3 flex-shrink-0 mt-0.5" />
+                                            <div className="flex flex-col gap-0.5 text-[11.5px] text-gray-400 leading-tight">
+                                                <span>ИНН 9727117720</span>
+                                                <span>КПП 772701001</span>
+                                                <span>ОГРН 1257700504709</span>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -470,7 +480,7 @@ export default function Footer() {
                         </p>
                         <div className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-3 order-2 md:order-1 mt-0.5 md:mt-0">
                             <p className="text-[9.5px] sm:text-[11px] text-gray-500 text-center">
-                                {bottomBar?.copyright || `© ${new Date().getFullYear()} Vedashi. All rights reserved.`}
+                                {isRussia ? `© ${new Date().getFullYear()} Vedashi Herbals. All rights reserved.` : (bottomBar?.copyright || `© ${new Date().getFullYear()} Vedashi. All rights reserved.`)}
                             </p>
                         </div>
                         <div className="hidden md:flex items-center gap-2 sm:gap-3 mt-1 sm:mt-0 order-3 md:order-3 relative z-[200]">
