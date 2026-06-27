@@ -68,7 +68,7 @@ export default function ContactClientPage() {
             <div className="relative z-10 mx-auto max-w-[1240px] px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.2fr_1fr] xl:gap-14">
 
-                    {/* Left Column: Contact Form */}
+                    {/* Left Column: Contact Forms */}
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
