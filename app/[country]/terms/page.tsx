@@ -2,13 +2,35 @@ import React from 'react';
 import Link from 'next/link';
 import { getLegalDocument } from '@/lib/api';
 import LegalContentRenderer from '@/components/ui/LegalContentRenderer';
+import RuLegalPage from '@/components/RuLegalPage';
+import { publicOffer } from '@/lib/ru-legal-content';
+import type { Metadata } from 'next';
 
-export const metadata = {
-    title: 'Terms of Service | Vedashi',
-    description: 'Terms of Service and Conditions for Vedashi.',
-};
+type Props = { params: Promise<{ country: string }> };
 
-export default async function TermsPage() {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+    const { country } = await params;
+    if (country === 'ru') {
+        return {
+            title: publicOffer.metaTitle,
+            description: publicOffer.metaDescription,
+        };
+    }
+    return {
+        title: 'Terms of Service | Vedashi',
+        description: 'Terms of Service and Conditions for Vedashi.',
+    };
+}
+
+export default async function TermsPage({ params }: Props) {
+    const { country } = await params;
+
+    // ─── Russia: show Public Offer (Публичная оферта) ───
+    if (country === 'ru') {
+        return <RuLegalPage doc={publicOffer} />;
+    }
+
+    // ─── Default: CMS-driven content ───
     const doc = await getLegalDocument('terms-of-service');
     
     return (

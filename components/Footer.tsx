@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Facebook, Instagram, Twitter, Youtube, Linkedin, Globe, MapPin, Phone, Mail, Leaf, Truck, RotateCcw, ShieldCheck } from 'lucide-react';
+import { Facebook, Instagram, Twitter, Youtube, Linkedin, Globe, MapPin, Phone, Mail, Leaf, Truck, RotateCcw, ShieldCheck, FileText } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import RegionSwitcher from './RegionSwitcher';
 import GoogleTranslateWidget from './GoogleTranslateWidget';
@@ -109,6 +109,8 @@ const FALLBACK: FooterData = {
 
 export default function Footer() {
     const pathname = usePathname();
+    const isRussia = pathname?.startsWith('/ru');
+    const currentCountry = pathname?.split('/')[1] || 'in';
     const [data, setData] = useState<FooterData | null>(null);
     const { openSettings } = useCookieConsent();
     const [email, setEmail] = useState('');
@@ -138,9 +140,34 @@ export default function Footer() {
     const isDynamic = data?.settings?.use_dynamic_footer !== false;
 
     const company = (isDynamic && data?.company) ? data.company : FALLBACK.company;
-    const columns = (isDynamic && data?.links && data.links.length > 0) ? data.links : (FALLBACK.links ?? []);
+    let columns = (isDynamic && data?.links && data.links.length > 0) ? data.links : (FALLBACK.links ?? []);
     const social = (isDynamic && data?.social && data.social.length > 0) ? data.social : (FALLBACK.social ?? []);
     const bottomBar = (isDynamic && data?.bottom_bar) ? data.bottom_bar : FALLBACK.bottom_bar;
+
+    // ─── Russia: override footer link labels with Russian text ───
+    if (isRussia && !isDynamic) {
+        columns = [
+            {
+                title: 'Навигация',
+                items: [
+                    { label: 'О нас', href: '/about' },
+                    { label: 'Блог', href: '/blog' },
+                    { label: 'Все товары', href: '/products' },
+                    { label: 'Контакты', href: '/contact' },
+                ],
+            },
+            {
+                title: 'Информация',
+                items: [
+                    { label: 'Центр помощи', href: '/help-center' },
+                    { label: 'Условия доставки и оплаты', href: '/shipping' },
+                    { label: 'Политика возврата', href: '/return-policy' },
+                    { label: 'Условия обслуживания', href: '/terms' },
+                    { label: 'Политика конфиденциальности', href: '/privacy' },
+                ],
+            },
+        ];
+    }
 
     const FollowUsContent = (
         <div className="flex flex-col items-start pt-0 pl-0 sm:pl-[42px]">
@@ -288,21 +315,34 @@ export default function Footer() {
                                     <div className="flex items-start gap-2">
                                         <MapPin className="text-gray-500 h-3 w-3 flex-shrink-0 mt-0.5" />
                                         <span className="text-[11.5px] text-gray-400 leading-snug">
-                                            {data?.contact?.address || 'Plot No C-89, Shop No: 2, Sector-04, Airoli, Navi Mumbai, Thane, Maharashtra – 400708 India'}
+                                            {data?.contact?.address || (isRussia
+                                                ? '117292, г. Москва, вн.тер.г. муниципальный округ Академический, ул. Шверника, д. 6, к. 1, помещ. 8П'
+                                                : 'Plot No C-89, Shop No: 2, Sector-04, Airoli, Navi Mumbai, Thane, Maharashtra – 400708 India')}
+                                            {isRussia && !data?.contact?.address && (
+                                                <>
+                                                    <br />
+                                                    <span className="text-gray-500">Генеральный директор: Андреев Кирилл Павлович</span>
+                                                </>
+                                            )}
                                         </span>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <Phone className="text-gray-500 h-3 w-3 flex-shrink-0" />
-                                        <span className="text-[11.5px] text-gray-400">
-                                            {data?.contact?.phone || '+91 96677 88869'}
-                                        </span>
-                                    </div>
+
                                     <div className="flex items-center gap-2">
                                         <Mail className="text-gray-500 h-3 w-3 flex-shrink-0" />
-                                        <span className="text-[11.5px] text-gray-400">
-                                            {data?.contact?.email || 'info@vedashi.com'}
-                                        </span>
+                                        <a href={`mailto:${isRussia ? 'info@vedashiherbals.com' : (data?.contact?.email || 'info@vedashi.com')}`} className="text-[11.5px] text-gray-400 hover:text-[#91C934] transition-colors">
+                                            {isRussia ? 'info@vedashiherbals.com' : (data?.contact?.email || 'info@vedashi.com')}
+                                        </a>
                                     </div>
+                                    {isRussia && (
+                                        <div className="flex items-start gap-2 mt-0.5">
+                                            <FileText className="text-gray-500 h-3 w-3 flex-shrink-0 mt-0.5" />
+                                            <div className="flex flex-col gap-0.5 text-[11.5px] text-gray-400 leading-tight">
+                                                <span>ИНН 9727117720</span>
+                                                <span>КПП 772701001</span>
+                                                <span>ОГРН 1257700504709</span>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -324,7 +364,7 @@ export default function Footer() {
                                     {columns[0]?.items.map((item, ii) => (
                                         <li key={ii}>
                                             <Link
-                                                href={item.href}
+                                                href={item.href.startsWith('/') ? `/${currentCountry}${item.href}` : item.href}
                                                 className="text-[11px] sm:text-[12px] text-gray-400 hover:text-white transition-colors duration-200"
                                             >
                                                 {item.label}
@@ -359,7 +399,7 @@ export default function Footer() {
                                     {columns[1]?.items.map((item, ii) => (
                                         <li key={ii}>
                                             <Link
-                                                href={item.href}
+                                                href={item.href.startsWith('/') ? `/${currentCountry}${item.href}` : item.href}
                                                 className="text-[11px] sm:text-[12px] text-gray-400 hover:text-white transition-colors duration-200"
                                             >
                                                 {item.label}
@@ -440,7 +480,7 @@ export default function Footer() {
                         </p>
                         <div className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-3 order-2 md:order-1 mt-0.5 md:mt-0">
                             <p className="text-[9.5px] sm:text-[11px] text-gray-500 text-center">
-                                {bottomBar?.copyright || `© ${new Date().getFullYear()} Vedashi. All rights reserved.`}
+                                {isRussia ? `© ${new Date().getFullYear()} Vedashi Herbals. All rights reserved.` : (bottomBar?.copyright || `© ${new Date().getFullYear()} Vedashi. All rights reserved.`)}
                             </p>
                         </div>
                         <div className="hidden md:flex items-center gap-2 sm:gap-3 mt-1 sm:mt-0 order-3 md:order-3 relative z-[200]">

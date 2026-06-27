@@ -3,8 +3,19 @@ import { getLegalDocument } from '@/lib/api';
 import { ArrowLeft, ShieldCheck, Mail, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import RuLegalPage from '@/components/RuLegalPage';
+import { privacyPolicy } from '@/lib/ru-legal-content';
 
-export async function generateMetadata(): Promise<Metadata> {
+type Props = { params: Promise<{ country: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+    const { country } = await params;
+    if (country === 'ru') {
+        return {
+            title: privacyPolicy.metaTitle,
+            description: privacyPolicy.metaDescription,
+        };
+    }
     const doc = await getLegalDocument('privacy-policy');
     return {
         title: doc ? `${doc.title} | Vedashi` : 'Privacy Policy | Vedashi',
@@ -12,7 +23,14 @@ export async function generateMetadata(): Promise<Metadata> {
     };
 }
 
-export default async function PrivacyPolicyPage() {
+export default async function PrivacyPolicyPage({ params }: Props) {
+    const { country } = await params;
+
+    // ─── Russia: show Russian privacy policy ───
+    if (country === 'ru') {
+        return <RuLegalPage doc={privacyPolicy} />;
+    }
+
     // Fetch the live legal document with slug "privacy-policy"
     const doc = await getLegalDocument('privacy-policy');
 

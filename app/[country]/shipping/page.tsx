@@ -1,15 +1,36 @@
 import React from 'react';
 import Link from 'next/link';
 import { getLegalDocument } from '@/lib/api';
-
 import LegalContentRenderer from '@/components/ui/LegalContentRenderer';
+import RuLegalPage from '@/components/RuLegalPage';
+import { deliveryPayment } from '@/lib/ru-legal-content';
+import type { Metadata } from 'next';
 
-export const metadata = {
-    title: 'Shipping Policy | Vedashi',
-    description: 'Learn about Vedashi shipping rates, delivery timelines, and our shipping policy.',
-};
+type Props = { params: Promise<{ country: string }> };
 
-export default async function ShippingPolicyPage() {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+    const { country } = await params;
+    if (country === 'ru') {
+        return {
+            title: deliveryPayment.metaTitle,
+            description: deliveryPayment.metaDescription,
+        };
+    }
+    return {
+        title: 'Shipping Policy | Vedashi',
+        description: 'Learn about Vedashi shipping rates, delivery timelines, and our shipping policy.',
+    };
+}
+
+export default async function ShippingPolicyPage({ params }: Props) {
+    const { country } = await params;
+
+    // ─── Russia: show Russian delivery & payment terms ───
+    if (country === 'ru') {
+        return <RuLegalPage doc={deliveryPayment} />;
+    }
+
+    // ─── Default: CMS-driven content ───
     const doc = await getLegalDocument('shipping-policy');
     
     return (
