@@ -7,7 +7,7 @@ interface UseIntersectionObserverOptions {
     rootMargin?: string;
     /** Visibility threshold (0–1). Default 0.1. */
     threshold?: number;
-    /** If true, keep observing (re-triggers). Default false (one-shot). */
+    /** If true, keep observing (re-triggers). Default false (one-shots). */
     continuous?: boolean;
 }
 
