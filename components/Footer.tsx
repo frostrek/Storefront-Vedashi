@@ -110,6 +110,7 @@ const FALLBACK: FooterData = {
 export default function Footer() {
     const pathname = usePathname();
     const isRussia = pathname?.startsWith('/ru');
+    const currentCountry = pathname?.split('/')[1] || 'in';
     const [data, setData] = useState<FooterData | null>(null);
     const { openSettings } = useCookieConsent();
     const [email, setEmail] = useState('');
@@ -353,7 +354,7 @@ export default function Footer() {
                                     {columns[0]?.items.map((item, ii) => (
                                         <li key={ii}>
                                             <Link
-                                                href={item.href}
+                                                href={item.href.startsWith('/') ? `/${currentCountry}${item.href}` : item.href}
                                                 className="text-[11px] sm:text-[12px] text-gray-400 hover:text-white transition-colors duration-200"
                                             >
                                                 {item.label}
@@ -388,7 +389,7 @@ export default function Footer() {
                                     {columns[1]?.items.map((item, ii) => (
                                         <li key={ii}>
                                             <Link
-                                                href={item.href}
+                                                href={item.href.startsWith('/') ? `/${currentCountry}${item.href}` : item.href}
                                                 className="text-[11px] sm:text-[12px] text-gray-400 hover:text-white transition-colors duration-200"
                                             >
                                                 {item.label}
