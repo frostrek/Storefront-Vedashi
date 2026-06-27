@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { MapPin, Phone, Mail, Clock, Send } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { submitFeedback } from '@/lib/api';
@@ -8,6 +9,8 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 
 export default function ContactClientPage() {
+    const pathname = usePathname();
+    const isRussia = pathname?.startsWith('/ru');
     const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -151,17 +154,15 @@ export default function ContactClientPage() {
                             {
                                 icon: MapPin,
                                 title: 'VISIT US',
-                                lines: ['JMD Empire, Sector 62', 'Gurgaon, Haryana', 'India']
+                                lines: isRussia
+                                    ? ['117292, г. Москва, вн.тер.г. муниципальный округ Академический,', 'ул. Шверника, д. 6, к. 1, помещ. 8П', 'Генеральный директор: Андреев Кирилл Павлович']
+                                    : ['JMD Empire, Sector 62', 'Gurgaon, Haryana', 'India']
                             },
-                            {
-                                icon: Phone,
-                                title: 'CALL US',
-                                lines: ['+91 96677 88869']
-                            },
+
                             {
                                 icon: Mail,
                                 title: 'EMAIL US',
-                                lines: ['info@vedashi.com', 'orders@vedashi.com']
+                                lines: ['info@vedashi.com']
                             },
                             {
                                 icon: Clock,
@@ -184,7 +185,13 @@ export default function ContactClientPage() {
                                 <div className="space-y-1">
                                     <h3 className="font-bold text-[11px] tracking-wider text-[#1A1A1A] uppercase mb-2">{info.title}</h3>
                                     {info.lines.map((line, j) => (
-                                        <p key={j} className="text-[14px] text-[#5c5c5c] leading-relaxed">{line}</p>
+                                        info.title === 'EMAIL US' ? (
+                                            <a key={j} href={`mailto:${line}`} className="block text-[14px] text-[#5c5c5c] leading-relaxed hover:text-[#91C934] transition-colors">
+                                                {line}
+                                            </a>
+                                        ) : (
+                                            <p key={j} className="text-[14px] text-[#5c5c5c] leading-relaxed">{line}</p>
+                                        )
                                     ))}
                                 </div>
                             </motion.div>

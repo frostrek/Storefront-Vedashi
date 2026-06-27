@@ -1493,3 +1493,76 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
   background-color: #91C934 !important;
   color: #FFFFFF !important;
 }
+
+/* ============================================
+   Chatbot Launcher Premium Overrides
+   ============================================ */
+
+/* Entrance animation for the chatbot button */
+@keyframes frostyEntrance {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) translateY(20px);
+  }
+
+  60% {
+    opacity: 1;
+    transform: scale(1.1) translateY(-5px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Subtle continuous pulse for attention */
+@keyframes frostyPulseGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(145, 201, 52, 0.4);
+  }
+
+  70% {
+    box-shadow: 0 0 0 15px rgba(145, 201, 52, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(145, 201, 52, 0);
+  }
+}
+
+#frosty-widget-root>button {
+  /* Enhance the base style */
+  background: linear-gradient(135deg, #91ca35 0%, #7db52a 100%) !important;
+  color: #ffffff !important;
+  border: 2px solid rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 6px 20px rgba(145, 201, 52, 0.35) !important;
+
+  /* Entrance animation */
+  animation: frostyEntrance 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards,
+    frostyPulseGlow 2.5s infinite 1s !important;
+
+  /* Transitions for interaction */
+  transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+
+  /* Text and icon styling */
+  font-weight: 700 !important;
+  letter-spacing: 0.03em !important;
+  text-transform: capitalize !important;
+  padding: 14px 22px !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+/* Hover effects */
+#frosty-widget-root>button:hover {
+  transform: translateY(-4px) scale(1.05) !important;
+  box-shadow: 0 10px 25px rgba(145, 201, 52, 0.5) !important;
+  background: linear-gradient(135deg, #9bd440 0%, #8ac030 100%) !important;
+  border-color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Active/click effects */
+#frosty-widget-root>button:active {
+  transform: translateY(1px) scale(0.98) !important;
+  box-shadow: 0 4px 12px rgba(145, 201, 52, 0.3) !important;
+}

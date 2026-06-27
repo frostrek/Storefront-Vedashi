@@ -2,13 +2,35 @@ import React from 'react';
 import Link from 'next/link';
 import { getLegalDocument } from '@/lib/api';
 import LegalContentRenderer from '@/components/ui/LegalContentRenderer';
+import RuLegalPage from '@/components/RuLegalPage';
+import { privacyPolicy } from '@/lib/ru-legal-content';
+import type { Metadata } from 'next';
 
-export const metadata = {
-    title: 'Privacy Policy | Vedashi',
-    description: 'Privacy Policy for Vedashi.',
-};
+type Props = { params: Promise<{ country: string }> };
 
-export default async function PrivacyPage() {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+    const { country } = await params;
+    if (country === 'ru') {
+        return {
+            title: privacyPolicy.metaTitle,
+            description: privacyPolicy.metaDescription,
+        };
+    }
+    return {
+        title: 'Privacy Policy | Vedashi',
+        description: 'Privacy Policy for Vedashi.',
+    };
+}
+
+export default async function PrivacyPage({ params }: Props) {
+    const { country } = await params;
+
+    // ─── Russia: show Russian privacy policy ───
+    if (country === 'ru') {
+        return <RuLegalPage doc={privacyPolicy} />;
+    }
+
+    // ─── Default: CMS-driven content ───
     const doc = await getLegalDocument('privacy-policy');
 
     return (

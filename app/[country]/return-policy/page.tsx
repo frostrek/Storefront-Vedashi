@@ -2,13 +2,35 @@ import React from 'react';
 import Link from 'next/link';
 import { getLegalDocument } from '@/lib/api';
 import LegalContentRenderer from '@/components/ui/LegalContentRenderer';
+import RuLegalPage from '@/components/RuLegalPage';
+import { returnPolicy } from '@/lib/ru-legal-content';
+import type { Metadata } from 'next';
 
-export const metadata = {
-    title: 'Return Policy | Vedashi',
-    description: 'Learn about Vedashi return, refund, and replacement policy.',
-};
+type Props = { params: Promise<{ country: string }> };
 
-export default async function ReturnPolicyPage() {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+    const { country } = await params;
+    if (country === 'ru') {
+        return {
+            title: returnPolicy.metaTitle,
+            description: returnPolicy.metaDescription,
+        };
+    }
+    return {
+        title: 'Return Policy | Vedashi',
+        description: 'Learn about Vedashi return, refund, and replacement policy.',
+    };
+}
+
+export default async function ReturnPolicyPage({ params }: Props) {
+    const { country } = await params;
+
+    // ─── Russia: show Russian return & exchange policy ───
+    if (country === 'ru') {
+        return <RuLegalPage doc={returnPolicy} />;
+    }
+
+    // ─── Default: CMS-driven content ───
     const doc = await getLegalDocument('return-policy');
     
     return (

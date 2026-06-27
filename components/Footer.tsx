@@ -109,6 +109,7 @@ const FALLBACK: FooterData = {
 
 export default function Footer() {
     const pathname = usePathname();
+    const isRussia = pathname?.startsWith('/ru');
     const [data, setData] = useState<FooterData | null>(null);
     const { openSettings } = useCookieConsent();
     const [email, setEmail] = useState('');
@@ -138,9 +139,34 @@ export default function Footer() {
     const isDynamic = data?.settings?.use_dynamic_footer !== false;
 
     const company = (isDynamic && data?.company) ? data.company : FALLBACK.company;
-    const columns = (isDynamic && data?.links && data.links.length > 0) ? data.links : (FALLBACK.links ?? []);
+    let columns = (isDynamic && data?.links && data.links.length > 0) ? data.links : (FALLBACK.links ?? []);
     const social = (isDynamic && data?.social && data.social.length > 0) ? data.social : (FALLBACK.social ?? []);
     const bottomBar = (isDynamic && data?.bottom_bar) ? data.bottom_bar : FALLBACK.bottom_bar;
+
+    // ─── Russia: override footer link labels with Russian text ───
+    if (isRussia && !isDynamic) {
+        columns = [
+            {
+                title: 'Навигация',
+                items: [
+                    { label: 'О нас', href: '/about' },
+                    { label: 'Блог', href: '/blog' },
+                    { label: 'Все товары', href: '/products' },
+                    { label: 'Контакты', href: '/contact' },
+                ],
+            },
+            {
+                title: 'Информация',
+                items: [
+                    { label: 'Центр помощи', href: '/help-center' },
+                    { label: 'Условия доставки и оплаты', href: '/shipping' },
+                    { label: 'Политика возврата', href: '/return-policy' },
+                    { label: 'Условия обслуживания', href: '/terms' },
+                    { label: 'Политика конфиденциальности', href: '/privacy' },
+                ],
+            },
+        ];
+    }
 
     const FollowUsContent = (
         <div className="flex flex-col items-start pt-0 pl-0 sm:pl-[42px]">
@@ -288,20 +314,23 @@ export default function Footer() {
                                     <div className="flex items-start gap-2">
                                         <MapPin className="text-gray-500 h-3 w-3 flex-shrink-0 mt-0.5" />
                                         <span className="text-[11.5px] text-gray-400 leading-snug">
-                                            {data?.contact?.address || 'Plot No C-89, Shop No: 2, Sector-04, Airoli, Navi Mumbai, Thane, Maharashtra – 400708 India'}
+                                            {data?.contact?.address || (isRussia
+                                                ? '117292, г. Москва, вн.тер.г. муниципальный округ Академический, ул. Шверника, д. 6, к. 1, помещ. 8П'
+                                                : 'Plot No C-89, Shop No: 2, Sector-04, Airoli, Navi Mumbai, Thane, Maharashtra – 400708 India')}
+                                            {isRussia && !data?.contact?.address && (
+                                                <>
+                                                    <br />
+                                                    <span className="text-gray-500">Генеральный директор: Андреев Кирилл Павлович</span>
+                                                </>
+                                            )}
                                         </span>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <Phone className="text-gray-500 h-3 w-3 flex-shrink-0" />
-                                        <span className="text-[11.5px] text-gray-400">
-                                            {data?.contact?.phone || '+91 96677 88869'}
-                                        </span>
-                                    </div>
+
                                     <div className="flex items-center gap-2">
                                         <Mail className="text-gray-500 h-3 w-3 flex-shrink-0" />
-                                        <span className="text-[11.5px] text-gray-400">
+                                        <a href={`mailto:${data?.contact?.email || 'info@vedashi.com'}`} className="text-[11.5px] text-gray-400 hover:text-[#91C934] transition-colors">
                                             {data?.contact?.email || 'info@vedashi.com'}
-                                        </span>
+                                        </a>
                                     </div>
                                 </div>
                             </div>
