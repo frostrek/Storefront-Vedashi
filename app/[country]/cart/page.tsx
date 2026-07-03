@@ -197,7 +197,7 @@ export default function CartPage() {
     const totalMRP = inStockItems.reduce((sum, item) => sum + (item.original_price ?? item.price ?? 0) * item.quantity, 0);
     const saleDiscount = totalMRP - inStockItems.reduce((sum, item) => sum + (item.price ?? 0) * item.quantity, 0);
     const inStockTotal = inStockItems.reduce((sum, item) => sum + (item.price ?? 0) * item.quantity, 0);
-    const deliveryFee = couponType === 'free_shipping' ? 0 : (inStockTotal > 50 ? 0 : 15);
+    const deliveryFee = 0;
     const grandTotal = inStockTotal - couponDiscount + deliveryFee;
     const inStockItemCount = inStockItems.reduce((sum, item) => sum + item.quantity, 0);
 

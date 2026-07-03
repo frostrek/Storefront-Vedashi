@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { buildPath, getCountryFromPathname } from '@/lib/currency';
 
 // Brand entries: name, slug (for URL filtering), and logo image paths
 // Add your brand logos to /public/brands/ and update the list below
@@ -22,7 +23,7 @@ const brands = [
 
 export default function BrandReel() {
   const params = useParams();
-  const country = (Array.isArray(params?.country) ? params?.country[0] : params?.country) || 'in';
+  const country = (Array.isArray(params?.country) ? params?.country[0] : params?.country) || 'us';
 
   // Duplicate brands for seamless infinite scroll
   const duplicatedBrands = [...brands, ...brands];
@@ -61,7 +62,7 @@ export default function BrandReel() {
             {duplicatedBrands.map((brand, index) => (
               <Link
                 key={`${brand.slug}-${index}`}
-                href={`/${country}/products?brand=${encodeURIComponent(brand.slug)}`}
+                href={buildPath(country, `/products?brand=${encodeURIComponent(brand.slug)}`)}
                 className="flex-shrink-0 group"
               >
                 <div className="flex items-center justify-center px-2 sm:px-4 h-[60px] w-[120px] sm:h-[80px] sm:w-[160px] transition-all duration-300 group-hover:scale-110">

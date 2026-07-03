@@ -16,6 +16,7 @@ import RegionSwitcher from './RegionSwitcher';
 import NotificationCenter from './account/NotificationCenter';
 import SecondaryNavbar from './SecondaryNavbar';
 import PromoBanner from './PromoBanner';
+import { buildPath, getCountryFromPathname } from '@/lib/currency';
 
 interface Category {
   category_id: string;
@@ -70,10 +71,10 @@ const DEFAULT_CONFIG: HeaderConfig = {
 
 /* ─── Recursive Desktop Mega Menu ─── */
 /* ─── Recursive Desktop Mega Menu Link Component ─── */
-const MegaMenuLinks = ({ item, country, topLevelSlug, secondLevelSlug, level = 0 }: { item: Category, country: string, topLevelSlug: string, secondLevelSlug?: string, level?: number }) => {
+const MegaMenuLinks = ({ item, country, topLevelSlug, secondLevelSlug, level = 0, buildPath }: { item: Category, country: string, topLevelSlug: string, secondLevelSlug?: string, level?: number, buildPath: (c: string, p: string) => string }) => {
   const hasChildren = item.children && item.children.length > 0;
 
-  let href = `/${country}/products?category=${topLevelSlug}`;
+  let href = buildPath(country, `/products?category=${topLevelSlug}`);
   if (level === 0) {
     href += `&sub_category=${item.slug}`;
   } else if (level === 1) {
@@ -104,6 +105,7 @@ const MegaMenuLinks = ({ item, country, topLevelSlug, secondLevelSlug, level = 0
               topLevelSlug={topLevelSlug}
               secondLevelSlug={level === 0 ? item.slug : secondLevelSlug}
               level={level + 1}
+              buildPath={buildPath}
             />
           ))}
         </div>
@@ -133,7 +135,7 @@ const MegaMenuContent = ({ parent, country, colors }: { parent: Category, countr
       {columnData.slice(0, 3).map((colItems, idx) => (
         <div key={idx} className="flex flex-col gap-10">
           {colItems.map(child => (
-            <MegaMenuLinks key={child.category_id} item={child} country={country} topLevelSlug={parent.slug} />
+            <MegaMenuLinks key={child.category_id} item={child} country={country} topLevelSlug={parent.slug} buildPath={buildPath} />
           ))}
         </div>
       ))}
@@ -222,7 +224,7 @@ export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const params = useParams();
-  const currentCountry = (params?.country as string) || 'in';
+  const currentCountry = (params?.country as string) || 'us';
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const { totalItems, loading: cartLoading } = useCart();
@@ -244,10 +246,10 @@ export default function Navbar() {
 
   const handleWishlistClick = () => {
     if (isAuthenticated) {
-      router.push(`/${currentCountry}/account/wishlist`);
+      router.push(buildPath(currentCountry, `/account/wishlist`));
     } else {
       toast('Please sign in to view your wishlist');
-      router.push(`/${currentCountry}/login`);
+      router.push(buildPath(currentCountry, `/login`));
     }
   };
 
@@ -317,13 +319,13 @@ export default function Navbar() {
             <div className="flex items-center justify-between h-8 text-[12px] tracking-wide">
               <div className="flex items-center gap-5">
                 {strip.show_track_orders && (
-                  <Link href={`/${currentCountry}/account`} className="font-medium" style={{ color: colors.strip_text }}>Track Orders</Link>
+                  <Link href={buildPath(currentCountry, `/account`)} className="font-medium" style={{ color: colors.strip_text }}>Track Orders</Link>
                 )}
                 {strip.show_categories && (
                   <div className="flex items-center gap-6">
                     {parentCategories.slice(0, 5).map(parent => (
                       <div key={parent.category_id} className="relative group flex items-center h-8">
-                        <Link href={`/${currentCountry}/products?category=${parent.slug}`} className="flex items-center gap-1 font-medium" style={{ color: colors.strip_text }}>
+                        <Link href={buildPath(currentCountry, `/products?category=${parent.slug}`)} className="flex items-center gap-1 font-medium" style={{ color: colors.strip_text }}>
                           {parent.name}
                           {parent.children && parent.children.length > 0 && <ChevronDown className="h-3 w-3 transition-transform group-hover:rotate-180" />}
                         </Link>
@@ -357,7 +359,7 @@ export default function Navbar() {
 
             {/* Logo Section */}
             <div className="flex-none flex items-center justify-start">
-              <Link href={`/${currentCountry}`} className="flex items-center gap-2 p-0 sm:p-2 relative overflow-visible">
+              <Link href={buildPath(currentCountry, '/')} className="flex items-center gap-2 p-0 sm:p-2 relative overflow-visible">
                 {branding.logo_url ? (
                   <img src={branding.logo_url} alt={branding.logo_alt} className="h-8 sm:h-10 md:h-12 lg:h-14 w-auto transition-all" />
                 ) : (
@@ -369,9 +371,9 @@ export default function Navbar() {
             {/* Center Nav Links */}
             <nav className="hidden xl:flex items-center gap-4 lg:gap-6 z-10 w-max transition-all duration-300 opacity-100 mr-4">
               {visibleLinks.map(link => {
-                const prefixedUrl = link.url.startsWith('/') ? `/${currentCountry}${link.url === '/' ? '' : link.url}` : link.url;
+                const prefixedUrl = link.url.startsWith('/') ? buildPath(currentCountry, link.url === '/' ? '' : link.url) : link.url;
                 const isActive = link.url === '/'
-                  ? pathname === `/${currentCountry}` || pathname === `/${currentCountry}/`
+                  ? pathname === buildPath(currentCountry, '/') || pathname === buildPath(currentCountry, `/`)
                   : pathname?.includes(link.url);
 
                 return (
@@ -413,7 +415,7 @@ export default function Navbar() {
               </button>
 
               <Link
-                href={`/${currentCountry}/cart`}
+                href={buildPath(currentCountry, `/cart`)}
                 className="relative p-2 group"
                 title="Cart"
                 aria-label="Cart"
@@ -428,7 +430,7 @@ export default function Navbar() {
 
               <div className="relative group">
                 <Link
-                  href={isAuthenticated ? `/${currentCountry}/account` : `/${currentCountry}/login`}
+                  href={isAuthenticated ? buildPath(currentCountry, `/account`) : buildPath(currentCountry, `/login`)}
                   className="p-2 block"
                   title={isAuthenticated ? "Account" : "Login / Register"}
                   aria-label={isAuthenticated ? "Account" : "Login / Register"}
@@ -460,14 +462,14 @@ export default function Navbar() {
                       </div>
                       <div className="p-4 space-y-2">
                         <Link
-                          href={`/${currentCountry}/login`}
+                          href={buildPath(currentCountry, `/login`)}
                           className="flex items-center gap-3 w-full px-4 py-2.5 bg-[#91C934] text-white rounded-xl text-[13px] font-bold transition-all hover:bg-[#7AA82C] hover:shadow-md active:scale-[0.98]"
                         >
                           <LogIn className="h-4 w-4" />
                           Sign In
                         </Link>
                         <Link
-                          href={`/${currentCountry}/login?mode=register`}
+                          href={buildPath(currentCountry, `/login?mode=register`)}
                           className="flex items-center gap-3 w-full px-4 py-2.5 bg-white text-gray-700 rounded-xl text-[13px] font-bold border border-gray-200 transition-all hover:bg-gray-50 active:scale-[0.98]"
                         >
                           <UserPlus className="h-4 w-4" />

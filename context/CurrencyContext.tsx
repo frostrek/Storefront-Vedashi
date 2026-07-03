@@ -7,7 +7,7 @@ import {
   SupportedCountryCode,
   CurrencyConfigEntry,
   CountryPriceOverride,
-  resolveInrPrice,
+  resolveBasePrice,
   formatPrice,
 } from '@/lib/currency';
 import { API_URL } from '@/lib/api';
@@ -19,11 +19,11 @@ interface CurrencyContextType {
   /**
    * Format a price for display. Handles country-based conversion automatically.
    *
-   * @param amountInr - Default price in INR
+   * @param amountUsd - Default price in USD (base currency)
    * @param countryPrices - Optional per-product country price overrides from the backend
    */
   formatPrice: (
-    amountInr: number | string | null | undefined,
+    amountUsd: number | string | null | undefined,
     countryPrices?: CountryPriceOverride[] | null
   ) => string;
   isLoadingRates: boolean;
@@ -63,8 +63,8 @@ export function CurrencyProvider({
       }
     }
 
-    // Only fetch if we are not in India, to save API calls
-    if (countryConfig.currency !== 'INR') {
+    // Only fetch if we are not in the US (base currency), to save API calls
+    if (countryConfig.currency !== 'USD') {
       fetchCurrencyConfig();
     } else {
       setIsLoadingRates(false);
@@ -76,42 +76,54 @@ export function CurrencyProvider({
     // Lookup the currency config for the current country (uppercase match)
     const upperCode = countryCode.toUpperCase();
     const currentConfig = currencyConfigs.find(c => c.country_code === upperCode);
-    // USD fallback config
-    const usdConfig = currencyConfigs.find(c => c.country_code === 'US');
 
     return (
-      amountInr: number | string | null | undefined,
+      amountUsd: number | string | null | undefined,
       countryPrices?: CountryPriceOverride[] | null
     ): string => {
-      const baseAmount = Number(amountInr) || 0;
+      const baseAmount = Number(amountUsd) || 0;
 
-      // For India — always show INR
-      if (countryCode === 'in') {
-        // Still check for a country-specific override (unlikely for IN but technically possible)
-        const resolved = resolveInrPrice(baseAmount, 'IN', countryPrices);
-        return formatPrice(resolved, 'INR', 1, 'en-IN');
+      // For US — always show USD (base currency, no conversion)
+      if (countryCode === 'us') {
+        // Still check for a country-specific override (unlikely for US but technically possible)
+        const resolved = resolveBasePrice(baseAmount, 'US', countryPrices);
+        return formatPrice(resolved, 'USD', 1, 'en-US');
       }
 
-      // Resolve the INR price (country override or default)
-      const resolvedInr = resolveInrPrice(baseAmount, upperCode, countryPrices);
+      // Resolve the USD price (country override or default)
+      const basePrice = Number(amountUsd) || 0;
+      
+      let overridePrice: number | null = null;
+      if (countryPrices && countryPrices.length > 0) {
+        const override = countryPrices.find(cp => cp.country_code.toUpperCase() === upperCode);
+        if (override && Number(override.price_inr) > 0) {
+          overridePrice = Number(override.price_inr);
+        }
+      }
 
-      // 1. Use the country's currency config if available
+      // 1. If an exact local price override exists for this country
+      if (overridePrice !== null && currentConfig) {
+        // Do NOT multiply by exchange_rate. Pass 1 as the rate.
+        return formatPrice(
+          overridePrice,
+          currentConfig.currency_code,
+          1, // <--- key change: treat as already converted
+          countryConfig.locale
+        );
+      }
+
+      // 2. Use the standard base USD price and multiply by exchange rate
       if (currentConfig) {
         return formatPrice(
-          resolvedInr,
+          basePrice,
           currentConfig.currency_code,
           currentConfig.exchange_rate,
           countryConfig.locale
         );
       }
 
-      // 2. Fallback: use USD if currency config not found for this country
-      if (usdConfig) {
-        return formatPrice(resolvedInr, 'USD', usdConfig.exchange_rate, 'en-US');
-      }
-
-      // 3. Last resort: show raw INR
-      return formatPrice(resolvedInr, 'INR', 1, 'en-IN');
+      // 3. Last resort: show raw USD
+      return formatPrice(basePrice, 'USD', 1, 'en-US');
     };
   }, [countryCode, countryConfig.locale, currencyConfigs]);
 
@@ -133,12 +145,12 @@ export function CurrencyProvider({
 export function useCurrency() {
   const context = useContext(CurrencyContext);
   if (!context) {
-    // If used outside provider (e.g. in root layout or admin), fallback to INR/India
+    // If used outside provider (e.g. in root layout or admin), fallback to USD/US
     return {
-      countryCode: 'in' as SupportedCountryCode,
-      countryConfig: SUPPORTED_COUNTRIES['in'],
+      countryCode: 'us' as SupportedCountryCode,
+      countryConfig: SUPPORTED_COUNTRIES['us'],
       currencyConfigs: [],
-      formatPrice: (amount: number | string | null | undefined, countryPrices?: CountryPriceOverride[] | null) => formatPrice(amount, 'INR', 1, 'en-IN'),
+      formatPrice: (amount: number | string | null | undefined, countryPrices?: CountryPriceOverride[] | null) => formatPrice(amount, 'USD', 1, 'en-US'),
       isLoadingRates: false,
     };
   }

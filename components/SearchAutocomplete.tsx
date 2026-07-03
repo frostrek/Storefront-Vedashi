@@ -5,6 +5,7 @@ import { useRouter, usePathname, useParams } from 'next/navigation';
 import { Search, X, Loader2 } from 'lucide-react';
 import { searchAutocomplete, type SearchSuggestion } from '@/lib/api';
 import { useCurrency } from '@/context/CurrencyContext';
+import { buildPath, getCountryFromPathname } from '@/lib/currency';
 
 interface SearchAutocompleteProps {
     /** Called when the sea rch overlay should close (e.g. mobile) */
@@ -23,7 +24,7 @@ export default function SearchAutocomplete({
     const router = useRouter();
     const pathname = usePathname();
     const params = useParams();
-    const country = (params.country as string) || 'in';
+    const country = (params.country as string) || 'us';
     const { formatPrice } = useCurrency();
     const [query, setQuery] = useState('');
     const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
@@ -104,11 +105,11 @@ export default function SearchAutocomplete({
 
     // ── Static Storefront Pages ──
     const storePages = [
-        { title: 'Home', path: `/${country}` },
-        { title: 'All Products', path: `/${country}/products` },
-        { title: 'Categories', path: `/${country}/categories` },
-        { title: 'About Us', path: `/${country}/about` },
-        { title: 'Contact Support', path: `/${country}/contact` },
+        { title: 'Home', path: buildPath(country, '/') },
+        { title: 'All Products', path: buildPath(country, `/products`) },
+        { title: 'Categories', path: buildPath(country, `/categories`) },
+        { title: 'About Us', path: buildPath(country, `/about`) },
+        { title: 'Contact Support', path: buildPath(country, `/contact`) },
     ];
 
     const matchedPages = query.trim().length >= 2
@@ -124,7 +125,7 @@ export default function SearchAutocomplete({
         setIsOpen(false);
         setQuery('');
         onClose?.();
-        router.push(`/${country}/products/${id}`);
+        router.push(buildPath(country, `/products/${id}`));
     };
 
     const goToPage = (path: string) => {
@@ -138,7 +139,7 @@ export default function SearchAutocomplete({
         if (!query.trim()) return;
         setIsOpen(false);
         onClose?.();
-        router.push(`/${country}/search?q=${encodeURIComponent(query.trim())}`);
+        router.push(buildPath(country, `/search?q=${encodeURIComponent(query.trim())}`));
     };
 
     // ── Keyboard navigation ────────────────────────────────────

@@ -5,6 +5,7 @@
  */
 
 import { Product, FilteredProduct, FilterMeta, ProductWithDetails, ProductAsset, ApiResponse } from '@/types';
+import { SUPPORTED_COUNTRIES, buildPath } from './currency';
 import { env } from '@/lib/env';
 import PerformanceStore from '@/lib/analytics/performance';
 import { isConsentGranted } from '@/lib/analytics/gtag';
@@ -151,8 +152,8 @@ export async function authFetch(url: string, init?: RequestInit): Promise<Respon
                     localStorage.removeItem('vedashi_user');
                     window.dispatchEvent(new CustomEvent('session-expired'));
                     const pathParts = window.location.pathname.split('/');
-                    const country = pathParts[1] || 'in';
-                    window.location.href = `/${country}/login?session_expired=1`;
+                    const country = pathParts[1] || 'us';
+                    window.location.href = buildPath(country, `/login?session_expired=1`);
                     return res;
                 }
             } catch { /* ignore */ }

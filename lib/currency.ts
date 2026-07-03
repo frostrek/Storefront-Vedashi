@@ -1,4 +1,4 @@
-export type SupportedCountryCode = 'us' | 'in' | 'gb' | 'ae' | 'ca' | 'au' | 'ru' | 'kr';
+export type SupportedCountryCode = 'us' | 'ru' | 'kr';
 
 export interface CountryConfig {
   code: SupportedCountryCode;
@@ -10,22 +10,47 @@ export interface CountryConfig {
 }
 
 export const SUPPORTED_COUNTRIES: Record<SupportedCountryCode, CountryConfig> = {
-  in: { code: 'in', name: 'India',            currency: 'INR', locale: 'en-IN', flag: '🇮🇳', symbol: '₹' },
-  us: { code: 'us', name: 'United States',    currency: 'USD', locale: 'en-US', flag: '🇺🇸', symbol: '$' },
-  gb: { code: 'gb', name: 'United Kingdom',   currency: 'GBP', locale: 'en-GB', flag: '🇬🇧', symbol: '£' },
-  ae: { code: 'ae', name: 'UAE',              currency: 'AED', locale: 'ar-AE', flag: '🇦🇪', symbol: 'د.إ' },
-  ca: { code: 'ca', name: 'Canada',           currency: 'CAD', locale: 'en-CA', flag: '🇨🇦', symbol: 'CA$' },
-  au: { code: 'au', name: 'Australia',        currency: 'AUD', locale: 'en-AU', flag: '🇦🇺', symbol: 'A$' },
+  us: { code: 'us', name: 'Worldwide',        currency: 'USD', locale: 'en-US', flag: '🇺🇸', symbol: '$' },
   ru: { code: 'ru', name: 'Russia',           currency: 'RUB', locale: 'ru-RU', flag: '🇷🇺', symbol: '₽' },
   kr: { code: 'kr', name: 'South Korea',      currency: 'KRW', locale: 'ko-KR', flag: '🇰🇷', symbol: '₩' },
 };
 
+/** Country codes that get a URL prefix. 'us' (worldwide) uses root URLs. */
+const PREFIXED_COUNTRIES = new Set<string>(['ru', 'kr']);
+
 /**
- * Represents a per-country INR price override from the backend.
+ * Build a URL path respecting the country prefix convention.
+ * - Worldwide ('us'): `/products`, `/about`, etc. (no prefix)
+ * - Russia/Korea: `/ru/products`, `/kr/products`
+ */
+export function buildPath(country: string, path: string): string {
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  if (PREFIXED_COUNTRIES.has(country)) {
+    return `/${country}${cleanPath}`;
+  }
+  return cleanPath || '/';
+}
+
+/**
+ * Extract the country code from a browser pathname.
+ * - `/ru/products` → 'ru'
+ * - `/kr/about` → 'kr'
+ * - `/products` → 'us' (worldwide default)
+ */
+export function getCountryFromPathname(pathname: string): SupportedCountryCode {
+  const segments = pathname.split('/').filter(Boolean);
+  const first = segments[0];
+  if (first && PREFIXED_COUNTRIES.has(first)) return first as SupportedCountryCode;
+  return 'us';
+}
+
+/**
+ * Represents a per-country USD price override from the backend.
+ * (Column name `price_inr` is a legacy DB name — values are now in USD.)
  */
 export interface CountryPriceOverride {
   country_code: string;   // uppercase: 'US', 'GB', etc.
-  price_inr: number;
+  price_inr: number;      // legacy column name — value is in USD
   country_name?: string;
   currency_code?: string;
   currency_symbol?: string;
@@ -40,18 +65,18 @@ export interface CurrencyConfigEntry {
   country_name: string;
   currency_code: string;      // 'USD', 'INR', etc.
   currency_symbol: string;    // '$', '₹', etc.
-  exchange_rate: number;      // 1 INR = X target currency
+  exchange_rate: number;      // 1 USD = X target currency
 }
 
 /**
- * Resolve the base INR price given a country and optional per-product overrides.
+ * Resolve the base USD price given a country and optional per-product overrides.
  *
  * Priority:
  * 1. Country-specific override (if > 0)
- * 2. Default price (amountInr)
+ * 2. Default price (amountUsd)
  */
-export function resolveInrPrice(
-  amountInr: number,
+export function resolveBasePrice(
+  amountUsd: number,
   countryCode: string,
   countryPrices?: CountryPriceOverride[] | null
 ): number {
@@ -62,28 +87,31 @@ export function resolveInrPrice(
       return Number(override.price_inr);
     }
   }
-  return Number(amountInr) || 0;
+  return Number(amountUsd) || 0;
 }
+
+/** @deprecated Use resolveBasePrice instead. Kept for backward compat. */
+export const resolveInrPrice = resolveBasePrice;
 
 /**
  * Format a price safely based on locale and currency.
- * Automatically converts the standard base price (in INR) to target currency using the provided rate.
- * @param amountInr Base amount in INR
+ * Automatically converts the standard base price (in USD) to target currency using the provided rate.
+ * @param amountUsd Base amount in USD
  * @param currency Target currency code
- * @param rate Exchange rate (1 INR = X Target)
+ * @param rate Exchange rate (1 USD = X Target)
  * @param locale Target locale for Intl.NumberFormat
  */
 export function formatPrice(
-  amountInr: number | string | null | undefined,
-  currency: string = 'INR',
+  amountUsd: number | string | null | undefined,
+  currency: string = 'USD',
   rate: number = 1,
-  locale: string = 'en-IN'
+  locale: string = 'en-US'
 ): string {
-  const n = Number(amountInr) || 0;
+  const n = Number(amountUsd) || 0;
   
   // Base case - no conversion needed
-  if (currency === 'INR') {
-    return '₹' + Math.round(n).toLocaleString('en-IN');
+  if (currency === 'USD') {
+    return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
   // Convert

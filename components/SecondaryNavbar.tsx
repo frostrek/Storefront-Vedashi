@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { getCategories, getFilterOptions } from '@/lib/api';
+import { buildPath, getCountryFromPathname } from '@/lib/currency';
 
 
 interface Category {
@@ -18,7 +19,7 @@ interface Category {
 const SecondaryMegaMenuLinks = ({ item, country, topLevelSlug, secondLevelSlug, level = 0 }: { item: Category, country: string, topLevelSlug: string, secondLevelSlug?: string, level?: number }) => {
   const hasChildren = item.children && item.children.length > 0;
 
-  let href = `/${country}/products?category=${topLevelSlug}`;
+  let href = buildPath(country, `/products?category=${topLevelSlug}`);
   if (level === 0) {
     href += `&sub_category=${item.slug}`;
   } else if (level === 1) {
@@ -60,7 +61,7 @@ const SecondaryMegaMenuLinks = ({ item, country, topLevelSlug, secondLevelSlug, 
 
 export default function SecondaryNavbar() {
   const params = useParams();
-  const country = (Array.isArray(params?.country) ? params?.country[0] : params?.country) || 'in';
+  const country = (Array.isArray(params?.country) ? params?.country[0] : params?.country) || 'us';
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -107,7 +108,7 @@ export default function SecondaryNavbar() {
                 <div key={parent.category_id} className="flex items-center h-full">
                   <div className="group/nav-item h-full flex items-center shrink-0">
                     <Link
-                      href={`/${country}/products?category=${parent.slug}`}
+                      href={buildPath(country, `/products?category=${parent.slug}`)}
                       className="flex items-center h-full px-1.5 transition-colors cursor-pointer border-b-2 border-transparent group-hover/nav-item:border-[#91CA35] hover:text-[#91CA35]"
                     >
                       {parent.name}
@@ -134,7 +135,7 @@ export default function SecondaryNavbar() {
 
                             {/* "View All" link positioned at the bottom right */}
                             <div className="flex justify-end mt-auto pt-4 border-t border-gray-50/50">
-                              <Link href={`/${country}/products?category=${parent.slug}`} className="text-[#FF0000] hover:text-[#CC0000] flex items-center gap-1 font-bold text-[13px] group/view-all">
+                              <Link href={buildPath(country, `/products?category=${parent.slug}`)} className="text-[#FF0000] hover:text-[#CC0000] flex items-center gap-1 font-bold text-[13px] group/view-all">
                                 Explore All {parent.name} <span className="transition-transform group-hover/view-all:translate-x-1">→</span>
                               </Link>
                             </div>
@@ -179,7 +180,7 @@ export default function SecondaryNavbar() {
                             {groupedBrands[letter].map(brand => (
                               <li key={brand}>
                                 <Link
-                                  href={`/${country}/products?brand=${encodeURIComponent(brand)}`}
+                                  href={buildPath(country, `/products?brand=${encodeURIComponent(brand)}`)}
                                   className="text-[13px] text-gray-600 font-medium hover:text-[#91CA35] transition-all block truncate"
                                 >
                                   {brand}
@@ -198,9 +199,9 @@ export default function SecondaryNavbar() {
 
           <div className="flex items-center h-full text-[13px] font-bold tracking-wide shrink-0 ml-4">
             <div className="h-4 w-[1px] bg-black/10 self-center mx-3" />
-            <Link href={`/${country}/products?bestSeller=true`} className="text-black hover:text-[#91CA35] h-full flex items-center">Best Sellers</Link>
+            <Link href={buildPath(country, `/products?bestSeller=true`)} className="text-black hover:text-[#91CA35] h-full flex items-center">Best Sellers</Link>
             <div className="h-4 w-[1px] bg-black/10 self-center mx-3" />
-            <Link href={`/${country}/products?newArrival=true`} className="text-[#FF0000] font-bold h-full flex items-center gap-1.5 group">
+            <Link href={buildPath(country, `/products?newArrival=true`)} className="text-[#FF0000] font-bold h-full flex items-center gap-1.5 group">
               <span className="flex h-2 w-2 rounded-full bg-[#FF0000] animate-promo-blink shadow-[0_0_8px_rgba(255,0,0,0.5)]"></span>
               New Arrivals
             </Link>

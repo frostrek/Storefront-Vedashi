@@ -298,7 +298,7 @@ function CheckoutContent() {
 
     const mrpDiscount = totalMrp - baseSubtotal;
 
-    const shippingCost = couponType === 'free_shipping' ? 0 : (baseSubtotal > 50 ? 0 : 15);
+    const shippingCost = 0;
     const discount = isBuyNow ? 0 : couponDiscount;
     const minPayable = Number(process.env.NEXT_PUBLIC_MINIMUM_PAYABLE_AMOUNT) || 1;
 
@@ -311,7 +311,7 @@ function CheckoutContent() {
         pointsToRedeem = Math.min(parseInt(redeemPoints) || 0, maxRedeemablePoints);
     }
 
-    // Assuming 1 point = 1 INR — enforce minimum payable of ₹1
+    // Assuming 1 point = 1 USD — enforce minimum payable of $1
     const grandTotal = Math.max(minPayable, prePointsTotal - pointsToRedeem);
     const localTotal = Number((grandTotal * exchangeRate).toFixed(2));
 
@@ -716,7 +716,7 @@ function CheckoutContent() {
                             }));
                             trackPurchase({
                                 currency: countryConfig.currency,
-                                value: countryConfig.currency === 'INR' ? grandTotal : localTotal,
+                                value: countryConfig.currency === 'USD' ? grandTotal : localTotal,
                                 transaction_id: platformOrderId || undefined,
                                 items: purchaseItems,
                                 coupon: couponCode || undefined,
@@ -962,7 +962,7 @@ function CheckoutContent() {
                 }));
                 trackPurchase({
                     currency: countryConfig.currency,
-                    value: countryConfig.currency === 'INR' ? grandTotal : localTotal,
+                    value: countryConfig.currency === 'USD' ? grandTotal : localTotal,
                     transaction_id: createdOrderId || undefined,
                     items: purchaseItems,
                     coupon: couponCode || undefined,
@@ -1068,7 +1068,7 @@ function CheckoutContent() {
         }));
         trackCheckoutStep('add_shipping_info', 2, {
             currency: countryConfig.currency,
-            value: countryConfig.currency === 'INR' ? grandTotal : localTotal,
+            value: countryConfig.currency === 'USD' ? grandTotal : localTotal,
             items: shippingItems,
             coupon: couponCode || undefined,
         });
@@ -1101,7 +1101,7 @@ function CheckoutContent() {
         }));
         trackCheckoutStep('add_payment_info', 3, {
             currency: countryConfig.currency,
-            value: countryConfig.currency === 'INR' ? grandTotal : localTotal,
+            value: countryConfig.currency === 'USD' ? grandTotal : localTotal,
             items: paymentInfoItems,
             coupon: couponCode || undefined,
             payment_type: paymentMethod,

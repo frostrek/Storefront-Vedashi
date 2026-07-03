@@ -5,7 +5,7 @@
  */
 
 import type { Metadata } from 'next';
-import { SUPPORTED_COUNTRIES } from './currency';
+import { SUPPORTED_COUNTRIES, buildPath } from './currency';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -112,25 +112,25 @@ function categoryFallbackDescription(c: CategorySeoInput): string {
 /** Generates alternate languages maps based on our supported regions. */
 export function buildHreflang(pathStrategy: string): Record<string, string> {
     const languages: Record<string, string> = {
-        'x-default': `${SITE_URL}/in/${pathStrategy}`
+        'x-default': `${SITE_URL}${buildPath('us', pathStrategy)}`
     };
     Object.values(SUPPORTED_COUNTRIES).forEach((c) => {
-        languages[c.locale] = `${SITE_URL}/${c.code}/${pathStrategy}`;
+        languages[c.locale] = `${SITE_URL}${buildPath(c.code, pathStrategy)}`;
     });
     return languages;
 }
 
 /** Build Next.js Metadata for a product page */
-export function buildProductMeta(product: ProductSeoInput, currentCountry: string = 'in'): Metadata {
+export function buildProductMeta(product: ProductSeoInput, currentCountry: string = 'us'): Metadata {
     const seo = product.seo;
     const regionName = SUPPORTED_COUNTRIES[currentCountry as keyof typeof SUPPORTED_COUNTRIES]?.name || 'India';
     const title = `${seo?.meta_title || productFallbackTitle(product)} | ${regionName}`;
     const description = seo?.meta_description || productFallbackDescription(product);
     
     const pathStrategy = `products/${product.slug || product.product_id}`;
-    const canonical = seo?.canonical_url || `${SITE_URL}/${currentCountry}/${pathStrategy}`;
+    const canonical = seo?.canonical_url || `${SITE_URL}${buildPath(currentCountry, pathStrategy)}`;
     
-    const ogImage = seo?.og_image || `${SITE_URL}/${currentCountry}/products/${product.slug || product.product_id}/opengraph-image`;
+    const ogImage = seo?.og_image || `${SITE_URL}${buildPath(currentCountry, `products/${product.slug || product.product_id}`)}/opengraph-image`;
     const keywords = seo?.meta_keywords || [product.product_name, product.brand, product.category, SITE_NAME].filter(Boolean).join(', ');
 
     const robotsValue = seo?.robots || 'index, follow';
@@ -166,14 +166,14 @@ export function buildProductMeta(product: ProductSeoInput, currentCountry: strin
 }
 
 /** Build Next.js Metadata for a category page */
-export function buildCategoryMeta(category: CategorySeoInput, currentCountry: string = 'in'): Metadata {
+export function buildCategoryMeta(category: CategorySeoInput, currentCountry: string = 'us'): Metadata {
     const seo = category.seo;
     const regionName = SUPPORTED_COUNTRIES[currentCountry as keyof typeof SUPPORTED_COUNTRIES]?.name || 'India';
     const title = `${seo?.meta_title || categoryFallbackTitle(category)} | ${regionName}`;
     const description = seo?.meta_description || categoryFallbackDescription(category);
     
     const pathStrategy = `categories/${category.slug || category.category_id}`;
-    const canonical = seo?.canonical_url || `${SITE_URL}/${currentCountry}/${pathStrategy}`;
+    const canonical = seo?.canonical_url || `${SITE_URL}${buildPath(currentCountry, pathStrategy)}`;
     
     const ogImage = seo?.og_image || category.image_url || DEFAULT_OG_IMAGE;
 
@@ -209,13 +209,13 @@ export function buildCategoryMeta(category: CategorySeoInput, currentCountry: st
 }
 
 /** Build Next.js Metadata for the product listing page */
-export function buildPLPMeta(hasFilters = false, currentCountry: string = 'in'): Metadata {
+export function buildPLPMeta(hasFilters = false, currentCountry: string = 'us'): Metadata {
     const pathStrategy = 'products';
     return {
         title: 'Shop Premium Ayurvedic Wellness | Vedashi',
         description: 'Browse our curated collection of premium Ayurvedic remedies and wellness formulations. Filter by category, benefit, and more. Fast delivery across India.',
         alternates: {
-            canonical: `${SITE_URL}/${currentCountry}/${pathStrategy}`,
+            canonical: `${SITE_URL}${buildPath(currentCountry, pathStrategy)}`,
             languages: buildHreflang(pathStrategy)
         },
         robots: hasFilters
@@ -224,7 +224,7 @@ export function buildPLPMeta(hasFilters = false, currentCountry: string = 'in'):
         openGraph: {
             title: 'Shop Premium Ayurvedic Wellness | Vedashi',
             description: 'Browse our curated collection of premium Ayurvedic remedies and wellness formulations.',
-            url: `${SITE_URL}/${currentCountry}/${pathStrategy}`,
+            url: `${SITE_URL}${buildPath(currentCountry, pathStrategy)}`,
             siteName: SITE_NAME,
             type: 'website',
         },
@@ -239,7 +239,7 @@ export function generateProductJsonLd(
     shippingConfig?: any,
     returnConfig?: any,
     currency: string = 'INR',
-    country: string = 'in'
+    country: string = 'us'
 ): Record<string, unknown> {
     const defaultVariant = product.variants?.find((v: any) => v.is_default) || product.variants?.[0];
     const price = defaultVariant?.price || product.price || 0;
@@ -259,7 +259,7 @@ export function generateProductJsonLd(
         sku,
         mpn: sku,
         image: Array.from(imageSet),
-        url: `${SITE_URL}/${country}/products/${product.slug || product.product_id}`,
+        url: `${SITE_URL}${buildPath(country, `products/${product.slug || product.product_id}`)}`,
         brand: {
             '@type': 'Brand',
             name: product.brand || SITE_NAME
@@ -271,7 +271,7 @@ export function generateProductJsonLd(
             availability: inStock
                 ? 'https://schema.org/InStock'
                 : 'https://schema.org/OutOfStock',
-            url: `${SITE_URL}/${country}/products/${product.slug || product.product_id}`,
+            url: `${SITE_URL}${buildPath(country, `products/${product.slug || product.product_id}`)}`,
             priceValidUntil: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
             itemCondition: 'https://schema.org/NewCondition',
             seller: {
