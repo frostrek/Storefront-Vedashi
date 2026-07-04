@@ -127,6 +127,9 @@ export function formatPrice(
       maximumFractionDigits: currency === 'KRW' ? 0 : 2,
     });
     formattedCurrency = formatter.format(converted);
+    if (currency === 'RUB') {
+      formattedCurrency = formattedCurrency.replace(',', '.');
+    }
   } catch (e) {
     // Fallback if Intl fails
     const sym = Object.values(SUPPORTED_COUNTRIES).find(c => c.currency === currency)?.symbol || currency;
@@ -134,4 +137,70 @@ export function formatPrice(
   }
 
   return formattedCurrency;
+}
+
+/**
+ * Format an ALREADY-CONVERTED local amount safely based on locale and currency.
+ * DOES NOT multiply by any exchange rate.
+ * @param localAmount The numerical amount in the target currency
+ * @param currency Target currency code (e.g. 'RUB', 'KRW')
+ * @param locale Target locale (e.g. 'ru-RU', 'ko-KR')
+ */
+export function formatLocal(
+  localAmount: number | string | null | undefined,
+  currency: string = 'USD',
+  locale: string = 'en-US'
+): string {
+  const n = Number(localAmount) || 0;
+  
+  // Base case - USD formatting
+  if (currency === 'USD') {
+    return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  let formattedCurrency = '';
+  try {
+    const formatter = new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: currency === 'KRW' ? 0 : 2,
+      maximumFractionDigits: currency === 'KRW' ? 0 : 2,
+    });
+    formattedCurrency = formatter.format(n);
+    if (currency === 'RUB') {
+      formattedCurrency = formattedCurrency.replace(',', '.');
+    }
+  } catch (e) {
+    // Fallback if Intl fails
+    const sym = Object.values(SUPPORTED_COUNTRIES).find(c => c.currency === currency)?.symbol || currency;
+    formattedCurrency = `${sym}${n.toFixed(currency === 'KRW' ? 0 : 2)}`;
+  }
+
+  return formattedCurrency;
+}
+
+/**
+ * Derive a country-specific MRP from a country selling price using the USD discount %.
+ *
+ * Logic: If USD prices show a 28% discount (MRP→SP), and the country SP is 750,
+ * then country MRP = ceil(750 × 1.28) = 960.
+ *
+ * @param countrySp  The country-specific selling price (override)
+ * @param usdSp      The USD selling price
+ * @param usdMrp     The USD MRP / original price
+ * @returns The derived country MRP (ceiled to integer if fractional)
+ */
+export function deriveCountryMrp(
+  countrySp: number,
+  usdSp: number,
+  usdMrp: number
+): number {
+  if (!countrySp || countrySp <= 0) return 0;
+  if (!usdMrp || usdMrp <= 0 || usdMrp <= usdSp) return countrySp; // no discount
+  const discountPct = (usdMrp - usdSp) / usdMrp; // e.g. 0.28
+  if (discountPct <= 0 || discountPct >= 1) return countrySp;
+  // MRP such that SP is discountPct% off → MRP = SP / (1 - discountPct)
+  // But user requested "28% up in reference to SP" → MRP = SP * (1 + discountPct)
+  const derived = countrySp * (1 + discountPct);
+  return Math.ceil(derived);
 }

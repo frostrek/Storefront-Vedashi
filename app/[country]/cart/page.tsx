@@ -42,7 +42,7 @@ function StepIndicator({ currentStep = 0 }: { currentStep?: number }) {
 /* ─── Main Cart Page ─────────────────────────────────────────── */
 
 export default function CartPage() {
-    const { formatPrice } = useCurrency();
+    const { formatPrice, format, resolvePrice, resolveMrp } = useCurrency();
     const {
         items, savedItems, updateQuantity, removeItem, saveForLater, moveToCart,
         totalPrice, totalItems, loading, error,
@@ -142,6 +142,7 @@ export default function CartPage() {
                         <div className="space-y-4">
                             {savedItems.map(item => {
                                 const price = item.price ?? 0;
+                                const resolvedSp = resolvePrice(price, item.country_prices);
                                 return (
                                     <div key={item.cart_item_id} className="cart-item-card flex items-center gap-4 bg-[#FAFAFA]">
                                         <Link href={`/${country}/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img w-16 h-16 rounded-lg flex-shrink-0">
@@ -151,7 +152,7 @@ export default function CartPage() {
                                             <Link href={`/${country}/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
                                                 <h3 className="text-sm font-bold text-[#1A1A1A] hover:text-[#3d5c3a] transition-colors">{item.product_name || 'Product'}</h3>
                                             </Link>
-                                            <p className="text-[#4A4A4A] mt-1">{formatPrice(price)}</p>
+                                            <p className="text-[#4A4A4A] mt-1">{format(resolvedSp)}</p>
                                         </div>
                                         <div className="flex flex-col items-end gap-2">
                                             <button onClick={() => { moveToCart(item.cart_item_id); toast.success('Moved to cart'); }} disabled={loading} className="bg-[#6B8F5E] text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-[#5A7A4E]">
@@ -194,11 +195,22 @@ export default function CartPage() {
     const hasInsufficientStock = insufficientStockItems.length > 0;
 
     // Calculate totals using ONLY in-stock items
-    const totalMRP = inStockItems.reduce((sum, item) => sum + (item.original_price ?? item.price ?? 0) * item.quantity, 0);
-    const saleDiscount = totalMRP - inStockItems.reduce((sum, item) => sum + (item.price ?? 0) * item.quantity, 0);
-    const inStockTotal = inStockItems.reduce((sum, item) => sum + (item.price ?? 0) * item.quantity, 0);
+    const totalMRP = inStockItems.reduce((sum, item) => {
+        const itemMrp = resolveMrp(item.original_price, item.price, item.country_prices);
+        return sum + itemMrp * item.quantity;
+    }, 0);
+    const inStockTotal = inStockItems.reduce((sum, item) => {
+        const itemSp = resolvePrice(item.price, item.country_prices);
+        return sum + itemSp * item.quantity;
+    }, 0);
+    const saleDiscount = totalMRP - inStockTotal;
     const deliveryFee = 0;
-    const grandTotal = inStockTotal - couponDiscount + deliveryFee;
+    
+    // We should resolve the couponDiscount to local currency too.
+    // Assuming couponDiscount is in USD right now.
+    const localCouponDiscount = resolvePrice(couponDiscount, null);
+    
+    const grandTotal = inStockTotal - localCouponDiscount + deliveryFee;
     const inStockItemCount = inStockItems.reduce((sum, item) => sum + item.quantity, 0);
 
     return (
@@ -257,6 +269,10 @@ export default function CartPage() {
                                 items.map(item => {
                                     const price = item.price ?? 0;
                                     const unitPrice = item.original_price ?? price;
+                                    
+                                    const resolvedSp = resolvePrice(price, item.country_prices);
+                                    const resolvedMrp = resolveMrp(unitPrice, price, item.country_prices);
+                                    
                                     const isOutOfStock = (item.stock_quantity ?? 0) === 0;
                                     const hasInsufficientStock = !isOutOfStock && item.quantity > (item.stock_quantity ?? 0);
                                     const isAtStockLimit = !isOutOfStock && item.quantity >= (item.stock_quantity ?? Infinity);
@@ -290,7 +306,7 @@ export default function CartPage() {
                                                     </div>
                                                         <div className="text-right">
                                                             <div className="text-lg font-bold text-[#1A1A1A]">
-                                                                {formatPrice(price * item.quantity)}
+                                                                {format(resolvedSp * item.quantity)}
                                                             </div>
                                                             {unitPrice > price && (
                                                                 <div className="flex items-center justify-end gap-1.5 mt-0.5">
@@ -298,13 +314,13 @@ export default function CartPage() {
                                                                         {Math.round((1 - price / unitPrice) * 100)}% OFF
                                                                     </span>
                                                                     <span className="text-gray-400 line-through text-xs">
-                                                                        {formatPrice(unitPrice * item.quantity)}
+                                                                        {format(resolvedMrp * item.quantity)}
                                                                     </span>
                                                                 </div>
                                                             )}
                                                             {item.quantity > 1 && (
                                                                 <div className="text-[10px] text-gray-400 mt-1 uppercase tracking-tight">
-                                                                    {formatPrice(price)} each
+                                                                    {format(resolvedSp)} each
                                                                 </div>
                                                             )}
                                                         </div>
@@ -348,6 +364,7 @@ export default function CartPage() {
                                 <div className="space-y-4">
                                     {savedItems.map(item => {
                                         const price = item.price ?? 0;
+                                        const resolvedSp = resolvePrice(price, item.country_prices);
                                         return (
                                             <div key={item.cart_item_id} className="cart-item-card flex items-center gap-4 bg-[#FAFAFA]">
                                                 <Link href={`/${country}/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img w-16 h-16 rounded-lg flex-shrink-0">
@@ -357,7 +374,7 @@ export default function CartPage() {
                                                     <Link href={`/${country}/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
                                                         <h3 className="text-sm font-bold text-[#1A1A1A] hover:text-[#3d5c3a] transition-colors">{item.product_name || 'Product'}</h3>
                                                     </Link>
-                                                    <p className="text-[#4A4A4A] mt-1">{formatPrice(price)}</p>
+                                                    <p className="text-[#4A4A4A] mt-1">{format(resolvedSp)}</p>
                                                 </div>
                                                 <div className="flex flex-col items-end gap-2">
                                                     <button onClick={() => { moveToCart(item.cart_item_id); toast.success('Moved to cart'); }} disabled={loading} className="bg-[#91C934] text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-[#7faf27]">
@@ -459,7 +476,11 @@ export default function CartPage() {
                                         <p className="text-[rgba(255,255,255,0.5)] text-xs text-center py-4">No in-stock items in your cart</p>
                                     ) : inStockItems.map(item => {
                                         const price = item.price ?? 0;
-                                        const lineTotal = price * item.quantity;
+                                        const resolvedSp = resolvePrice(price, item.country_prices);
+                                        const resolvedMrp = resolveMrp(item.original_price, item.price, item.country_prices);
+                                        const lineTotal = resolvedSp * item.quantity;
+                                        const lineMrpTotal = resolvedMrp * item.quantity;
+
                                         return (
                                             <div key={item.cart_item_id} className="ritual-summary-item pb-3 border-b border-[rgba(255,255,255,0.1)] last:border-0 last:pb-0">
                                                 <div className="ritual-summary-item-img">
@@ -474,10 +495,10 @@ export default function CartPage() {
                                                     <div className="ritual-summary-item-qty mt-0.5">Qty: {item.quantity}</div>
                                                 </div>
                                                 <div className="flex flex-col items-end">
-                                                    <span className="ritual-summary-item-price">{formatPrice(lineTotal)}</span>
-                                                    {((item as any).original_price ?? 0) > price && (
+                                                    <span className="ritual-summary-item-price">{format(lineTotal)}</span>
+                                                    {resolvedMrp > resolvedSp && (
                                                         <span className="text-[10px] text-[rgba(255,255,255,0.4)] line-through">
-                                                            {formatPrice(((item as any).original_price || 0) * item.quantity)}
+                                                            {format(lineMrpTotal)}
                                                         </span>
                                                     )}
                                                 </div>
@@ -491,18 +512,18 @@ export default function CartPage() {
                                 <div className="space-y-2.5">
                                     <div className="ritual-summary-row">
                                         <span className="label">Total MRP</span>
-                                        <span className="value">{formatPrice(totalMRP)}</span>
+                                        <span className="value">{format(totalMRP)}</span>
                                     </div>
                                     {saleDiscount > 0 && (
                                         <div className="ritual-summary-row">
                                             <span className="label">Discount on MRP</span>
-                                            <span className="value !text-[#86EFAC]">- {formatPrice(saleDiscount)}</span>
+                                            <span className="value !text-[#86EFAC]">- {format(saleDiscount)}</span>
                                         </div>
                                     )}
                                     {couponDiscount > 0 && (
                                         <div className="ritual-summary-row">
                                             <span className="label">Coupon Discount</span>
-                                            <span className="value !text-[#86EFAC]">- {formatPrice(couponDiscount)}</span>
+                                            <span className="value !text-[#86EFAC]">- {format(localCouponDiscount)}</span>
                                         </div>
                                     )}
                                     <div className="ritual-summary-row">
@@ -518,7 +539,7 @@ export default function CartPage() {
                                 {(saleDiscount + couponDiscount) > 0 && (
                                     <div className="mt-4 p-3 bg-white/10 rounded-xl border border-white/10 text-center">
                                         <p className="text-[10px] font-bold text-[#86EFAC] uppercase tracking-widest">
-                                            Total Savings: {formatPrice(saleDiscount + couponDiscount)}
+                                            Total Savings: {format(saleDiscount + localCouponDiscount)}
                                         </p>
                                     </div>
                                 )}
@@ -526,7 +547,7 @@ export default function CartPage() {
                                 <div className="ritual-summary-total">
                                     <div>
                                         <div className="ritual-summary-total-label">Total Amount</div>
-                                        <div className="ritual-summary-total-value mt-1">{formatPrice(grandTotal)}</div>
+                                        <div className="ritual-summary-total-value mt-1">{format(grandTotal)}</div>
                                     </div>
                                     <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.05)]">
                                         <Leaf className="h-5 w-5 text-white opacity-80" />

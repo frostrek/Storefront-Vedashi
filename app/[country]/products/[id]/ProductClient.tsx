@@ -91,7 +91,7 @@ function LazyBestSellers({ title, icon }: {
 
 
 function ProductDetailContent({ id, country, initialProduct }: Props) {
-    const { formatPrice } = useCurrency();
+    const { formatPrice, formatMrp } = useCurrency();
     const [product, setProduct] = useState<ProductWithDetails | null>(initialProduct);
     const [loading, setLoading] = useState(!initialProduct);
     const [pageQuantity, setPageQuantity] = useState(1);
@@ -570,7 +570,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                             <div className="flex items-center gap-1.5 text-sm">
                                                 <span className="text-gray-500">MRP</span>
                                                 <span className="text-gray-400 line-through">
-                                                    {formatPrice(originalPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
+                                                    {formatMrp(originalPrice, displayPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
                                                 </span>
                                             </div>
                                         </div>
@@ -595,7 +595,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                 <p className="text-[11px] text-gray-400 uppercase tracking-tight leading-none mb-1">MRP</p>
                                 <div className="flex items-baseline gap-1.5">
                                     <span className="text-xl font-bold text-black">
-                                        {formatPrice(originalPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
+                                        {formatMrp(originalPrice, displayPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
                                     </span>
                                     <span className="text-[12px] text-gray-400">(Inclusive of all taxes)</span>
                                 </div>

@@ -32,7 +32,7 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, onMoveToCart, priority = false, layout = 'grid', listName, listIndex }: ProductCardProps) {
     const params = useParams();
-    const { formatPrice } = useCurrency();
+    const { formatPrice, formatMrp } = useCurrency();
     const { isInWishlist, toggleItem } = useWishlist();
     const { addItem, updateQuantity, removeItem, items, loading: cartLoading } = useCart();
     const wishlisted = isInWishlist(product.product_id);
@@ -562,7 +562,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                     {vIsDiscounted && (
                                                         <>
                                                             <span className={`text-[10px] line-through ${isSelected ? 'text-white/50' : 'text-gray-400'}`}>
-                                                                {formatPrice(vOriginalPrice, v.country_prices || product.country_prices)}
+                                                                {formatMrp(vOriginalPrice, vDisplayPrice, v.country_prices || product.country_prices)}
                                                             </span>
                                                             <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isSelected ? 'bg-red-500/20 text-red-100' : 'text-red-500 bg-red-50'}`}>
                                                                 {getDiscountPercent(v)}% OFF
@@ -823,7 +823,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                                 {getDiscountPercent(v)}% OFF
                                                             </span>
                                                             <span className="text-[10px] text-gray-400 line-through">
-                                                                MRP {formatPrice(vOriginalPrice, v.country_prices || product.country_prices)}
+                                                                MRP {formatMrp(vOriginalPrice, vDisplayPrice, v.country_prices || product.country_prices)}
                                                             </span>
                                                         </div>
                                                     )}
@@ -1077,7 +1077,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                         {Math.round((1 - displayPrice / originalPrice) * 100)}% OFF
                                     </span>
                                     <span className="text-gray-400 line-through text-[11px] sm:text-xs font-bold font-ui">
-                                        MRP {formatPrice(originalPrice, product.country_prices)}
+                                        MRP {formatMrp(originalPrice, displayPrice, product.country_prices)}
                                     </span>
                                 </div>
                             )}

@@ -94,7 +94,7 @@ function StepIndicator({
 }
 
 function CheckoutContent() {
-    const { formatPrice, countryConfig, currencyConfigs } = useCurrency();
+    const { formatPrice, format, resolvePrice, resolveMrp, countryConfig, currencyConfigs } = useCurrency();
     const currentConfig = currencyConfigs.find(c => c.country_code === countryConfig.code.toUpperCase());
     const exchangeRate = currentConfig?.exchange_rate || 1;
     const router = useRouter();
@@ -289,12 +289,14 @@ function CheckoutContent() {
     const itemsCount = isBuyNow && buyNowItem ? buyNowItem.quantity : totalItems;
 
     const baseSubtotal = isBuyNow && buyNowItem
-        ? Math.round(buyNowItem.unit_price * buyNowItem.quantity)
-        : items.reduce((sum, item) => sum + (item.price ?? 0) * item.quantity, 0);
+        ? resolvePrice(buyNowItem.unit_price, null) * buyNowItem.quantity
+        : items.reduce((sum, item) => sum + resolvePrice(item.price ?? 0, item.country_prices) * item.quantity, 0);
 
     const totalMrp = isBuyNow && buyNowItem
-        ? Math.round((buyNowItem.original_price || buyNowItem.unit_price) * buyNowItem.quantity)
-        : items.reduce((sum, item) => sum + ((item as any).original_price ?? item.price ?? 0) * item.quantity, 0);
+        ? resolveMrp(buyNowItem.original_price || buyNowItem.unit_price, buyNowItem.unit_price, null) * buyNowItem.quantity
+        : items.reduce((sum, item) => {
+              return sum + resolveMrp((item as any).original_price ?? item.price ?? 0, item.price ?? 0, item.country_prices) * item.quantity;
+          }, 0);
 
     const mrpDiscount = totalMrp - baseSubtotal;
 
@@ -311,9 +313,11 @@ function CheckoutContent() {
         pointsToRedeem = Math.min(parseInt(redeemPoints) || 0, maxRedeemablePoints);
     }
 
-    // Assuming 1 point = 1 USD — enforce minimum payable of $1
-    const grandTotal = Math.max(minPayable, prePointsTotal - pointsToRedeem);
-    const localTotal = Number((grandTotal * exchangeRate).toFixed(2));
+    const localPointsValue = resolvePrice(pointsToRedeem, null);
+    const grandTotal = Math.max(resolvePrice(minPayable, null), prePointsTotal - localPointsValue);
+    
+    // grandTotal is already native local currency
+    const localTotal = grandTotal;
 
     // Load addresses
     useEffect(() => {
@@ -1681,14 +1685,13 @@ function CheckoutContent() {
 
                                 <div className="mt-8">
                                     <button onClick={handlePlaceOrder} disabled={placing || paymentProcessing} className="cart-checkout-btn w-full text-center flex items-center justify-center gap-2 py-4 text-base">
-                                        {placing || paymentProcessing ? <><Loader2 className="h-5 w-5 animate-spin" /> Processing Ritual...</> : <><Lock className="w-4 h-4" /> Place Final Order — {formatPrice(grandTotal)}</>}
+                                        {placing || paymentProcessing ? <><Loader2 className="h-5 w-5 animate-spin" /> Processing Ritual...</> : <><Lock className="w-4 h-4" /> Place Final Order — {format(grandTotal)}</>}
                                     </button>
                                     <p className="text-center text-xs text-[#6B6B60] mt-4 max-w-lg mx-auto leading-relaxed">By placing your order, you agree to Vedashi&apos;s <span className="underline cursor-pointer hover:text-[#2D3B2D]">Terms of Service</span> and <span className="underline cursor-pointer hover:text-[#2D3B2D]">Privacy & Wellness Policy</span>.</p>
                                 </div>
                             </div>
                         )}
                     </div>
-
                     {/* ─── Ritual Summary Sidebar (Appears on all steps) ─── */}
                     <div className="mt-8 lg:mt-0">
                         <div className="sticky top-28">
@@ -1705,9 +1708,14 @@ function CheckoutContent() {
                                     {checkoutItems.map(item => {
                                         const price = isBuyNow ? (item as BuyNowItem).unit_price : (item as any).price ?? 0;
                                         const originalPrice = isBuyNow ? (item as BuyNowItem).original_price : (item as any).original_price ?? price;
-                                        const lineTotal = price * item.quantity;
+                                        
+                                        const resolvedSp = resolvePrice(price, (item as any).country_prices);
+                                        const resolvedMrp = resolveMrp(originalPrice, price, (item as any).country_prices);
+                                        const lineTotal = resolvedSp * item.quantity;
+                                        const lineMrpTotal = resolvedMrp * item.quantity;
+
                                         return (
-                                            <div key={item.product_id + (item.variant_id || '')} className="ritual-summary-item pb-3 border-b border-[#E8E4DC] last:border-0 last:pb-0">
+                                            <div key={(item as any).cart_item_id || item.product_id + (item.variant_id || '')} className="ritual-summary-item pb-3 border-b border-[#E8E4DC] last:border-0 last:pb-0">
                                                 <div className="ritual-summary-item-img">
                                                     {item.image_url ? (
                                                         <img src={item.image_url} alt="" />
@@ -1721,14 +1729,14 @@ function CheckoutContent() {
                                                     <div className="ritual-summary-item-qty mt-0.5">Qty: {item.quantity}</div>
                                                 </div>
                                                 <div className="flex flex-col items-end">
-                                                    <span className="ritual-summary-item-price">{formatPrice(lineTotal)}</span>
+                                                    <span className="ritual-summary-item-price">{format(lineTotal)}</span>
                                                     {originalPrice > price && (
                                                         <div className="flex items-center gap-1 mt-0.5">
                                                             <span className="text-[10px] text-red-500 font-bold">
                                                                 {Math.round((1 - price / originalPrice) * 100)}% OFF
                                                             </span>
                                                             <span className="text-[10px] text-gray-400 line-through">
-                                                                {formatPrice(originalPrice * item.quantity)}
+                                                                {format(lineMrpTotal)}
                                                             </span>
                                                         </div>
                                                     )}
@@ -1743,27 +1751,27 @@ function CheckoutContent() {
                                 <div className="space-y-2.5">
                                     <div className="ritual-summary-row">
                                         <span className="label font-medium text-gray-900">Total MRP</span>
-                                        <span className="value font-medium text-gray-900">{formatPrice(totalMrp)}</span>
+                                        <span className="value font-medium text-gray-900">{format(totalMrp)}</span>
                                     </div>
 
                                     {mrpDiscount > 0 && (
                                         <div className="ritual-summary-row">
                                             <span className="label text-gray-600">Discount on MRP</span>
-                                            <span className="value text-[#91C934] font-medium">- {formatPrice(mrpDiscount)}</span>
+                                            <span className="value text-[#91C934] font-medium">- {format(mrpDiscount)}</span>
                                         </div>
                                     )}
 
                                     {!isBuyNow && couponDiscount > 0 && (
                                         <div className="ritual-summary-row">
                                             <span className="label text-gray-600 flex items-center gap-1"><Ticket className="w-3 h-3" /> Coupon Discount</span>
-                                            <span className="value text-[#91C934] font-medium">- {formatPrice(couponDiscount)}</span>
+                                            <span className="value text-[#91C934] font-medium">- {format(resolvePrice(couponDiscount, null))}</span>
                                         </div>
                                     )}
 
                                     {pointsToRedeem > 0 && (
                                         <div className="ritual-summary-row">
                                             <span className="label text-gray-600 flex items-center gap-1"><Leaf className="w-3 h-3" /> Loyalty Points</span>
-                                            <span className="value text-[#91C934] font-medium">- {formatPrice(pointsToRedeem)}</span>
+                                            <span className="value text-[#91C934] font-medium">- {format(resolvePrice(pointsToRedeem, null))}</span>
                                         </div>
                                     )}
 
@@ -1774,12 +1782,12 @@ function CheckoutContent() {
 
                                     <div className="ritual-summary-row">
                                         <span className="label text-gray-600">Shipping Fee</span>
-                                        <span className="value text-gray-900">{shippingCost === 0 ? <span className="text-[#91C934] font-bold">FREE</span> : formatPrice(shippingCost)}</span>
+                                        <span className="value text-gray-900">{shippingCost === 0 ? <span className="text-[#91C934] font-bold">FREE</span> : format(resolvePrice(shippingCost, null))}</span>
                                     </div>
 
                                     {shippingCost > 0 && baseSubtotal > 0 && baseSubtotal < 50 && (
                                         <p className="text-[10px] text-gray-400 -mt-1">
-                                            Add {formatPrice(50 - baseSubtotal)} more for free shipping
+                                            Add {format(resolvePrice(50 - baseSubtotal, null))} more for free shipping
                                         </p>
                                     )}
                                 </div>
@@ -1787,7 +1795,7 @@ function CheckoutContent() {
                                 {(mrpDiscount + (isBuyNow ? 0 : couponDiscount) + pointsToRedeem) > 0 && (
                                     <div className="mt-4 p-3 bg-[#91C934]/10 rounded-xl border border-[#91C934]/20 text-center">
                                         <p className="text-[11px] font-bold text-[#91C934] uppercase tracking-wider">
-                                            You are saving {formatPrice(mrpDiscount + (isBuyNow ? 0 : couponDiscount) + pointsToRedeem)} on this order
+                                            You are saving {format(mrpDiscount + resolvePrice((isBuyNow ? 0 : couponDiscount), null) + resolvePrice(pointsToRedeem, null))} on this order
                                         </p>
                                     </div>
                                 )}
@@ -1795,7 +1803,7 @@ function CheckoutContent() {
                                 <div className="ritual-summary-total">
                                     <div>
                                         <div className="ritual-summary-total-label">Total Amount</div>
-                                        <div className="ritual-summary-total-value mt-1">{formatPrice(grandTotal)}</div>
+                                        <div className="ritual-summary-total-value mt-1">{format(grandTotal)}</div>
                                     </div>
                                     <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#91C934]/20 bg-[#91C934]/10">
                                         <Leaf className="h-5 w-5 text-[#91C934]" />
@@ -1841,7 +1849,7 @@ function CheckoutContent() {
                                         </div>
                                         {pointsToRedeem > 0 && (
                                             <p className="text-[10px] text-[#91C934] mt-1 text-right font-bold">
-                                                - {formatPrice(pointsToRedeem)} applied
+                                                - {format(resolvePrice(pointsToRedeem, null))} applied
                                             </p>
                                         )}
                                     </div>
