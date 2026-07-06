@@ -12,7 +12,7 @@ const path = require('path');
 
 const STOREFRONT = path.resolve(__dirname, '..');
 
-// Files that need the buildPath import and link updates
+// Files that need the buildPath import and link update
 const filesToUpdate = [
   // Components
   'components/Navbar.tsx',
@@ -43,13 +43,13 @@ filesToUpdate.forEach(relPath => {
     console.log(`SKIP (not found): ${relPath}`);
     return;
   }
-  
+
   let content = fs.readFileSync(absPath, 'utf8');
   const original = content;
-  
+
   // 1. Replace fallback defaults: || 'in' → || 'us'
   content = content.replace(/\|\|\s*['"]in['"]/g, "|| 'us'");
-  
+
   // 2. Replace country extraction from pathname
   content = content.replace(
     /const currentCountry = pathname\?\.split\('\/'\)\[1\] \|\| 'in';/g,
@@ -59,7 +59,7 @@ filesToUpdate.forEach(relPath => {
     /const currentCountry = pathname\?\.split\('\/'\)\[1\] \|\| 'us';/g,
     "const currentCountry = getCountryFromPathname(pathname || '/');"
   );
-  
+
   if (content !== original) {
     fs.writeFileSync(absPath, content, 'utf8');
     totalChanges++;
