@@ -345,9 +345,11 @@ export interface FilterParams {
     availability?: string;  // 'in_stock' | 'out_of_stock' | 'all'
     category?: string;
     sub_category?: string;
+    sub_sub_category?: string;
     brand?: string;
     discount_min?: number;
     featured?: boolean;
+    storefront_country?: string;
     trending?: boolean;
     editor_pick?: boolean;
     on_sale?: boolean;
@@ -375,7 +377,9 @@ export async function getFilteredProducts(
         if (params.availability) sp.set('availability', params.availability);
         if (params.category) sp.set('category', params.category);
         if (params.sub_category) sp.set('sub_category', params.sub_category);
+        if (params.sub_sub_category) sp.set('sub_sub_category', params.sub_sub_category);
         if (params.brand) sp.set('brand', params.brand);
+        if (params.storefront_country) sp.set('storefront_country', params.storefront_country);
         if (params.discount_min != null) sp.set('discount_min', String(params.discount_min));
         if (params.featured) sp.set('featured', 'true');
         if (params.trending) sp.set('trending', 'true');

@@ -115,7 +115,6 @@ export function CurrencyProvider({
       countryPrices?: CountryPriceOverride[] | null
     ): number => {
       const baseAmount = Number(amountUsd) || 0;
-      if (countryCode === 'us') return baseAmount;
 
       if (countryPrices && countryPrices.length > 0) {
         const override = countryPrices.find(cp => cp.country_code.toUpperCase() === upperCode);
@@ -143,7 +142,6 @@ export function CurrencyProvider({
     ): number => {
       const mrp = Number(usdMrp) || 0;
       const sp = Number(usdSp) || 0;
-      if (countryCode === 'us') return mrp;
 
       if (countryPrices && countryPrices.length > 0) {
         const override = countryPrices.find(cp => cp.country_code.toUpperCase() === upperCode);

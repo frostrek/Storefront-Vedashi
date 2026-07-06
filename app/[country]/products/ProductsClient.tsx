@@ -39,13 +39,14 @@ interface FilterAttribute {
 const ITEMS_PER_PAGE = 24;
 
 function ProductsContent() {
-    const { formatPrice } = useCurrency();
+    const { formatPrice, format, resolvePrice, countryCode } = useCurrency();
     const {
         filters,
         activeChips,
         setSearch,
         setCategory,
         setSubCategory,
+        setSubSubCategory,
         setBrands,
         setCountry,
         setForm,
@@ -61,7 +62,7 @@ function ProductsContent() {
         setAttribute,
         removeFilter,
         clearAll,
-    } = useFilters();
+    } = useFilters(format);
 
     const searchParams = useSearchParams();
 
@@ -123,6 +124,13 @@ function ProductsContent() {
                     .find((s: any) => s.slug === chip.value);
                 return subCat ? { ...chip, value: subCat.name } : chip;
             }
+            if (chip.key === 'sub_sub_category') {
+                const subSubCat = categories
+                    .flatMap(c => (c as any).children || [])
+                    .flatMap((c: any) => c.children || [])
+                    .find((s: any) => s.slug === chip.value);
+                return subSubCat ? { ...chip, value: subSubCat.name } : chip;
+            }
             return chip;
         }),
         [activeChips, categories]
@@ -138,7 +146,7 @@ function ProductsContent() {
         getFilterOptions().then(opts => {
             setBrandOptions(opts.brands);
             setCountryOptions(opts.countries);
-            if (opts.maxPrice) setPriceMax(opts.maxPrice);
+            // NOTE: priceMax is now set dynamically by the scope-aware effect below
             if (opts.categories) setCategories(opts.categories);
             if (opts.attributes) setFilterAttributes(opts.attributes);
         });
@@ -146,6 +154,7 @@ function ProductsContent() {
         getFormEnumOptions().then(setFormFilterOptions);
         getSpecialityEnumOptions().then(setSpecialityFilterOptions);
     }, []);
+
 
     const buildParams = useCallback((page: number) => {
         const params: Record<string, string | number | boolean | string[]> = {
@@ -157,9 +166,11 @@ function ProductsContent() {
         if (filters.sort) params.sort = filters.sort;
         if (filters.category) params.category = filters.category;
         if (filters.sub_category) params.sub_category = filters.sub_category;
+        if (filters.sub_sub_category) params.sub_sub_category = filters.sub_sub_category;
         if (filters.brands.length > 0) params.brand = filters.brands.join(',');
         if (filters.priceRange[0] !== 0) params.min_price = filters.priceRange[0];
         if (filters.priceRange[1] !== Infinity) params.max_price = filters.priceRange[1];
+        params.storefront_country = countryCode;
         if (filters.country) params.country = filters.country;
         if (filters.form.length > 0) params.form = filters.form.join(',');
         if (filters.specialities.length > 0) params.specialities = filters.specialities.join(',');
@@ -173,7 +184,7 @@ function ProductsContent() {
         if (filters.discountMin) params.discount_min = filters.discountMin;
         if (Object.keys(filters.attributes).length > 0) params.attributes = JSON.stringify(filters.attributes);
         return params;
-    }, [filters]);
+    }, [filters, countryCode]);
 
     // Fetch page — appends to list for page > 1, resets for page 1
     const fetchPage = useCallback(async (
@@ -192,6 +203,7 @@ function ProductsContent() {
         const result = await getFilteredProducts(params);
 
         if (!cancelled.value) {
+
             const incoming = result.data ?? [];
             const totalCount = result.meta?.total_count ?? incoming.length;
             const loadedSoFar = isFirstPage ? incoming.length : (currentPage - 1) * ITEMS_PER_PAGE + incoming.length;
@@ -308,6 +320,66 @@ function ProductsContent() {
     // (managed inside SearchBar component; we just call setSearch)
 
     /* ─── Sidebar content (shared between desktop & mobile) ─── */
+    // Compute the slider max from LOADED products using the exact same
+    // resolvePrice(price, country_prices) logic the product cards use.
+    // This guarantees the slider matches the highest visible price for ANY country.
+    //   • US  → resolvePrice uses product_variants.price directly
+    //   • RU/KR → resolvePrice uses admin-set product_country_prices.price_inr
+    const lastKnownMaxRef = useRef<number>(0);
+
+    const localPriceMax = useMemo(() => {
+        // We only want to re-evaluate the maximum boundary if the user isn't currently filtering by price.
+        // If they are filtering by price, we lock the boundary so they don't get trapped.
+        const isPriceFilterActive = filters.priceRange && (filters.priceRange[0] !== 0 || filters.priceRange[1] !== Infinity);
+
+        if (products.length > 0 && !isPriceFilterActive) {
+            let max = 0;
+            for (const p of products) {
+                const localPrice = resolvePrice(p.price, (p as any).country_prices);
+                if (localPrice > max) max = localPrice;
+            }
+            if (max > 0) {
+                // Round up nicely to give the slider some breathing room
+                let rounded = Math.ceil(max / 1000) * 1000;
+                if (max <= 100) rounded = Math.ceil(max / 10) * 10;
+                else if (max <= 1000) rounded = Math.ceil(max / 100) * 100;
+                else if (max <= 5000) rounded = Math.ceil(max / 500) * 500;
+                
+                lastKnownMaxRef.current = rounded;
+                return rounded;
+            }
+        }
+        
+        // If filters yield 0 products, OR if a price filter is currently active, 
+        // retain the last known max price so the slider doesn't collapse!
+        if (lastKnownMaxRef.current > 0) {
+            return lastKnownMaxRef.current;
+        }
+
+        // Ultimate fallback before any products have ever loaded
+        return Math.max(resolvePrice(priceMax), 1);
+    }, [products, resolvePrice, priceMax, filters.priceRange]);
+    const localStep = useMemo(() => localPriceMax / 100, [localPriceMax]);
+
+    const priceButtons = useMemo(() => {
+        const getNiceNumber = (num: number) => {
+            if (num <= 10) return Number(num.toFixed(1));
+            if (num <= 100) return Math.round(num / 5) * 5;
+            if (num <= 1000) return Math.round(num / 50) * 50;
+            if (num <= 10000) return Math.round(num / 500) * 500;
+            return Math.round(num / 1000) * 1000;
+        };
+        const q1 = Math.max(getNiceNumber(localPriceMax * 0.25), 0.1);
+        const q2 = Math.max(getNiceNumber(localPriceMax * 0.5), q1 + 0.1);
+        const q3 = Math.max(getNiceNumber(localPriceMax * 0.75), q2 + 0.1);
+        return [
+            { label: `Under ${format(q1)}`, range: [0, q1] as [number, number] },
+            { label: `${format(q1)} – ${format(q2)}`, range: [q1, q2] as [number, number] },
+            { label: `${format(q2)} – ${format(q3)}`, range: [q2, q3] as [number, number] },
+            { label: `${format(q3)}+`, range: [q3, Infinity] as [number, number] },
+        ];
+    }, [localPriceMax, format]);
+
     const sidebarContent = (
         <div className="space-y-0">
             {categories.length > 0 && (
@@ -339,6 +411,20 @@ function ProductsContent() {
                                 ))}
                             </select>
                         )}
+                        
+                        {/* Sub Subcategory */}
+                        {filters.sub_category && (categories.find((c: any) => c.slug === filters.category)?.children?.find((s: any) => s.slug === filters.sub_category)?.children?.length ?? 0) > 0 && (
+                            <select
+                                className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] font-medium focus:border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-colors cursor-pointer"
+                                value={filters.sub_sub_category}
+                                onChange={(e) => setSubSubCategory(e.target.value)}
+                            >
+                                <option value="">All Types</option>
+                                {categories.find((c: any) => c.slug === filters.category)?.children?.find((s: any) => s.slug === filters.sub_category)?.children?.map((sub: Category) => (
+                                    <option key={sub.category_id} value={sub.slug}>{sub.name}</option>
+                                ))}
+                            </select>
+                        )}
                     </div>
                 </FilterSection>
             )}
@@ -358,15 +444,10 @@ function ProductsContent() {
 
             <FilterSection title="Price Range">
                 <div className="mb-5 flex flex-wrap gap-2 text-xs">
-                    {[
-                        { label: 'Under ₹1,000', range: [0, 1000] as [number, number] },
-                        { label: '₹1,000 – ₹2,500', range: [1000, 2500] as [number, number] },
-                        { label: '₹2,500 – ₹5,000', range: [2500, 5000] as [number, number] },
-                        { label: '₹5,000+', range: [5000, Infinity] as [number, number] },
-                    ].map(p => (
+                    {priceButtons.map(p => (
                         <button
                             key={p.label}
-                            onClick={() => setPriceRange(p.range, priceMax)}
+                            onClick={() => setPriceRange(p.range, localPriceMax)}
                             className={`rounded-full border px-3 py-1.5 transition-colors cursor-pointer ${(filters.priceRange[0] === p.range[0] && filters.priceRange[1] === p.range[1])
                                 ? 'bg-gray-800 text-white border-gray-800 shadow-sm'
                                 : 'border-gray-200 bg-white text-gray-500 hover:border-gray-400 hover:text-gray-800'
@@ -378,11 +459,11 @@ function ProductsContent() {
                 </div>
                 <RangeSlider
                     min={0}
-                    max={priceMax}
-                    step={priceMax <= 5000 ? 100 : (priceMax <= 20000 ? 500 : 1000)}
-                    value={[filters.priceRange[0] ?? 0, filters.priceRange[1] === Infinity ? priceMax : filters.priceRange[1]]}
-                    onChange={(val) => setPriceRange(val, priceMax)}
-                    formatLabel={v => formatPrice(v)}
+                    max={localPriceMax}
+                    step={localStep}
+                    value={[filters.priceRange[0] ?? 0, filters.priceRange[1] === Infinity ? localPriceMax : filters.priceRange[1]]}
+                    onChange={(val) => setPriceRange(val, localPriceMax)}
+                    formatLabel={v => format(v)}
                 />
             </FilterSection>
 
@@ -580,6 +661,18 @@ function ProductsContent() {
                                                             ))}
                                                         </select>
                                                     )}
+                                                    {filters.sub_category && (categories.find((c: any) => c.slug === filters.category)?.children?.find((s: any) => s.slug === filters.sub_category)?.children?.length ?? 0) > 0 && (
+                                                        <select
+                                                            className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] font-medium focus:border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-colors cursor-pointer"
+                                                            value={filters.sub_sub_category}
+                                                            onChange={(e) => setSubSubCategory(e.target.value)}
+                                                        >
+                                                            <option value="">All Types</option>
+                                                            {categories.find((c: any) => c.slug === filters.category)?.children?.find((s: any) => s.slug === filters.sub_category)?.children?.map((sub: Category) => (
+                                                                <option key={sub.category_id} value={sub.slug}>{sub.name}</option>
+                                                            ))}
+                                                        </select>
+                                                    )}
                                                 </div>
                                             </div>
                                         )}
@@ -600,15 +693,10 @@ function ProductsContent() {
                                             <div className="space-y-6">
                                                 <h3 className="text-sm font-bold text-gray-900">Price Range</h3>
                                                 <div className="flex flex-wrap gap-2 text-xs">
-                                                    {[
-                                                        { label: 'Under ₹1,000', range: [0, 1000] as [number, number] },
-                                                        { label: '₹1,000 – ₹2,500', range: [1000, 2500] as [number, number] },
-                                                        { label: '₹2,500 – ₹5,000', range: [2500, 5000] as [number, number] },
-                                                        { label: '₹5,000+', range: [5000, Infinity] as [number, number] },
-                                                    ].map(p => (
+                                                    {priceButtons.map(p => (
                                                         <button
                                                             key={p.label}
-                                                            onClick={() => setPriceRange(p.range, priceMax)}
+                                                            onClick={() => setPriceRange(p.range, localPriceMax)}
                                                             className={`rounded-full border px-3 py-1.5 transition-colors cursor-pointer ${(filters.priceRange[0] === p.range[0] && filters.priceRange[1] === p.range[1])
                                                                 ? 'bg-gray-800 text-white border-gray-800 shadow-sm'
                                                                 : 'border-gray-200 bg-white text-gray-500 hover:border-gray-400 hover:text-gray-800'
@@ -620,11 +708,11 @@ function ProductsContent() {
                                                 </div>
                                                 <RangeSlider
                                                     min={0}
-                                                    max={priceMax}
-                                                    step={priceMax <= 5000 ? 100 : (priceMax <= 20000 ? 500 : 1000)}
-                                                    value={[filters.priceRange[0] ?? 0, filters.priceRange[1] === Infinity ? priceMax : filters.priceRange[1]]}
-                                                    onChange={(val) => setPriceRange(val, priceMax)}
-                                                    formatLabel={v => formatPrice(v)}
+                                                    max={localPriceMax}
+                                                    step={localStep}
+                                                    value={[filters.priceRange[0] ?? 0, filters.priceRange[1] === Infinity ? localPriceMax : filters.priceRange[1]]}
+                                                    onChange={(val) => setPriceRange(val, localPriceMax)}
+                                                    formatLabel={v => format(v)}
                                                 />
                                             </div>
                                         )}
