@@ -1098,6 +1098,67 @@ export async function getPaymentStatus(orderId: string) {
     }
 }
 
+/* ─── CloudPayments (Russia) ─────────────────────────────────────── */
+
+/**
+ * Initiate a CloudPayments checkout (Deferred Order Creation for Russia).
+ * Returns { payment_id, public_id, amount, currency, invoice_id, description }.
+ */
+export async function initiateCloudPaymentsCheckout(data: {
+    cart_id?: string;
+    items?: Array<{ product_id: string; variant_id?: string | null; quantity: number; unit_price?: number }>;
+    customer_id?: string;
+    customer_name?: string;
+    customer_email?: string;
+    shipping_address_id?: string;
+    shipping_address?: Record<string, any>;
+    billing_address_id?: string;
+    billing_address?: Record<string, any>;
+    coupon_code?: string;
+    redeem_points?: number;
+    final_total?: number;
+    currency?: string;
+    order_notes?: string;
+    ga_client_id?: string;
+    attribution?: TrafficSource | null;
+}) {
+    try {
+        const res = await authFetch(`${API_URL}/api/payments/cloudpayments/initiate-checkout`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        return res.json();
+    } catch (error) {
+        console.warn('[API] initiateCloudPaymentsCheckout failed:', error);
+        return { success: false, message: 'Network error' };
+    }
+}
+
+/**
+ * Verify CloudPayments payment after widget completion.
+ */
+export async function verifyCloudPayment(data: {
+    payment_id: string;
+    transaction_id: number;
+    amount: number;
+    currency: string;
+    card_last_four?: string;
+    card_type?: string;
+}) {
+    try {
+        const res = await authFetch(`${API_URL}/api/payments/cloudpayments/verify`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        return res.json();
+    } catch (error) {
+        console.warn('[API] verifyCloudPayment failed:', error);
+        return { success: false, message: 'Network error' };
+    }
+}
+
 /* ─── Orders ─── */
 
 /**

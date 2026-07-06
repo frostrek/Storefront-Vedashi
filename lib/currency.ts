@@ -127,9 +127,6 @@ export function formatPrice(
       maximumFractionDigits: currency === 'KRW' ? 0 : 2,
     });
     formattedCurrency = formatter.format(converted);
-    if (currency === 'RUB') {
-      formattedCurrency = formattedCurrency.replace(',', '.');
-    }
   } catch (e) {
     // Fallback if Intl fails
     const sym = Object.values(SUPPORTED_COUNTRIES).find(c => c.currency === currency)?.symbol || currency;
@@ -167,9 +164,6 @@ export function formatLocal(
       maximumFractionDigits: currency === 'KRW' ? 0 : 2,
     });
     formattedCurrency = formatter.format(n);
-    if (currency === 'RUB') {
-      formattedCurrency = formattedCurrency.replace(',', '.');
-    }
   } catch (e) {
     // Fallback if Intl fails
     const sym = Object.values(SUPPORTED_COUNTRIES).find(c => c.currency === currency)?.symbol || currency;
