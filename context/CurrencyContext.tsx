@@ -7,8 +7,10 @@ import {
   SupportedCountryCode,
   CurrencyConfigEntry,
   CountryPriceOverride,
-  resolveInrPrice,
+  resolveBasePrice,
   formatPrice,
+  formatLocal,
+  deriveCountryMrp,
 } from '@/lib/currency';
 import { API_URL } from '@/lib/api';
 
@@ -19,13 +21,45 @@ interface CurrencyContextType {
   /**
    * Format a price for display. Handles country-based conversion automatically.
    *
-   * @param amountInr - Default price in INR
+   * @param amountUsd - Default price in USD (base currency)
    * @param countryPrices - Optional per-product country price overrides from the backend
    */
   formatPrice: (
-    amountInr: number | string | null | undefined,
+    amountUsd: number | string | null | undefined,
     countryPrices?: CountryPriceOverride[] | null
   ) => string;
+  /**
+   * Format an MRP for display. For countries with a price override,
+   * derives the MRP from the country SP using the USD discount percentage.
+   *
+   * @param usdMrp       - The MRP / original price in USD
+   * @param usdSp        - The selling / display price in USD
+   * @param countryPrices - Optional per-product country price overrides
+   */
+  formatMrp: (
+    usdMrp: number | string | null | undefined,
+    usdSp: number | string | null | undefined,
+    countryPrices?: CountryPriceOverride[] | null
+  ) => string;
+  /**
+   * Resolve a USD price to the active country's numerical value (applying overrides or exchange rate).
+   */
+  resolvePrice: (
+    amountUsd: number | string | null | undefined,
+    countryPrices?: CountryPriceOverride[] | null
+  ) => number;
+  /**
+   * Resolve a USD MRP to the active country's numerical MRP value.
+   */
+  resolveMrp: (
+    usdMrp: number | string | null | undefined,
+    usdSp: number | string | null | undefined,
+    countryPrices?: CountryPriceOverride[] | null
+  ) => number;
+  /**
+   * Format a numerical value that is ALREADY in the active country's currency.
+   */
+  format: (localAmount: number | string | null | undefined) => string;
   isLoadingRates: boolean;
 }
 
@@ -63,63 +97,111 @@ export function CurrencyProvider({
       }
     }
 
-    // Only fetch if we are not in India, to save API calls
-    if (countryConfig.currency !== 'INR') {
+    // Only fetch if we are not in the US (base currency), to save API calls
+    if (countryConfig.currency !== 'USD') {
       fetchCurrencyConfig();
     } else {
       setIsLoadingRates(false);
     }
   }, [countryConfig.currency]);
 
-  // Build the bound formatPrice function
-  const boundFormatPrice = useMemo(() => {
-    // Lookup the currency config for the current country (uppercase match)
+  // 1. Core resolve function for SP
+  const resolvePriceFn = useMemo(() => {
     const upperCode = countryCode.toUpperCase();
     const currentConfig = currencyConfigs.find(c => c.country_code === upperCode);
-    // USD fallback config
-    const usdConfig = currencyConfigs.find(c => c.country_code === 'US');
 
     return (
-      amountInr: number | string | null | undefined,
+      amountUsd: number | string | null | undefined,
       countryPrices?: CountryPriceOverride[] | null
-    ): string => {
-      const baseAmount = Number(amountInr) || 0;
+    ): number => {
+      const baseAmount = Number(amountUsd) || 0;
 
-      // For India — always show INR
-      if (countryCode === 'in') {
-        // Still check for a country-specific override (unlikely for IN but technically possible)
-        const resolved = resolveInrPrice(baseAmount, 'IN', countryPrices);
-        return formatPrice(resolved, 'INR', 1, 'en-IN');
+      if (countryPrices && countryPrices.length > 0) {
+        const override = countryPrices.find(cp => cp.country_code.toUpperCase() === upperCode);
+        if (override && Number(override.price_inr) > 0) {
+          return Number(override.price_inr);
+        }
       }
 
-      // Resolve the INR price (country override or default)
-      const resolvedInr = resolveInrPrice(baseAmount, upperCode, countryPrices);
-
-      // 1. Use the country's currency config if available
       if (currentConfig) {
-        return formatPrice(
-          resolvedInr,
-          currentConfig.currency_code,
-          currentConfig.exchange_rate,
-          countryConfig.locale
-        );
+        return baseAmount * currentConfig.exchange_rate;
+      }
+      return baseAmount;
+    };
+  }, [countryCode, currencyConfigs]);
+
+  // 2. Core resolve function for MRP
+  const resolveMrpFn = useMemo(() => {
+    const upperCode = countryCode.toUpperCase();
+    const currentConfig = currencyConfigs.find(c => c.country_code === upperCode);
+
+    return (
+      usdMrp: number | string | null | undefined,
+      usdSp: number | string | null | undefined,
+      countryPrices?: CountryPriceOverride[] | null
+    ): number => {
+      const mrp = Number(usdMrp) || 0;
+      const sp = Number(usdSp) || 0;
+
+      if (countryPrices && countryPrices.length > 0) {
+        const override = countryPrices.find(cp => cp.country_code.toUpperCase() === upperCode);
+        if (override && Number(override.price_inr) > 0) {
+          const overrideSp = Number(override.price_inr);
+          return deriveCountryMrp(overrideSp, sp, mrp);
+        }
       }
 
-      // 2. Fallback: use USD if currency config not found for this country
-      if (usdConfig) {
-        return formatPrice(resolvedInr, 'USD', usdConfig.exchange_rate, 'en-US');
+      if (currentConfig) {
+        return mrp * currentConfig.exchange_rate;
       }
+      return mrp;
+    };
+  }, [countryCode, currencyConfigs]);
 
-      // 3. Last resort: show raw INR
-      return formatPrice(resolvedInr, 'INR', 1, 'en-IN');
+  // 3. Core formatter (already converted)
+  const formatFn = useMemo(() => {
+    const upperCode = countryCode.toUpperCase();
+    const currentConfig = currencyConfigs.find(c => c.country_code === upperCode);
+    
+    return (localAmount: number | string | null | undefined): string => {
+      if (countryCode === 'us') return formatLocal(localAmount, 'USD', 'en-US');
+      if (currentConfig) return formatLocal(localAmount, currentConfig.currency_code, countryConfig.locale);
+      return formatLocal(localAmount, 'USD', 'en-US');
     };
   }, [countryCode, countryConfig.locale, currencyConfigs]);
+
+  // 4. Backward compatible formatPrice (resolve + format)
+  const boundFormatPrice = useMemo(() => {
+    return (
+      amountUsd: number | string | null | undefined,
+      countryPrices?: CountryPriceOverride[] | null
+    ): string => {
+      const localNum = resolvePriceFn(amountUsd, countryPrices);
+      return formatFn(localNum);
+    };
+  }, [resolvePriceFn, formatFn]);
+
+  // 5. Backward compatible formatMrp (resolve + format)
+  const boundFormatMrp = useMemo(() => {
+    return (
+      usdMrp: number | string | null | undefined,
+      usdSp: number | string | null | undefined,
+      countryPrices?: CountryPriceOverride[] | null
+    ): string => {
+      const localNum = resolveMrpFn(usdMrp, usdSp, countryPrices);
+      return formatFn(localNum);
+    };
+  }, [resolveMrpFn, formatFn]);
 
   const value: CurrencyContextType = {
     countryCode,
     countryConfig,
     currencyConfigs,
+    resolvePrice: resolvePriceFn,
+    resolveMrp: resolveMrpFn,
+    format: formatFn,
     formatPrice: boundFormatPrice,
+    formatMrp: boundFormatMrp,
     isLoadingRates,
   };
 
@@ -133,12 +215,16 @@ export function CurrencyProvider({
 export function useCurrency() {
   const context = useContext(CurrencyContext);
   if (!context) {
-    // If used outside provider (e.g. in root layout or admin), fallback to INR/India
+    // If used outside provider (e.g. in root layout or admin), fallback to USD/US
     return {
-      countryCode: 'in' as SupportedCountryCode,
-      countryConfig: SUPPORTED_COUNTRIES['in'],
+      countryCode: 'us' as SupportedCountryCode,
+      countryConfig: SUPPORTED_COUNTRIES['us'],
       currencyConfigs: [],
-      formatPrice: (amount: number | string | null | undefined, countryPrices?: CountryPriceOverride[] | null) => formatPrice(amount, 'INR', 1, 'en-IN'),
+      resolvePrice: (usdAmount: number | string | null | undefined, itemOverrides?: CountryPriceOverride[] | null | undefined) => Number(usdAmount) || 0,
+      resolveMrp: (usdMrp: number | string | null | undefined, usdSp?: number | string | null | undefined, itemOverrides?: CountryPriceOverride[] | null | undefined) => Number(usdMrp) || 0,
+      format: (localAmount: number | string | null | undefined) => formatPrice(localAmount, 'USD', 1, 'en-US'),
+      formatPrice: (amount: number | string | null | undefined, countryPrices?: CountryPriceOverride[] | null) => formatPrice(amount, 'USD', 1, 'en-US'),
+      formatMrp: (usdMrp: number | string | null | undefined, usdSp?: number | string | null | undefined, countryPrices?: CountryPriceOverride[] | null) => formatPrice(usdMrp, 'USD', 1, 'en-US'),
       isLoadingRates: false,
     };
   }

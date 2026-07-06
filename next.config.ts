@@ -69,6 +69,11 @@ const nextConfig: NextConfig = {
         destination: '/:country/products?category=:slug',
         permanent: true,
       },
+      {
+        source: '/categories/:slug',
+        destination: '/products?category=:slug',
+        permanent: true,
+      },
     ];
   },
   webpack: (config, { dev, isServer }) => {

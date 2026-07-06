@@ -15,6 +15,7 @@ import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { trackEcommerce } from '@/lib/analytics/gtag';
 import { hasDiscount, getDiscountPercent, getValidPrices } from '@/utils/discount';
+import { buildPath, getCountryFromPathname } from '@/lib/currency';
 
 
 const BLUR_DATA_URL =
@@ -31,7 +32,7 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, onMoveToCart, priority = false, layout = 'grid', listName, listIndex }: ProductCardProps) {
     const params = useParams();
-    const { formatPrice } = useCurrency();
+    const { formatPrice, formatMrp } = useCurrency();
     const { isInWishlist, toggleItem } = useWishlist();
     const { addItem, updateQuantity, removeItem, items, loading: cartLoading } = useCart();
     const wishlisted = isInWishlist(product.product_id);
@@ -101,7 +102,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
         const shareData = {
             title: product.product_name,
             text: `Check out ${product.product_name} on Vedashi — Premium Ayurvedic Wellness.`,
-            url: `${window.location.origin}/${params.country || 'in'}/products/${product.slug || product.product_id}`,
+            url: `${window.location.origin}/${params.country || 'us'}/products/${product.slug || product.product_id}`,
         };
 
         if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
@@ -128,7 +129,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
     const imageSrc = product.thumbnail_url || product.images?.[0] || '/herbal_placeholder.png';
     const isExternal = imageSrc.startsWith('http');
     const isBase64 = imageSrc.startsWith('data:');
-    const productUrl = `/${params.country || 'in'}/products/${product.slug || product.product_id}`;
+    const productUrl = `/${params.country || 'us'}/products/${product.slug || product.product_id}`;
 
     const closeCartModal = useCallback((e?: React.MouseEvent) => {
         if (e) {
@@ -561,7 +562,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                     {vIsDiscounted && (
                                                         <>
                                                             <span className={`text-[10px] line-through ${isSelected ? 'text-white/50' : 'text-gray-400'}`}>
-                                                                {formatPrice(vOriginalPrice, v.country_prices || product.country_prices)}
+                                                                {formatMrp(vOriginalPrice, vDisplayPrice, v.country_prices || product.country_prices)}
                                                             </span>
                                                             <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isSelected ? 'bg-red-500/20 text-red-100' : 'text-red-500 bg-red-50'}`}>
                                                                 {getDiscountPercent(v)}% OFF
@@ -822,7 +823,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                                 {getDiscountPercent(v)}% OFF
                                                             </span>
                                                             <span className="text-[10px] text-gray-400 line-through">
-                                                                MRP {formatPrice(vOriginalPrice, v.country_prices || product.country_prices)}
+                                                                MRP {formatMrp(vOriginalPrice, vDisplayPrice, v.country_prices || product.country_prices)}
                                                             </span>
                                                         </div>
                                                     )}
@@ -1076,7 +1077,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                         {Math.round((1 - displayPrice / originalPrice) * 100)}% OFF
                                     </span>
                                     <span className="text-gray-400 line-through text-[11px] sm:text-xs font-bold font-ui">
-                                        MRP {formatPrice(originalPrice, product.country_prices)}
+                                        MRP {formatMrp(originalPrice, displayPrice, product.country_prices)}
                                     </span>
                                 </div>
                             )}
@@ -1112,7 +1113,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
 
                         {product.brand && (
                             <Link
-                                href={`/${params.country || 'in'}/products?brand=${encodeURIComponent(product.brand)}`}
+                                href={`/${params.country || 'us'}/products?brand=${encodeURIComponent(product.brand)}`}
                                 className={`relative z-20 block uppercase tracking-[0.12em] text-gray-400 font-medium mb-1 sm:mb-1.5 hover:text-[#3d5c3a] transition-colors cursor-pointer ${isList ? 'text-[10px] sm:text-[11px]' : 'text-[9px]'}`}
                             >
                                 {product.brand}

@@ -230,6 +230,7 @@ export interface BackendCartItem {
     quantity: number;
     price: number;
     added_at: string;
+    country_prices?: any[] | null;
     product?: {
         product_id: string;
         product_name: string;
@@ -238,6 +239,7 @@ export interface BackendCartItem {
         product_sku?: string;
         slug?: string;
         thumbnail_url?: string;
+        country_prices?: any[] | null;
     };
     variant?: {
         variant_id: string;

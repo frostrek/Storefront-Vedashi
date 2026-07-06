@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 import { API_URL } from '@/lib/api';
-import { SUPPORTED_COUNTRIES } from '@/lib/currency';
+import { SUPPORTED_COUNTRIES, buildPath } from '@/lib/currency';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.com';
 
@@ -46,18 +46,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             const languages: Record<string, string> = {};
             countries.forEach(c => {
                 const locale = SUPPORTED_COUNTRIES[c as keyof typeof SUPPORTED_COUNTRIES].locale;
-                languages[locale] = `${SITE_URL}/${c}${p}`;
+                languages[locale] = `${SITE_URL}${buildPath(c, p)}`;
             });
             
             // Base language fallbacks for broader SEO matching
-            languages['en'] = `${SITE_URL}/in${p}`;
-            languages['ru'] = `${SITE_URL}/ru${p}`;
-            languages['ko'] = `${SITE_URL}/kr${p}`;
+            languages['en'] = `${SITE_URL}${buildPath('us', p)}`;
+            languages['ru'] = `${SITE_URL}${buildPath('ru', p)}`;
+            languages['ko'] = `${SITE_URL}${buildPath('kr', p)}`;
             languages['ar'] = `${SITE_URL}/ae${p}`;
-            languages['x-default'] = `${SITE_URL}/in${p}`;
+            languages['x-default'] = `${SITE_URL}${buildPath('us', p)}`;
 
             sitemapEntries.push({
-                url: `${SITE_URL}/${country}${p}`,
+                url: `${SITE_URL}${buildPath(country, p)}`,
                 lastModified: lastMod,
                 changeFrequency: p === '' ? 'daily' : 'weekly',
                 priority: p === '' ? 1.0 : 0.8,
@@ -70,17 +70,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             const languages: Record<string, string> = {};
             countries.forEach(cc => {
                 const locale = SUPPORTED_COUNTRIES[cc as keyof typeof SUPPORTED_COUNTRIES].locale;
-                languages[locale] = `${SITE_URL}/${cc}/products?category=${c.slug}`;
+                languages[locale] = `${SITE_URL}${buildPath(cc, `/products?category=${c.slug}`)}`;
             });
             
-            languages['en'] = `${SITE_URL}/in/products?category=${c.slug}`;
-            languages['ru'] = `${SITE_URL}/ru/products?category=${c.slug}`;
-            languages['ko'] = `${SITE_URL}/kr/products?category=${c.slug}`;
+            languages['en'] = `${SITE_URL}${buildPath('us', `/products?category=${c.slug}`)}`;
+            languages['ru'] = `${SITE_URL}${buildPath('ru', `/products?category=${c.slug}`)}`;
+            languages['ko'] = `${SITE_URL}${buildPath('kr', `/products?category=${c.slug}`)}`;
             languages['ar'] = `${SITE_URL}/ae/products?category=${c.slug}`;
-            languages['x-default'] = `${SITE_URL}/in/products?category=${c.slug}`;
+            languages['x-default'] = `${SITE_URL}${buildPath('us', `/products?category=${c.slug}`)}`;
 
             sitemapEntries.push({
-                url: `${SITE_URL}/${country}/products?category=${c.slug}`,
+                url: `${SITE_URL}${buildPath(country, `/products?category=${c.slug}`)}`,
                 lastModified: lastMod,
                 changeFrequency: 'weekly',
                 priority: 0.7,
@@ -93,17 +93,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             const languages: Record<string, string> = {};
             countries.forEach(cc => {
                 const locale = SUPPORTED_COUNTRIES[cc as keyof typeof SUPPORTED_COUNTRIES].locale;
-                languages[locale] = `${SITE_URL}/${cc}/products/${p.slug}`;
+                languages[locale] = `${SITE_URL}${buildPath(cc, `/products/${p.slug}`)}`;
             });
             
-            languages['en'] = `${SITE_URL}/in/products/${p.slug}`;
-            languages['ru'] = `${SITE_URL}/ru/products/${p.slug}`;
-            languages['ko'] = `${SITE_URL}/kr/products/${p.slug}`;
+            languages['en'] = `${SITE_URL}${buildPath('us', `/products/${p.slug}`)}`;
+            languages['ru'] = `${SITE_URL}${buildPath('ru', `/products/${p.slug}`)}`;
+            languages['ko'] = `${SITE_URL}${buildPath('kr', `/products/${p.slug}`)}`;
             languages['ar'] = `${SITE_URL}/ae/products/${p.slug}`;
-            languages['x-default'] = `${SITE_URL}/in/products/${p.slug}`;
+            languages['x-default'] = `${SITE_URL}${buildPath('us', `/products/${p.slug}`)}`;
 
             sitemapEntries.push({
-                url: `${SITE_URL}/${country}/products/${p.slug}`,
+                url: `${SITE_URL}${buildPath(country, `/products/${p.slug}`)}`,
                 lastModified: p.updated_at ? new Date(p.updated_at) : lastMod,
                 changeFrequency: 'weekly',
                 priority: 0.9,

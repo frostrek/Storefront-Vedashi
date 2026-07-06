@@ -5,6 +5,7 @@
  */
 
 import { Product, FilteredProduct, FilterMeta, ProductWithDetails, ProductAsset, ApiResponse } from '@/types';
+import { SUPPORTED_COUNTRIES, buildPath } from './currency';
 import { env } from '@/lib/env';
 import PerformanceStore from '@/lib/analytics/performance';
 import { isConsentGranted } from '@/lib/analytics/gtag';
@@ -151,8 +152,8 @@ export async function authFetch(url: string, init?: RequestInit): Promise<Respon
                     localStorage.removeItem('vedashi_user');
                     window.dispatchEvent(new CustomEvent('session-expired'));
                     const pathParts = window.location.pathname.split('/');
-                    const country = pathParts[1] || 'in';
-                    window.location.href = `/${country}/login?session_expired=1`;
+                    const country = pathParts[1] || 'us';
+                    window.location.href = buildPath(country, `/login?session_expired=1`);
                     return res;
                 }
             } catch { /* ignore */ }
@@ -344,9 +345,11 @@ export interface FilterParams {
     availability?: string;  // 'in_stock' | 'out_of_stock' | 'all'
     category?: string;
     sub_category?: string;
+    sub_sub_category?: string;
     brand?: string;
     discount_min?: number;
     featured?: boolean;
+    storefront_country?: string;
     trending?: boolean;
     editor_pick?: boolean;
     on_sale?: boolean;
@@ -374,7 +377,9 @@ export async function getFilteredProducts(
         if (params.availability) sp.set('availability', params.availability);
         if (params.category) sp.set('category', params.category);
         if (params.sub_category) sp.set('sub_category', params.sub_category);
+        if (params.sub_sub_category) sp.set('sub_sub_category', params.sub_sub_category);
         if (params.brand) sp.set('brand', params.brand);
+        if (params.storefront_country) sp.set('storefront_country', params.storefront_country);
         if (params.discount_min != null) sp.set('discount_min', String(params.discount_min));
         if (params.featured) sp.set('featured', 'true');
         if (params.trending) sp.set('trending', 'true');
@@ -1093,6 +1098,67 @@ export async function getPaymentStatus(orderId: string) {
         return res.json();
     } catch (error) {
         console.warn('[API] getPaymentStatus failed:', error);
+        return { success: false, message: 'Network error' };
+    }
+}
+
+/* ─── CloudPayments (Russia) ─────────────────────────────────────── */
+
+/**
+ * Initiate a CloudPayments checkout (Deferred Order Creation for Russia).
+ * Returns { payment_id, public_id, amount, currency, invoice_id, description }.
+ */
+export async function initiateCloudPaymentsCheckout(data: {
+    cart_id?: string;
+    items?: Array<{ product_id: string; variant_id?: string | null; quantity: number; unit_price?: number }>;
+    customer_id?: string;
+    customer_name?: string;
+    customer_email?: string;
+    shipping_address_id?: string;
+    shipping_address?: Record<string, any>;
+    billing_address_id?: string;
+    billing_address?: Record<string, any>;
+    coupon_code?: string;
+    redeem_points?: number;
+    final_total?: number;
+    currency?: string;
+    order_notes?: string;
+    ga_client_id?: string;
+    attribution?: TrafficSource | null;
+}) {
+    try {
+        const res = await authFetch(`${API_URL}/api/payments/cloudpayments/initiate-checkout`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        return res.json();
+    } catch (error) {
+        console.warn('[API] initiateCloudPaymentsCheckout failed:', error);
+        return { success: false, message: 'Network error' };
+    }
+}
+
+/**
+ * Verify CloudPayments payment after widget completion.
+ */
+export async function verifyCloudPayment(data: {
+    payment_id: string;
+    transaction_id: number;
+    amount: number;
+    currency: string;
+    card_last_four?: string;
+    card_type?: string;
+}) {
+    try {
+        const res = await authFetch(`${API_URL}/api/payments/cloudpayments/verify`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        return res.json();
+    } catch (error) {
+        console.warn('[API] verifyCloudPayment failed:', error);
         return { success: false, message: 'Network error' };
     }
 }

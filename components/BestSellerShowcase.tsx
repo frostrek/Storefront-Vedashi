@@ -6,6 +6,7 @@ import ProductCard from './ProductCard';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { useParams } from 'next/navigation';
+import { buildPath, getCountryFromPathname } from '@/lib/currency';
 
 // Ad banners that rotate  in the left panel
 // You can replace these with dedicated promotional images
@@ -34,7 +35,7 @@ export default function BestSellerShowcase({
   viewAllText = 'Explore All',
 }: BestSellerShowcaseProps) {
   const params = useParams();
-  const country = (Array.isArray(params?.country) ? params?.country[0] : params?.country) || 'in';
+  const country = (Array.isArray(params?.country) ? params?.country[0] : params?.country) || 'us';
   const [adIndex, setAdIndex] = useState(0);
   const [direction, setDirection] = useState(1);
 
@@ -53,10 +54,10 @@ export default function BestSellerShowcase({
   const displayProducts = products.slice(0, 8);
 
   const resolvedViewAllLink = viewAllLink
-    ? viewAllLink.startsWith('/') && !viewAllLink.startsWith(`/${country}`)
-      ? `/${country}${viewAllLink}`
+    ? viewAllLink.startsWith('/') && !viewAllLink.startsWith(buildPath(country, '/'))
+      ? buildPath(country, viewAllLink)
       : viewAllLink
-    : `/${country}/products?sort=popular&bestSeller=true`;
+    : buildPath(country, `/products?sort=popular&bestSeller=true`);
 
   return (
     <div className="relative pt-6 sm:pt-8 pb-0">

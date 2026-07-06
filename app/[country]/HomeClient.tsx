@@ -32,6 +32,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, useParams } from 'next/navigation';
 import NeedHelpSection from '@/components/NeedHelpSection';
 import BrandReel from '@/components/BrandReel';
+import { buildPath, getCountryFromPathname } from '@/lib/currency';
 
 export interface HomeClientProps {
   initialBestSellers?: Product[];
@@ -50,7 +51,7 @@ export default function HomeClientPage({
 }: HomeClientProps) {
   const router = useRouter();
   const params = useParams();
-  const country = params?.country as string || 'in';
+  const country = params?.country as string || 'us';
 
   const [bestSellers, setBestSellers] = useState<Product[]>(initialBestSellers);
   const [newArrivals, setNewArrivals] = useState<Product[]>(initialNewArrivals);
@@ -189,7 +190,7 @@ export default function HomeClientPage({
               <div className="relative text-center mb-2 px-4">
                 <div className="absolute right-6 top-3 hidden lg:block">
                   <Link
-                    href={`/${country}/products`}
+                    href={buildPath(country, `/products`)}
                     className="group flex items-center gap-2 text-[13px] font-medium text-[#FF0000] hover:text-[#CC0000] transition-all underline decoration-[#FF0000]/30 underline-offset-2 hover:decoration-[#FF0000]"
                   >
                     Explore all products
@@ -228,7 +229,7 @@ export default function HomeClientPage({
                         <div
                           key={cat.category_id}
                           onClick={() => {
-                            router.push(`/${country}/products?category=${cat.slug}`);
+                            router.push(buildPath(country, `/products?category=${cat.slug}`));
                           }}
                           className="group flex flex-col items-center gap-3 transition-all duration-500 hover:-translate-y-2 cursor-pointer"
                         >
@@ -261,7 +262,7 @@ export default function HomeClientPage({
               {/* Mobile View All - Shop all products */}
               <div className="sm:hidden flex justify-end mt-4">
                 <Link
-                  href={`/${country}/products`}
+                  href={buildPath(country, `/products`)}
                   className="text-[10px] font-medium text-[#FF0000] hover:text-[#CC0000] transition-colors underline decoration-[#FF0000]/30 underline-offset-2"
                 >
                   Explore all products
@@ -277,7 +278,7 @@ export default function HomeClientPage({
                 loading={loading}
                 title="Best Sellers"
                 subtitle="Our most-loved natural wellness essentials, chosen by you."
-                viewAllLink={`/${country}/products?bestSeller=true`}
+                viewAllLink={buildPath(country, `/products?bestSeller=true`)}
                 viewAllText="Shop all Best Sellers"
               />
             </div>
@@ -320,7 +321,7 @@ export default function HomeClientPage({
               loading={loading}
               title="Face Wash"
               subtitle="Gentle cleansers for a fresh, radiant complexion every day."
-              viewAllLink={`/${country}/products?category=cosmetics&sub_category=face-care&sub_sub_category=cleansers-and-face-wash`}
+              viewAllLink={buildPath(country, `/products?category=cosmetics&sub_category=face-care&sub_sub_category=cleansers-and-face-wash`)}
               viewAllText="Shop All Face Wash"
             />
           </div>
@@ -333,7 +334,7 @@ export default function HomeClientPage({
               loading={loading}
               title="Hair oils"
               subtitle="Nourishing oils for stronger, shinier, and healthier hair."
-              viewAllLink={`/${country}/products?category=cosmetics&sub_category=hair-care&sub_sub_category=shampoos-and-conditioners`}
+              viewAllLink={buildPath(country, `/products?category=cosmetics&sub_category=hair-care&sub_sub_category=shampoos-and-conditioners`)}
               viewAllText="Shop All Hair Care"
             />
           </div>

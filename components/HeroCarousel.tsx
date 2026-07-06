@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { API_URL, getHeroSlides, getHeroSettings } from '@/lib/api';
 import { useParams } from 'next/navigation';
+import { buildPath, getCountryFromPathname } from '@/lib/currency';
 
 // API_URL imported from @/lib/api
 
@@ -49,7 +50,7 @@ export interface HeroCarouselProps {
 
 export default function HeroCarousel({ initialSlides = [], initialSettings = undefined }: HeroCarouselProps) {
     const params = useParams<{ country: string }>();
-    const country = params?.country || 'in';
+    const country = params?.country || 'us';
     const [slides, setSlides] = useState<HeroSlide[]>(initialSlides);
     const [settings, setSettings] = useState<HeroSettings>(
         initialSettings || { slider_speed: 3000, arrow_visibility: 'hover', loop: true, slideshow_type: 'fade' }

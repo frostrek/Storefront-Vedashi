@@ -3,20 +3,15 @@ import type { NextRequest } from 'next/server';
 
 
 // ─── Supported Countries ────────────────────────────────────────────
-const SUPPORTED_COUNTRIES = ['in', 'us', 'gb', 'ae', 'ca', 'au', 'ru', 'kr'] as const;
+const SUPPORTED_COUNTRIES = ['us', 'ru', 'kr'] as const;
 type SupportedCountry = (typeof SUPPORTED_COUNTRIES)[number];
-const DEFAULT_COUNTRY: SupportedCountry = 'in';
+const DEFAULT_COUNTRY: SupportedCountry = 'us';
 
 const SUPPORTED_SET = new Set<string>(SUPPORTED_COUNTRIES);
 
 // ─── Country → Currency Map ─────────────────────────────────────────
 const COUNTRY_CURRENCY_MAP: Record<string, string> = {
-  in: 'INR',
   us: 'USD',
-  gb: 'GBP',
-  ae: 'AED',
-  ca: 'CAD',
-  au: 'AUD',
   ru: 'RUB',
   kr: 'KRW',
 };
@@ -24,13 +19,8 @@ const DEFAULT_CURRENCY = 'USD';
 
 // ─── Country → Language Map ─────────────────────────────────────────
 const COUNTRY_LANGUAGE_MAP: Record<string, string> = {
-  in: 'en',
   us: 'en',
-  gb: 'en',
-  ca: 'en',
-  au: 'en',
   ru: 'ru',
-  ae: 'ar',
   kr: 'ko',
 };
 const DEFAULT_LANGUAGE = 'en';
@@ -123,10 +113,28 @@ async function fetchCountryFromIPinfo(ip: string): Promise<SupportedCountry | nu
   }
 }
 
+// ─── URL Prefix Strategy ────────────────────────────────────────────
+// 'us' (worldwide) uses ROOT URLs: vedashi.com/products
+// 'ru' and 'kr' use PREFIXED URLs: vedashi.com/ru/products, vedashi.com/kr/products
+const PREFIXED_COUNTRIES = new Set<string>(['ru', 'kr']);
+
+// Old country prefixes that should 301 redirect to root
+const LEGACY_PREFIXES = new Set<string>(['in', 'gb', 'ae', 'ca', 'au', 'us']);
+
 function pathHasCountryPrefix(pathname: string): string | null {
-  for (const country of SUPPORTED_COUNTRIES) {
+  // Check prefixed countries (ru, kr)
+  for (const country of PREFIXED_COUNTRIES) {
     if (pathname === `/${country}` || pathname.startsWith(`/${country}/`)) {
       return country;
+    }
+  }
+  return null;
+}
+
+function pathHasLegacyPrefix(pathname: string): string | null {
+  for (const prefix of LEGACY_PREFIXES) {
+    if (pathname === `/${prefix}` || pathname.startsWith(`/${prefix}/`)) {
+      return prefix;
     }
   }
   return null;
@@ -180,7 +188,6 @@ export async function proxy(request: NextRequest) {
   const isWww = host === 'www.vedashi.com' || host === 'www.vedashi.onrender.com';
   
   if (isWww) {
-    // Build a clean URL using SITE_URL to strip internal ports like :3000
     const target = new URL(`${pathname}${search}`, SITE_URL);
     return NextResponse.redirect(target, 301);
   }
@@ -190,7 +197,21 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 2. URL already has a valid country prefix
+  // 2. Handle LEGACY prefixes (/us/*, /in/*, /gb/*, etc.) → 301 redirect to root
+  const legacyPrefix = pathHasLegacyPrefix(pathname);
+  if (legacyPrefix) {
+    // Strip the legacy prefix → redirect to root
+    const restOfPath = pathname.slice(`/${legacyPrefix}`.length) || '/';
+    const baseUrl = process.env.NODE_ENV === 'production' ? SITE_URL : request.nextUrl.origin;
+    const redirectUrl = new URL(`${restOfPath}${search}`, baseUrl);
+    const response = NextResponse.redirect(redirectUrl, 301);
+    // Ensure cookies reflect worldwide defaults
+    response.cookies.set('geo_country', 'us', GEO_COOKIE_OPTIONS);
+    response.cookies.set('geo_currency', 'USD', GEO_COOKIE_OPTIONS);
+    return response;
+  }
+
+  // 3. Handle PREFIXED countries (/ru/*, /kr/*) → pass through normally
   const existingCountry = pathHasCountryPrefix(pathname);
   if (existingCountry) {
     const response = NextResponse.next();
@@ -208,7 +229,9 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
-  // 3. Resolve country — tiered strategy
+  // 4. ROOT URLs (/products, /about, /cart, etc.) → Geo-detect or default to worldwide
+  //    We check if user should be redirected to a prefixed country, otherwise rewrite to /us/
+
   let country: SupportedCountry | null = null;
 
   // Tier 1: User Manual Preference (Lock)
@@ -240,25 +263,40 @@ export async function proxy(request: NextRequest) {
     country = DEFAULT_COUNTRY;
   }
 
-  // 4. Build redirect to /{country}{pathname}
-  const currency = getCurrency(country);
-  
-  let targetPath = `/${country}${pathname}`;
-  if (targetPath.endsWith('/') && targetPath.length > 3) {
-    targetPath = targetPath.slice(0, -1);
+  // If detected country is a PREFIXED country (ru/kr), redirect to the prefixed URL
+  if (PREFIXED_COUNTRIES.has(country)) {
+    const currency = getCurrency(country);
+    let targetPath = `/${country}${pathname}`;
+    if (targetPath.endsWith('/') && targetPath.length > 3) {
+      targetPath = targetPath.slice(0, -1);
+    }
+    
+    const baseUrl = process.env.NODE_ENV === 'production' ? SITE_URL : request.nextUrl.origin;
+    const redirectUrl = new URL(`${targetPath}${search}`, baseUrl);
+    const response = NextResponse.redirect(redirectUrl);
+
+    response.cookies.set('geo_country', country, GEO_COOKIE_OPTIONS);
+    response.cookies.set('geo_currency', currency, GEO_COOKIE_OPTIONS);
+    applyLanguageCookies(request, response, country);
+    return response;
   }
-  
-  // Build absolute redirect using SITE_URL to strip internal ports in production
-  const baseUrl = process.env.NODE_ENV === 'production' ? SITE_URL : request.nextUrl.origin;
-  const redirectUrl = new URL(`${targetPath}${search}`, baseUrl);
-  const response = NextResponse.redirect(redirectUrl);
 
-  // 5. Set geo cookies
-  response.cookies.set('geo_country', country, GEO_COOKIE_OPTIONS);
-  response.cookies.set('geo_currency', currency, GEO_COOKIE_OPTIONS);
+  // Otherwise: worldwide (us) — REWRITE to /us/ internally (URL stays clean in browser)
+  const rewritePath = `/us${pathname === '/' ? '' : pathname}`;
+  const rewriteUrl = request.nextUrl.clone();
+  rewriteUrl.pathname = rewritePath || '/us';
 
-  applyLanguageCookies(request, response, country);
+  const response = NextResponse.rewrite(rewriteUrl);
 
+  // Set worldwide cookies
+  if (request.cookies.get('geo_country')?.value !== 'us') {
+    response.cookies.set('geo_country', 'us', GEO_COOKIE_OPTIONS);
+  }
+  if (request.cookies.get('geo_currency')?.value !== 'USD') {
+    response.cookies.set('geo_currency', 'USD', GEO_COOKIE_OPTIONS);
+  }
+
+  applyLanguageCookies(request, response, 'us');
   return response;
 }
 

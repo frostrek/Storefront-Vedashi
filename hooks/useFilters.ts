@@ -8,6 +8,7 @@ export interface FilterState {
     search: string;
     category: string;
     sub_category: string;
+    sub_sub_category: string;
     brands: string[];
     country: string;
     form: string[];
@@ -26,6 +27,7 @@ const DEFAULTS: FilterState = {
     search: '',
     category: '',
     sub_category: '',
+    sub_sub_category: '',
     brands: [],
     country: '',
     form: [],
@@ -54,7 +56,7 @@ function parseRange(val: string | null, fallback: [number, number]): [number, nu
     return fallback;
 }
 
-export function useFilters() {
+export function useFilters(formatPrice?: (v: number) => string) {
     const searchParams = useSearchParams();
     const router = useRouter();
     const pathname = usePathname();
@@ -73,6 +75,7 @@ export function useFilters() {
             search: searchParams.get('search') || DEFAULTS.search,
             category: searchParams.get('category') || DEFAULTS.category,
             sub_category: searchParams.get('sub_category') || DEFAULTS.sub_category,
+            sub_sub_category: searchParams.get('sub_sub_category') || DEFAULTS.sub_sub_category,
             brands: parseArray(searchParams.get('brand')),
             country: searchParams.get('country') || DEFAULTS.country,
             form: parseArray(searchParams.get('form')),
@@ -106,8 +109,9 @@ export function useFilters() {
 
     // Setter  helpers
     const setSearch = useCallback((val: string) => setParam({ search: val || null }), [setParam]);
-    const setCategory = useCallback((val: string) => setParam({ category: val || null, sub_category: null }), [setParam]);
-    const setSubCategory = useCallback((val: string) => setParam({ sub_category: val || null }), [setParam]);
+    const setCategory = useCallback((val: string) => setParam({ category: val || null, sub_category: null, sub_sub_category: null }), [setParam]);
+    const setSubCategory = useCallback((val: string) => setParam({ sub_category: val || null, sub_sub_category: null }), [setParam]);
+    const setSubSubCategory = useCallback((val: string) => setParam({ sub_sub_category: val || null }), [setParam]);
     const setBrands = useCallback((val: string[]) => setParam({ brand: val.length ? val.join(',') : null }), [setParam]);
     const setCountry = useCallback((val: string) => setParam({ country: val || null }), [setParam]);
     const setForm = useCallback((val: string[]) => setParam({ form: val.length ? val.join(',') : null }), [setParam]);
@@ -145,8 +149,9 @@ export function useFilters() {
             case 'form': setForm(filters.form.filter(f => f !== value)); break;
             case 'specialities': setSpecialities(filters.specialities.filter(s => s !== value)); break;
             case 'rating': setRatings(filters.ratings.filter(r => r !== value)); break;
-            case 'category': setParam({ category: null, sub_category: null }); break;
-            case 'sub_category': setSubCategory(''); break;
+            case 'category': setParam({ category: null, sub_category: null, sub_sub_category: null }); break;
+            case 'sub_category': setParam({ sub_category: null, sub_sub_category: null }); break;
+            case 'sub_sub_category': setSubSubCategory(''); break;
             case 'search': setSearch(''); break;
             case 'price': setPriceRange(DEFAULTS.priceRange); break;
             case 'inStock': setInStock(false); break;
@@ -163,15 +168,17 @@ export function useFilters() {
         if (filters.search) chips.push({ key: 'search', label: 'Search', value: filters.search });
         if (filters.category) chips.push({ key: 'category', label: 'Category', value: filters.category });
         if (filters.sub_category) chips.push({ key: 'sub_category', label: 'Subcategory', value: filters.sub_category });
+        if (filters.sub_sub_category) chips.push({ key: 'sub_sub_category', label: 'Sub-subcategory', value: filters.sub_sub_category });
         filters.brands.forEach(b => chips.push({ key: 'brand', label: 'Brand', value: b }));
         if (filters.country) chips.push({ key: 'country', label: 'Country', value: filters.country });
         filters.form.forEach(f => chips.push({ key: 'form', label: 'Form', value: f }));
         filters.specialities.forEach(s => chips.push({ key: 'specialities', label: 'Speciality', value: s }));
         filters.ratings.forEach(r => chips.push({ key: 'rating', label: 'Rating', value: r }));
         
+        const fmtPrice = formatPrice || ((v: number) => `₹${v.toLocaleString()}`);
         if (filters.priceRange[0] !== 0 || filters.priceRange[1] !== Infinity) {
-            const min = `₹${filters.priceRange[0].toLocaleString()}`;
-            const max = filters.priceRange[1] === Infinity ? 'Max' : `₹${filters.priceRange[1].toLocaleString()}`;
+            const min = fmtPrice(filters.priceRange[0]);
+            const max = filters.priceRange[1] === Infinity ? 'Max' : fmtPrice(filters.priceRange[1]);
             chips.push({ key: 'price', label: 'Price', value: `${min} – ${max}` });
         }
         if (filters.inStock) chips.push({ key: 'inStock', label: 'Status', value: 'In Stock' });
@@ -192,6 +199,7 @@ export function useFilters() {
         setSearch,
         setCategory,
         setSubCategory,
+        setSubSubCategory,
         setBrands,
         setCountry,
         setForm,

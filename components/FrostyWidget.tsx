@@ -79,6 +79,7 @@ function FrostyShopBridge() {
 }
 
 export default function FrostyWidget() {
+    return null; // HIDDEN FOR NOW
     if (!FROSTY_EMBED_KEY) {
         if (process.env.NODE_ENV === "development") {
             console.warn("[Frosty] Missing NEXT_PUBLIC_FROSTY_EMBED_KEY");

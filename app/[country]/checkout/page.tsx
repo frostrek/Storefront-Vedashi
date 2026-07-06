@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom';
 import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
-import { getCart, clearCart as clearCartApi, checkoutOrder, getAddresses, updateAddress, deleteAddress, directCheckout, createPaymentOrder, verifyPayment, initiatePaymentCheckout, lookupPostalCode, getLoyaltyWallet, updateCheckoutDraft } from '@/lib/api';
+import { getCart, clearCart as clearCartApi, checkoutOrder, getAddresses, updateAddress, deleteAddress, directCheckout, createPaymentOrder, verifyPayment, initiatePaymentCheckout, initiateCloudPaymentsCheckout, verifyCloudPayment, lookupPostalCode, getLoyaltyWallet, updateCheckoutDraft } from '@/lib/api';
 import { useCurrency } from '@/context/CurrencyContext';
 import { Address } from '@/types';
 import { COUNTRIES } from '@/lib/countries';
@@ -27,6 +27,7 @@ import PerformanceStore from '@/lib/analytics/performance';
 declare global {
     interface Window {
         Razorpay: any;
+        cp: any;
     }
 }
 
@@ -41,9 +42,7 @@ interface BuyNowItem {
     image_url: string;
 }
 
-type PaymentMethod = 'razorpay' | 'cod';
-
-const isCodEnabled = process.env.NEXT_PUBLIC_ENABLE_COD === 'true';
+type PaymentMethod = 'razorpay' | 'cloudpayments';
 
 /* ─── Component ─────────────────────────────────────────────── */
 
@@ -94,7 +93,7 @@ function StepIndicator({
 }
 
 function CheckoutContent() {
-    const { formatPrice, countryConfig, currencyConfigs } = useCurrency();
+    const { formatPrice, format, resolvePrice, resolveMrp, countryConfig, currencyConfigs } = useCurrency();
     const currentConfig = currencyConfigs.find(c => c.country_code === countryConfig.code.toUpperCase());
     const exchangeRate = currentConfig?.exchange_rate || 1;
     const router = useRouter();
@@ -114,8 +113,9 @@ function CheckoutContent() {
     // Persistence Key
     const PERSIST_KEY = 'vedashi_checkout_draft';
 
-    // Payment method selection
-    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('razorpay');
+    // Payment method selection — auto-select based on country
+    const isRussia = routeCountry === 'ru';
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(isRussia ? 'cloudpayments' : 'razorpay');
     const [paymentProcessing, setPaymentProcessing] = useState(false);
     const [paymentFailed, setPaymentFailed] = useState(false);
     const [failedOrderId, setFailedOrderId] = useState<string | null>(null);
@@ -289,16 +289,18 @@ function CheckoutContent() {
     const itemsCount = isBuyNow && buyNowItem ? buyNowItem.quantity : totalItems;
 
     const baseSubtotal = isBuyNow && buyNowItem
-        ? Math.round(buyNowItem.unit_price * buyNowItem.quantity)
-        : items.reduce((sum, item) => sum + (item.price ?? 0) * item.quantity, 0);
+        ? resolvePrice(buyNowItem.unit_price, null) * buyNowItem.quantity
+        : items.reduce((sum, item) => sum + resolvePrice(item.price ?? 0, item.country_prices) * item.quantity, 0);
 
     const totalMrp = isBuyNow && buyNowItem
-        ? Math.round((buyNowItem.original_price || buyNowItem.unit_price) * buyNowItem.quantity)
-        : items.reduce((sum, item) => sum + ((item as any).original_price ?? item.price ?? 0) * item.quantity, 0);
+        ? resolveMrp(buyNowItem.original_price || buyNowItem.unit_price, buyNowItem.unit_price, null) * buyNowItem.quantity
+        : items.reduce((sum, item) => {
+              return sum + resolveMrp((item as any).original_price ?? item.price ?? 0, item.price ?? 0, item.country_prices) * item.quantity;
+          }, 0);
 
     const mrpDiscount = totalMrp - baseSubtotal;
 
-    const shippingCost = couponType === 'free_shipping' ? 0 : (baseSubtotal > 50 ? 0 : 15);
+    const shippingCost = 0;
     const discount = isBuyNow ? 0 : couponDiscount;
     const minPayable = Number(process.env.NEXT_PUBLIC_MINIMUM_PAYABLE_AMOUNT) || 1;
 
@@ -311,9 +313,11 @@ function CheckoutContent() {
         pointsToRedeem = Math.min(parseInt(redeemPoints) || 0, maxRedeemablePoints);
     }
 
-    // Assuming 1 point = 1 INR — enforce minimum payable of ₹1
-    const grandTotal = Math.max(minPayable, prePointsTotal - pointsToRedeem);
-    const localTotal = Number((grandTotal * exchangeRate).toFixed(2));
+    const localPointsValue = resolvePrice(pointsToRedeem, null);
+    const grandTotal = Math.max(resolvePrice(minPayable, null), prePointsTotal - localPointsValue);
+    
+    // grandTotal is already native local currency
+    const localTotal = grandTotal;
 
     // Load addresses
     useEffect(() => {
@@ -716,7 +720,7 @@ function CheckoutContent() {
                             }));
                             trackPurchase({
                                 currency: countryConfig.currency,
-                                value: countryConfig.currency === 'INR' ? grandTotal : localTotal,
+                                value: countryConfig.currency === 'USD' ? grandTotal : localTotal,
                                 transaction_id: platformOrderId || undefined,
                                 items: purchaseItems,
                                 coupon: couponCode || undefined,
@@ -784,6 +788,128 @@ function CheckoutContent() {
         }
     };
 
+    /* ─── CloudPayments Checkout Handler (Russia) ────────────── */
+
+    const openCloudPaymentsCheckout = async (checkoutData: any) => {
+        setPaymentProcessing(true);
+
+        try {
+            // 1. Call backend to create payment record + get widget config
+            const payRes = await initiateCloudPaymentsCheckout(checkoutData);
+
+            if (!payRes.success) throw new Error(payRes.message || 'Failed to initiate CloudPayments checkout');
+
+            const { payment_id, public_id, amount, currency, invoice_id, description } = payRes.data;
+
+            // 2. Load CloudPayments widget script if not loaded
+            if (typeof window.cp === 'undefined') {
+                await new Promise<void>((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = 'https://widget.cloudpayments.ru/bundles/cloudpayments';
+                    script.onload = () => resolve();
+                    script.onerror = () => reject(new Error('Failed to load CloudPayments widget'));
+                    document.head.appendChild(script);
+                });
+            }
+
+            // 3. Open CloudPayments widget (charge mode)
+            const widget = new window.cp.CloudPayments();
+            widget.pay('charge',
+                {
+                    publicId: public_id,
+                    description: description || 'Vedashi — Holistic Wellness Order',
+                    amount: amount,
+                    currency: currency || 'RUB',
+                    invoiceId: invoice_id,
+                    accountId: getCheckoutEmail(),
+                    skin: 'mini',
+                    data: {
+                        payment_id: payment_id,
+                    },
+                },
+                {
+                    onSuccess: async (options: any) => {
+                        try {
+                            const verifyRes = await verifyCloudPayment({
+                                payment_id: payment_id,
+                                transaction_id: options.transactionId || options.TransactionId,
+                                amount: amount,
+                                currency: currency || 'RUB',
+                                card_last_four: options.cardLastFour || options.CardLastFour,
+                                card_type: options.cardType || options.CardType,
+                            });
+
+                            if (verifyRes.success) {
+                                const platformOrderId = verifyRes.data?.order_id;
+                                setOrderId(platformOrderId || null);
+
+                                // GA4: purchase (CloudPayments)
+                                const purchaseItems: EcommerceItem[] = checkoutItems.map((item: any) => ({
+                                    item_id: item.product_id || '',
+                                    item_name: item.product_name || 'Product',
+                                    price: Number(item.price ?? item.unit_price ?? 0),
+                                    quantity: item.quantity,
+                                }));
+                                trackPurchase({
+                                    currency: countryConfig.currency,
+                                    value: countryConfig.currency === 'USD' ? grandTotal : localTotal,
+                                    transaction_id: platformOrderId || undefined,
+                                    items: purchaseItems,
+                                    coupon: couponCode || undefined,
+                                    shipping: shippingCost,
+                                    payment_type: 'cloudpayments',
+                                    ...PerformanceStore.getPerformanceSummary(),
+                                });
+
+                                if (!isBuyNow) { await clearCart(true); removeCoupon(); }
+                                sessionStorage.removeItem(PERSIST_KEY);
+                                sessionStorage.removeItem('ksp_buy_now_item');
+                                clearCheckoutStepKeys();
+                                setOrderPlaced(true);
+                                setPaymentFailed(false);
+                                setFailedOrderId(null);
+                            } else {
+                                setPaymentFailed(true);
+                                setStep(2);
+                                toast.error(verifyRes.message || 'Payment verification failed');
+                                trackEvent('payment_failed', { reason: 'cp_verification_failed', details: verifyRes.message });
+                            }
+                        } catch {
+                            setPaymentFailed(true);
+                            setStep(2);
+                            toast.error('Payment verification failed. Please contact support.');
+                            trackEvent('payment_failed', { reason: 'cp_verification_exception' });
+                        }
+                        setPaymentProcessing(false);
+                    },
+                    onFail: (reason: any, options: any) => {
+                        setPaymentProcessing(false);
+                        setPaymentFailed(true);
+                        setStep(2);
+                        toast.error(reason || 'Payment failed. Please try again.');
+                        trackEvent('payment_failed', { reason: 'cp_gateway_error', details: reason });
+                    },
+                    onComplete: (paymentResult: any, options: any) => {
+                        // Widget closed — if payment wasn't handled by onSuccess/onFail
+                        if (!paymentResult?.success) {
+                            setPaymentProcessing(false);
+                        }
+                    },
+                }
+            );
+        } catch (error: any) {
+            setPaymentProcessing(false);
+            setStep(2);
+            toast.error(error.message || 'Failed to initiate CloudPayments');
+            trackEvent('payment_failed', { reason: 'cp_initiation_exception', details: error.message });
+
+            const errorMsg = error.message?.toLowerCase() || '';
+            if (errorMsg.includes('token') || errorMsg.includes('expire') || errorMsg.includes('unauthorized') || error.statusCode === 401) {
+                router.push('/login?redirect=/checkout');
+            }
+        }
+    };
+
     /* ─── Place Order Handler ────────────────────────────────── */
 
     const handlePlaceOrder = async () => {
@@ -801,14 +927,6 @@ function CheckoutContent() {
 
         setPlacing(true);
         setPaymentFailed(false);
-
-        // Guard: reject COD if feature flag is disabled
-        if (paymentMethod === 'cod' && !isCodEnabled) {
-            toast.error('Cash on Delivery is currently unavailable. Please use online payment.');
-            setPaymentMethod('razorpay');
-            setPlacing(false);
-            return;
-        }
 
         try {
 
@@ -897,95 +1015,67 @@ function CheckoutContent() {
                 return;
             }
 
-            let result;
-            if (isBuyNow && buyNowItem) {
-                result = await directCheckout({
-                    customer_id: user?.id || undefined,
-                    customer_name: user?.name || undefined,
-                    customer_email: getCheckoutEmail() || undefined,
-                    items: [{ product_id: buyNowItem.product_id, variant_id: buyNowItem.variant_id, quantity: buyNowItem.quantity, unit_price: buyNowItem.unit_price }],
-                    shipping_address_id: useNewAddress ? undefined : selectedAddressId || undefined,
-                    shipping_address: useNewAddress ? finalNewAddress as unknown as Record<string, string> : undefined,
-                    billing_address_id: billingSameAsShipping ? (useNewAddress ? undefined : selectedAddressId || undefined) : (useNewBillingAddress ? undefined : selectedBillingAddressId || undefined),
-                    billing_address: !billingSameAsShipping && useNewBillingAddress ? finalNewBillingAddress as unknown as Record<string, string> : (billingSameAsShipping && useNewAddress ? finalNewAddress as unknown as Record<string, string> : undefined),
-                    payment_method: paymentMethod,
-                    order_notes: orderNotes.trim() || undefined,
-                    redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
-                    ga_client_id: getGAClientId() || undefined,
-                    attribution: getAttribution() || undefined,
-                    currency: countryConfig.currency,
-                });
-            } else if (isAuthenticated && cartId && user?.id) {
-                result = await checkoutOrder({
-                    cart_id: cartId,
-                    customer_id: user.id,
-                    shipping_address_id: useNewAddress ? undefined : selectedAddressId || undefined,
-                    shipping_address: useNewAddress ? finalNewAddress as unknown as Record<string, string> : undefined,
-                    billing_address_id: billingSameAsShipping ? (useNewAddress ? undefined : selectedAddressId || undefined) : (useNewBillingAddress ? undefined : selectedBillingAddressId || undefined),
-                    billing_address: !billingSameAsShipping && useNewBillingAddress ? finalNewBillingAddress as unknown as Record<string, string> : (billingSameAsShipping && useNewAddress ? finalNewAddress as unknown as Record<string, string> : undefined),
-                    coupon_code: couponCode || undefined,
-                    order_notes: orderNotes.trim() || undefined,
-                    payment_method: paymentMethod,
-                    redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
-                    ga_client_id: getGAClientId() || undefined,
-                    attribution: getAttribution() || undefined,
-                    currency: countryConfig.currency,
-                } as any);
-            } else {
-                result = await directCheckout({
-                    customer_id: user?.id || undefined,
-                    customer_name: user?.name || undefined,
-                    customer_email: getCheckoutEmail() || undefined,
-                    items: checkoutItems.map(item => ({ product_id: (item as any).product_id || '', variant_id: (item as any).variant_id, quantity: item.quantity, unit_price: Number((item as any).price || (item as any).unit_price) || 0 })),
-                    shipping_address: useNewAddress ? finalNewAddress as unknown as Record<string, string> : undefined,
-                    billing_address: !billingSameAsShipping && useNewBillingAddress ? finalNewBillingAddress as unknown as Record<string, string> : (billingSameAsShipping && useNewAddress ? finalNewAddress as unknown as Record<string, string> : undefined),
-                    payment_method: paymentMethod,
-                    coupon_code: couponCode || undefined,
-                    order_notes: orderNotes.trim() || undefined,
-                    redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
-                    ga_client_id: getGAClientId() || undefined,
-                    attribution: getAttribution() || undefined,
-                    currency: countryConfig.currency,
-                });
-            }
+            // CLOUDPAYMENTS FLOW (Russia):
+            if (paymentMethod === 'cloudpayments') {
+                setPlacing(false);
 
-            if (result.success) {
-                const createdOrderId = result.data?.order_id;
-                setOrderId(createdOrderId || null);
-
-                // GA4: purchase (COD) — deduplicated
-                const purchaseItems: EcommerceItem[] = checkoutItems.map((item: any) => ({
-                    item_id: item.product_id || '',
-                    item_name: item.product_name || 'Product',
-                    price: Number(item.price ?? item.unit_price ?? 0),
-                    quantity: item.quantity,
-                }));
-                trackPurchase({
-                    currency: countryConfig.currency,
-                    value: countryConfig.currency === 'INR' ? grandTotal : localTotal,
-                    transaction_id: createdOrderId || undefined,
-                    items: purchaseItems,
-                    coupon: couponCode || undefined,
-                    shipping: shippingCost,
-                    payment_type: paymentMethod,
-                    ...PerformanceStore.getPerformanceSummary(),
-                });
-
-                if (!isBuyNow) { await clearCart(true); removeCoupon(); }
-                sessionStorage.removeItem(PERSIST_KEY);
-                sessionStorage.removeItem('ksp_buy_now_item');
-                clearCheckoutStepKeys();
-                setOrderPlaced(true);
-            } else {
-                toast.error(result.message || 'Failed to place order');
-                trackEvent('checkout_error', { reason: 'api_failed', details: result.message });
-
-                // Handle session expiry gracefully
-                const errorMsg = result.message?.toLowerCase() || '';
-                if (errorMsg.includes('token') || errorMsg.includes('expire') || errorMsg.includes('unauthorized') || result.statusCode === 401) {
-                    router.push('/login?redirect=/checkout');
+                // Construct checkout data (same shape as Razorpay)
+                let checkoutData: any;
+                if (isBuyNow && buyNowItem) {
+                    checkoutData = {
+                        customer_id: user?.id || undefined,
+                        customer_name: user?.name || undefined,
+                        customer_email: getCheckoutEmail() || undefined,
+                        items: [{ product_id: buyNowItem.product_id, variant_id: buyNowItem.variant_id, quantity: buyNowItem.quantity, unit_price: buyNowItem.unit_price }],
+                        shipping_address_id: useNewAddress ? undefined : selectedAddressId || undefined,
+                        shipping_address: useNewAddress ? finalNewAddress : undefined,
+                        billing_address_id: billingSameAsShipping ? (useNewAddress ? undefined : selectedAddressId || undefined) : (useNewBillingAddress ? undefined : selectedBillingAddressId || undefined),
+                        billing_address: !billingSameAsShipping && useNewBillingAddress ? finalNewBillingAddress : (billingSameAsShipping && useNewAddress ? finalNewAddress : undefined),
+                        order_notes: orderNotes.trim() || undefined,
+                        redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
+                        final_total: grandTotal,
+                        currency: countryConfig.currency,
+                        ga_client_id: getGAClientId() || undefined,
+                        attribution: getAttribution() || undefined,
+                    };
+                } else if (isAuthenticated && cartId && user?.id) {
+                    checkoutData = {
+                        cart_id: cartId,
+                        customer_id: user.id,
+                        shipping_address_id: useNewAddress ? undefined : selectedAddressId || undefined,
+                        shipping_address: useNewAddress ? finalNewAddress : undefined,
+                        billing_address_id: billingSameAsShipping ? (useNewAddress ? undefined : selectedAddressId || undefined) : (useNewBillingAddress ? undefined : selectedBillingAddressId || undefined),
+                        billing_address: !billingSameAsShipping && useNewBillingAddress ? finalNewBillingAddress : (billingSameAsShipping && useNewAddress ? finalNewAddress : undefined),
+                        coupon_code: couponCode || undefined,
+                        order_notes: orderNotes.trim() || undefined,
+                        redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
+                        final_total: grandTotal,
+                        currency: countryConfig.currency,
+                        ga_client_id: getGAClientId() || undefined,
+                        attribution: getAttribution() || undefined,
+                    };
+                } else {
+                    checkoutData = {
+                        customer_id: user?.id || undefined,
+                        customer_name: user?.name || undefined,
+                        customer_email: getCheckoutEmail() || undefined,
+                        items: checkoutItems.map(item => ({ product_id: (item as any).product_id || '', variant_id: (item as any).variant_id, quantity: item.quantity, unit_price: Number((item as any).price || (item as any).unit_price) || 0 })),
+                        shipping_address: useNewAddress ? finalNewAddress : undefined,
+                        billing_address: !billingSameAsShipping && useNewBillingAddress ? finalNewBillingAddress : (billingSameAsShipping && useNewAddress ? finalNewAddress : undefined),
+                        coupon_code: couponCode || undefined,
+                        order_notes: orderNotes.trim() || undefined,
+                        redeem_points: pointsToRedeem > 0 ? pointsToRedeem : undefined,
+                        final_total: grandTotal,
+                        currency: countryConfig.currency,
+                        ga_client_id: getGAClientId() || undefined,
+                        attribution: getAttribution() || undefined,
+                    };
                 }
+
+                await openCloudPaymentsCheckout(checkoutData);
+                return;
             }
+
         } catch (error: any) {
             toast.error('Something went wrong. Please try again.');
             trackEvent('checkout_error', { reason: 'exception', details: error.message });
@@ -1068,7 +1158,7 @@ function CheckoutContent() {
         }));
         trackCheckoutStep('add_shipping_info', 2, {
             currency: countryConfig.currency,
-            value: countryConfig.currency === 'INR' ? grandTotal : localTotal,
+            value: countryConfig.currency === 'USD' ? grandTotal : localTotal,
             items: shippingItems,
             coupon: couponCode || undefined,
         });
@@ -1101,7 +1191,7 @@ function CheckoutContent() {
         }));
         trackCheckoutStep('add_payment_info', 3, {
             currency: countryConfig.currency,
-            value: countryConfig.currency === 'INR' ? grandTotal : localTotal,
+            value: countryConfig.currency === 'USD' ? grandTotal : localTotal,
             items: paymentInfoItems,
             coupon: couponCode || undefined,
             payment_type: paymentMethod,
@@ -1463,54 +1553,45 @@ function CheckoutContent() {
                                     </div>
                                 </div>
 
-                                {/* Payment Failed Retry Banner */}
-                                {paymentFailed && failedOrderId && (
-                                    <div className="mb-6 flex items-start gap-4 rounded-xl bg-red-50 border border-red-200 p-5 shadow-sm">
-                                        <AlertTriangle className="h-6 w-6 text-red-600 flex-shrink-0" />
-                                        <div className="flex-1">
-                                            <p className="font-bold text-red-800">Transaction Incomplete</p>
-                                            <p className="text-sm text-red-600 mt-1 mb-3">Your wellness journey is paused due to a payment drop-off. Please complete the transaction to secure your order.</p>
-                                            <button onClick={() => openRazorpayCheckout(failedOrderId!)} disabled={paymentProcessing} className="bg-red-600 text-white px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-red-700 transition-colors flex items-center gap-2">
-                                                {paymentProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
-                                                Retry Transaction
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-
                                 {/* Payment Methods */}
                                 <div className="cart-item-card p-6 border-l-4 border-l-[#8B7A3D]">
                                     <p className="text-[#6B6B60] text-sm mb-5 font-medium">Select a payment option for your healing bundle:</p>
 
                                     <div className="space-y-4">
-                                        <label className={`flex items-start sm:items-center gap-4 rounded-xl border-2 p-5 cursor-pointer transition-all ${paymentMethod === 'razorpay' ? 'border-[#91C934] bg-[#91C934]/5 shadow-sm' : 'border-[#D4CFC0] bg-white hover:border-[#CEDBCE]'}`}>
-                                            <input type="radio" name="payment-method" value="razorpay" checked={paymentMethod === 'razorpay'} onChange={() => setPaymentMethod('razorpay')} className="w-5 h-5 appearance-none rounded-full border border-[#D4CFC0] checked:border-[#91C934] checked:bg-[#91C934] checked:ring-2 checked:ring-white checked:ring-inset transition-all cursor-pointer focus:outline-none mt-0.5 sm:mt-0" />
-                                            <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                                <div>
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <CreditCard className={`h-5 w-5 ${paymentMethod === 'razorpay' ? 'text-[#91C934]' : 'text-[#8B7A3D]'}`} />
-                                                        <span className="font-bold text-[#1A1A1A]">Online Payment (Secure)</span>
+                                        {!isRussia ? (
+                                            <label className={`flex items-start sm:items-center gap-4 rounded-xl border-2 p-5 cursor-pointer transition-all ${paymentMethod === 'razorpay' ? 'border-[#91C934] bg-[#91C934]/5 shadow-sm' : 'border-[#D4CFC0] bg-white hover:border-[#CEDBCE]'}`}>
+                                                <input type="radio" name="payment-method" value="razorpay" checked={paymentMethod === 'razorpay'} onChange={() => setPaymentMethod('razorpay')} className="w-5 h-5 appearance-none rounded-full border border-[#D4CFC0] checked:border-[#91C934] checked:bg-[#91C934] checked:ring-2 checked:ring-white checked:ring-inset transition-all cursor-pointer focus:outline-none mt-0.5 sm:mt-0" />
+                                                <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                                    <div>
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <CreditCard className={`h-5 w-5 ${paymentMethod === 'razorpay' ? 'text-[#91C934]' : 'text-[#8B7A3D]'}`} />
+                                                            <span className="font-bold text-[#1A1A1A]">Online Payment (Secure)</span>
+                                                        </div>
+                                                        <p className="text-xs text-[#6B6B60]">Credit/Debit, Netbanking, UPI, Wallets</p>
                                                     </div>
-                                                    <p className="text-xs text-[#6B6B60]">Credit/Debit, Netbanking, UPI, Wallets</p>
-                                                </div>
-                                                <div className="flex flex-wrap items-center gap-2 opacity-80">
-                                                    <div className="bg-white border border-[#D4CFC0] rounded px-2 py-1 text-[9px] font-bold text-blue-800">VISA</div>
-                                                    <div className="bg-white border border-[#D4CFC0] rounded px-2 py-1 text-[9px] font-bold text-red-600">MasterCard</div>
-                                                    <div className="bg-[#1A1A1A] text-white rounded px-2 py-1 text-[9px] font-bold">UPI</div>
-                                                </div>
-                                            </div>
-                                        </label>
-
-                                        {/* Cash on Delivery — only shown if feature flag is enabled */}
-                                        {isCodEnabled && (
-                                            <label className={`flex items-start sm:items-center gap-4 rounded-xl border-2 p-5 cursor-pointer transition-all ${paymentMethod === 'cod' ? 'border-[#91C934] bg-[#91C934]/5 shadow-sm' : 'border-[#D4CFC0] bg-white hover:border-[#CEDBCE]'}`}>
-                                                <input type="radio" name="payment-method" value="cod" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} className="w-5 h-5 appearance-none rounded-full border border-[#D4CFC0] checked:border-[#91C934] checked:bg-[#91C934] checked:ring-2 checked:ring-white checked:ring-inset transition-all cursor-pointer focus:outline-none mt-0.5 sm:mt-0" />
-                                                <div className="flex-1">
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <Banknote className={`h-5 w-5 ${paymentMethod === 'cod' ? 'text-[#91C934]' : 'text-[#8B7A3D]'}`} />
-                                                        <span className="font-bold text-[#1A1A1A]">Cash on Delivery</span>
+                                                    <div className="flex flex-wrap items-center gap-2 opacity-80">
+                                                        <div className="bg-white border border-[#D4CFC0] rounded px-2 py-1 text-[9px] font-bold text-blue-800">VISA</div>
+                                                        <div className="bg-white border border-[#D4CFC0] rounded px-2 py-1 text-[9px] font-bold text-red-600">MasterCard</div>
+                                                        <div className="bg-[#1A1A1A] text-white rounded px-2 py-1 text-[9px] font-bold">UPI</div>
                                                     </div>
-                                                    <p className="text-xs text-[#6B6B60]">Settle the amount upon receiving your package.</p>
+                                                </div>
+                                            </label>
+                                        ) : (
+                                            <label className={`flex items-start sm:items-center gap-4 rounded-xl border-2 p-5 cursor-pointer transition-all ${paymentMethod === 'cloudpayments' ? 'border-[#91C934] bg-[#91C934]/5 shadow-sm' : 'border-[#D4CFC0] bg-white hover:border-[#CEDBCE]'}`}>
+                                                <input type="radio" name="payment-method" value="cloudpayments" checked={paymentMethod === 'cloudpayments'} onChange={() => setPaymentMethod('cloudpayments')} className="w-5 h-5 appearance-none rounded-full border border-[#D4CFC0] checked:border-[#91C934] checked:bg-[#91C934] checked:ring-2 checked:ring-white checked:ring-inset transition-all cursor-pointer focus:outline-none mt-0.5 sm:mt-0" />
+                                                <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                                    <div>
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <CreditCard className={`h-5 w-5 ${paymentMethod === 'cloudpayments' ? 'text-[#91C934]' : 'text-[#8B7A3D]'}`} />
+                                                            <span className="font-bold text-[#1A1A1A]">Online Payment (CloudPayments)</span>
+                                                        </div>
+                                                        <p className="text-xs text-[#6B6B60]">MIR, Visa, MasterCard, Maestro</p>
+                                                    </div>
+                                                    <div className="flex flex-wrap items-center gap-2 opacity-80">
+                                                        <div className="bg-[#009E4B] border border-[#009E4B] rounded px-2 py-1 text-[9px] font-bold text-white">MIR</div>
+                                                        <div className="bg-white border border-[#D4CFC0] rounded px-2 py-1 text-[9px] font-bold text-blue-800">VISA</div>
+                                                        <div className="bg-white border border-[#D4CFC0] rounded px-2 py-1 text-[9px] font-bold text-red-600">MasterCard</div>
+                                                    </div>
                                                 </div>
                                             </label>
                                         )}
@@ -1663,10 +1744,10 @@ function CheckoutContent() {
                                             <button onClick={() => setStep(2)} className="text-[11px] font-bold text-[#8B7A3D] uppercase hover:underline">Edit</button>
                                         </div>
                                         <div className="flex items-center gap-3">
-                                            {paymentMethod === 'razorpay' ? (
+                                            {paymentMethod === 'razorpay' || paymentMethod === 'cloudpayments' ? (
                                                 <><CreditCard className="w-5 h-5 text-[#91C934]" /> <span className="font-bold text-[#4A4A4A]">Online Payment</span></>
                                             ) : (
-                                                <><Banknote className="w-5 h-5 text-[#91C934]" /> <span className="font-bold text-[#4A4A4A]">Cash on Delivery</span></>
+                                                <><Banknote className="w-5 h-5 text-[#91C934]" /> <span className="font-bold text-[#4A4A4A]">Unknown Payment Method</span></>
                                             )}
                                         </div>
                                         <div className="mt-3 pt-2 border-t border-[#D4CFC0]/50">
@@ -1681,14 +1762,13 @@ function CheckoutContent() {
 
                                 <div className="mt-8">
                                     <button onClick={handlePlaceOrder} disabled={placing || paymentProcessing} className="cart-checkout-btn w-full text-center flex items-center justify-center gap-2 py-4 text-base">
-                                        {placing || paymentProcessing ? <><Loader2 className="h-5 w-5 animate-spin" /> Processing Ritual...</> : <><Lock className="w-4 h-4" /> Place Final Order — {formatPrice(grandTotal)}</>}
+                                        {placing || paymentProcessing ? <><Loader2 className="h-5 w-5 animate-spin" /> Processing Ritual...</> : <><Lock className="w-4 h-4" /> Place Final Order — {format(grandTotal)}</>}
                                     </button>
                                     <p className="text-center text-xs text-[#6B6B60] mt-4 max-w-lg mx-auto leading-relaxed">By placing your order, you agree to Vedashi&apos;s <span className="underline cursor-pointer hover:text-[#2D3B2D]">Terms of Service</span> and <span className="underline cursor-pointer hover:text-[#2D3B2D]">Privacy & Wellness Policy</span>.</p>
                                 </div>
                             </div>
                         )}
                     </div>
-
                     {/* ─── Ritual Summary Sidebar (Appears on all steps) ─── */}
                     <div className="mt-8 lg:mt-0">
                         <div className="sticky top-28">
@@ -1705,9 +1785,14 @@ function CheckoutContent() {
                                     {checkoutItems.map(item => {
                                         const price = isBuyNow ? (item as BuyNowItem).unit_price : (item as any).price ?? 0;
                                         const originalPrice = isBuyNow ? (item as BuyNowItem).original_price : (item as any).original_price ?? price;
-                                        const lineTotal = price * item.quantity;
+                                        
+                                        const resolvedSp = resolvePrice(price, (item as any).country_prices);
+                                        const resolvedMrp = resolveMrp(originalPrice, price, (item as any).country_prices);
+                                        const lineTotal = resolvedSp * item.quantity;
+                                        const lineMrpTotal = resolvedMrp * item.quantity;
+
                                         return (
-                                            <div key={item.product_id + (item.variant_id || '')} className="ritual-summary-item pb-3 border-b border-[#E8E4DC] last:border-0 last:pb-0">
+                                            <div key={(item as any).cart_item_id || item.product_id + (item.variant_id || '')} className="ritual-summary-item pb-3 border-b border-[#E8E4DC] last:border-0 last:pb-0">
                                                 <div className="ritual-summary-item-img">
                                                     {item.image_url ? (
                                                         <img src={item.image_url} alt="" />
@@ -1721,14 +1806,14 @@ function CheckoutContent() {
                                                     <div className="ritual-summary-item-qty mt-0.5">Qty: {item.quantity}</div>
                                                 </div>
                                                 <div className="flex flex-col items-end">
-                                                    <span className="ritual-summary-item-price">{formatPrice(lineTotal)}</span>
+                                                    <span className="ritual-summary-item-price">{format(lineTotal)}</span>
                                                     {originalPrice > price && (
                                                         <div className="flex items-center gap-1 mt-0.5">
                                                             <span className="text-[10px] text-red-500 font-bold">
                                                                 {Math.round((1 - price / originalPrice) * 100)}% OFF
                                                             </span>
                                                             <span className="text-[10px] text-gray-400 line-through">
-                                                                {formatPrice(originalPrice * item.quantity)}
+                                                                {format(lineMrpTotal)}
                                                             </span>
                                                         </div>
                                                     )}
@@ -1743,27 +1828,27 @@ function CheckoutContent() {
                                 <div className="space-y-2.5">
                                     <div className="ritual-summary-row">
                                         <span className="label font-medium text-gray-900">Total MRP</span>
-                                        <span className="value font-medium text-gray-900">{formatPrice(totalMrp)}</span>
+                                        <span className="value font-medium text-gray-900">{format(totalMrp)}</span>
                                     </div>
 
                                     {mrpDiscount > 0 && (
                                         <div className="ritual-summary-row">
                                             <span className="label text-gray-600">Discount on MRP</span>
-                                            <span className="value text-[#91C934] font-medium">- {formatPrice(mrpDiscount)}</span>
+                                            <span className="value text-[#91C934] font-medium">- {format(mrpDiscount)}</span>
                                         </div>
                                     )}
 
                                     {!isBuyNow && couponDiscount > 0 && (
                                         <div className="ritual-summary-row">
                                             <span className="label text-gray-600 flex items-center gap-1"><Ticket className="w-3 h-3" /> Coupon Discount</span>
-                                            <span className="value text-[#91C934] font-medium">- {formatPrice(couponDiscount)}</span>
+                                            <span className="value text-[#91C934] font-medium">- {format(resolvePrice(couponDiscount, null))}</span>
                                         </div>
                                     )}
 
                                     {pointsToRedeem > 0 && (
                                         <div className="ritual-summary-row">
                                             <span className="label text-gray-600 flex items-center gap-1"><Leaf className="w-3 h-3" /> Loyalty Points</span>
-                                            <span className="value text-[#91C934] font-medium">- {formatPrice(pointsToRedeem)}</span>
+                                            <span className="value text-[#91C934] font-medium">- {format(resolvePrice(pointsToRedeem, null))}</span>
                                         </div>
                                     )}
 
@@ -1774,12 +1859,12 @@ function CheckoutContent() {
 
                                     <div className="ritual-summary-row">
                                         <span className="label text-gray-600">Shipping Fee</span>
-                                        <span className="value text-gray-900">{shippingCost === 0 ? <span className="text-[#91C934] font-bold">FREE</span> : formatPrice(shippingCost)}</span>
+                                        <span className="value text-gray-900">{shippingCost === 0 ? <span className="text-[#91C934] font-bold">FREE</span> : format(resolvePrice(shippingCost, null))}</span>
                                     </div>
 
                                     {shippingCost > 0 && baseSubtotal > 0 && baseSubtotal < 50 && (
                                         <p className="text-[10px] text-gray-400 -mt-1">
-                                            Add {formatPrice(50 - baseSubtotal)} more for free shipping
+                                            Add {format(resolvePrice(50 - baseSubtotal, null))} more for free shipping
                                         </p>
                                     )}
                                 </div>
@@ -1787,7 +1872,7 @@ function CheckoutContent() {
                                 {(mrpDiscount + (isBuyNow ? 0 : couponDiscount) + pointsToRedeem) > 0 && (
                                     <div className="mt-4 p-3 bg-[#91C934]/10 rounded-xl border border-[#91C934]/20 text-center">
                                         <p className="text-[11px] font-bold text-[#91C934] uppercase tracking-wider">
-                                            You are saving {formatPrice(mrpDiscount + (isBuyNow ? 0 : couponDiscount) + pointsToRedeem)} on this order
+                                            You are saving {format(mrpDiscount + resolvePrice((isBuyNow ? 0 : couponDiscount), null) + resolvePrice(pointsToRedeem, null))} on this order
                                         </p>
                                     </div>
                                 )}
@@ -1795,7 +1880,7 @@ function CheckoutContent() {
                                 <div className="ritual-summary-total">
                                     <div>
                                         <div className="ritual-summary-total-label">Total Amount</div>
-                                        <div className="ritual-summary-total-value mt-1">{formatPrice(grandTotal)}</div>
+                                        <div className="ritual-summary-total-value mt-1">{format(grandTotal)}</div>
                                     </div>
                                     <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#91C934]/20 bg-[#91C934]/10">
                                         <Leaf className="h-5 w-5 text-[#91C934]" />
@@ -1841,7 +1926,7 @@ function CheckoutContent() {
                                         </div>
                                         {pointsToRedeem > 0 && (
                                             <p className="text-[10px] text-[#91C934] mt-1 text-right font-bold">
-                                                - {formatPrice(pointsToRedeem)} applied
+                                                - {format(resolvePrice(pointsToRedeem, null))} applied
                                             </p>
                                         )}
                                     </div>

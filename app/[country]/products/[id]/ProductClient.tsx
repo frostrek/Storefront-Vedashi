@@ -21,6 +21,7 @@ import { getValidPrices } from '@/utils/discount';
 import { useRouter, useSearchParams, notFound } from 'next/navigation';
 import { CheckCircle2, FlaskConical, Leaf as LeafIcon, ShieldCheck } from 'lucide-react';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
+import { buildPath, getCountryFromPathname } from '@/lib/currency';
 
 
 // Dynamic imports for below-fold sections
@@ -90,7 +91,7 @@ function LazyBestSellers({ title, icon }: {
 
 
 function ProductDetailContent({ id, country, initialProduct }: Props) {
-    const { formatPrice } = useCurrency();
+    const { formatPrice, formatMrp } = useCurrency();
     const [product, setProduct] = useState<ProductWithDetails | null>(initialProduct);
     const [loading, setLoading] = useState(!initialProduct);
     const [pageQuantity, setPageQuantity] = useState(1);
@@ -301,7 +302,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                     image_url: product.thumbnail_url || '',
                 };
                 sessionStorage.setItem('ksp_buy_now_item', JSON.stringify(buyNowItem));
-                router.push(`/${country}/checkout?buyNow=true`);
+                router.push(buildPath(country, `/checkout?buyNow=true`));
             }, 300);
             return () => clearTimeout(timer);
         }
@@ -394,8 +395,8 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
 
         // If user is NOT signed in, redirect to login with a return URL
         if (!isAuthenticated) {
-            const returnUrl = `/${country}/products/${product.slug || product.product_id}?buyNow=true`;
-            router.push(`/${country}/login?redirect=${encodeURIComponent(returnUrl)}`);
+            const returnUrl = buildPath(country, `/products/${product.slug || product.product_id}?buyNow=true`);
+            router.push(buildPath(country, `/login?redirect=${encodeURIComponent(returnUrl)}`));
             return;
         }
 
@@ -412,7 +413,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
         };
         sessionStorage.setItem('ksp_buy_now_item', JSON.stringify(buyNowItem));
         sessionStorage.removeItem('vedashi_checkout_draft');
-        router.push(`/${country}/checkout?buyNow=true`);
+        router.push(buildPath(country, `/checkout?buyNow=true`));
     };
 
     return (
@@ -421,13 +422,13 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
             <div className="border-b border-light-border bg-white py-1">
                 <div className="mx-auto max-w-[1440px] px-4 py-1">
                     <nav className="flex items-center gap-2 text-sm text-gray-500">
-                        <Link href={`/${country}`}>Home</Link>
+                        <Link href={buildPath(country, '/')}>Home</Link>
                         <ChevronRight className="h-3 w-3" />
-                        <Link href={`/${country}/products`}>Shop</Link>
+                        <Link href={buildPath(country, `/products`)}>Shop</Link>
                         <ChevronRight className="h-3 w-3" />
                         {product.category && (
                             <>
-                                <Link href={`/${country}/products?category=${encodeURIComponent(product.category.toLowerCase().replace(/\s+/g, '-'))}`} className="hover:text-gray-900 transition-colors">
+                                <Link href={buildPath(country, `/products?category=${encodeURIComponent(product.category.toLowerCase().replace(/\s+/g, '-'))}`)} className="hover:text-gray-900 transition-colors">
                                     {product.category}
                                 </Link>
                                 <ChevronRight className="h-3 w-3" />
@@ -479,7 +480,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                 {product.brand && (
                                     <div className="mt-1">
                                         <Link
-                                            href={`/${country}/products?brand=${encodeURIComponent(product.brand)}`}
+                                            href={buildPath(country, `/products?brand=${encodeURIComponent(product.brand)}`)}
                                             className="text-sm font-semibold underline text-gray-500 hover:text-gray-700 transition-all"
                                         >
                                             {product.brand}
@@ -569,7 +570,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                             <div className="flex items-center gap-1.5 text-sm">
                                                 <span className="text-gray-500">MRP</span>
                                                 <span className="text-gray-400 line-through">
-                                                    {formatPrice(originalPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
+                                                    {formatMrp(originalPrice, displayPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
                                                 </span>
                                             </div>
                                         </div>
@@ -594,7 +595,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                 <p className="text-[11px] text-gray-400 uppercase tracking-tight leading-none mb-1">MRP</p>
                                 <div className="flex items-baseline gap-1.5">
                                     <span className="text-xl font-bold text-black">
-                                        {formatPrice(originalPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
+                                        {formatMrp(originalPrice, displayPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
                                     </span>
                                     <span className="text-[12px] text-gray-400">(Inclusive of all taxes)</span>
                                 </div>
@@ -1056,7 +1057,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                         </button>
                                     </div>
                                     <button
-                                        onClick={() => router.push(`/${country || 'in'}/cart`)}
+                                        onClick={() => router.push(`/${country || 'us'}/cart`)}
                                         className="w-full bg-white border border-gray-300 hover:border-[#91C934] text-gray-800 font-bold rounded-lg h-[48px] transition-colors flex items-center justify-center gap-2 group"
                                     >
                                         <ShoppingCart size={18} className="text-[#91C934]" /> View Cart

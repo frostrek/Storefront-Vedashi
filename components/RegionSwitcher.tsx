@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useCurrency } from '@/context/CurrencyContext';
-import { SUPPORTED_COUNTRIES } from '@/lib/currency';
+import { SUPPORTED_COUNTRIES, buildPath, getCountryFromPathname } from '@/lib/currency';
 import { ChevronDown, Globe } from 'lucide-react';
 
 export default function RegionSwitcher({ upward = false }: { upward?: boolean }) {
@@ -13,10 +13,7 @@ export default function RegionSwitcher({ upward = false }: { upward?: boolean })
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const parts = pathname.split('/');
-  const urlCountry = parts[1];
-  const isValidCountry = Object.keys(SUPPORTED_COUNTRIES).includes(urlCountry);
-  const country = isValidCountry ? urlCountry : 'in';
+  const country = getCountryFromPathname(pathname || '/');
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -36,24 +33,17 @@ export default function RegionSwitcher({ upward = false }: { upward?: boolean })
     // Set cookies (7 days)
     document.cookie = `geo_country=${newCountry}; max-age=${7 * 24 * 60 * 60}; path=/`;
     document.cookie = `geo_manual=true; max-age=${7 * 24 * 60 * 60}; path=/`;
-    const currencyMap: Record<string, string> = { in: 'INR', us: 'USD', gb: 'GBP', ae: 'AED', ca: 'CAD', au: 'AUD', ru: 'RUB', kr: 'KRW' };
+    const currencyMap: Record<string, string> = { us: 'USD', ru: 'RUB', kr: 'KRW' };
     document.cookie = `geo_currency=${currencyMap[newCountry] || 'USD'}; max-age=${7 * 24 * 60 * 60}; path=/`;
 
-    // Replace country code in pathname
-    const parts = pathname.split('/');
-    // Check if the current pathname has a valid country slug
-    const hasCountryPrefix = Object.keys(SUPPORTED_COUNTRIES).includes(parts[1]);
-
-    let newPath = `/${newCountry}`;
-    if (hasCountryPrefix) {
-      if (parts.length > 2) {
-        newPath += '/' + parts.slice(2).join('/');
-      }
-    } else {
-      // If for some reason it doesn't have a prefix (e.g. root), just append
-      // But typically middleware handles this. We will just redirect to the new route.
-      newPath += pathname === '/' ? '' : pathname;
+    // Strip out the old prefix if it had one
+    let strippedPath = pathname || '/';
+    if (strippedPath.startsWith(`/${country}`)) {
+      strippedPath = strippedPath.slice(country.length + 1) || '/';
     }
+    
+    // Build new path
+    const newPath = buildPath(newCountry, strippedPath);
 
     // Retain query params if any
     const search = window.location.search;
