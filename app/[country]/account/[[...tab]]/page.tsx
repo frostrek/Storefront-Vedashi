@@ -24,6 +24,7 @@ import {
 import { trackRefund, EcommerceItem } from '@/lib/analytics/gtag';
 import { Order, Address } from '@/types';
 import { COUNTRIES } from '@/lib/countries';
+import { formatLocal } from '@/lib/currency';
 import Select from 'react-select';
 import {
     Package, MapPin, Heart, User, Plus, Pencil, Trash2,
@@ -49,7 +50,7 @@ type Tab = 'overview' | 'orders' | 'wishlist' | 'addresses' | 'profile' | 'priva
 const VALID_TABS: Tab[] = ['overview', 'orders', 'wishlist', 'addresses', 'profile', 'privacy', 'support', 'wallet', 'notifications'];
 
 export default function AccountPage() {
-    const { formatPrice } = useCurrency();
+    const { formatPrice, format } = useCurrency();
     const router = useRouter();
     const params = useParams<{ country: string, tab?: string[] }>();
     const searchParams = useSearchParams();
@@ -1685,7 +1686,7 @@ export default function AccountPage() {
                                                                     {order.order_status || 'PENDING'}
                                                                 </span>
                                                             </td>
-                                                            <td className="py-4 text-sm font-bold text-gray-900 text-right">{formatPrice(order.final_total || order.total_amount)}</td>
+                                                            <td className="py-4 text-sm font-bold text-gray-900 text-right">{formatLocal(order.final_total || order.total_amount, order.currency || 'USD', order.currency === 'RUB' ? 'ru-RU' : order.currency === 'KRW' ? 'ko-KR' : 'en-US')}</td>
                                                         </tr>
                                                     ))}
                                                     {orders.length === 0 && (
@@ -1894,7 +1895,11 @@ export default function AccountPage() {
                                                                 <div className="flex flex-col">
                                                                     <span className="text-[10px] uppercase tracking-widest text-warm-gray font-bold mb-0.5">Total Amount</span>
                                                                     <span className="text-sm font-bold text-gray-900">
-                                                                        {formatPrice(order.final_total || order.total_amount)}
+                                                                        {formatLocal(
+                                                                            order.final_total || order.total_amount, 
+                                                                            order.currency || 'USD', 
+                                                                            order.currency === 'RUB' ? 'ru-RU' : order.currency === 'KRW' ? 'ko-KR' : 'en-US'
+                                                                        )}
                                                                     </span>
                                                                 </div>
                                                             </div>
@@ -2091,7 +2096,13 @@ export default function AccountPage() {
                                                                             </div>
                                                                         </div>
                                                                         <span className="text-xs font-bold text-gray-900 whitespace-nowrap">
-                                                                            {formatPrice(item.price || item.unit_price)}
+                                                                            {formatLocal(
+                                                                                selectedOrderDetails.currency === 'USD' 
+                                                                                    ? (item.unit_price || item.price || 0)
+                                                                                    : Math.round((item.unit_price || item.price || 0) * (selectedOrderDetails.exchange_rate || 1)), 
+                                                                                selectedOrderDetails.currency || 'USD', 
+                                                                                selectedOrderDetails.currency === 'RUB' ? 'ru-RU' : selectedOrderDetails.currency === 'KRW' ? 'ko-KR' : 'en-US'
+                                                                            )}
                                                                         </span>
                                                                     </div>
                                                                 );
@@ -2125,7 +2136,11 @@ export default function AccountPage() {
                                                         <div className="space-y-3">
                                                             <div className="flex items-center justify-between text-xs text-warm-gray font-medium">
                                                                 <span>Subtotal</span>
-                                                                <span className="text-gray-900 font-bold">{formatPrice(selectedOrderDetails.total_amount || 0)}</span>
+                                                                <span className="text-gray-900 font-bold">{formatLocal(
+                                                                    selectedOrderDetails.subtotal || selectedOrderDetails.total_amount || 0,
+                                                                    selectedOrderDetails.currency || 'USD', 
+                                                                    selectedOrderDetails.currency === 'RUB' ? 'ru-RU' : selectedOrderDetails.currency === 'KRW' ? 'ko-KR' : 'en-US'
+                                                                )}</span>
                                                             </div>
                                                             <div className="flex items-center justify-between text-xs text-warm-gray font-medium">
                                                                 <span>Eco-Shipping</span>
@@ -2135,7 +2150,11 @@ export default function AccountPage() {
 
                                                             <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
                                                                 <span className="text-sm font-bold text-gray-900">Total</span>
-                                                                <span className="text-lg font-bold text-gray-900">{formatPrice(selectedOrderDetails.final_total || selectedOrderDetails.total_amount || 0)}</span>
+                                                                <span className="text-lg font-bold text-gray-900">{formatLocal(
+                                                                    selectedOrderDetails.final_total || selectedOrderDetails.total_amount || 0,
+                                                                    selectedOrderDetails.currency || 'USD', 
+                                                                    selectedOrderDetails.currency === 'RUB' ? 'ru-RU' : selectedOrderDetails.currency === 'KRW' ? 'ko-KR' : 'en-US'
+                                                                )}</span>
                                                             </div>
                                                         </div>
                                                     </div>
