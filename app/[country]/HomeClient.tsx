@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   ArrowRight,
   Leaf,
@@ -234,13 +235,16 @@ export default function HomeClientPage({
                           className="group flex flex-col items-center gap-3 transition-all duration-500 hover:-translate-y-2 cursor-pointer"
                         >
                           <div className={`relative w-[85%] sm:w-full mx-auto aspect-[4/3] rounded-xl sm:rounded-2xl ${categoryColors[cat.slug] || 'bg-[#F2F4F2]'} flex items-center justify-center shadow-sm group-hover:shadow-[0_20px_50px_rgba(59,93,59,0.12)] group-hover:bg-[#E2F0E2] transition-all duration-700 overflow-hidden isolate`}>
-                            <img
+                            <Image
                               src={cat.image_url || categoryImages[cat.slug?.toLowerCase() || ''] || `/icons/shop/${cat.slug}.png`}
                               alt={cat.name}
+                              fill
+                              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 14vw"
                               onError={(e) => {
-                                (e.target as HTMLImageElement).src = '/icons/shop/category-sprite.png';
+                                e.currentTarget.srcset = '';
+                                e.currentTarget.src = '/icons/shop/category-sprite.png';
                               }}
-                              className="w-full h-full object-cover relative z-10 opacity-90 group-hover:opacity-100 transition-all duration-[800ms] cubic-bezier(0.34,1.56,0.64,1) group-hover:scale-110 pointer-events-none"
+                              className="object-cover relative z-10 opacity-90 group-hover:opacity-100 transition-all duration-[800ms] cubic-bezier(0.34,1.56,0.64,1) group-hover:scale-110 pointer-events-none"
                             />
 
                             {/* Hover Pulse Effect */}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import ProductCard from './ProductCard';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
@@ -11,10 +12,10 @@ import { buildPath, getCountryFromPathname } from '@/lib/currency';
 // Ad banners that rotate in the left panel
 // You can replace these with dedicated promotional images
 const adBanners = [
-  { src: '/small banners/1.png', href: null },
-  { src: '/small banners/2.png', href: null },
-  { src: '/small banners/3.png', href: null },
-  { src: '/small banners/4.png', href: null },
+  { src: '/small banners/1.webp', href: null },
+  { src: '/small banners/2.webp', href: null },
+  { src: '/small banners/3.webp', href: null },
+  { src: '/small banners/4.webp', href: null },
 ];
 
 interface BestSellerShowcaseProps {
@@ -89,7 +90,7 @@ export default function BestSellerShowcase({
             {/* Preload all banner images immediately so carousel rotations are instant */}
             <div className="hidden" aria-hidden="true">
               {adBanners.map((banner, i) => (
-                <img key={i} src={banner.src} alt="" loading="eager" fetchPriority="high" />
+                <Image key={i} src={banner.src} alt="" width={400} height={500} priority />
               ))}
             </div>
             <AnimatePresence initial={false} custom={direction}>
@@ -123,12 +124,13 @@ export default function BestSellerShowcase({
                   }
                 }}
               >
-                <img
+                <Image
                   src={adBanners[adIndex].src}
                   alt="Promotional Banner"
-                  className="w-full h-full object-cover"
-                  loading="eager"
-                  fetchPriority="high"
+                  fill
+                  sizes="(max-width: 1024px) 85vw, 450px"
+                  className="object-cover"
+                  priority
                 />
               </motion.div>
             </AnimatePresence>

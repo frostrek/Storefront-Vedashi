@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { buildPath, getCountryFromPathname } from '@/lib/currency';
@@ -9,16 +10,16 @@ import { buildPath, getCountryFromPathname } from '@/lib/currency';
 // Add your brand logos to /public/brands/ and update the list below
 const brands = [
   { name: 'minimalist', slug: 'minimalist', logo: '/brands/minimalist.webp' },
-  { name: 'nivea', slug: 'nivea', logo: '/brands/nivea.png' },
-  { name: 'bellavita', slug: 'bellavita', logo: '/brands/bellavita.jpg' },
-  { name: 'colgate', slug: 'colgate', logo: '/brands/colgate.png' },
-  { name: 'dove', slug: 'dove', logo: '/brands/dove.png' },
-  { name: 'emami', slug: 'emami', logo: '/brands/emami.png' },
+  { name: 'nivea', slug: 'nivea', logo: '/brands/nivea.webp' },
+  { name: 'bellavita', slug: 'bellavita', logo: '/brands/bellavita.webp' },
+  { name: 'colgate', slug: 'colgate', logo: '/brands/colgate.webp' },
+  { name: 'dove', slug: 'dove', logo: '/brands/dove.webp' },
+  { name: 'emami', slug: 'emami', logo: '/brands/emami.webp' },
   { name: 'Dabur', slug: 'Dabur', logo: '/brands/dabur.avif' },
   { name: 'Organic-India', slug: 'Organic-India', logo: '/brands/organic-india.avif' },
   { name: 'wishcare', slug: 'wishcare', logo: '/brands/wishcare.webp' },
   { name: 'Mamaearth', slug: 'Mamaearth', logo: '/brands/mamaearth.webp' },
-  { name: 'maybelline', slug: 'maybelline', logo: '/brands/maybelline.png' },
+  { name: 'maybelline', slug: 'maybelline', logo: '/brands/maybelline.webp' },
 ];
 
 export default function BrandReel() {
@@ -66,9 +67,11 @@ export default function BrandReel() {
                 className="flex-shrink-0 group"
               >
                 <div className="flex items-center justify-center px-2 sm:px-4 h-[60px] w-[120px] sm:h-[80px] sm:w-[160px] transition-all duration-300 group-hover:scale-110">
-                  <img
+                  <Image
                     src={brand.logo}
                     alt={brand.name}
+                    width={140}
+                    height={65}
                     className="max-h-[45px] max-w-[100px] sm:max-h-[65px] sm:max-w-[140px] object-contain transition-all duration-300 grayscale-[20%] group-hover:grayscale-0"
                     onError={(e) => {
                       // Fallback: show brand name as text if logo is missing

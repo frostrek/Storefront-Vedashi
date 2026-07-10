@@ -68,7 +68,7 @@ const FALLBACK: FooterData = {
     company: {
         name: 'Vedashi',
         description: 'Nurturing your journey towards holistic health through the ancient wisdom of Ayurveda.',
-        logo_url: '/vedashi-logo-white.png',
+        logo_url: '/vedashi-logo-white.webp',
     },
     links: [
         {
