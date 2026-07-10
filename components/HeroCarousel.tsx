@@ -208,7 +208,7 @@ export default function HeroCarousel({ initialSlides = [], initialSettings = und
                         sizes="100vw"
                         className="object-cover object-center"
                         priority={i === 0}
-                        loading={i === 0 ? 'eager' : 'lazy'}
+                        fetchPriority={i === 0 ? 'high' : 'auto'}
                     />
                     <div
                         className="absolute inset-0 bg-gradient-to-b from-black/20 to-black/60"
