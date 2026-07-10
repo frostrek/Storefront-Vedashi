@@ -47,7 +47,7 @@ const SUGGESTED_LANG_COOKIE_OPTIONS = {
 };
 
 // ─── IPinfo Config ──────────────────────────────────────────────────
-const IPINFO_TIMEOUT_MS = 800;
+const IPINFO_TIMEOUT_MS = 150;
 
 // ─── Helper Functions ───────────────────────────────────────────────
 
