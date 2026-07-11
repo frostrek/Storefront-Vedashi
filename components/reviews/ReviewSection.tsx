@@ -6,6 +6,7 @@ import ReviewCard from './ReviewCard';
 import ReviewForm from './ReviewForm';
 import { getProductReviews, getRatingSummary, getMyReviewForProduct } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import { useCurrency } from '@/context/CurrencyContext';
 import { MessageSquare } from 'lucide-react';
 
 interface RatingSummary {
@@ -43,6 +44,7 @@ const SORT_OPTIONS = [
 
 export default function ReviewSection({ productId, product, selectedVariant, onAddToCart }: ReviewSectionProps) {
     const { isAuthenticated } = useAuth();
+    const { formatPrice } = useCurrency();
 
     const [summary, setSummary] = useState<RatingSummary | null>(null);
     const [reviews, setReviews] = useState<Review[]>([]);
@@ -90,15 +92,7 @@ export default function ReviewSection({ productId, product, selectedVariant, onA
         fetchData();
     }, [fetchData]);
 
-    const formatPrice = (amount: number) => {
-        return new Intl.NumberFormat('en-IN', {
-            style: 'currency',
-            currency: 'INR',
-            maximumFractionDigits: 0
-        }).format(amount);
-    };
-
-    const displayPrice = selectedVariant?.price ?? product?.price ?? 0;
+    const basePrice = selectedVariant?.price ?? product?.price ?? 0;
 
     return (
         <section className="pt-6">
@@ -226,7 +220,7 @@ export default function ReviewSection({ productId, product, selectedVariant, onA
                                         </h3>
                                         <div className="flex items-baseline gap-2">
                                             <p className="text-base font-bold text-gray-900">
-                                                {formatPrice(displayPrice)}
+                                                {formatPrice(basePrice, product?.country_prices)}
                                             </p>
                                             {selectedVariant?.size_label && (
                                                 <p className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">

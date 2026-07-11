@@ -42,7 +42,9 @@ function StepIndicator({ currentStep = 0 }: { currentStep?: number }) {
 /* ─── Main Cart Page ─────────────────────────────────────────── */
 
 export default function CartPage() {
-    const { formatPrice, format, resolvePrice, resolveMrp } = useCurrency();
+    const { formatPrice, format, resolvePrice, resolveMrp, countryConfig, currencyConfigs } = useCurrency();
+    const currentConfig = currencyConfigs.find(c => c.country_code === countryConfig.code.toUpperCase());
+    const exchangeRate = currentConfig?.exchange_rate || 1;
     const {
         items, savedItems, updateQuantity, removeItem, saveForLater, moveToCart,
         totalPrice, totalItems, loading, error,
@@ -204,13 +206,14 @@ export default function CartPage() {
         return sum + itemSp * item.quantity;
     }, 0);
     const saleDiscount = totalMRP - inStockTotal;
-    const deliveryFee = 0;
+    const deliveryFee = 0; // Shipping is free for all regions
     
     // We should resolve the couponDiscount to local currency too.
     // Assuming couponDiscount is in USD right now.
     const localCouponDiscount = resolvePrice(couponDiscount, null);
+    const localDeliveryFee = 0;
     
-    const grandTotal = inStockTotal - localCouponDiscount + deliveryFee;
+    const grandTotal = inStockTotal - localCouponDiscount + localDeliveryFee;
     const inStockItemCount = inStockItems.reduce((sum, item) => sum + item.quantity, 0);
 
     return (

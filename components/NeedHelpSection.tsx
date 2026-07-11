@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { API_URL } from '@/lib/api';
 
 interface NeedHelpCategory {
@@ -63,10 +64,12 @@ export default function NeedHelpSection() {
                 <div
                   className="relative rounded-2xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group"
                 >
-                  <img
+                  <Image
                     src={category.image_url}
                     alt={category.name}
-                    loading="lazy"
+                    width={400}
+                    height={400}
+                    sizes="(max-width: 640px) 33vw, (max-width: 1024px) 25vw, 16vw"
                     className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                   

@@ -47,7 +47,7 @@ const SUGGESTED_LANG_COOKIE_OPTIONS = {
 };
 
 // ─── IPinfo Config ──────────────────────────────────────────────────
-const IPINFO_TIMEOUT_MS = 800;
+const IPINFO_TIMEOUT_MS = 150;
 
 // ─── Helper Functions ───────────────────────────────────────────────
 
@@ -141,8 +141,13 @@ function pathHasLegacyPrefix(pathname: string): string | null {
 }
 
 function shouldSkip(pathname: string): boolean {
+  // Explicitly skip SEO files so they don't get rewritten to /us/
+  if (pathname === '/robots.txt' || pathname === '/sitemap.xml' || pathname === '/sitemap.xsl') {
+    return true;
+  }
+
   // Never skip Next.js RSC payload requests (.rsc or .txt prefetch)
-  if (pathname.endsWith('.rsc') || pathname.endsWith('.txt')) {
+  if (pathname.endsWith('.rsc') || (pathname.endsWith('.txt') && pathname !== '/robots.txt')) {
     return false;
   }
 

@@ -208,7 +208,7 @@ export default function HeroCarousel({ initialSlides = [], initialSettings = und
                         sizes="100vw"
                         className="object-cover object-center"
                         priority={i === 0}
-                        loading={i === 0 ? 'eager' : 'lazy'}
+                        fetchPriority={i === 0 ? 'high' : 'auto'}
                     />
                     <div
                         className="absolute inset-0 bg-gradient-to-b from-black/20 to-black/60"
@@ -287,6 +287,7 @@ export default function HeroCarousel({ initialSlides = [], initialSettings = und
                     return (
                         <Link
                             href={`/${country}${slide.link_url.startsWith('/') ? '' : '/'}${slide.link_url}`}
+                            aria-label={slide.headings?.[0]?.text || 'View details'}
                             className="relative z-20 mx-auto max-w-7xl px-4 py-2 sm:py-8 md:py-10 lg:py-12 text-center w-full h-full flex flex-col justify-center cursor-pointer"
                         >
                             {slideContent}
@@ -307,6 +308,7 @@ export default function HeroCarousel({ initialSlides = [], initialSettings = und
                     {(!(!settings.loop && current === 0)) && (
                         <button
                             onClick={prev}
+                            aria-label="Previous slide"
                             className={`absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/30 hover:bg-black/50 text-white backdrop-blur-sm transition-all duration-300 ${showArrows ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 pointer-events-none'}`}
                         >
                             <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -315,6 +317,7 @@ export default function HeroCarousel({ initialSlides = [], initialSettings = und
                     {(!(!settings.loop && current === displaySlides.length - 1)) && (
                         <button
                             onClick={next}
+                            aria-label="Next slide"
                             className={`absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/30 hover:bg-black/50 text-white backdrop-blur-sm transition-all duration-300 ${showArrows ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 pointer-events-none'}`}
                         >
                             <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -331,6 +334,7 @@ export default function HeroCarousel({ initialSlides = [], initialSettings = und
                         return (
                             <button
                                 key={i}
+                                aria-label={`Go to slide ${i + 1}`}
                                 onClick={() => {
                                     // Calculate closest path to requested index to avoid backwards spinning if cloned
                                     let targetIndex = i;

@@ -1,0 +1,18 @@
+# Vedashi
+
+> Vedashi is a premium wellness and natural products brand offering clinically tested formulations for holistic health.
+
+## Key Pages
+- [Homepage](https://vedashi.com): Discover our curated collection of premium wellness products, natural skincare, and herbal remedies.
+- [Products](https://vedashi.com/products): Browse our full catalog of Ayurvedic herbs, dry fruits, spices, and natural beauty products.
+- [Collections](https://vedashi.com/collections): Explore carefully curated product collections and bundles for specific wellness goals.
+- [Blog](https://vedashi.com/blog): Read insightful articles on Ayurveda, holistic health tips, and wellness routines.
+- [About Us](https://vedashi.com/about): Learn about our mission, our sourcing practices, and the science behind our natural formulations.
+- [Help Center](https://vedashi.com/help-center): Access FAQs, knowledge base articles, and customer support resources.
+- [Contact](https://vedashi.com/contact): Get in touch with our support team for inquiries and assistance.
+- [Return Policy](https://vedashi.com/return-policy): Information on our 100% satisfaction guarantee, returns, and refunds.
+- [Shipping](https://vedashi.com/shipping): Details on domestic and international shipping rates and timelines.
+- [Vendor Registration](https://vedashi.com/vendor-registration): Portal for ethical suppliers and natural product vendors to partner with Vedashi.
+
+## About
+Vedashi is dedicated to bringing the ancient wisdom of Ayurveda into modern wellness routines. We specialize in sourcing the highest quality natural ingredients to create premium skincare, dietary supplements, and herbal remedies. Our offerings are rigorously tested to ensure purity, potency, and efficacy, empowering our customers to achieve holistic health naturally.

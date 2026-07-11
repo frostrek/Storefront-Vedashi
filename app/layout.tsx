@@ -115,9 +115,7 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
       <head>
-        {/* Preconnect to CDN & API origins — saves ~100-200ms per domain on mobile */}
-        <link rel="preconnect" href="https://d15o8yv09tizyc.cloudfront.net" />
-        <link rel="preconnect" href="https://vedashi-prod-assets.s3.ap-south-1.amazonaws.com" />
+        {/* Preconnect to CDN & API origins removed as Next.js Image Optimization proxies them */}
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://mc.yandex.ru" />
 

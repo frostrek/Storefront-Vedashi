@@ -74,7 +74,7 @@ export default function GoogleTranslateWidget({ upward = false }: { upward?: boo
   const [ready, setReady] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  const loadGoogleTranslate = useCallback(() => {
     if (initialized.current) return;
     initialized.current = true;
 
@@ -106,7 +106,7 @@ export default function GoogleTranslateWidget({ upward = false }: { upward?: boo
     }
 
     // Periodically hide Google's toolbar (CSS only — never remove from DOM)
-    const interval = setInterval(hideGoogleToolbar, 300);
+    setInterval(hideGoogleToolbar, 300);
     // Also react to DOM mutations
     const observer = new MutationObserver(hideGoogleToolbar);
     observer.observe(document.body, { childList: true, subtree: false, attributes: true, attributeFilter: ['style', 'class'] });
@@ -170,12 +170,7 @@ export default function GoogleTranslateWidget({ upward = false }: { upward?: boo
       `;
       document.head.appendChild(style);
     }
-
-    return () => {
-      clearInterval(interval);
-      observer.disconnect();
-    };
-  }, []);
+  }, [upward]);
 
   // Close on outside click
   useEffect(() => {
@@ -227,9 +222,9 @@ export default function GoogleTranslateWidget({ upward = false }: { upward?: boo
         suppressHydrationWarning
       />
 
-      <div ref={wrapperRef} style={{ position: 'relative', display: 'flex', alignItems: 'center' }} suppressHydrationWarning>
+      <div ref={wrapperRef} style={{ position: 'relative', display: 'flex', alignItems: 'center' }} suppressHydrationWarning onMouseEnter={loadGoogleTranslate}>
         <button
-          onClick={() => setOpen(!open)}
+          onClick={() => { loadGoogleTranslate(); setOpen(!open); }}
           style={{
             padding: '8px',
             background: 'none',

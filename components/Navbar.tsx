@@ -49,7 +49,7 @@ interface HeaderConfig {
 }
 
 const DEFAULT_CONFIG: HeaderConfig = {
-  branding: { logo_url: '', logo_alt: 'Vedashi' },
+  branding: { logo_url: '/vedashi-logo.webp', logo_alt: 'Vedashi' },
   colors: {
     navbar_bg: '#FFFFFF',
     navbar_text: '#374151',

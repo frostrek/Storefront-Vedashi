@@ -42,7 +42,7 @@ interface BuyNowItem {
     image_url: string;
 }
 
-type PaymentMethod = 'razorpay' | 'cloudpayments';
+type PaymentMethod = 'razorpay' | 'cloudpayments' | 'cod';
 
 /* ─── Component ─────────────────────────────────────────────── */
 
@@ -300,7 +300,7 @@ function CheckoutContent() {
 
     const mrpDiscount = totalMrp - baseSubtotal;
 
-    const shippingCost = 0;
+    const shippingCost = 0; // Shipping is free for all regions
     const discount = isBuyNow ? 0 : couponDiscount;
     const minPayable = Number(process.env.NEXT_PUBLIC_MINIMUM_PAYABLE_AMOUNT) || 1;
 
@@ -1236,7 +1236,7 @@ function CheckoutContent() {
                         )}
                         <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#91C934]/10 text-[#2D3B2D] text-sm font-bold tracking-wide uppercase">
                             <ShieldCheck className="h-4 w-4" />
-                            {paymentMethod === 'razorpay' ? 'Payment Confirmed' : 'Cash on Delivery'}
+                            {paymentMethod === 'cod' ? 'Cash on Delivery' : 'Payment Confirmed'}
                         </div>
                         <p className="mt-6 text-[#4A4A4A] leading-relaxed">
                             Your sacred herbs and authentic formulations are being prepared with care. We&apos;ll notify you regarding the delivery schedule.
