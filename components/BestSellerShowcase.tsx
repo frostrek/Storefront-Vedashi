@@ -9,7 +9,7 @@ import { ArrowRight } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { buildPath, getCountryFromPathname } from '@/lib/currency';
 
-// Ad banners that rotate  in the left panel
+// Ad banners that rotate  in the left panels
 // You can replace these with dedicated promotional images
 const adBanners = [
   { src: '/small banners/1.webp', href: null },
