@@ -97,7 +97,7 @@ export default async function RootLayout({
     }
   } catch (error) {
     // If the health check times out or fails, we assume the site is NOT in maintenance
-    // This prioritizes speed and prevents the "TimeoutError" crash in dev
+    // This prioritize speed and prevents the "TimeoutError" crash in dev
   } finally {
     clearTimeout(timeoutId);
   }
