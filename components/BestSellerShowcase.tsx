@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { buildPath, getCountryFromPathname } from '@/lib/currency';
+import { RU_DICTIONARY } from '@/content/ru';
 
 // Ad banners that rotate in the left panel
 // You can replace these with dedicated promotional images
@@ -33,7 +34,7 @@ export default function BestSellerShowcase({
   title,
   subtitle,
   viewAllLink,
-  viewAllText = 'Explore All',
+  viewAllText = RU_DICTIONARY.home.exploreAll,
 }: BestSellerShowcaseProps) {
   const params = useParams();
   const country = (Array.isArray(params?.country) ? params?.country[0] : params?.country) || 'us';
@@ -126,7 +127,7 @@ export default function BestSellerShowcase({
               >
                 <Image
                   src={adBanners[adIndex].src}
-                  alt="Promotional Banner"
+                  alt={RU_DICTIONARY.footer.promotionalBannerAlt}
                   fill
                   sizes="(max-width: 1024px) 85vw, 450px"
                   className="object-cover"

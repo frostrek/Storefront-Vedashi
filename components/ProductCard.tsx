@@ -16,6 +16,7 @@ import toast from 'react-hot-toast';
 import { trackEcommerce } from '@/lib/analytics/gtag';
 import { hasDiscount, getDiscountPercent, getValidPrices } from '@/utils/discount';
 import { buildPath, getCountryFromPathname } from '@/lib/currency';
+import { RU_DICTIONARY } from '@/content/ru';
 
 
 const BLUR_DATA_URL =
@@ -102,7 +103,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
         const shareData = {
             title: product.product_name,
             text: `Check out ${product.product_name} on Vedashi — Premium Ayurvedic Wellness.`,
-            url: `${window.location.origin}/${params.country || 'us'}/products/${product.slug || product.product_id}`,
+            url: `${window.location.origin}/products/${product.slug || product.product_id}`,
         };
 
         if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
@@ -129,7 +130,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
     const imageSrc = product.thumbnail_url || product.images?.[0] || '/herbal_placeholder.png';
     const isExternal = imageSrc.startsWith('http');
     const isBase64 = imageSrc.startsWith('data:');
-    const productUrl = `/${params.country || 'us'}/products/${product.slug || product.product_id}`;
+    const productUrl = `/products/${product.slug || product.product_id}`;
 
     const closeCartModal = useCallback((e?: React.MouseEvent) => {
         if (e) {
@@ -469,7 +470,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                         (product.common_form && countLabel === product.common_form) ? '' : countLabel,
                                         (product.common_strength && strengthLabel === product.common_strength) ? '' : strengthLabel,
                                         (product.common_flavor && v.flavor === product.common_flavor) ? '' : (v.flavor ?? ''),
-                                        (v.pack_quantity ?? 0) > 1 ? `Pack of ${v.pack_quantity ?? 0}` : ''
+                                        (v.pack_quantity ?? 0) > 1 ? `${RU_DICTIONARY.productPage.packOf} ${v.pack_quantity ?? 0}` : ''
                                     ].filter(Boolean);
 
                                     let parsedOptions = v.options;
@@ -565,7 +566,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                                 {formatMrp(vOriginalPrice, vDisplayPrice, v.country_prices || product.country_prices)}
                                                             </span>
                                                             <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isSelected ? 'bg-red-500/20 text-red-100' : 'text-red-500 bg-red-50'}`}>
-                                                                {getDiscountPercent(v)}% OFF
+                                                                {getDiscountPercent(v)}% {RU_DICTIONARY.product.off}
                                                             </span>
                                                         </>
                                                     )}
@@ -586,7 +587,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                 })}
                             </div>
                         ) : (
-                            <p className="text-xs text-gray-400 text-center py-5">No options available.</p>
+                            <p className="text-xs text-gray-400 text-center py-5">{RU_DICTIONARY.product.noOptionsAvailable}</p>
                         )}
                     </div>
 
@@ -622,7 +623,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                         : justAdded
                                             ? 'Added to bag!'
                                             : selectedVariant
-                                                ? `Add to Cart · ${formatPrice((selectedVariant?.price ?? 0) * quantity, (selectedVariant as any)?.country_prices || (product as any).country_prices)}`
+                                                ? `${RU_DICTIONARY.product.add} · ${formatPrice((selectedVariant?.price ?? 0) * quantity, (selectedVariant as any)?.country_prices || (product as any).country_prices)}`
                                                 : 'Select an option'
                                     }
                                 </span>
@@ -639,7 +640,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                 </button>
 
                                 <div className="flex-1 flex flex-col items-center justify-center bg-[#FF0000]/5 rounded-xl py-0.5 border border-[#FF0000]/10 min-w-[32px]">
-                                    <p className="text-[7px] font-bold text-[#FF0000]/60 uppercase tracking-widest leading-none mb-0.5">in cart</p>
+                                    <p className="text-[7px] font-bold text-[#FF0000]/60 uppercase tracking-widest leading-none mb-0.5">{RU_DICTIONARY.product.inCart}</p>
                                     <p className="text-sm font-black text-[#FF0000] leading-none">{currentItemInCart.quantity}</p>
                                 </div>
 
@@ -677,7 +678,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
             (product.common_form && countLabel === product.common_form) ? '' : countLabel,
             (product.common_strength && strengthLabel === product.common_strength) ? '' : strengthLabel,
             (product.common_flavor && v.flavor === product.common_flavor) ? '' : (v.flavor ?? ''),
-            (v.pack_quantity ?? 0) > 1 ? `Pack of ${v.pack_quantity ?? 0}` : ''
+            (v.pack_quantity ?? 0) > 1 ? `${RU_DICTIONARY.productPage.packOf} ${v.pack_quantity ?? 0}` : ''
         ].filter(Boolean);
         return labelParts.join(' · ') || v.sku || 'Standard';
     };
@@ -798,7 +799,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                             <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-50 flex-shrink-0 border border-gray-100 relative">
                                                 {vIsDiscounted && (
                                                     <span className="absolute top-0 left-0 bg-blue-600 text-white text-[6px] font-bold px-1 py-[1px] rounded-br-md leading-none z-10">
-                                                        {getDiscountPercent(v)}% OFF
+                                                        {getDiscountPercent(v)}% {RU_DICTIONARY.product.off}
                                                     </span>
                                                 )}
                                                 <Image
@@ -820,19 +821,19 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                     {vIsDiscounted && (
                                                         <div className="flex items-center gap-1.5 mt-1">
                                                             <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full text-red-500 bg-red-50">
-                                                                {getDiscountPercent(v)}% OFF
+                                                                {getDiscountPercent(v)}% {RU_DICTIONARY.product.off}
                                                             </span>
                                                             <span className="text-[10px] text-gray-400 line-through">
-                                                                MRP {formatMrp(vOriginalPrice, vDisplayPrice, v.country_prices || product.country_prices)}
+                                                                {RU_DICTIONARY.product.mrp} {formatMrp(vOriginalPrice, vDisplayPrice, v.country_prices || product.country_prices)}
                                                             </span>
                                                         </div>
                                                     )}
                                                 </div>
                                                 {isOut && !isInactive && (
-                                                    <p className="text-[9px] text-red-500 font-semibold mt-0.5">Out of stock</p>
+                                                    <p className="text-[9px] text-red-500 font-semibold mt-0.5">{RU_DICTIONARY.product.outOfStock}</p>
                                                 )}
                                                 {isInactive && (
-                                                    <p className="text-[9px] text-gray-400 font-semibold mt-0.5">Unavailable</p>
+                                                    <p className="text-[9px] text-gray-400 font-semibold mt-0.5">{RU_DICTIONARY.product.unavailable}</p>
                                                 )}
                                             </div>
 
@@ -866,7 +867,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                         disabled={addingToCart}
                                                         className="px-2 py-1.5 border border-[#FF0000] rounded-lg text-[11px] font-bold text-[#FF0000] bg-white hover:bg-[#FF0000]/5 transition-all cursor-pointer shadow-sm"
                                                     >
-                                                        ADD
+                                                        {RU_DICTIONARY.product.add}
                                                     </button>
                                                 )}
                                             </div>
@@ -875,7 +876,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                 })}
                             </div>
                         ) : (
-                            <p className="text-xs text-gray-400 text-center py-6">No options available.</p>
+                            <p className="text-xs text-gray-400 text-center py-6">{RU_DICTIONARY.product.noOptionsAvailable}</p>
                         )
                     ) : null}
                 </div>
@@ -941,8 +942,8 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                 <button
                                     onClick={handleToggleWishlist}
                                     className="rounded-full bg-white/90 backdrop-blur-sm p-1.5 shadow-sm transition-all hover:scale-110 hover:shadow-md cursor-pointer"
-                                    title={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
-                                    aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                                    title={wishlisted ? RU_DICTIONARY.product.removeFromWishlist : RU_DICTIONARY.product.addToWishlist}
+                                    aria-label={wishlisted ? RU_DICTIONARY.product.removeFromWishlist : RU_DICTIONARY.product.addToWishlist}
                                 >
                                     <Heart
                                         className={`h-3.5 w-3.5 transition hover:text-[#91C934] ${wishlisted
@@ -954,7 +955,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                 <button
                                     onClick={handleShare}
                                     className="rounded-full bg-white/90 backdrop-blur-sm p-1.5 shadow-sm transition-all hover:scale-110 hover:shadow-md cursor-pointer text-gray-400 hover:text-[#91C934]"
-                                    title="Share"
+                                    title={RU_DICTIONARY.product.share}
                                 >
                                     <Share2 size={14} />
                                 </button>
@@ -1015,7 +1016,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                 {currentItemInCart.quantity > 1 ? <Minus className="h-3 w-3" /> : <X className="h-3 w-3" />}
                                             </button>
                                             <div className="px-1.5 flex flex-col items-center justify-center min-w-[28px]">
-                                                <span className="text-[6.5px] font-bold text-gray-400 uppercase tracking-wider leading-none">QTY</span>
+                                                <span className="text-[6.5px] font-bold text-gray-400 uppercase tracking-wider leading-none">{RU_DICTIONARY.product.qty}</span>
                                                 <span className="text-[12px] font-black text-[#FF0000] leading-tight">{currentItemInCart.quantity}</span>
                                             </div>
                                             <button
@@ -1041,7 +1042,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                             ) : justAdded ? (
                                                 <Check className="h-4 w-4 text-white" />
                                             ) : (
-                                                <span className="text-[13px] font-extrabold text-[#FF0000] tracking-wide">ADD</span>
+                                                <span className="text-[13px] font-extrabold text-[#FF0000] tracking-wide">{RU_DICTIONARY.product.add}</span>
                                             )}
                                         </button>
                                     )
@@ -1054,9 +1055,9 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                             : 'border-[#FF0000] hover:bg-gray-50'
                                             }`}
                                     >
-                                        <span className="text-[13px] font-extrabold text-[#FF0000] tracking-wide leading-tight">ADD</span>
+                                        <span className="text-[13px] font-extrabold text-[#FF0000] tracking-wide leading-tight">{RU_DICTIONARY.product.add}</span>
                                         <span className="text-[8px] font-semibold text-gray-400 leading-none mt-[1px]">
-                                            {product.variant_count ?? product.variants?.length ?? 0} options
+                                            {product.variant_count ?? product.variants?.length ?? 0} {RU_DICTIONARY.product.options}
                                         </span>
                                     </button>
                                 )}
@@ -1073,11 +1074,11 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             </span>
                             {originalPrice > displayPrice && (
                                 <div className="flex items-center gap-1.5 mt-1">
-                                    <span className="text-[#FF0000] bg-red-50 text-[10px] font-bold px-1.5 py-0.5 rounded border border-red-100 whitespace-nowrap">
-                                        {Math.round((1 - displayPrice / originalPrice) * 100)}% OFF
-                                    </span>
                                     <span className="text-gray-400 line-through text-[11px] sm:text-xs font-bold font-ui">
-                                        MRP {formatMrp(originalPrice, displayPrice, product.country_prices)}
+                                        {RU_DICTIONARY.product.mrp} {formatMrp(originalPrice, displayPrice, product.country_prices)}
+                                    </span>
+                                    <span className="text-[#FF0000] bg-red-50 text-[10px] font-bold px-1.5 py-0.5 rounded border border-red-100 whitespace-nowrap">
+                                        {Math.round((1 - displayPrice / originalPrice) * 100)}% {RU_DICTIONARY.product.off}
                                     </span>
                                 </div>
                             )}
@@ -1113,7 +1114,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
 
                         {product.brand && (
                             <Link
-                                href={`/${params.country || 'us'}/products?brand=${encodeURIComponent(product.brand)}`}
+                                href={buildPath(params.country as string || 'us', `/products?brand=${encodeURIComponent(product.brand)}`)}
                                 className={`relative z-20 block uppercase tracking-[0.12em] text-gray-400 font-medium mb-1 sm:mb-1.5 hover:text-[#3d5c3a] transition-colors cursor-pointer ${isList ? 'text-[10px] sm:text-[11px]' : 'text-[9px]'}`}
                             >
                                 {product.brand}
@@ -1219,7 +1220,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                 <button
                                     onClick={handleShare}
                                     className="relative z-30 inline-flex flex-shrink-0 items-center justify-center p-2.5 sm:p-2.5 rounded-lg border border-gray-200 bg-white text-gray-400 hover:text-[#3d5c3a] hover:border-[#3d5c3a]/30 hover:bg-gray-50 transition-all cursor-pointer"
-                                    title="Share"
+                                    title={RU_DICTIONARY.product.share}
                                 >
                                     <Share2 className="h-4 w-4 sm:h-4 sm:w-4" />
                                 </button>

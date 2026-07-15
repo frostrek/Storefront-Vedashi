@@ -5,13 +5,13 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Facebook, Instagram, Twitter, Youtube, Linkedin, Globe, MapPin, Phone, Mail, Leaf, Truck, RotateCcw, ShieldCheck, FileText } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import RegionSwitcher from './RegionSwitcher';
-import GoogleTranslateWidget from './GoogleTranslateWidget';
+
 import { useCookieConsent } from '@/context/CookieConsentContext';
 import { API_URL, subscribeNewsletter } from '@/lib/api';
 import toast from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
 import { buildPath, getCountryFromPathname } from '@/lib/currency';
+import { RU_DICTIONARY } from '@/content/ru';
 
 // ─── Types ────────────────────────────────────────────────────────
 
@@ -67,27 +67,27 @@ const SOCIAL_ICONS: Record<string, any> = {
 const FALLBACK: FooterData = {
     company: {
         name: 'Vedashi',
-        description: 'Nurturing your journey towards holistic health through the ancient wisdom of Ayurveda.',
+        description: RU_DICTIONARY.footer.companyDesc,
         logo_url: '/vedashi-logo-white.webp',
     },
     links: [
         {
-            title: 'Explore',
+            title: RU_DICTIONARY.footer.explore,
             items: [
-                { label: 'Our Story', href: '/about' },
-                { label: 'Blogs', href: '/blog' },
-                { label: 'All Products', href: '/products' },
-                { label: 'Contact Us', href: '/contact' },
+                { label: RU_DICTIONARY.footer.ourStory, href: '/about' },
+                { label: RU_DICTIONARY.footer.blogs, href: '/blog' },
+                { label: RU_DICTIONARY.footer.allProducts, href: '/products' },
+                { label: RU_DICTIONARY.footer.contactUs, href: '/contact' },
             ],
         },
         {
-            title: 'Support',
+            title: RU_DICTIONARY.footer.support,
             items: [
-                { label: 'Help Center', href: '/help-center' },
-                { label: 'Shipping Policy', href: '/shipping' },
-                { label: 'Return Policy', href: '/return-policy' },
-                { label: 'Terms of Service', href: '/terms' },
-                { label: 'Privacy Policy', href: '/privacy' },
+                { label: RU_DICTIONARY.footer.helpCenter, href: '/help-center' },
+                { label: RU_DICTIONARY.footer.shippingPolicy, href: '/shipping' },
+                { label: RU_DICTIONARY.footer.returnPolicy, href: '/return-policy' },
+                { label: RU_DICTIONARY.footer.termsOfService, href: '/terms' },
+                { label: RU_DICTIONARY.footer.privacyPolicyFooter, href: '/privacy' },
             ],
         },
     ],
@@ -97,12 +97,12 @@ const FALLBACK: FooterData = {
         { platform: 'Facebook', url: '#', icon_name: 'facebook' },
     ],
     newsletter: {
-        title: 'Newsletter',
-        description: 'Get 10% OFF + Weekly Ayurvedic Secrets',
+        title: RU_DICTIONARY.footer.newsletter,
+        description: RU_DICTIONARY.footer.newsletterDesc,
     },
     bottom_bar: {
-        copyright: `© ${new Date().getFullYear()} Vedashi. All rights reserved.`,
-        text: 'Made with 💚 in India | Inspired by Ayurveda, backed by science.',
+        copyright: RU_DICTIONARY.footer.copyright,
+        text: RU_DICTIONARY.footer.madeWith,
     },
 };
 
@@ -110,7 +110,6 @@ const FALLBACK: FooterData = {
 
 export default function Footer() {
     const pathname = usePathname();
-    const isRussia = pathname?.startsWith('/ru');
     const currentCountry = getCountryFromPathname(pathname || '/');
     const [data, setData] = useState<FooterData | null>(null);
     const { openSettings } = useCookieConsent();
@@ -126,13 +125,13 @@ export default function Footer() {
 
     const handleSubscribe = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!email || !email.includes('@')) { toast.error('Please enter a valid email.'); return; }
+        if (!email || !email.includes('@')) { toast.error(RU_DICTIONARY.footer.validEmail); return; }
         setLoading(true);
         try {
             const res = await subscribeNewsletter(email);
-            if (res.success) { toast.success(res.message || 'Successfully subscribed!'); setEmail(''); }
-            else toast.error(res.message || 'Failed to subscribe.');
-        } catch { toast.error('Communication error. Please try again later.'); }
+            if (res.success) { toast.success(res.message || RU_DICTIONARY.footer.subscribeSuccess); setEmail(''); }
+            else toast.error(res.message || RU_DICTIONARY.footer.subscribeFailed);
+        } catch { toast.error(RU_DICTIONARY.footer.commError); }
         finally { setLoading(false); }
     };
 
@@ -145,8 +144,8 @@ export default function Footer() {
     const social = (isDynamic && data?.social && data.social.length > 0) ? data.social : (FALLBACK.social ?? []);
     const bottomBar = (isDynamic && data?.bottom_bar) ? data.bottom_bar : FALLBACK.bottom_bar;
 
-    // ─── Russia: override footer link labels with Russian text ───
-    if (isRussia && !isDynamic) {
+    // ─── Russia-only: always use Russian footer links when not dynamic ───
+    if (!isDynamic) {
         columns = [
             {
                 title: 'Навигация',
@@ -173,7 +172,7 @@ export default function Footer() {
     const FollowUsContent = (
         <div className="flex flex-col items-start pt-0 pl-0 sm:pl-[42px]">
             <h4 className="text-[#91CA35] font-semibold text-[10px] sm:text-[12px] tracking-widest uppercase mb-0.5 sm:mb-1">
-                Follow Us
+                {RU_DICTIONARY.footer.followUs}
             </h4>
             <div className="w-7 h-[2px] bg-[#91CA35] mb-1.5 sm:mb-2.5" />
             {social.length > 0 && (
@@ -205,7 +204,7 @@ export default function Footer() {
                 <div className="absolute inset-y-0 left-0 w-[60%] z-0 overflow-hidden">
                     <Image
                         src="/Footer-banners/vendor regis.jpeg"
-                        alt="Become a Partner"
+                        alt={RU_DICTIONARY.footer.becomePartnerAlt}
                         fill
                         sizes="(max-width: 768px) 100vw, 50vw"
                         className="object-cover object-center opacity-90 group-hover:opacity-100 transition-opacity duration-300"
@@ -216,16 +215,15 @@ export default function Footer() {
 
                 <div className="relative z-10 py-2 px-3 sm:pr-4 flex flex-row items-center h-full w-full justify-end">
                     <div className="flex flex-col items-start w-[140px]">
-                        <h5 className="text-[#91C935] text-[12px] sm:text-sm md:text-base font-bold mb-0.5 drop-shadow-md">Become a Partner</h5>
+                        <h5 className="text-[#91C935] text-[12px] sm:text-sm md:text-base font-bold mb-0.5 drop-shadow-md">{RU_DICTIONARY.footer.becomePartner}</h5>
                         <p className="text-gray-200 text-[8.5px] sm:text-[9.5px] md:text-[10px] leading-tight mb-1 sm:mb-1.5 drop-shadow-sm">
-                            Start selling with Vedashi<br />
-                            and reach thousands.
+                            {RU_DICTIONARY.footer.becomePartnerSub}
                         </p>
                         <Link
                             href="/vendor-registration"
                             className="inline-flex w-fit items-center justify-center bg-[#91C935] hover:bg-[#7eb02e] text-white text-[9.5px] sm:text-[11px] font-medium py-1 px-3 sm:px-4 rounded-full transition-all duration-300 shadow-[0_4px_12px_rgba(110,147,42,0.2)] hover:shadow-[0_6px_16px_rgba(110,147,42,0.3)] hover:-translate-y-0.5"
                         >
-                            Register Now
+                            {RU_DICTIONARY.footer.registerNow}
                         </Link>
                     </div>
                 </div>
@@ -235,7 +233,7 @@ export default function Footer() {
                 <div className="absolute inset-y-0 left-0 w-[60%] z-0 overflow-hidden">
                     <Image
                         src="/Footer-banners/bulk order.jpeg"
-                        alt="Bulk Orders"
+                        alt={RU_DICTIONARY.footer.bulkOrdersAlt}
                         fill
                         sizes="(max-width: 768px) 100vw, 50vw"
                         className="object-cover object-center opacity-90 group-hover:opacity-100 transition-opacity duration-300"
@@ -246,16 +244,15 @@ export default function Footer() {
 
                 <div className="relative z-10 py-2 px-3 sm:pr-4 flex flex-row items-center h-full w-full justify-end">
                     <div className="flex flex-col items-start w-[140px]">
-                        <h5 className="text-[#91C935] text-[12px] sm:text-sm md:text-base font-bold mb-0.5 drop-shadow-md">Bulk Orders</h5>
+                        <h5 className="text-[#91C935] text-[12px] sm:text-sm md:text-base font-bold mb-0.5 drop-shadow-md">{RU_DICTIONARY.footer.bulkOrders}</h5>
                         <p className="text-gray-200 text-[8.5px] sm:text-[9.5px] md:text-[10px] leading-tight mb-1 sm:mb-1.5 drop-shadow-sm">
-                            Stock up on Vedashi<br />
-                            products at special prices.
+                            {RU_DICTIONARY.footer.bulkOrdersSub}
                         </p>
                         <Link
                             href="/contact"
                             className="inline-flex w-fit items-center justify-center bg-[#91C935] hover:bg-[#7eb02e] text-white text-[9.5px] sm:text-[11px] font-medium py-1 px-3 sm:px-4 rounded-full transition-all duration-300 shadow-[0_4px_12px_rgba(110,147,42,0.2)] hover:shadow-[0_6px_16px_rgba(110,147,42,0.3)] hover:-translate-y-0.5"
                         >
-                            Inquire Now
+                            {RU_DICTIONARY.footer.inquireNow}
                         </Link>
                     </div>
                 </div>
@@ -273,7 +270,7 @@ export default function Footer() {
                         <input
                             suppressHydrationWarning
                             type="email"
-                            placeholder="Enter email address"
+                            placeholder={RU_DICTIONARY.footer.enterEmail}
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             disabled={loading}
@@ -285,7 +282,7 @@ export default function Footer() {
                             disabled={loading}
                             className="px-7 py-3 bg-[#91CA35] text-white text-[11px] font-bold uppercase tracking-widest rounded-r-full hover:bg-[#7eb02e] transition-all whitespace-nowrap disabled:opacity-70 flex items-center justify-center min-w-[110px] shadow-sm"
                         >
-                            {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Subscribe'}
+                            {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : RU_DICTIONARY.footer.subscribe}
                         </button>
                     </form>
                 </div>
@@ -316,10 +313,8 @@ export default function Footer() {
                                     <div className="flex items-start gap-2">
                                         <MapPin className="text-gray-500 h-3 w-3 flex-shrink-0 mt-0.5" />
                                         <span className="text-[11.5px] text-gray-400 leading-snug">
-                                            {data?.contact?.address || (isRussia
-                                                ? '117292, г. Москва, вн.тер.г. муниципальный округ Академический, ул. Шверника, д. 6, к. 1, помещ. 8П'
-                                                : 'Plot No C-89, Shop No: 2, Sector-04, Airoli, Navi Mumbai, Thane, Maharashtra – 400708 India')}
-                                            {isRussia && !data?.contact?.address && (
+                                            {data?.contact?.address || '117292, г. Москва, вн.тер.г. муниципальный округ Академический, ул. Шверника, д. 6, к. 1, помещ. 8П'}
+                                            {!data?.contact?.address && (
                                                 <>
                                                     <br />
                                                     <span className="text-gray-500">Генеральный директор: Андреев Кирилл Павлович</span>
@@ -330,20 +325,18 @@ export default function Footer() {
 
                                     <div className="flex items-center gap-2">
                                         <Mail className="text-gray-500 h-3 w-3 flex-shrink-0" />
-                                        <a href={`mailto:${isRussia ? 'info@vedashiherbals.com' : (data?.contact?.email || 'info@vedashi.com')}`} className="text-[11.5px] text-gray-400 hover:text-[#91C934] transition-colors">
-                                            {isRussia ? 'info@vedashiherbals.com' : (data?.contact?.email || 'info@vedashi.com')}
+                                        <a href={`mailto:${data?.contact?.email || 'info@vedashiherbals.com'}`} className="text-[11.5px] text-gray-400 hover:text-[#91C934] transition-colors">
+                                            {data?.contact?.email || 'info@vedashiherbals.com'}
                                         </a>
                                     </div>
-                                    {isRussia && (
-                                        <div className="flex items-start gap-2 mt-0.5">
-                                            <FileText className="text-gray-500 h-3 w-3 flex-shrink-0 mt-0.5" />
-                                            <div className="flex flex-col gap-0.5 text-[11.5px] text-gray-400 leading-tight">
-                                                <span>ИНН 9727117720</span>
-                                                <span>КПП 772701001</span>
-                                                <span>ОГРН 1257700504709</span>
-                                            </div>
+                                    <div className="flex items-start gap-2 mt-0.5">
+                                        <FileText className="text-gray-500 h-3 w-3 flex-shrink-0 mt-0.5" />
+                                        <div className="flex flex-col gap-0.5 text-[11.5px] text-gray-400 leading-tight">
+                                            <span>ИНН 9727117720</span>
+                                            <span>КПП 772701001</span>
+                                            <span>ОГРН 1257700504709</span>
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
                             </div>
 
@@ -358,7 +351,7 @@ export default function Footer() {
                             {/* 2. Explore */}
                             <div className="flex flex-col">
                                 <h4 className="text-[#91CA35] font-semibold text-[10px] sm:text-[12px] tracking-widest uppercase mb-0.5 sm:mb-1">
-                                    {columns[0]?.title || 'Explore'}
+                                    {columns[0]?.title || RU_DICTIONARY.footer.explore}
                                 </h4>
                                 <div className="w-7 h-[2px] bg-[#91CA35] mb-1.5 sm:mb-2.5" />
                                 <ul className="space-y-0 sm:space-y-1.5 flex-grow">
@@ -379,21 +372,13 @@ export default function Footer() {
                                     {FollowUsContent}
                                 </div>
 
-                                {/* Mobile-only Currency & Language */}
-                                <div className="flex md:hidden flex-row items-center gap-0 mt-2 relative z-[200]">
-                                    <div className="scale-[0.85] origin-left">
-                                        <RegionSwitcher upward={true} />
-                                    </div>
-                                    <div className="scale-[0.85] origin-left -ml-4">
-                                        <GoogleTranslateWidget upward={true} />
-                                    </div>
-                                </div>
+
                             </div>
 
                             {/* 3. Support */}
                             <div>
                                 <h4 className="text-[#91CA35] font-semibold text-[10px] sm:text-[12px] tracking-widest uppercase mb-0.5 sm:mb-1">
-                                    {columns[1]?.title || 'Support'}
+                                    {columns[1]?.title || RU_DICTIONARY.footer.support}
                                 </h4>
                                 <div className="w-7 h-[2px] bg-[#91CA35] mb-1.5 sm:mb-2.5" />
                                 <ul className="space-y-0 sm:space-y-1.5">
@@ -437,8 +422,8 @@ export default function Footer() {
                                 <Leaf className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-[#91CA35]" />
                             </div>
                             <div className="flex flex-col items-center sm:items-start">
-                                <p className="text-[8px] sm:text-[11px] font-bold text-white uppercase tracking-tight sm:tracking-wide leading-[1.1] text-center sm:text-left">100% Natural</p>
-                                <p className="hidden sm:block text-[10px] text-gray-500 leading-tight">Ayurveda Certified</p>
+                                <p className="text-[8px] sm:text-[11px] font-bold text-white uppercase tracking-tight sm:tracking-wide leading-[1.1] text-center sm:text-left">{RU_DICTIONARY.footer.natural}</p>
+                                <p className="hidden sm:block text-[10px] text-gray-500 leading-tight">{RU_DICTIONARY.footer.naturalSub}</p>
                             </div>
                         </div>
                         <div className="flex flex-col sm:flex-row items-center justify-start sm:justify-start gap-1 sm:gap-3 text-center sm:text-left">
@@ -446,8 +431,8 @@ export default function Footer() {
                                 <Truck className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-[#91CA35]" />
                             </div>
                             <div className="flex flex-col items-center sm:items-start">
-                                <p className="text-[8px] sm:text-[11px] font-bold text-white uppercase tracking-tight sm:tracking-wide leading-[1.1] text-center sm:text-left">Free Shipping</p>
-                                <p className="hidden sm:block text-[10px] text-gray-500 leading-tight">Free Worldwide Shipping</p>
+                                <p className="text-[8px] sm:text-[11px] font-bold text-white uppercase tracking-tight sm:tracking-wide leading-[1.1] text-center sm:text-left">{RU_DICTIONARY.footer.freeShipping}</p>
+                                <p className="hidden sm:block text-[10px] text-gray-500 leading-tight">{RU_DICTIONARY.footer.freeShippingSub}</p>
                             </div>
                         </div>
                         <div className="flex flex-col sm:flex-row items-center justify-start sm:justify-start gap-1 sm:gap-3 text-center sm:text-left">
@@ -455,8 +440,8 @@ export default function Footer() {
                                 <RotateCcw className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-[#91CA35]" />
                             </div>
                             <div className="flex flex-col items-center sm:items-start">
-                                <p className="text-[8px] sm:text-[11px] font-bold text-white uppercase tracking-tight sm:tracking-wide leading-[1.1] text-center sm:text-left">Authentic</p>
-                                <p className="hidden sm:block text-[10px] text-gray-500 leading-tight">Trusted sources & sellers</p>
+                                <p className="text-[8px] sm:text-[11px] font-bold text-white uppercase tracking-tight sm:tracking-wide leading-[1.1] text-center sm:text-left">{RU_DICTIONARY.footer.authentic}</p>
+                                <p className="hidden sm:block text-[10px] text-gray-500 leading-tight">{RU_DICTIONARY.footer.authenticSub}</p>
                             </div>
                         </div>
                         <div className="flex flex-col sm:flex-row items-center justify-start sm:justify-start gap-1 sm:gap-3 text-center sm:text-left">
@@ -464,8 +449,8 @@ export default function Footer() {
                                 <ShieldCheck className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-[#91CA35]" />
                             </div>
                             <div className="flex flex-col items-center sm:items-start">
-                                <p className="text-[8px] sm:text-[11px] font-bold text-white uppercase tracking-tight sm:tracking-wide leading-[1.1] text-center sm:text-left">Secure Pay</p>
-                                <p className="hidden sm:block text-[10px] text-gray-500 leading-tight">100% protected</p>
+                                <p className="text-[8px] sm:text-[11px] font-bold text-white uppercase tracking-tight sm:tracking-wide leading-[1.1] text-center sm:text-left">{RU_DICTIONARY.footer.securePay}</p>
+                                <p className="hidden sm:block text-[10px] text-gray-500 leading-tight">{RU_DICTIONARY.footer.securePaySub}</p>
                             </div>
                         </div>
                     </div>
@@ -476,22 +461,12 @@ export default function Footer() {
             <div className="bg-[#111111] py-1.5 sm:py-2.5 relative z-[200]">
                 <div className="mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-12">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-1 sm:gap-2">
-                        <p className="text-[9.5px] sm:text-[11px] text-gray-500 text-center order-1 md:order-2">
-                            Made with 💚 in India | Inspired by Ayurveda, backed by science.
+                        <p className="text-gray-400 text-xs text-center sm:text-left">
+                            {RU_DICTIONARY.footer.copyright}
                         </p>
-                        <div className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-3 order-2 md:order-1 mt-0.5 md:mt-0">
-                            <p className="text-[9.5px] sm:text-[11px] text-gray-500 text-center">
-                                {isRussia ? `© ${new Date().getFullYear()} Vedashi Herbals. All rights reserved.` : (bottomBar?.copyright || `© ${new Date().getFullYear()} Vedashi. All rights reserved.`)}
-                            </p>
-                        </div>
-                        <div className="hidden md:flex items-center gap-2 sm:gap-3 mt-1 sm:mt-0 order-3 md:order-3 relative z-[200]">
-                            <div className="scale-90 sm:scale-100 origin-right">
-                                <RegionSwitcher upward={true} />
-                            </div>
-                            <div className="scale-90 sm:scale-100 origin-left">
-                                <GoogleTranslateWidget upward={true} />
-                            </div>
-                        </div>
+                        <p className="text-[#91C935]/80 text-[10px] text-center sm:text-right">
+                            {RU_DICTIONARY.footer.madeWith}
+                        </p>
                     </div>
                 </div>
             </div>

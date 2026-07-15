@@ -6,6 +6,7 @@ import { Search, X, Loader2, Sparkles } from 'lucide-react';
 import { getSearchSuggestions, SearchSuggestion } from '@/lib/api';
 import Image from 'next/image';
 import Link from 'next/link';
+import { RU_DICTIONARY } from '@/content/ru';
 
 interface SearchBarProps {
     /** Current search value (from URL / filter state) */
@@ -34,11 +35,14 @@ export default function SearchBar({
     value,
     onSearch,
     variant = 'hero',
-    placeholder = 'Search products, brands, or categories...',
+    placeholder,
     className = '',
     autoFocus = false,
     live = false,
 }: SearchBarProps) {
+    const defaultPlaceholder = RU_DICTIONARY.plp.searchPlaceholder;
+    const finalPlaceholder = placeholder || defaultPlaceholder;
+
     const router = useRouter();
     const pathname = usePathname();
 
@@ -164,7 +168,7 @@ export default function SearchBar({
                     onChange={e => { setInputValue(e.target.value); setSuggestionsOpen(false); }}
                     onFocus={() => { if (suggestions.length > 0) setSuggestionsOpen(true); }}
                     onKeyDown={handleKeyDown}
-                    placeholder={placeholder}
+                    placeholder={finalPlaceholder}
                     autoFocus={autoFocus}
                     autoComplete="off"
                     spellCheck={false}
@@ -199,7 +203,7 @@ export default function SearchBar({
                             className={`text-[10px] font-bold px-2 py-1 rounded-full cursor-pointer transition-colors ${isHero ? 'bg-white/20 text-white hover:bg-white/30' : 'bg-[#3d5c3a] text-white hover:bg-[#2d4a2a]'}`}
                             aria-label="Search"
                         >
-                            Go
+                            {RU_DICTIONARY.search.go}
                         </button>
                     )}
                 </div>

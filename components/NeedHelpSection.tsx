@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { API_URL } from '@/lib/api';
+import { RU_DICTIONARY } from '@/content/ru';
 
 interface NeedHelpCategory {
   id: string;
@@ -44,7 +45,7 @@ export default function NeedHelpSection() {
         {/* Heading */}
         <div className="mb-4 sm:mb-7 text-center sm:text-left">
           <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2">
-            Need Help Choosing? Start Here!
+            {RU_DICTIONARY.home.needHelpTitle}
           </h2>
         </div>
 

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, usePathname, useParams } from 'next/navigation';
 import { Search, X, Loader2 } from 'lucide-react';
+import { RU_DICTIONARY } from '@/content/ru';
 import { searchAutocomplete, type SearchSuggestion } from '@/lib/api';
 import { useCurrency } from '@/context/CurrencyContext';
 import { buildPath, getCountryFromPathname } from '@/lib/currency';
@@ -18,7 +19,7 @@ interface SearchAutocompleteProps {
 
 export default function SearchAutocomplete({
     onClose,
-    placeholder = 'Search products…',
+    placeholder = `${RU_DICTIONARY.common.search}...`,
     className = '',
 }: SearchAutocompleteProps) {
     const router = useRouter();
@@ -105,11 +106,11 @@ export default function SearchAutocomplete({
 
     // ── Static Storefront Pages ──
     const storePages = [
-        { title: 'Home', path: buildPath(country, '/') },
-        { title: 'All Products', path: buildPath(country, `/products`) },
-        { title: 'Categories', path: buildPath(country, `/categories`) },
-        { title: 'About Us', path: buildPath(country, `/about`) },
-        { title: 'Contact Support', path: buildPath(country, `/contact`) },
+        { title: RU_DICTIONARY.search.pageTitles.home, path: buildPath(country, '/') },
+        { title: RU_DICTIONARY.search.pageTitles.allProducts, path: buildPath(country, `/products`) },
+        { title: RU_DICTIONARY.search.pageTitles.categories, path: buildPath(country, `/categories`) },
+        { title: RU_DICTIONARY.search.pageTitles.aboutUs, path: buildPath(country, `/about`) },
+        { title: RU_DICTIONARY.search.pageTitles.contactSupport, path: buildPath(country, `/contact`) },
     ];
 
     const matchedPages = query.trim().length >= 2
@@ -250,7 +251,7 @@ export default function SearchAutocomplete({
                     {matchedPages.length > 0 && (
                         <div className="py-1">
                             <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400 bg-gray-50/50">
-                                Pages
+                                {RU_DICTIONARY.search.pages}
                             </p>
                             {matchedPages.map((page, index) => (
                                 <button
@@ -276,12 +277,12 @@ export default function SearchAutocomplete({
                     {(suggestions.length > 0 || isLoading) && (
                         <div className="py-1 border-t border-gray-100">
                             <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400 bg-gray-50/50">
-                                Products
+                                {RU_DICTIONARY.search.products}
                             </p>
                             {isLoading && suggestions.length === 0 && (
                                 <div className="flex items-center gap-2 px-4 py-3 text-sm text-gray-400">
                                     <Loader2 className="h-4 w-4 animate-spin" />
-                                    Searching...
+                                    {RU_DICTIONARY.search.searching}
                                 </div>
                             )}
                             {suggestions.map((item, index) => {
@@ -338,7 +339,7 @@ export default function SearchAutocomplete({
                     {/* Empty state */}
                     {!isLoading && matchedPages.length === 0 && suggestions.length === 0 && (
                         <div className="px-4 py-6 text-center text-sm text-gray-400">
-                            No results found for &ldquo;{query}&rdquo;
+                            {RU_DICTIONARY.search.noResults} &ldquo;{query}&rdquo;
                         </div>
                     )}
 
@@ -358,7 +359,7 @@ export default function SearchAutocomplete({
               `}
                         >
                             <Search className="h-3.5 w-3.5" />
-                            View all results for &ldquo;{query}&rdquo;
+                            {RU_DICTIONARY.search.viewAllResults} &ldquo;{query}&rdquo;
                         </button>
                     )}
                 </div>

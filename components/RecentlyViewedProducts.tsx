@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { RU_DICTIONARY } from '@/content/ru';
+
 import { getProductDetails, getProduct } from '@/lib/api';
 import { Product } from '@/types';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
@@ -62,7 +64,7 @@ export default function RecentlyViewedProducts({ currentProductId }: RecentlyVie
 
     return (
         <ProductReel
-            title="Recently Viewed"
+            title={RU_DICTIONARY.productPage.recentlyViewed}
             products={products}
             loading={loading}
         />

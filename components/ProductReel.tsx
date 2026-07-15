@@ -6,6 +6,7 @@ import ProductCard from './ProductCard';
 import { FilteredProduct } from '@/types';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import { RU_DICTIONARY } from '@/content/ru';
 
 interface ProductReelProps {
     products: any[];
@@ -79,7 +80,7 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
                 {viewAllLink && (
                     <div className="flex-shrink-0 hidden sm:block pb-1">
                         <Link href={viewAllLink} className="group flex items-center gap-2 text-[13px] font-medium text-[#FF0000] hover:text-[#CC0000] transition-colors underline decoration-[#FF0000]/30 underline-offset-2 hover:decoration-[#FF0000]">
-                            {viewAllText || 'Explore All'}
+                            {viewAllText || RU_DICTIONARY.home.exploreAll}
                             <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                         </Link>
                     </div>
@@ -94,7 +95,7 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
                     <button
                         onClick={() => scroll('left')}
                         className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-40 p-3 rounded-full bg-white/90 shadow-xl border border-gray-100 text-[#91CA35] hover:bg-[#91CA35] hover:text-white transition-all duration-300 backdrop-blur-sm group-hover/reel:scale-110"
-                        aria-label="Scroll left"
+                        aria-label={RU_DICTIONARY.product.scrollLeft}
                         suppressHydrationWarning
                     >
                         <ChevronLeft className="h-6 w-6" />
@@ -104,7 +105,7 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
                     <button
                         onClick={() => scroll('right')}
                         className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-40 p-3 rounded-full bg-white/90 shadow-xl border border-gray-100 text-[#91CA35] hover:bg-[#91CA35] hover:text-white transition-all duration-300 backdrop-blur-sm group-hover/reel:scale-110"
-                        aria-label="Scroll right"
+                        aria-label={RU_DICTIONARY.product.scrollRight}
                         suppressHydrationWarning
                     >
                         <ChevronRight className="h-6 w-6" />
@@ -143,7 +144,7 @@ export default function ProductReel({ products, title, subtitle, loading, viewAl
                 {viewAllLink && (
                     <div className="sm:hidden flex justify-end mt-1">
                         <Link href={viewAllLink} className="group flex items-center gap-2 text-[10px] font-medium text-[#FF0000] hover:text-[#CC0000] transition-colors underline decoration-[#FF0000]/30 underline-offset-2">
-                            {viewAllText || 'Explore All'}
+                            {viewAllText || RU_DICTIONARY.home.exploreAll}
                         </Link>
                     </div>
                 )}

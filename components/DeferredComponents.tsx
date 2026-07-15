@@ -7,7 +7,7 @@ import { Suspense } from 'react';
 // These are deferred to reduce the initial JS bundle count.
 const PromoBanner = dynamic(() => import('@/components/PromoBanner'), { ssr: false });
 const CookieBanner = dynamic(() => import('@/components/CookieBanner'), { ssr: false });
-const LanguageSuggestionBanner = dynamic(() => import('@/components/LanguageSuggestionBanner'), { ssr: false });
+
 
 const RouteTracker = dynamic(() => import('@/components/RouteTracker'), { ssr: false });
 const GlobalErrorTracker = dynamic(() => import('@/components/GlobalErrorTracker'), { ssr: false });
@@ -29,7 +29,7 @@ export default function DeferredComponents() {
       <GlobalErrorTracker />
 
       <CookieBanner />
-      <LanguageSuggestionBanner />
+
     </>
   );
 }

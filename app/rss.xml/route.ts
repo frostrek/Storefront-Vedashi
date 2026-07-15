@@ -23,7 +23,7 @@ export async function GET() {
 
         for (const p of products) {
             // Pick a default country for global RSS (e.g., IN)
-            const productUrl = `${SITE_URL}/in/products/${p.slug || p.product_id}`;
+            const productUrl = `${SITE_URL}/products/${p.slug || p.product_id}`;
             const description = p.short_description || p.description || p.product_name;
             const cleanDescription = description.replace(/<[^>]*>?/gm, '').substring(0, 300);
 

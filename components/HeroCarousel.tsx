@@ -207,7 +207,7 @@ export default function HeroCarousel({ initialSlides = [], initialSettings = und
                         fill
                         sizes="100vw"
                         className="object-cover object-center"
-                        priority={i === 0}
+                        priority={i < 2}
                         fetchPriority={i === 0 ? 'high' : 'auto'}
                     />
                     <div
@@ -286,7 +286,7 @@ export default function HeroCarousel({ initialSlides = [], initialSettings = und
                 if (slide.link_url) {
                     return (
                         <Link
-                            href={`/${country}${slide.link_url.startsWith('/') ? '' : '/'}${slide.link_url}`}
+                            href={`${slide.link_url.startsWith('/') ? '' : '/'}${slide.link_url}`}
                             aria-label={slide.headings?.[0]?.text || 'View details'}
                             className="relative z-20 mx-auto max-w-7xl px-4 py-2 sm:py-8 md:py-10 lg:py-12 text-center w-full h-full flex flex-col justify-center cursor-pointer"
                         >

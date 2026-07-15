@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useCallback, useMemo, useRef, useEffect, memo } from 'react';
+import { RU_DICTIONARY } from '@/content/ru';
+
 import Image from 'next/image';
 import type { ProductAsset, GalleryImage } from '@/types';
 import ImageThumbnailStrip from './ImageThumbnailStrip';
@@ -95,7 +97,7 @@ function resolveGalleryImages(
                 if (brand) parts.push(brand);
                 parts.push(productName);
                 if (category) parts.push(category);
-                enrichedAlt = `${parts.join(' ')} - Image ${index + 1}`;
+                enrichedAlt = `${parts.join(' ')} - ${RU_DICTIONARY.productPage.image} ${index + 1}`;
             }
 
             gallery.push({
@@ -113,7 +115,7 @@ function resolveGalleryImages(
         // Video assets
         unique.filter((a) => a.media_type === 'video').forEach((a, index) => {
             const videoUrl = a.cdn_url || a.asset_url || a.base64_data || '';
-            const enrichedAlt = a.alt_text || `${productName} Video ${index + 1}`;
+            const enrichedAlt = a.alt_text || `${productName} ${RU_DICTIONARY.productPage.video} ${index + 1}`;
 
             gallery.push({
                 id: a.asset_id || `video-${index}`,
@@ -134,7 +136,7 @@ function resolveGalleryImages(
             return validFallbacks.map((src, index) => ({
                 id: `fallback-${index}`,
                 src,
-                alt: `${productName} - Image ${index + 1}`,
+                alt: `${productName} - ${RU_DICTIONARY.productPage.image} ${index + 1}`,
                 isPrimary: index === 0,
             }));
         }
@@ -144,7 +146,7 @@ function resolveGalleryImages(
         {
             id: 'default-fallback',
             src: FALLBACK_IMAGE,
-            alt: `${productName} - Product Image`,
+            alt: `${productName} - ${RU_DICTIONARY.productPage.image}`,
             isPrimary: true,
         },
     ];
@@ -256,7 +258,7 @@ function ProductImageGalleryInner({
                                 className={`${styles.mainImage} ${styles.loaded}`}
                                 style={{ objectFit: 'contain', background: '#000' }}
                             >
-                                Your browser does not support the video tag.
+                                {RU_DICTIONARY.productPage.browserNoVideo}
                             </video>
                         ) : (
                             <Image
@@ -302,7 +304,7 @@ function ProductImageGalleryInner({
                         ref={zoomPanelRef}
                         className={styles.zoomPanel}
                         role="img"
-                        aria-label={`Zoomed view: ${currentImage.alt}`}
+                        aria-label={`${RU_DICTIONARY.productPage.zoomedView} ${currentImage.alt}`}
                     />
                 </div>
 

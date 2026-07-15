@@ -3,6 +3,18 @@
 import { ChevronDown, ChevronUp, Search, X } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { COUNTRIES, getFlagByName } from '@/lib/countries';
+import { RU_DICTIONARY } from '@/content/ru';
+
+const getRussianCountryName = (englishName: string) => {
+    const countryObj = COUNTRIES.find(c => c.name === englishName);
+    if (!countryObj) return englishName;
+    try {
+        const displayNames = new Intl.DisplayNames(['ru'], { type: 'region' });
+        return displayNames.of(countryObj.code) || englishName;
+    } catch (e) {
+        return englishName;
+    }
+};
 
 interface CountryDropdownProps {
     options: string[];
@@ -37,7 +49,10 @@ export default function CountryDropdown({ options, selected, onChange }: Country
     }, [listOpen]);
 
     const filtered = search
-        ? options.filter(c => c.toLowerCase().includes(search.toLowerCase()))
+        ? options.filter(c => 
+            c.toLowerCase().includes(search.toLowerCase()) || 
+            getRussianCountryName(c).toLowerCase().includes(search.toLowerCase())
+          )
         : options;
 
     return (
@@ -49,7 +64,7 @@ export default function CountryDropdown({ options, selected, onChange }: Country
                 aria-expanded={open}
             >
                 <span className="text-xs font-semibold uppercase tracking-[0.15em] text-charcoal/70 group-hover:text-herbal-green transition-colors">
-                    Country
+                    {RU_DICTIONARY.plp.country}
                 </span>
                 {open
                     ? <ChevronUp className="h-4 w-4 text-warm-gray/60 group-hover:text-herbal-green transition-colors" />
@@ -82,7 +97,7 @@ export default function CountryDropdown({ options, selected, onChange }: Country
                                     value={search}
                                     onChange={e => setSearch(e.target.value)}
                                     className="w-full bg-transparent outline-none text-charcoal placeholder:text-warm-gray/50 text-sm"
-                                    placeholder="Type to search..."
+                                    placeholder={RU_DICTIONARY.search.searching}
                                     onClick={e => e.stopPropagation()}
                                 />
                             </>
@@ -91,10 +106,10 @@ export default function CountryDropdown({ options, selected, onChange }: Country
                                 {selected ? (
                                     <span className="flex items-center gap-2 text-charcoal font-medium flex-1 truncate">
                                         <span className="text-base leading-none">{getFlagByName(selected)}</span>
-                                        {selected}
+                                        {getRussianCountryName(selected)}
                                     </span>
                                 ) : (
-                                    <span className="text-warm-gray/70 flex-1">All Countries</span>
+                                    <span className="text-warm-gray/70 flex-1">{RU_DICTIONARY.plp.allCountries}</span>
                                 )}
                             </>
                         )}
@@ -126,11 +141,11 @@ export default function CountryDropdown({ options, selected, onChange }: Country
                                     className={`flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm transition-colors hover:bg-herbal-green/5 ${!selected ? 'bg-herbal-green/[0.06] text-herbal-green font-medium' : 'text-charcoal'
                                         }`}
                                 >
-                                    All Countries
+                                    {RU_DICTIONARY.plp.allCountries}
                                 </button>
                                 {filtered.length === 0 ? (
                                     <div className="px-4 py-5 text-sm text-warm-gray/60 text-center">
-                                        No countries found
+                                        {RU_DICTIONARY.plp.noCountriesFound}
                                     </div>
                                 ) : (
                                     filtered.map(country => (
@@ -144,7 +159,7 @@ export default function CountryDropdown({ options, selected, onChange }: Country
                                                 }`}
                                         >
                                             <span className="text-base leading-none flex-shrink-0">{getFlagByName(country)}</span>
-                                            <span className="truncate">{country}</span>
+                                            <span className="truncate">{getRussianCountryName(country)}</span>
                                         </button>
                                     ))
                                 )}
@@ -156,7 +171,7 @@ export default function CountryDropdown({ options, selected, onChange }: Country
                     {selected && !listOpen && (
                         <div className="mt-2 flex items-center gap-1.5">
                             <span className="text-base leading-none">{getFlagByName(selected)}</span>
-                            <span className="text-xs font-medium text-herbal-green">{selected}</span>
+                            <span className="text-xs font-medium text-herbal-green">{getRussianCountryName(selected)}</span>
                             <button
                                 type="button"
                                 onClick={() => onChange('')}

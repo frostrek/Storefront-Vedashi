@@ -9,10 +9,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useWishlist } from '@/context/WishlistContext';
 import { useAuth } from '@/context/AuthContext';
 import { getCategories, API_URL } from '@/lib/api';
+import { RU_DICTIONARY } from '@/content/ru';
 import toast from 'react-hot-toast';
 import SearchAutocomplete from './SearchAutocomplete';
-import GoogleTranslateWidget from './GoogleTranslateWidget';
-import RegionSwitcher from './RegionSwitcher';
+
 import NotificationCenter from './account/NotificationCenter';
 import SecondaryNavbar from './SecondaryNavbar';
 import PromoBanner from './PromoBanner';
@@ -147,19 +147,19 @@ const MegaMenuContent = ({ parent, country, colors }: { parent: Category, countr
           <Leaf className="absolute -bottom-4 -right-4 h-24 w-24 text-[#3B5D3B]/5 rotate-12 transition-transform duration-500 group-hover/promo:scale-110" />
 
           <div className="relative z-10">
-            <span className="inline-block bg-[#3B5D3B]/10 text-[#3B5D3B] text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded mb-3">Featured Collection</span>
-            <h5 className="text-xl font-serif font-bold text-gray-900 mb-2 leading-tight">Explore {parent.name}</h5>
+            <span className="inline-block bg-[#3B5D3B]/10 text-[#3B5D3B] text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded mb-3">{RU_DICTIONARY.nav.featuredCollection}</span>
+            <h5 className="text-xl font-serif font-bold text-gray-900 mb-2 leading-tight">{RU_DICTIONARY.nav.exploreCategory} {parent.name}</h5>
             <p className="text-xs text-gray-600 leading-relaxed italic">
-              Discover our ethically sourced, premium Ayurvedic essentials crafted with traditional wisdom.
+              {RU_DICTIONARY.nav.discoverDesc}
             </p>
           </div>
 
           <div className="mt-8 space-y-3 relative z-10">
             <Link
-              href={`/${country}/products?category=${parent.slug}`}
+              href={`/products?category=${parent.slug}`}
               className="flex items-center justify-between w-full group/btn text-sm font-bold text-[#FF0000] hover:text-[#CC0000] transition-colors"
             >
-              Shop All {parent.name}
+              {RU_DICTIONARY.nav.shopAll} {parent.name}
               <div className="h-8 w-8 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center transition-all group-hover/btn:bg-[#FF0000] group-hover/btn:text-white">
                 <ArrowRight className="h-4 w-4" />
               </div>
@@ -180,7 +180,7 @@ const MobileNavItem = ({ item, country, onClose, level = 0 }: { item: Category, 
     <div className="flex flex-col">
       <div className="flex items-center justify-between">
         <Link
-          href={`/${country}/products?category=${item.slug}`}
+          href={`/products?category=${item.slug}`}
           onClick={onClose}
           className={`py-3 px-4 font-bold text-sm text-gray-800 hover:text-[#3B5D3B] transition-colors flex-1 ${level > 0 ? 'pl-8 border-l-2 border-gray-100 ml-4' : ''}`}
         >
@@ -248,7 +248,7 @@ export default function Navbar() {
     if (isAuthenticated) {
       router.push(buildPath(currentCountry, `/account/wishlist`));
     } else {
-      toast('Please sign in to view your wishlist');
+      toast(RU_DICTIONARY.nav.signInToViewWishlist);
       router.push(buildPath(currentCountry, `/login`));
     }
   };
@@ -319,7 +319,7 @@ export default function Navbar() {
             <div className="flex items-center justify-between h-8 text-[12px] tracking-wide">
               <div className="flex items-center gap-5">
                 {strip.show_track_orders && (
-                  <Link href={buildPath(currentCountry, `/account`)} className="font-medium" style={{ color: colors.strip_text }}>Track Orders</Link>
+                  <Link href={buildPath(currentCountry, `/account`)} className="font-medium" style={{ color: colors.strip_text }}>{RU_DICTIONARY.nav.trackOrders}</Link>
                 )}
                 {strip.show_categories && (
                   <div className="flex items-center gap-6">
@@ -337,7 +337,7 @@ export default function Navbar() {
               </div>
               <span className="font-medium" style={{ color: colors.strip_text }}>{strip.center_message}</span>
               <div className="flex items-center gap-1.5 font-medium" style={{ color: colors.strip_text }}>
-                <span>Hotline: <span style={{ color: colors.strip_accent }}>{strip.hotline}</span></span>
+                <span>{RU_DICTIONARY.nav.hotline}: <span style={{ color: colors.strip_accent }}>{strip.hotline}</span></span>
               </div>
             </div>
           </div>
@@ -403,8 +403,8 @@ export default function Navbar() {
               <button
                 onClick={handleWishlistClick}
                 className="relative p-2 group"
-                title="Wishlist"
-                aria-label="Wishlist"
+                title={RU_DICTIONARY.nav.wishlist}
+                aria-label={RU_DICTIONARY.nav.wishlist}
               >
                 <Heart className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
                 {wishlistCount > 0 && (
@@ -417,8 +417,8 @@ export default function Navbar() {
               <Link
                 href={buildPath(currentCountry, `/cart`)}
                 className="relative p-2 group"
-                title="Cart"
-                aria-label="Cart"
+                title={RU_DICTIONARY.nav.cart}
+                aria-label={RU_DICTIONARY.nav.cart}
               >
                 <ShoppingCart className="h-[20px] w-[20px] transition-colors" style={{ color: colors.navbar_text }} />
                 {totalItems > 0 && (
@@ -432,12 +432,12 @@ export default function Navbar() {
                 <Link
                   href={isAuthenticated ? buildPath(currentCountry, `/account`) : buildPath(currentCountry, `/login`)}
                   className="p-2 block"
-                  title={isAuthenticated ? "Account" : "Login / Register"}
-                  aria-label={isAuthenticated ? "Account" : "Login / Register"}
+                  title={isAuthenticated ? RU_DICTIONARY.nav.account : RU_DICTIONARY.nav.loginRegister}
+                  aria-label={isAuthenticated ? RU_DICTIONARY.nav.account : RU_DICTIONARY.nav.loginRegister}
                 >
                   {isAuthenticated && user?.avatar_url ? (
                     <div className="h-[22px] w-[22px] rounded-full overflow-hidden ring-1 ring-[#D4A847]/30">
-                      <img src={user.avatar_url} alt="Profile" className="h-full w-full object-cover" />
+                      <img src={user.avatar_url} alt={RU_DICTIONARY.nav.profile} className="h-full w-full object-cover" />
                     </div>
                   ) : (
                     <User className="h-[20px] w-[20px]" style={{ color: colors.navbar_text }} />
@@ -450,15 +450,15 @@ export default function Navbar() {
                         <p className="text-[13px] font-bold text-gray-800 truncate">{user?.name}</p>
                         <p className="text-[10px] text-gray-500 truncate">{user?.email}</p>
                       </div>
-                      <Link href="/account" className="flex items-center gap-3 px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50"><Settings className="h-4 w-4" /> Settings</Link>
-                      <Link href="/account/orders" className="flex items-center gap-3 px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50"><Package className="h-4 w-4" /> Orders</Link>
-                      <button onClick={() => logout()} className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm text-red-600 hover:bg-red-50 mt-1"><LogOut className="h-4 w-4" /> Logout</button>
+                      <Link href="/account" className="flex items-center gap-3 px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50"><Settings className="h-4 w-4" /> {RU_DICTIONARY.nav.settings}</Link>
+                      <Link href="/account/orders" className="flex items-center gap-3 px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50"><Package className="h-4 w-4" /> {RU_DICTIONARY.nav.orders}</Link>
+                      <button onClick={() => logout()} className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm text-red-600 hover:bg-red-50 mt-1"><LogOut className="h-4 w-4" /> {RU_DICTIONARY.nav.logout}</button>
                     </div>
                   ) : (
                     <div className="flex flex-col">
                       <div className="p-5 bg-gray-50/50 border-b border-gray-100">
-                        <h3 className="text-[15px] font-bold text-gray-900 mb-1">Welcome to Vedashi</h3>
-                        <p className="text-[11px] text-gray-500 leading-tight">Sign in to easily track orders, save items, and more.</p>
+                        <h3 className="text-[15px] font-bold text-gray-900 mb-1">{RU_DICTIONARY.nav.welcomeToVedashi}</h3>
+                        <p className="text-[11px] text-gray-500 leading-tight">{RU_DICTIONARY.nav.signInDesc}</p>
                       </div>
                       <div className="p-4 space-y-2">
                         <Link
@@ -466,14 +466,14 @@ export default function Navbar() {
                           className="flex items-center gap-3 w-full px-4 py-2.5 bg-[#91C934] text-white rounded-xl text-[13px] font-bold transition-all hover:bg-[#7AA82C] hover:shadow-md active:scale-[0.98]"
                         >
                           <LogIn className="h-4 w-4" />
-                          Sign In
+                          {RU_DICTIONARY.nav.signIn}
                         </Link>
                         <Link
                           href={buildPath(currentCountry, `/login?mode=register`)}
                           className="flex items-center gap-3 w-full px-4 py-2.5 bg-white text-gray-700 rounded-xl text-[13px] font-bold border border-gray-200 transition-all hover:bg-gray-50 active:scale-[0.98]"
                         >
                           <UserPlus className="h-4 w-4" />
-                          Create Account
+                          {RU_DICTIONARY.nav.createAccount}
                         </Link>
                       </div>
                     </div>
@@ -481,14 +481,12 @@ export default function Navbar() {
                 </div>
               </div>
 
-              <div className="hidden md:block">
-                <RegionSwitcher />
-              </div>
+
               <button
                 onClick={() => setMobileOpen(!mobileOpen)}
                 className="md:hidden p-2"
-                title="Open Menu"
-                aria-label="Open Menu"
+                title={RU_DICTIONARY.nav.openMenu}
+                aria-label={RU_DICTIONARY.nav.openMenu}
               >
                 <Menu className="h-5 w-5" />
               </button>
@@ -511,8 +509,8 @@ export default function Navbar() {
                 </div>
                 <button
                   onClick={() => setMobileOpen(false)}
-                  title="Close Menu"
-                  aria-label="Close Menu"
+                  title={RU_DICTIONARY.nav.closeMenu}
+                  aria-label={RU_DICTIONARY.nav.closeMenu}
                 >
                   <X className="h-6 w-6" />
                 </button>
@@ -526,7 +524,7 @@ export default function Navbar() {
                   ))}
                 </div>
                 <div className="border-t pt-6">
-                  <p className="text-[10px] uppercase font-bold text-[#3B5D3B] mb-3 px-4">Categories</p>
+                  <p className="text-[10px] uppercase font-bold text-[#3B5D3B] mb-3 px-4">{RU_DICTIONARY.nav.categories}</p>
                   <div className="space-y-1">
                     {parentCategories.map(parent => (
                       <MobileNavItem key={parent.category_id} item={parent} country={currentCountry} onClose={() => setMobileOpen(false)} />

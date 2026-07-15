@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { getNotificationPreferences, toggleNotificationPreference } from '@/lib/api';
 import { Mail, Smartphone, MessageSquare, Bell, Loader2, Package, Tag, TrendingDown, Newspaper, Shield, Truck } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { RU_DICTIONARY } from '@/content/ru';
 
 interface Preference {
     preference_id: string;
@@ -14,18 +15,18 @@ interface Preference {
 }
 
 const CHANNEL_META: Record<string, { label: string; description: string; icon: React.ElementType; color: string }> = {
-    email: { label: 'Email', description: 'Receive notifications via email', icon: Mail, color: '#3B5D3B' }, // herbal-green
-    sms: { label: 'SMS', description: 'Receive notifications via text message', icon: Smartphone, color: '#2D4A2D' }, // deep herbal-green
-    whatsapp: { label: 'WhatsApp', description: 'Receive notifications on WhatsApp', icon: MessageSquare, color: '#25D366' },
-    push: { label: 'Push Notifications', description: 'Browser and app push notifications', icon: Bell, color: '#8B7A3D' }, // keeping gold as secondary or shift? user said greenish accents. lets go light green.
+    email: { label: RU_DICTIONARY.profileTab.notificationPreferences.channels.email.label, description: RU_DICTIONARY.profileTab.notificationPreferences.channels.email.desc, icon: Mail, color: '#3B5D3B' }, // herbal-green
+    sms: { label: RU_DICTIONARY.profileTab.notificationPreferences.channels.sms.label, description: RU_DICTIONARY.profileTab.notificationPreferences.channels.sms.desc, icon: Smartphone, color: '#2D4A2D' }, // deep herbal-green
+    whatsapp: { label: RU_DICTIONARY.profileTab.notificationPreferences.channels.whatsapp.label, description: RU_DICTIONARY.profileTab.notificationPreferences.channels.whatsapp.desc, icon: MessageSquare, color: '#25D366' },
+    push: { label: RU_DICTIONARY.profileTab.notificationPreferences.channels.push.label, description: RU_DICTIONARY.profileTab.notificationPreferences.channels.push.desc, icon: Bell, color: '#8B7A3D' }, // keeping gold as secondary or shift? user said greenish accents. lets go light green.
 };
 
 const CATEGORY_META: Record<string, { label: string; description: string; icon: React.ElementType }> = {
-    order_updates: { label: 'Order & Delivery Updates', description: 'Order confirmation, status changes, shipping & delivery', icon: Package },
-    account_security: { label: 'Account & Security', description: 'Login alerts, password changes', icon: Shield },
-    promotions: { label: 'Promotions & Offers', description: 'Sales, discounts, special deals', icon: Tag },
-    price_alerts: { label: 'Price Alerts', description: 'Price drops on wishlist items', icon: TrendingDown },
-    newsletter: { label: 'Newsletter', description: 'Weekly curated content & picks', icon: Newspaper },
+    order_updates: { label: RU_DICTIONARY.profileTab.notificationPreferences.categories.orderUpdates.label, description: RU_DICTIONARY.profileTab.notificationPreferences.categories.orderUpdates.desc, icon: Package },
+    account_security: { label: RU_DICTIONARY.profileTab.notificationPreferences.categories.accountSecurity.label, description: RU_DICTIONARY.profileTab.notificationPreferences.categories.accountSecurity.desc, icon: Shield },
+    promotions: { label: RU_DICTIONARY.profileTab.notificationPreferences.categories.promotions.label, description: RU_DICTIONARY.profileTab.notificationPreferences.categories.promotions.desc, icon: Tag },
+    price_alerts: { label: RU_DICTIONARY.profileTab.notificationPreferences.categories.priceAlerts.label, description: RU_DICTIONARY.profileTab.notificationPreferences.categories.priceAlerts.desc, icon: TrendingDown },
+    newsletter: { label: RU_DICTIONARY.profileTab.notificationPreferences.categories.newsletter.label, description: RU_DICTIONARY.profileTab.notificationPreferences.categories.newsletter.desc, icon: Newspaper },
 };
 
 const CATEGORY_ORDER = ['order_updates', 'account_security', 'promotions', 'price_alerts', 'newsletter'];
@@ -55,7 +56,7 @@ export default function NotificationPreferences({
                 setPreferences(res.data.preferences);
             }
         } catch {
-            toast.error('Failed to load notification preferences');
+            toast.error(RU_DICTIONARY.profileTab.notificationPreferences.toasts.loadFailed);
         } finally {
             setLoading(false);
         }
@@ -89,9 +90,9 @@ export default function NotificationPreferences({
                             : p
                     )
                 );
-                toast.error(res.message || 'Failed to update preference');
+                toast.error(res.message || RU_DICTIONARY.profileTab.notificationPreferences.toasts.updateFailed);
             } else {
-                toast.success('Preference updated successfully');
+                toast.success(RU_DICTIONARY.profileTab.notificationPreferences.toasts.updateSuccess);
             }
         } catch {
             // Revert
@@ -102,7 +103,7 @@ export default function NotificationPreferences({
                         : p
                 )
             );
-            toast.error('Network error. Please try again.');
+            toast.error(RU_DICTIONARY.profileTab.notificationPreferences.toasts.networkError);
         } finally {
             setTogglingKey(null);
         }
@@ -126,9 +127,9 @@ export default function NotificationPreferences({
             {/* Header */}
             {!hideHeader && (
                 <div>
-                    <h2 className="text-lg font-bold text-charcoal">Notification Preferences</h2>
+                    <h2 className="text-lg font-bold text-charcoal">{RU_DICTIONARY.profileTab.notificationPreferences.header.title}</h2>
                     <p className="text-sm text-warm-gray mt-0.5">
-                        Manage how you&apos;d like to receive alerts and updates from us
+                        {RU_DICTIONARY.profileTab.notificationPreferences.header.desc}
                     </p>
                 </div>
             )}
@@ -136,8 +137,8 @@ export default function NotificationPreferences({
             {/* ── Receive Notifications Via ── */}
             <div className="rounded-3xl border border-light-border bg-white overflow-hidden shadow-sm">
                 <div className="px-6 py-4 border-b border-light-border bg-cream/50">
-                    <h3 className="text-base font-bold text-herbal-green">Receive notifications via:</h3>
-                    <p className="text-[10px] font-bold text-warm-gray uppercase tracking-widest mt-1">Select the channels for your periodic awareness</p>
+                    <h3 className="text-base font-bold text-herbal-green">{RU_DICTIONARY.profileTab.notificationPreferences.header.receiveVia}</h3>
+                    <p className="text-[10px] font-bold text-warm-gray uppercase tracking-widest mt-1">{RU_DICTIONARY.profileTab.notificationPreferences.header.selectChannels}</p>
                 </div>
                 <div className="flex flex-col divide-y divide-light-border/50">
                     {/* SMS — active if verified */}
@@ -162,9 +163,9 @@ export default function NotificationPreferences({
                             </div>
                         </div>
                         {isMobileVerified ? (
-                            <span className="rounded-full bg-herbal-green/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-herbal-green border border-herbal-green/10">Active</span>
+                            <span className="rounded-full bg-herbal-green/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-herbal-green border border-herbal-green/10">{RU_DICTIONARY.profileTab.notificationPreferences.badges.active}</span>
                         ) : (
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-warm-gray/60">Unverified</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-warm-gray/60">{RU_DICTIONARY.profileTab.notificationPreferences.badges.unverified}</span>
                         )}
                     </div>
 
@@ -184,7 +185,7 @@ export default function NotificationPreferences({
                                 <span className="text-sm font-bold text-herbal-green">Email</span>
                             </div>
                         </div>
-                        <span className="rounded-full bg-herbal-green/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-herbal-green border border-herbal-green/10">Active</span>
+                        <span className="rounded-full bg-herbal-green/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-herbal-green border border-herbal-green/10">{RU_DICTIONARY.profileTab.notificationPreferences.badges.active}</span>
                     </div>
 
                     {/* WhatsApp — coming soon */}
@@ -196,7 +197,7 @@ export default function NotificationPreferences({
                                 <span className="text-sm font-bold text-warm-gray/80">WhatsApp</span>
                             </div>
                         </div>
-                        <span className="rounded-full bg-light-border/40 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-warm-gray/70">Soon</span>
+                        <span className="rounded-full bg-light-border/40 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-warm-gray/70">{RU_DICTIONARY.profileTab.notificationPreferences.badges.soon}</span>
                     </div>
                 </div>
             </div>
@@ -230,7 +231,7 @@ export default function NotificationPreferences({
                             </div>
                             {isChannelDisabled && (
                                 <div className="text-[9px] font-bold text-burgundy bg-burgundy/5 px-3 py-1.5 rounded-full border border-burgundy/10 uppercase tracking-widest">
-                                    Sanctity verification required
+                                    {RU_DICTIONARY.profileTab.notificationPreferences.badges.verificationRequired}
                                 </div>
                             )}
                         </div>
@@ -288,8 +289,7 @@ export default function NotificationPreferences({
             {/* Footer info */}
             <div className="rounded-xl bg-cream/60 border border-light-border px-5 py-4">
                 <p className="text-xs text-warm-gray leading-relaxed">
-                    <strong className="text-charcoal">Note:</strong> Account security notifications (login alerts, password changes) are always
-                    sent via email for your safety and cannot be fully disabled. SMS notifications require a verified phone number on your account.
+                    <strong className="text-charcoal">{RU_DICTIONARY.profileTab.notificationPreferences.footer.noteLabel}</strong> {RU_DICTIONARY.profileTab.notificationPreferences.footer.noteText}
                 </p>
             </div>
         </div>
