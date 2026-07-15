@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { BlogPost } from '@/lib/api';
+import { RU_DICTIONARY } from '@/content/ru';
 
 interface BlogHeroSectionProps {
     featuredPost: BlogPost | null;
@@ -10,7 +11,7 @@ interface BlogHeroSectionProps {
 export default function BlogHeroSection({ featuredPost }: BlogHeroSectionProps) {
     if (!featuredPost) return null;
 
-    const readTime = featuredPost.reading_time ? `${featuredPost.reading_time} min` : '5 min';
+    const readTime = featuredPost.reading_time ? `${featuredPost.reading_time} ${RU_DICTIONARY.blog.meta.minRead}` : `5 ${RU_DICTIONARY.blog.meta.minRead}`;
     const mainImage = featuredPost.featured_image || featuredPost.cover_image || '/hero-ayurveda.png';
     return (
         <section className="relative overflow-hidden pt-12 pb-16 md:pt-20 md:pb-24">
@@ -55,7 +56,7 @@ export default function BlogHeroSection({ featuredPost }: BlogHeroSectionProps) 
                     <div className="flex flex-col justify-center max-w-xl animate-fade-in-up md:pl-8">
                         <div className="mb-6">
                             <span className="inline-block border border-[#91C934] text-[#91C934] font-semibold uppercase tracking-widest text-[10px] sm:text-xs px-4 py-1.5 rounded-full mb-4">
-                                Featured Wisdom
+                                {RU_DICTIONARY.blog.hero.featuredWisdom}
                             </span>
                         </div>
 
@@ -64,7 +65,7 @@ export default function BlogHeroSection({ featuredPost }: BlogHeroSectionProps) 
                         </h1>
 
                         <p className="text-lg text-warm-gray mb-8 leading-relaxed line-clamp-3">
-                            {featuredPost.excerpt || 'Dive into our latest featured wisdom on holistic health.'}
+                            {featuredPost.excerpt || RU_DICTIONARY.blog.hero.fallbackExcerpt}
                         </p>
 
                         <div className="flex flex-col sm:flex-row sm:items-center gap-6">
@@ -72,7 +73,7 @@ export default function BlogHeroSection({ featuredPost }: BlogHeroSectionProps) 
                                 href={`/blog/${featuredPost.slug}`}
                                 className="inline-flex items-center justify-center px-8 py-4 rounded-full bg-[#91C934] hover:bg-[#7bb42c] text-white font-medium transition-colors duration-300 shadow-lg shadow-herbal-green/20"
                             >
-                                Read Article
+                                {RU_DICTIONARY.blog.hero.readArticle}
                                 <svg className="ml-2 w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                                 </svg>
@@ -82,7 +83,7 @@ export default function BlogHeroSection({ featuredPost }: BlogHeroSectionProps) 
                                 <svg className="w-5 h-5 mr-2 text-vedic-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                {readTime} read
+                                {readTime}
                             </div>
                         </div>
                     </div>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ChevronLeft, BookOpen, Eye, Clock, ChevronRight } from 'lucide-react';
 import { getKBArticle } from '@/lib/api';
+import { RU_DICTIONARY } from '@/content/ru';
 
 export default function KBArticlePage() {
     const params = useParams();
@@ -41,10 +42,10 @@ export default function KBArticlePage() {
                     <div className="w-24 h-24 rounded-[30px] bg-[#4A5D23]/10 flex items-center justify-center mx-auto mb-10">
                         <BookOpen className="h-10 w-10 text-[#4A5D23]" />
                     </div>
-                    <h2 className="text-3xl font-bold text-[#1a2408] mb-4">Ancient Scroll Not Found</h2>
-                    <p className="text-[#5B4A31] mb-10 font-medium">This search did not lead us to the wisdom you seek.</p>
+                    <h2 className="text-3xl font-bold text-[#1a2408] mb-4">{RU_DICTIONARY.helpCenter.knowledgeBase.detail.notFoundTitle}</h2>
+                    <p className="text-[#5B4A31] mb-10 font-medium">{RU_DICTIONARY.helpCenter.knowledgeBase.detail.notFoundDesc}</p>
                     <Link href="/help-center/knowledge-base" className="inline-flex items-center gap-3 bg-[#4A5D23] text-white px-10 py-5 rounded-[20px] font-black uppercase tracking-widest text-sm hover:bg-[#3a491b] transition-all shadow-xl">
-                        <ChevronLeft className="h-5 w-5" /> Return to Archives
+                        <ChevronLeft className="h-5 w-5" /> {RU_DICTIONARY.helpCenter.knowledgeBase.detail.returnArchive}
                     </Link>
                 </div>
             </div>
@@ -72,7 +73,7 @@ export default function KBArticlePage() {
                         <div className="w-10 h-10 rounded-xl bg-white shadow-md flex items-center justify-center group-hover:bg-[#4A5D23] group-hover:text-white transition-all">
                             <ChevronLeft className="h-5 w-5" />
                         </div>
-                        Back to Knowledge Hub
+                        {RU_DICTIONARY.helpCenter.knowledgeBase.detail.backHub}
                     </Link>
                     
                     <h1 className="text-4xl md:text-6xl font-bold text-[#1a2408] mb-8 leading-tight">
@@ -82,16 +83,16 @@ export default function KBArticlePage() {
                     <div className="flex flex-wrap items-center gap-8 text-xs font-black uppercase tracking-[0.2em]">
                         {article.category_name && (
                             <span className="bg-[#4A5D23] text-white px-5 py-2 rounded-full shadow-lg shadow-[#4A5D23]/20">
-                                {article.category_name}
+                                {(RU_DICTIONARY.helpCenter.knowledgeBase.categories as Record<string, string>)[article.category_name] || article.category_name}
                             </span>
                         )}
                         <span className="flex items-center gap-2 text-[#5B4A31]/60">
                             <Eye className="h-4 w-4" />
-                            {article.view_count} ENLIGHTENED
+                            {article.view_count} {RU_DICTIONARY.helpCenter.knowledgeBase.detail.enlightened}
                         </span>
                         <span className="flex items-center gap-2 text-[#5B4A31]/60">
                             <Clock className="h-4 w-4" />
-                            UPDATED {new Date(article.updated_at || article.created_at).toLocaleDateString()}
+                            {RU_DICTIONARY.helpCenter.knowledgeBase.detail.updated} {new Date(article.updated_at || article.created_at).toLocaleDateString()}
                         </span>
                     </div>
                 </div>
@@ -109,7 +110,7 @@ export default function KBArticlePage() {
                 {related && related.length > 0 && (
                     <div className="mt-20">
                         <div className="flex items-center gap-4 mb-8">
-                            <h3 className="text-3xl font-bold text-[#1a2408]">Related Wisdom</h3>
+                            <h3 className="text-3xl font-bold text-[#1a2408]">{RU_DICTIONARY.helpCenter.knowledgeBase.detail.relatedWisdom}</h3>
                             <div className="flex-1 h-px bg-[#4A5D23]/10"></div>
                         </div>
                         <div className="grid gap-6 md:grid-cols-2">

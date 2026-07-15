@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { BlogComment, postBlogComment, getBlogComments, subscribeNewsletter } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
+import { RU_DICTIONARY } from '@/content/ru';
 
 interface CommentSectionProps {
     postId: string;
@@ -49,7 +50,7 @@ function Comment({ comment, postId, onReply }: { comment: BlogComment; postId: s
                         onClick={() => setShowReply(!showReply)}
                         className="mt-1.5 text-xs font-medium text-burgundy/70 hover:text-burgundy transition-colors"
                     >
-                        Reply
+                        {RU_DICTIONARY.blog.comments.replyBtn}
                     </button>
 
                     {showReply && (
@@ -57,13 +58,13 @@ function Comment({ comment, postId, onReply }: { comment: BlogComment; postId: s
                             <input
                                 value={replyName}
                                 onChange={e => setReplyName(e.target.value)}
-                                placeholder="Your name (optional if logged in)"
+                                placeholder={RU_DICTIONARY.blog.comments.namePlaceholderReply}
                                 className="w-full rounded-lg border border-light-border px-3 py-2 text-sm focus:border-burgundy/40 focus:outline-none"
                             />
                             <textarea
                                 value={replyBody}
                                 onChange={e => setReplyBody(e.target.value)}
-                                placeholder="Write a reply..."
+                                placeholder={RU_DICTIONARY.blog.comments.replyPlaceholder}
                                 rows={2}
                                 className="w-full rounded-lg border border-light-border px-3 py-2 text-sm resize-none focus:border-burgundy/40 focus:outline-none"
                             />
@@ -73,13 +74,13 @@ function Comment({ comment, postId, onReply }: { comment: BlogComment; postId: s
                                     disabled={submitting || !replyBody.trim()}
                                     className="px-4 py-1.5 rounded-lg bg-burgundy text-white text-xs font-semibold hover:bg-burgundy-dark transition-colors disabled:opacity-50"
                                 >
-                                    {submitting ? 'Posting...' : 'Post Reply'}
+                                    {submitting ? RU_DICTIONARY.blog.comments.posting : RU_DICTIONARY.blog.comments.postReply}
                                 </button>
                                 <button
                                     onClick={() => setShowReply(false)}
                                     className="px-4 py-1.5 rounded-lg border border-light-border text-sm text-warm-gray hover:bg-cream-dark transition-colors text-xs"
                                 >
-                                    Cancel
+                                    {RU_DICTIONARY.blog.comments.cancel}
                                 </button>
                             </div>
                         </div>
@@ -155,14 +156,14 @@ export default function BlogCommentSection({ postId, initialComments }: CommentS
             setBody('');
             setName('');
             setEmail('');
-            setMessage(res.message || 'Comment posted!');
+            setMessage(res.message || RU_DICTIONARY.blog.comments.postSuccess);
             if (res.data) {
                 setComments(prev => [res.data, ...prev]);
             } else {
                 await refresh();
             }
         } else {
-            setMessage(res.message || 'Failed to post comment');
+            setMessage(res.message || RU_DICTIONARY.blog.comments.postFail);
         }
         setSubmitting(false);
     };
@@ -171,7 +172,7 @@ export default function BlogCommentSection({ postId, initialComments }: CommentS
         <section className="mt-12">
             <h3 className="text-xl font-bold text-charcoal mb-6 flex items-center gap-2">
                 <svg className="w-5 h-5 text-burgundy" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-                Comments ({comments.length})
+                {RU_DICTIONARY.blog.comments.title} ({comments.length})
             </h3>
 
             {/* Comment Form */}
@@ -180,13 +181,13 @@ export default function BlogCommentSection({ postId, initialComments }: CommentS
                     <input
                         value={name}
                         onChange={e => setName(e.target.value)}
-                        placeholder="Your name"
+                        placeholder={RU_DICTIONARY.blog.comments.namePlaceholder}
                         className="rounded-lg border border-light-border px-3 py-2.5 text-sm focus:border-burgundy/40 focus:outline-none transition-colors"
                     />
                     <input
                         value={email}
                         onChange={e => setEmail(e.target.value)}
-                        placeholder="Email (optional)"
+                        placeholder={RU_DICTIONARY.blog.comments.emailPlaceholder}
                         type="email"
                         className="rounded-lg border border-light-border px-3 py-2.5 text-sm focus:border-burgundy/40 focus:outline-none transition-colors"
                     />
@@ -194,7 +195,7 @@ export default function BlogCommentSection({ postId, initialComments }: CommentS
                 <textarea
                     value={body}
                     onChange={e => setBody(e.target.value)}
-                    placeholder="Share your thoughts..."
+                    placeholder={RU_DICTIONARY.blog.comments.commentPlaceholder}
                     rows={3}
                     className="w-full rounded-lg border border-light-border px-3 py-2.5 text-sm resize-none focus:border-burgundy/40 focus:outline-none transition-colors"
                     required
@@ -208,7 +209,7 @@ export default function BlogCommentSection({ postId, initialComments }: CommentS
                         disabled={submitting || !body.trim()}
                         className="px-5 py-2 rounded-lg bg-burgundy text-white text-sm font-semibold hover:bg-burgundy-dark transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {submitting ? 'Posting...' : 'Post Comment'}
+                        {submitting ? RU_DICTIONARY.blog.comments.posting : RU_DICTIONARY.blog.comments.postComment}
                     </button>
                 </div>
             </form>
@@ -216,7 +217,7 @@ export default function BlogCommentSection({ postId, initialComments }: CommentS
             {/* Comment List */}
             <div className="space-y-6">
                 {comments.length === 0 ? (
-                    <p className="text-center text-warm-gray py-8">No comments yet. Be the first to share your thoughts!</p>
+                    <p className="text-center text-warm-gray py-8">{RU_DICTIONARY.blog.comments.noComments}</p>
                 ) : (
                     comments.map(comment => (
                         <Comment key={comment.comment_id} comment={comment} postId={postId} onReply={handleReplyDone} />

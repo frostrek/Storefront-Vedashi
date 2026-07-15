@@ -2,6 +2,7 @@
 
 import { recordBlogShare } from '@/lib/api';
 import toast from 'react-hot-toast';
+import { RU_DICTIONARY } from '@/content/ru';
 
 interface SocialShareBarProps {
     shareUrls?: Record<string, string>;
@@ -42,8 +43,8 @@ export default function SocialShareBar({ shareUrls, postId, title }: SocialShare
         recordBlogShare(postId, key);
         if (key === 'copy_link') {
             navigator.clipboard.writeText(url || window.location.href)
-                .then(() => toast.success('Link copied to clipboard!'))
-                .catch(() => toast.error('Failed to copy link'));
+                .then(() => toast.success(RU_DICTIONARY.blog.share.copied))
+                .catch(() => toast.error(RU_DICTIONARY.blog.share.failedCopy));
             return;
         }
         if (url) window.open(url, '_blank', 'width=600,height=400');
@@ -51,13 +52,13 @@ export default function SocialShareBar({ shareUrls, postId, title }: SocialShare
 
     return (
         <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-warm-gray mr-1">Share</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-warm-gray mr-1">{RU_DICTIONARY.blog.share.shareLabel}</span>
             {platforms.map(p => (
                 <button
                     key={p.key}
                     onClick={() => handleShare(p.key, shareUrls?.[p.key])}
                     className="w-9 h-9 rounded-full border border-light-border bg-white flex items-center justify-center text-warm-gray hover:text-burgundy hover:border-burgundy/30 hover:bg-burgundy/5 transition-all duration-300"
-                    title={`Share on ${p.label}`}
+                    title={`${RU_DICTIONARY.blog.share.shareOn} ${p.label}`}
                 >
                     {p.icon}
                 </button>
@@ -66,7 +67,7 @@ export default function SocialShareBar({ shareUrls, postId, title }: SocialShare
             <button
                 onClick={() => handleShare('copy_link', shareUrls?.copy_link)}
                 className="w-9 h-9 rounded-full border border-light-border bg-white flex items-center justify-center text-warm-gray hover:text-burgundy hover:border-burgundy/30 hover:bg-burgundy/5 transition-all duration-300"
-                title="Copy link"
+                title={RU_DICTIONARY.blog.share.copyLink}
             >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
             </button>

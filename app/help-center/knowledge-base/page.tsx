@@ -8,6 +8,7 @@ import {
     ArrowRight, Clock, Leaf, HelpCircle, FileText
 } from 'lucide-react';
 import { getKBCategories, getKBArticles, searchKBArticles } from '@/lib/api';
+import { RU_DICTIONARY } from '@/content/ru';
 
 /* ── Category icon mapping ─────────────────────────────────── */
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
@@ -91,15 +92,15 @@ export default function KnowledgeBasePage() {
                     {/* Resource Hub badge */}
                     <div className="inline-flex items-center gap-3 bg-white/40 backdrop-blur-md border border-[#4A5D23]/10 rounded-full px-6 py-2 mb-10 shadow-sm">
                         <Sparkles className="h-4 w-4 text-[#4A5D23]" />
-                        <span className="text-xs font-black tracking-[0.2em] uppercase text-[#1a2408]">Vedashi Resource Hub</span>
+                        <span className="text-xs font-black tracking-[0.2em] uppercase text-[#1a2408]">{RU_DICTIONARY.helpCenter.knowledgeBase.hero.badge}</span>
                     </div>
 
                     <h1 className="text-5xl md:text-7xl font-bold text-[#1a2408] mb-8 leading-tight">
-                        Sacred <span className="text-[#4A5D23]">Knowledge</span> Archive
+                        {RU_DICTIONARY.helpCenter.knowledgeBase.hero.titlePart1} <span className="text-[#4A5D23]">{RU_DICTIONARY.helpCenter.knowledgeBase.hero.titlePart2}</span>
                     </h1>
 
                     <p className="text-[#5B4A31] text-lg md:text-xl max-w-2xl mx-auto mb-12 font-medium leading-relaxed">
-                        Deep dive into our collection of herbal guides, traditional practices, and modern Ayurvedic research.
+                        {RU_DICTIONARY.helpCenter.knowledgeBase.hero.desc}
                     </p>
 
                     {/* Search bar */}
@@ -114,7 +115,7 @@ export default function KnowledgeBasePage() {
                                     if (!e.target.value.trim()) setSearchResults(null);
                                 }}
                                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                                placeholder="Search the archive..."
+                                placeholder={RU_DICTIONARY.helpCenter.knowledgeBase.hero.searchPlaceholder}
                                 className="w-full pl-16 pr-20 py-6 rounded-[24px] bg-white/90 backdrop-blur-xl text-[#1a2408] placeholder-[#5B4A31]/40 text-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23]/20 shadow-2xl transition-all border border-[#4A5D23]/5"
                             />
                             <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-6 w-6 text-[#4A5D23]" />
@@ -137,14 +138,14 @@ export default function KnowledgeBasePage() {
                     <div className="flex items-center justify-between mb-12 animate-in fade-in slide-in-from-top-4">
                         <h2 className="text-3xl font-bold text-[#1a2408]">
                             {searchResults.length > 0
-                                ? `${searchResults.length} Wisdom Found for "${searchQuery}"`
-                                : 'No results found in the hub'}
+                                ? `${searchResults.length} ${RU_DICTIONARY.helpCenter.knowledgeBase.results.wisdomFound} "${searchQuery}"`
+                                : RU_DICTIONARY.helpCenter.knowledgeBase.results.noResultsHub}
                         </h2>
                         <button
                             onClick={() => { setSearchQuery(''); setSearchResults(null); }}
                             className="text-sm font-black uppercase tracking-widest text-[#4A5D23] hover:text-[#3a491b] flex items-center gap-2 cursor-pointer bg-white px-6 py-3 rounded-full border border-[#4A5D23]/5 shadow-sm"
                         >
-                            <ChevronLeft className="h-4 w-4" /> Clear Search
+                            <ChevronLeft className="h-4 w-4" /> {RU_DICTIONARY.helpCenter.knowledgeBase.results.clearSearch}
                         </button>
                     </div>
                 )}
@@ -164,7 +165,7 @@ export default function KnowledgeBasePage() {
                                 : 'bg-white text-[#5B4A31] border border-[#4A5D23]/5 hover:border-[#4A5D23]/30'
                                 }`}
                         >
-                            All Articles
+                            {RU_DICTIONARY.helpCenter.knowledgeBase.categories.allArticles}
                         </button>
                         {categories.map((cat: any) => (
                             <button
@@ -175,7 +176,7 @@ export default function KnowledgeBasePage() {
                                     : 'bg-white text-[#5B4A31] border border-[#4A5D23]/5 hover:border-[#4A5D23]/30'
                                     }`}
                             >
-                                {cat.name}
+                                {(RU_DICTIONARY.helpCenter.knowledgeBase.categories as Record<string, string>)[cat.name] || cat.name}
                             </button>
                         ))}
                     </div>
@@ -204,9 +205,9 @@ export default function KnowledgeBasePage() {
                         <div className="w-24 h-24 rounded-[30px] bg-[#4A5D23]/10 flex items-center justify-center mx-auto mb-10">
                             <BookOpen className="h-10 w-10 text-[#4A5D23]" />
                         </div>
-                        <h3 className="text-3xl font-bold text-[#1a2408] mb-4">The library is currently silent</h3>
+                        <h3 className="text-3xl font-bold text-[#1a2408] mb-4">{RU_DICTIONARY.helpCenter.knowledgeBase.emptyState.title}</h3>
                         <p className="text-lg text-[#5B4A31] max-w-sm mx-auto font-medium">
-                            {searchResults ? 'Our archive doesn\'t seem to contain that wisdom. Try adjusting your search.' : 'Our scholars are preparing new guides for you.'}
+                            {searchResults ? RU_DICTIONARY.helpCenter.knowledgeBase.emptyState.searchDesc : RU_DICTIONARY.helpCenter.knowledgeBase.emptyState.defaultDesc}
                         </p>
                     </div>
                 ) : (
@@ -227,12 +228,12 @@ export default function KnowledgeBasePage() {
                                         <div className="flex items-center justify-between mb-8">
                                             {article.category_name && (
                                                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#4A5D23] bg-[#4A5D23]/5 px-4 py-1.5 rounded-full">
-                                                    {article.category_name}
+                                                    {(RU_DICTIONARY.helpCenter.knowledgeBase.categories as Record<string, string>)[article.category_name] || article.category_name}
                                                 </span>
                                             )}
                                             <div className="flex items-center gap-1.5 text-xs font-bold text-[#5B4A31]/50">
                                                 <Clock className="h-3.5 w-3.5" />
-                                                {readTime} MIN READ
+                                                {readTime} {RU_DICTIONARY.helpCenter.knowledgeBase.article.minRead}
                                             </div>
                                         </div>
 
@@ -269,14 +270,14 @@ export default function KnowledgeBasePage() {
                                                 onClick={() => setExpandedId(isExpanded ? null : article.article_id)}
                                                 className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[#5B4A31] hover:text-[#4A5D23] transition-colors cursor-pointer group/btn"
                                             >
-                                                {isExpanded ? 'Collapse' : 'Sneak Peek'}
+                                                {isExpanded ? RU_DICTIONARY.helpCenter.knowledgeBase.article.collapse : RU_DICTIONARY.helpCenter.knowledgeBase.article.sneakPeek}
                                                 <ChevronDown className={`h-4 w-4 transition-transform duration-500 ${isExpanded ? 'rotate-180' : ''}`} />
                                             </button>
                                             <Link
                                                 href={`/help-center/knowledge-base/${article.slug}`}
                                                 className="inline-flex items-center gap-3 bg-[#4A5D23]/5 text-[#4A5D23] px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-[#4A5D23] hover:text-white transition-all ml-auto hover:shadow-lg"
                                             >
-                                                Open Article
+                                                {RU_DICTIONARY.helpCenter.knowledgeBase.article.openArticle}
                                                 <ArrowRight className="h-4 w-4" />
                                             </Link>
                                         </div>
@@ -296,14 +297,14 @@ export default function KnowledgeBasePage() {
                         <div className="w-14 h-14 rounded-2xl bg-white shadow-xl flex items-center justify-center group-hover:bg-[#4A5D23] group-hover:text-white transition-all">
                             <ChevronLeft className="h-7 w-7" />
                         </div>
-                        Help Center Home
+                        {RU_DICTIONARY.helpCenter.knowledgeBase.footer.home}
                     </Link>
                     <Link
                         href="/help-center/support"
                         className="inline-flex items-center gap-4 bg-[#4A5D23] text-white px-10 py-5 rounded-2xl text-lg font-black uppercase tracking-widest hover:bg-[#3a491b] transition-all shadow-2xl hover:-translate-y-1"
                     >
                         <HeadphonesIcon className="h-6 w-6" />
-                        Request Support
+                        {RU_DICTIONARY.helpCenter.knowledgeBase.footer.requestSupport}
                     </Link>
                 </div>
             </div>

@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { getFaqs, searchFaqs } from '@/lib/api';
 import { generateFAQPageJsonLd } from '@/lib/seo';
+import { RU_DICTIONARY } from '@/content/ru';
 
 interface Faq {
     faq_id: string;
@@ -89,11 +90,11 @@ export default function FAQPage() {
                 <div className="max-w-4xl mx-auto text-center relative z-10">
                     <div className="inline-flex items-center gap-2 bg-[#4A5D23]/10 backdrop-blur-sm border border-[#4A5D23]/10 rounded-full px-5 py-2 mb-6 shadow-sm">
                         <Sparkles className="h-4 w-4 text-[#4A5D23]" />
-                        <span className="text-xs font-bold tracking-[0.2em] uppercase text-[#2D3A15]">Knowledge Base</span>
+                        <span className="text-xs font-bold tracking-[0.2em] uppercase text-[#2D3A15]">{RU_DICTIONARY.helpCenter.faqPage.hero.badge}</span>
                     </div>
 
                     <h1 className="text-4xl md:text-6xl font-bold text-[#1a2408] mb-6 leading-tight">
-                        How can we help you <em className="not-italic text-[#4A5D23]">grow</em>?
+                        {RU_DICTIONARY.helpCenter.faqPage.hero.titlePart1} <em className="not-italic text-[#4A5D23]">{RU_DICTIONARY.helpCenter.faqPage.hero.titlePart2}</em>
                     </h1>
 
                     {/* Search bar */}
@@ -107,7 +108,7 @@ export default function FAQPage() {
                                 if (!e.target.value.trim()) setSearchResults(null);
                             }}
                             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                            placeholder="Search for tracking, returns, or ingredients..."
+                            placeholder={RU_DICTIONARY.helpCenter.faqPage.hero.searchPlaceholder}
                             className="relative w-full pl-14 pr-4 py-5 rounded-2xl bg-white/90 backdrop-blur-sm text-gray-900 placeholder-gray-400 text-lg border border-[#4A5D23]/10 focus:outline-none focus:ring-2 focus:ring-[#4A5D23] shadow-2xl transition-all"
                         />
                         <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-6 w-6 text-[#4A5D23]" />
@@ -125,14 +126,14 @@ export default function FAQPage() {
                             <h2 className="text-2xl font-bold text-[#1a2408] flex items-center gap-3">
                                 <div className="w-1.5 h-8 bg-[#4A5D23] rounded-full"></div>
                                 {searchResults.length > 0
-                                    ? `${searchResults.length} result${searchResults.length !== 1 ? 's' : ''} for "${searchQuery}"`
-                                    : 'No results found'}
+                                    ? `${searchResults.length} ${searchResults.length !== 1 ? RU_DICTIONARY.helpCenter.faqPage.results.resultsFor : RU_DICTIONARY.helpCenter.faqPage.results.resultFor} "${searchQuery}"`
+                                    : RU_DICTIONARY.helpCenter.faqPage.results.noResults}
                             </h2>
                             <button
                                 onClick={() => { setSearchQuery(''); setSearchResults(null); }}
                                 className="px-4 py-2 rounded-xl bg-[#4A5D23]/5 text-[#4A5D23] hover:bg-[#4A5D23] hover:text-white font-bold text-sm transition-all shadow-sm"
                             >
-                                Clear search
+                                {RU_DICTIONARY.helpCenter.faqPage.results.clearSearch}
                             </button>
                         </div>
                         {searchResults.length > 0 ? (
@@ -159,7 +160,7 @@ export default function FAQPage() {
                                             </div>
                                             <div className="px-6 pb-6">
                                                 <span className="text-[10px] uppercase tracking-widest font-black px-3 py-1 rounded-full bg-[#4A5D23]/10 text-[#4A5D23]">
-                                                    {faq.category}
+                                                    {(RU_DICTIONARY.helpCenter.faqPage.categories as Record<string, string>)[faq.category] || faq.category}
                                                 </span>
                                             </div>
                                         </div>
@@ -169,8 +170,8 @@ export default function FAQPage() {
                         ) : (
                             <div className="text-center py-20 bg-white rounded-3xl border border-[#4A5D23]/5">
                                 <Search className="h-16 w-16 text-gray-200 mx-auto mb-6" />
-                                <h3 className="text-2xl font-bold text-[#1a2408] mb-2">No matching questions</h3>
-                                <p className="text-[#5B4A31]">Try a different search term or browse our categories below.</p>
+                                <h3 className="text-2xl font-bold text-[#1a2408] mb-2">{RU_DICTIONARY.helpCenter.faqPage.results.noMatchingTitle}</h3>
+                                <p className="text-[#5B4A31]">{RU_DICTIONARY.helpCenter.faqPage.results.noMatchingDesc}</p>
                             </div>
                         )}
                     </div>
@@ -181,10 +182,10 @@ export default function FAQPage() {
                     <div className="flex-1 min-w-0">
                         <div className="mb-12">
                             <h2 className="text-3xl md:text-5xl font-bold text-[#1a2408] mb-4">
-                                Frequently Asked Questions
+                                {RU_DICTIONARY.helpCenter.faqPage.main.title}
                             </h2>
                             <p className="text-lg text-[#5B4A31] max-w-2xl leading-relaxed">
-                                Curated answers for our most common inquiries, rooted in clarity and convenience.
+                                {RU_DICTIONARY.helpCenter.faqPage.main.desc}
                             </p>
                         </div>
 
@@ -211,8 +212,8 @@ export default function FAQPage() {
                             /* Empty state */
                             <div className="text-center py-24 bg-white rounded-[40px] border border-[#4A5D23]/5">
                                 <HelpCircle className="h-20 w-20 text-gray-100 mx-auto mb-6" />
-                                <h3 className="text-2xl font-bold text-[#1a2408] mb-2">No FAQs available</h3>
-                                <p className="text-[#5B4A31]">Please check back later as we grow our knowledge base.</p>
+                                <h3 className="text-2xl font-bold text-[#1a2408] mb-2">{RU_DICTIONARY.helpCenter.faqPage.main.noFaqsTitle}</h3>
+                                <p className="text-[#5B4A31]">{RU_DICTIONARY.helpCenter.faqPage.main.noFaqsDesc}</p>
                             </div>
                         ) : !searchResults && (
                             /* Category-grouped FAQ sections */
@@ -232,7 +233,7 @@ export default function FAQPage() {
                                                 <div className="w-12 h-12 rounded-2xl bg-[#4A5D23]/10 flex items-center justify-center shadow-inner">
                                                     <Icon className="h-6 w-6 text-[#4A5D23]" />
                                                 </div>
-                                                <h3 className="text-2xl font-bold text-[#1a2408] tracking-tight">{category}</h3>
+                                                <h3 className="text-2xl font-bold text-[#1a2408] tracking-tight">{(RU_DICTIONARY.helpCenter.faqPage.categories as Record<string, string>)[category] || category}</h3>
                                             </div>
 
                                             {/* FAQ items */}
@@ -291,20 +292,16 @@ export default function FAQPage() {
                                             <div className="w-10 h-10 rounded-full bg-[#4A5D23] flex items-center justify-center shadow-lg">
                                                 <ShieldCheck className="h-5 w-5 text-white" />
                                             </div>
-                                            <span className="text-xs font-black text-[#A6BF8F] uppercase tracking-[0.2em]">Featured</span>
+                                            <span className="text-xs font-black text-[#A6BF8F] uppercase tracking-[0.2em]">{RU_DICTIONARY.helpCenter.faqPage.sidebar.featured}</span>
                                         </div>
                                         <Leaf className="h-10 w-10 text-[#4A5D23]/40 -mr-2" />
                                     </div>
-                                    <h3 className="text-2xl font-bold text-[#F2E8CF] mb-4">Our Organic Promise</h3>
+                                    <h3 className="text-2xl font-bold text-[#F2E8CF] mb-4">{RU_DICTIONARY.helpCenter.faqPage.sidebar.promiseTitle}</h3>
                                     <p className="text-base text-[#A6BF8F] leading-relaxed mb-8 font-medium">
-                                        Transparecy is our root. Every Vedashi product is verified for purity and environmental impact.
+                                        {RU_DICTIONARY.helpCenter.faqPage.sidebar.promiseDesc}
                                     </p>
                                     <ul className="space-y-4 mb-10">
-                                        {[
-                                            'Certified Organic Extracts',
-                                            'Regenerative Sourcing',
-                                            'No Synthetic Fragrances',
-                                        ].map((item) => (
+                                        {RU_DICTIONARY.helpCenter.faqPage.sidebar.promiseItems.map((item) => (
                                             <li key={item} className="flex items-center gap-3 text-sm text-[#FDFBF7] font-semibold">
                                                 <div className="w-2 h-2 rounded-full bg-[#A6BF8F] shadow-[0_0_8px_rgba(166,191,143,0.5)]" />
                                         {item}
@@ -317,26 +314,26 @@ export default function FAQPage() {
                             {/* Still need help? */}
                             <div className="bg-white rounded-[40px] border border-[#4A5D23]/5 p-10 shadow-xl relative overflow-hidden">
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-[#4A5D23]/5 rounded-bl-[100px] pointer-events-none"></div>
-                                <h3 className="text-2xl font-bold text-[#1a2408] mb-4">Need More Help?</h3>
+                                <h3 className="text-2xl font-bold text-[#1a2408] mb-4">{RU_DICTIONARY.helpCenter.faqPage.sidebar.needHelpTitle}</h3>
                                 <p className="text-base text-[#5B4A31] leading-relaxed mb-8 font-medium">
-                                    Our Ayurvedic experts are rooted in knowledge and ready to assist you.
+                                    {RU_DICTIONARY.helpCenter.faqPage.sidebar.needHelpDesc}
                                 </p>
                                 <Link
                                     href="/help-center/support"
                                     className="flex items-center justify-center gap-3 bg-[#4A5D23] text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-[#3a491b] transition-all shadow-lg hover:-translate-y-1"
                                 >
                                     <Mail className="h-5 w-5" />
-                                    Contact Us
+                                    {RU_DICTIONARY.helpCenter.faqPage.sidebar.contactUs}
                                 </Link>
                                 <div className="flex items-center justify-around mt-10 pt-8 border-t border-gray-100">
                                     <div className="flex flex-col items-center gap-1">
                                         <Clock className="h-6 w-6 text-[#4A5D23] opacity-60" />
-                                        <span className="text-xs font-bold text-gray-500 uppercase tracking-widest mt-2">Mon – Fri</span>
+                                        <span className="text-xs font-bold text-gray-500 uppercase tracking-widest mt-2">{RU_DICTIONARY.helpCenter.faqPage.sidebar.monFri}</span>
                                     </div>
                                     <div className="w-px h-8 bg-gray-100"></div>
                                     <div className="flex flex-col items-center gap-1">
                                         <Mail className="h-6 w-6 text-[#4A5D23] opacity-60" />
-                                        <span className="text-xs font-bold text-gray-500 uppercase tracking-widest mt-2">24h Reply</span>
+                                        <span className="text-xs font-bold text-gray-500 uppercase tracking-widest mt-2">{RU_DICTIONARY.helpCenter.faqPage.sidebar.reply24h}</span>
                                     </div>
                                 </div>
                             </div>
@@ -353,13 +350,13 @@ export default function FAQPage() {
                         <div className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center group-hover:bg-[#4A5D23] group-hover:text-white transition-all">
                             <ChevronLeft className="h-6 w-6" />
                         </div>
-                        Help Center Home
+                        {RU_DICTIONARY.helpCenter.faqPage.footer.home}
                     </Link>
                     <Link
                         href="/help-center/support"
                         className="inline-flex items-center gap-3 bg-white text-[#4A5D23] border-2 border-[#4A5D23] px-10 py-5 rounded-[20px] font-black text-lg hover:bg-[#4A5D23] hover:text-white transition-all shadow-xl hover:-translate-y-1"
                     >
-                        Submit Support Ticket
+                        {RU_DICTIONARY.helpCenter.faqPage.footer.submitTicket}
                     </Link>
                 </div>
             </div>

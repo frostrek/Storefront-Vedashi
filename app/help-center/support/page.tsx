@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { createSupportTicket, getMySupportTickets } from '@/lib/api';
 import toast from 'react-hot-toast';
+import { RU_DICTIONARY } from '@/content/ru';
 
 const CATEGORIES = ['Orders', 'Payments', 'Shipping & Delivery', 'Product Issues', 'Returns & Refunds', 'Account Support', 'Other'];
 const PRIORITIES = ['low', 'medium', 'high', 'urgent'] as const;
@@ -137,7 +138,7 @@ function SupportContent() {
     };
 
     return (
-        <div className="min-h-screen bg-[#FDFBF7]">
+        <div className="min-h-screen bg-[#FFFFFF]">
             {/* ═══════ AUTH GATE ═══════ */}
             {!isAuthenticated ? (
                 <section className="relative min-h-[60vh] flex items-center justify-center overflow-hidden py-24 px-6">
@@ -159,16 +160,16 @@ function SupportContent() {
                             <AlertCircle className="h-12 w-12 text-[#4A5D23]" />
                         </div>
                         <h1 className="text-4xl md:text-5xl font-bold text-[#1a2408] mb-6 leading-tight">
-                            Sign in to access <span className="text-[#4A5D23]">support</span>
+                            {RU_DICTIONARY.helpCenter.support.authGate.titlePart1} <span className="text-[#4A5D23]">{RU_DICTIONARY.helpCenter.support.authGate.titlePart2}</span>
                         </h1>
                         <p className="text-[#5B4A31] text-lg mb-10 font-medium max-w-sm mx-auto">
-                            You need to be logged in to submit and track your support tickets.
+                            {RU_DICTIONARY.helpCenter.support.authGate.desc}
                         </p>
                         <Link 
                             href={`/login`} 
                             className="inline-flex items-center gap-3 bg-[#4A5D23] text-white px-10 py-4 rounded-[20px] font-bold text-lg hover:bg-[#3a491b] hover:shadow-2xl hover:-translate-y-1 transition-all shadow-xl"
                         >
-                            Sign In Now
+                            {RU_DICTIONARY.helpCenter.support.authGate.signIn}
                         </Link>
                     </div>
                 </section>
@@ -179,11 +180,11 @@ function SupportContent() {
                     <div className="bg-white/80 backdrop-blur-md border-b border-[#4A5D23]/5 sticky top-0 z-50">
                         <div className="max-w-4xl mx-auto px-6 py-5">
                             <nav className="flex items-center gap-3 text-sm font-bold tracking-wide">
-                                <Link href={`/help-center`} className="text-[#5B4A31] hover:text-[#4A5D23] transition-colors">Help & Support</Link>
+                                <Link href={`/help-center`} className="text-[#5B4A31] hover:text-[#4A5D23] transition-colors">{RU_DICTIONARY.helpCenter.support.create.breadcrumbHelp}</Link>
                                 <ChevronDown className="h-4 w-4 text-gray-300 -rotate-90" />
-                                <Link href={`/help-center/support`} onClick={(e) => { e.preventDefault(); setView('list'); }} className="text-[#5B4A31] hover:text-[#4A5D23] transition-colors cursor-pointer">Support Tickets</Link>
+                                <Link href={`/help-center/support`} onClick={(e) => { e.preventDefault(); setView('list'); }} className="text-[#5B4A31] hover:text-[#4A5D23] transition-colors cursor-pointer">{RU_DICTIONARY.helpCenter.support.create.breadcrumbList}</Link>
                                 <ChevronDown className="h-4 w-4 text-gray-300 -rotate-90" />
-                                <span className="text-[#4A5D23] font-black uppercase text-xs">Create Ticket</span>
+                                <span className="text-[#4A5D23] font-black uppercase text-xs">{RU_DICTIONARY.helpCenter.support.create.breadcrumbCreate}</span>
                             </nav>
                         </div>
                     </div>
@@ -193,51 +194,51 @@ function SupportContent() {
                             <div className="p-10 md:p-14">
                                 <div className="flex items-center justify-between mb-10">
                                     <div>
-                                        <h2 className="text-3xl md:text-4xl font-bold text-[#1a2408] mb-2">Create New Ticket</h2>
+                                        <h2 className="text-3xl md:text-4xl font-bold text-[#1a2408] mb-2">{RU_DICTIONARY.helpCenter.support.create.title}</h2>
                                         <div className="w-16 h-1 bg-[#4A5D23] rounded-full opacity-30"></div>
                                     </div>
                                     <MessageSquare className="h-10 w-10 text-[#4A5D23]/20" />
                                 </div>
                                 <p className="text-lg text-[#5B4A31] mb-12 font-medium leading-relaxed">
-                                    Fill out the details below and our support engineers will get back to you shortly.
+                                    {RU_DICTIONARY.helpCenter.support.create.desc}
                                 </p>
 
                                 {/* Subject */}
                                 <div className="mb-10 group">
-                                    <label className="block text-sm font-black text-[#1a2408] uppercase tracking-widest mb-3">Subject</label>
+                                    <label className="block text-sm font-black text-[#1a2408] uppercase tracking-widest mb-3">{RU_DICTIONARY.helpCenter.support.create.subject}</label>
                                     <div className="relative">
                                         <input
                                             type="text"
                                             value={form.subject}
                                             onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                                            placeholder="e.g., Unable to sync order status..."
+                                            placeholder={RU_DICTIONARY.helpCenter.support.create.subjectPlaceholder}
                                             className="w-full px-6 py-5 rounded-2xl bg-gray-50/50 border border-transparent text-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23]/20 focus:bg-white focus:border-[#4A5D23]/30 transition-all font-medium"
                                             required
                                         />
                                     </div>
                                     <p className="text-xs text-[#5B4A31]/60 mt-3 font-semibold flex items-center gap-2">
                                         <AlertCircle className="h-4 w-4 text-[#4A5D23]" />
-                                        Use a descriptive title for faster investigation.
+                                        {RU_DICTIONARY.helpCenter.support.create.subjectHint}
                                     </p>
                                 </div>
 
                                 {/* Category + Priority row */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-10">
                                     <div className="group">
-                                        <label className="block text-sm font-black text-[#1a2408] uppercase tracking-widest mb-3">Category</label>
+                                        <label className="block text-sm font-black text-[#1a2408] uppercase tracking-widest mb-3">{RU_DICTIONARY.helpCenter.support.create.category}</label>
                                         <div className="relative">
                                             <select
                                                 value={form.category}
                                                 onChange={(e) => setForm({ ...form, category: e.target.value })}
                                                 className="w-full pl-6 pr-12 py-5 rounded-2xl bg-gray-50/50 border border-transparent text-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23]/20 focus:bg-white focus:border-[#4A5D23]/30 transition-all font-medium appearance-none"
                                             >
-                                                {CATEGORIES.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
+                                                {CATEGORIES.map((cat) => <option key={cat} value={cat}>{(RU_DICTIONARY.helpCenter.support.categories as Record<string, string>)[cat] || cat}</option>)}
                                             </select>
                                             <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 h-6 w-6 text-gray-400 pointer-events-none" />
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-black text-[#1a2408] uppercase tracking-widest mb-3">Priority</label>
+                                        <label className="block text-sm font-black text-[#1a2408] uppercase tracking-widest mb-3">{RU_DICTIONARY.helpCenter.support.create.priority}</label>
                                         <div className="flex bg-gray-50/50 p-1.5 rounded-2xl gap-1 border border-transparent">
                                             {PRIORITIES.map((p) => (
                                                 <button
@@ -258,23 +259,23 @@ function SupportContent() {
 
                                 {/* Order ID (optional) */}
                                 <div className="mb-10">
-                                    <label className="block text-sm font-black text-[#1a2408] uppercase tracking-widest mb-3">Order ID <span className="font-normal text-gray-400 lowercase tracking-normal">(optional)</span></label>
+                                    <label className="block text-sm font-black text-[#1a2408] uppercase tracking-widest mb-3">{RU_DICTIONARY.helpCenter.support.create.orderId} <span className="font-normal text-gray-400 lowercase tracking-normal">{RU_DICTIONARY.helpCenter.support.create.optional}</span></label>
                                     <input
                                         type="text"
                                         value={form.order_id}
                                         onChange={(e) => setForm({ ...form, order_id: e.target.value })}
-                                        placeholder="Enter order ID if applicable"
+                                        placeholder={RU_DICTIONARY.helpCenter.support.create.orderIdPlaceholder}
                                         className="w-full px-6 py-5 rounded-2xl bg-gray-50/50 border border-transparent text-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23]/20 focus:bg-white focus:border-[#4A5D23]/30 transition-all font-medium"
                                     />
                                 </div>
 
                                 {/* Description */}
                                 <div className="mb-10">
-                                    <label className="block text-sm font-black text-[#1a2408] uppercase tracking-widest mb-3">Description</label>
+                                    <label className="block text-sm font-black text-[#1a2408] uppercase tracking-widest mb-3">{RU_DICTIONARY.helpCenter.support.create.description}</label>
                                     <textarea
                                         value={form.description}
                                         onChange={(e) => setForm({ ...form, description: e.target.value })}
-                                        placeholder="Describe the issue in detail..."
+                                        placeholder={RU_DICTIONARY.helpCenter.support.create.descPlaceholder}
                                         rows={8}
                                         maxLength={5000}
                                         className="w-full px-6 py-6 rounded-3xl bg-gray-50/50 border border-transparent text-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23]/20 focus:bg-white focus:border-[#4A5D23]/30 transition-all font-medium resize-none leading-relaxed"
@@ -283,7 +284,7 @@ function SupportContent() {
                                     <div className="flex justify-between mt-4">
                                         <span className="text-xs font-bold text-[#5B4A31]/40 uppercase tracking-widest flex items-center gap-2">
                                             <Leaf className="h-3 w-3" />
-                                            Markdown supported
+                                            {RU_DICTIONARY.helpCenter.support.create.markdownSupported}
                                         </span>
                                         <span className="text-xs font-bold text-[#5B4A31]/40 tracking-widest">{form.description.length} / 5000</span>
                                     </div>
@@ -298,11 +299,11 @@ function SupportContent() {
                                     className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-[#4A5D23] text-white px-12 py-5 rounded-2xl font-black text-lg hover:bg-[#3a491b] transition-all disabled:opacity-50 cursor-pointer shadow-xl hover:-translate-y-1"
                                 >
                                     <Send className="h-6 w-6" />
-                                    {submitting ? 'Creating...' : 'Submit Support Ticket'}
+                                    {submitting ? RU_DICTIONARY.helpCenter.support.create.creating : RU_DICTIONARY.helpCenter.support.create.submit}
                                 </button>
                                 <p className="text-sm font-bold text-[#5B4A31]/60 max-w-xs text-center sm:text-right">
-                                    By creating a ticket, you agree to our{' '}
-                                    <Link href={`/help-center`} className="underline hover:text-[#4A5D23]">Support Terms</Link>.
+                                    {RU_DICTIONARY.helpCenter.support.create.agree}{' '}
+                                    <Link href={`/help-center`} className="underline hover:text-[#4A5D23]">{RU_DICTIONARY.helpCenter.support.create.terms}</Link>.
                                 </p>
                             </div>
                         </form>
@@ -319,8 +320,8 @@ function SupportContent() {
                                     <Ticket className="h-8 w-8 text-[#4A5D23]" />
                                 </div>
                                 <div>
-                                    <h1 className="text-3xl font-bold text-[#1a2408]">Support Tickets</h1>
-                                    <p className="text-base text-[#5B4A31] font-medium mt-1">Manage and track your Vedic support inquiries.</p>
+                                    <h1 className="text-3xl font-bold text-[#1a2408]">{RU_DICTIONARY.helpCenter.support.list.title}</h1>
+                                    <p className="text-base text-[#5B4A31] font-medium mt-1">{RU_DICTIONARY.helpCenter.support.list.desc}</p>
                                 </div>
                             </div>
                             <button
@@ -328,7 +329,7 @@ function SupportContent() {
                                 className="inline-flex items-center gap-3 bg-[#4A5D23] text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-[#3a491b] transition-all cursor-pointer shadow-xl hover:-translate-y-1"
                             >
                                 <Plus className="h-6 w-6" />
-                                New Ticket
+                                {RU_DICTIONARY.helpCenter.support.list.newTicket}
                             </button>
                         </div>
                     </div>
@@ -337,10 +338,10 @@ function SupportContent() {
                         {/* Stats Cards */}
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
                             {[
-                                { label: 'Total Tickets', value: stats.total, icon: Ticket, color: '#4A5D23' },
-                                { label: 'Open Tickets', value: stats.open, icon: Clock, color: '#8B4513' },
-                                { label: 'In Progress', value: stats.inProgress, icon: MessageSquare, color: '#2E5A50' },
-                                { label: 'Resolved', value: stats.resolved, icon: ArrowUpRight, color: '#1a2408' },
+                                { label: RU_DICTIONARY.helpCenter.support.list.statsTotal, value: stats.total, icon: Ticket, color: '#4A5D23' },
+                                { label: RU_DICTIONARY.helpCenter.support.list.statsOpen, value: stats.open, icon: Clock, color: '#8B4513' },
+                                { label: RU_DICTIONARY.helpCenter.support.list.statsInProgress, value: stats.inProgress, icon: MessageSquare, color: '#2E5A50' },
+                                { label: RU_DICTIONARY.helpCenter.support.list.statsResolved, value: stats.resolved, icon: ArrowUpRight, color: '#1a2408' },
                             ].map((stat) => {
                                 const Icon = stat.icon;
                                 return (
@@ -363,7 +364,7 @@ function SupportContent() {
                                         type="text"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        placeholder="Search by ID, subject, or category..."
+                                        placeholder={RU_DICTIONARY.helpCenter.support.list.searchPlaceholder}
                                         className="w-full pl-14 pr-6 py-4 rounded-[20px] bg-gray-50 border-transparent text-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23]/20 focus:bg-white focus:border-[#4A5D23]/30 transition-all font-medium"
                                     />
                                     <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-6 w-6 text-gray-400" />
@@ -374,14 +375,14 @@ function SupportContent() {
                                         onChange={(e) => setStatusFilter(e.target.value)}
                                         className="w-full sm:w-auto px-6 py-4 rounded-[20px] bg-gray-50 border-transparent text-base font-bold focus:outline-none focus:ring-2 focus:ring-[#4A5D23]/20 cursor-pointer appearance-none min-w-[180px]"
                                     >
-                                        <option value="">All Statuses</option>
+                                        <option value="">{RU_DICTIONARY.helpCenter.support.list.filterAll}</option>
                                         <option value="open">Open</option>
                                         <option value="in_progress">In Progress</option>
                                         <option value="resolved">Resolved</option>
                                         <option value="closed">Closed</option>
                                     </select>
                                     <span className="text-sm font-bold text-gray-400 uppercase tracking-widest bg-gray-50 px-5 py-2 rounded-full">
-                                        {filteredTickets.length} Results
+                                        {filteredTickets.length} {RU_DICTIONARY.helpCenter.support.list.results}
                                     </span>
                                 </div>
                             </div>
@@ -404,17 +405,17 @@ function SupportContent() {
                                             <MessageSquare className="h-10 w-10 text-gray-200" />
                                         </div>
                                         <h3 className="text-2xl font-bold text-[#1a2408] mb-4">
-                                            {tickets.length === 0 ? 'No tickets yet' : 'No matching results'}
+                                            {tickets.length === 0 ? RU_DICTIONARY.helpCenter.support.list.noTicketsTitle : RU_DICTIONARY.helpCenter.support.list.noResultsTitle}
                                         </h3>
                                         <p className="text-lg text-[#5B4A31] mb-10 max-w-sm mx-auto font-medium">
-                                            {tickets.length === 0 ? 'Start your journey by creating your first support ticket.' : 'Try adjusting your search or filters.'}
+                                            {tickets.length === 0 ? RU_DICTIONARY.helpCenter.support.list.noTicketsDesc : RU_DICTIONARY.helpCenter.support.list.noResultsDesc}
                                         </p>
                                         {tickets.length === 0 && (
                                             <button
                                                 onClick={() => setView('create')}
                                                 className="inline-flex items-center gap-3 bg-[#4A5D23] text-white px-10 py-4 rounded-2xl font-bold text-lg hover:bg-[#3a491b] transition-all cursor-pointer shadow-xl hover:-translate-y-1"
                                             >
-                                                <Plus className="h-6 w-6" /> Create Ticket
+                                                <Plus className="h-6 w-6" /> {RU_DICTIONARY.helpCenter.support.list.createTicket}
                                             </button>
                                         )}
                                     </div>
@@ -441,10 +442,10 @@ function SupportContent() {
                                                             <div className="flex items-center gap-4 mt-4">
                                                                 <span className={`inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest px-4 py-1.5 rounded-full ${status.bg} ${status.text}`}>
                                                                     <span className={`w-2 h-2 rounded-full ${status.dot} shadow-[0_0_8px_rgba(0,0,0,0.1)]`} />
-                                                                    {status.label}
+                                                                    {(RU_DICTIONARY.helpCenter.support.statuses as Record<string, string>)[status.label] || status.label}
                                                                 </span>
                                                                 <span className={`text-xs font-black uppercase tracking-widest flex items-center gap-1.5 ${priority.color} bg-gray-50 px-3 py-1.5 rounded-full`}>
-                                                                    {priority.icon} {priority.label}
+                                                                    {priority.icon} {(RU_DICTIONARY.helpCenter.support.priorities as Record<string, string>)[priority.label] || priority.label}
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -475,7 +476,7 @@ function SupportContent() {
                                 <div className="w-12 h-12 rounded-2xl bg-white shadow-xl flex items-center justify-center group-hover:bg-[#4A5D23] group-hover:text-white transition-all">
                                     <ChevronLeft className="h-6 w-6" />
                                 </div>
-                                Help Center Home
+                                {RU_DICTIONARY.helpCenter.support.list.home}
                             </Link>
                         </div>
                     </div>

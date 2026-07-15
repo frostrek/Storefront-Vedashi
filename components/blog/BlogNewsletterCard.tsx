@@ -3,6 +3,7 @@ import { subscribeNewsletter } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
+import { RU_DICTIONARY } from '@/content/ru';
 
 export default function BlogNewsletterCard() {
     const [email, setEmail] = useState('');
@@ -19,7 +20,7 @@ export default function BlogNewsletterCard() {
     const handleSubscribe = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!email || !email.includes('@')) {
-            toast.error('Please enter a valid email.');
+            toast.error(RU_DICTIONARY.blog.newsletter.invalidEmail);
             return;
         }
 
@@ -27,13 +28,13 @@ export default function BlogNewsletterCard() {
         try {
             const res = await subscribeNewsletter(email);
             if (res.success) {
-                toast.success('You have joined the Sanctuary!');
+                toast.success(RU_DICTIONARY.blog.newsletter.successMessage);
                 setEmail('');
             } else {
-                toast.error(res.message || 'Failed to subscribe.');
+                toast.error(res.message || RU_DICTIONARY.blog.newsletter.failMessage);
             }
         } catch (error) {
-            toast.error('Connection error. Please try again.');
+            toast.error(RU_DICTIONARY.blog.newsletter.error);
         } finally {
             setLoading(false);
         }
@@ -49,17 +50,17 @@ export default function BlogNewsletterCard() {
                 </div>
 
                 <h3 className="text-2xl md:text-3xl font-bold mb-3">
-                    The Rituals List
+                    {RU_DICTIONARY.blog.newsletter.title}
                 </h3>
 
                 <p className="text-charcoal text-sm md:text-base mb-8 leading-relaxed">
-                    Weekly drops of Vedic wisdom, seasonal recipes, and mindful rituals for the modern soul.
+                    {RU_DICTIONARY.blog.newsletter.description}
                 </p>
 
                 <form className="space-y-4" onSubmit={handleSubscribe}>
                     <input
                         type="email"
-                        placeholder="your@email.com"
+                        placeholder={RU_DICTIONARY.blog.newsletter.emailPlaceholder}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         disabled={loading}
@@ -72,13 +73,13 @@ export default function BlogNewsletterCard() {
                         disabled={loading}
                         className="w-full rounded-full py-4 text-sm md:text-base font-bold bg-[#91C934] hover:bg-[#7bb42c] text-white transition-all duration-300 shadow-lg hover:shadow-[#91C934]/30 active:scale-[0.98] disabled:opacity-70 flex items-center justify-center min-h-[56px]"
                     >
-                        {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Join the Sanctuary'}
+                        {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : RU_DICTIONARY.blog.newsletter.joinBtn}
                     </button>
                 </form>
 
                 <div className="mt-6 border-t border-light-border/60 pt-4">
                     <p className="text-[10px] md:text-xs text-warm-gray/60 tracking-wider uppercase">
-                        Strictly Private. No Spam. Pure Wisdom.
+                        {RU_DICTIONARY.blog.newsletter.privacy}
                     </p>
                 </div>
             </div>

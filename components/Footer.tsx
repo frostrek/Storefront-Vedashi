@@ -398,7 +398,7 @@ export default function Footer() {
                                             onClick={openSettings}
                                             className="text-[11px] sm:text-[12px] text-gray-400 hover:text-white transition-colors duration-200 bg-transparent border-none p-0 cursor-pointer text-left"
                                         >
-                                            Cookie Settings
+                                            {RU_DICTIONARY.footer.cookieSettings || 'Cookie Settings'}
                                         </button>
                                     </li>
                                 </ul>

@@ -1,5 +1,7 @@
 'use client';
 
+import { RU_DICTIONARY } from '@/content/ru';
+
 interface BlogCategoryFiltersProps {
     categories: string[];
     activeCategory: string;
@@ -15,8 +17,13 @@ export default function BlogCategoryFilters({
     searchTerm,
     onSearchChange
 }: BlogCategoryFiltersProps) {
+    const getCategoryTranslation = (cat: string) => {
+        const map = RU_DICTIONARY.blog.categoriesMap as Record<string, string>;
+        return map[cat] || cat;
+    };
+
     return (
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 py-6 border-y border-light-border/40">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10 bg-white/40 p-4 rounded-3xl backdrop-blur-sm border border-light-border/40">
             {/* Category Pills */}
             <div className="flex flex-wrap items-center gap-2">
                 <button
@@ -26,7 +33,7 @@ export default function BlogCategoryFilters({
                         : 'bg-white border border-[#91C934]/50 text-warm-gray hover:border-[#91C934]/50 hover:text-[#91C934]'
                         }`}
                 >
-                    All
+                    {RU_DICTIONARY.blog.filters.all}
                 </button>
                 {categories.map((cat) => (
                     <button
@@ -37,7 +44,7 @@ export default function BlogCategoryFilters({
                             : 'bg-white border border-[#91C934]/50 text-warm-gray hover:border-[#91C934]/50 hover:text-[#91C934]'
                             }`}
                     >
-                        {cat}
+                        {getCategoryTranslation(cat)}
                     </button>
                 ))}
             </div>
@@ -53,7 +60,7 @@ export default function BlogCategoryFilters({
                     type="text"
                     value={searchTerm}
                     onChange={(e) => onSearchChange(e.target.value)}
-                    placeholder="Search wisdom..."
+                    placeholder={RU_DICTIONARY.blog.filters.searchPlaceholder}
                     className="block w-full pl-10 pr-4 py-2.5 bg-[#A3B5A3]/20 border-transparent rounded-full text-sm placeholder-[#8B9F8B] text-charcoal focus:bg-white focus:border-[#8B9F8B] focus:ring-1 focus:ring-[#8B9F8B] transition-colors"
                 />
             </div>

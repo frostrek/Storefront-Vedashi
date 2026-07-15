@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import { submitFeedback } from '@/lib/api';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
+import { RU_DICTIONARY } from '@/content/ru';
 
 export default function ContactClientPage() {
 
@@ -27,13 +28,13 @@ export default function ContactClientPage() {
             });
 
             if (result.success) {
-                toast.success('Message sent! We\'ll get back to you soon.');
+                toast.success(RU_DICTIONARY.contact.toasts.success);
                 setForm({ name: '', email: '', subject: '', message: '' });
             } else {
-                toast.error(result.message || 'Failed to send message. Please try again.');
+                toast.error(result.message || RU_DICTIONARY.contact.toasts.fail);
             }
         } catch (error) {
-            toast.error('An error occurred. Please try again later.');
+            toast.error(RU_DICTIONARY.contact.toasts.error);
         } finally {
             setIsSubmitting(false);
         }
@@ -53,13 +54,13 @@ export default function ContactClientPage() {
                     whileHover={{ scale: 1.05 }}
                     className="inline-flex items-center justify-center rounded-full border border-gray-300 bg-white/50 px-5 py-1.5 text-xs font-semibold uppercase tracking-widest text-[#91C934] mb-6 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow cursor-default"
                 >
-                    Get In Touch
+                    {RU_DICTIONARY.contact.hero.getInTouch}
                 </motion.div>
                 <h1 className="text-[42px] leading-tight sm:text-6xl font-bold text-[#1A1A1A] mb-5 tracking-tight">
-                    Contact Us
+                    {RU_DICTIONARY.contact.hero.title}
                 </h1>
                 <p className="text-[#5c5c5c] text-lg sm:text-lg max-w-[600px] mx-auto leading-relaxed">
-                    We&apos;d love to hear from you. Whether you have a question about our collections or simply want to share your experience, send us a message or visit us at our tasting room.
+                    {RU_DICTIONARY.contact.hero.description}
                 </p>
             </motion.section>
 
@@ -75,31 +76,31 @@ export default function ContactClientPage() {
                         style={{ willChange: "transform, opacity" }}
                         className="rounded-[24px] bg-white p-8 sm:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] h-fit border border-gray-100"
                     >
-                        <h2 className="text-3xl font-bold text-[#1A1A1A] mb-3">Send a Message</h2>
-                        <p className="text-[#5c5c5c] mb-8 text-[15px]">Fill out the form below and our team will be in touch shortly.</p>
+                        <h2 className="text-3xl font-bold text-[#1A1A1A] mb-3">{RU_DICTIONARY.contact.form.title}</h2>
+                        <p className="text-[#5c5c5c] mb-8 text-[15px]">{RU_DICTIONARY.contact.form.subtitle}</p>
 
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="grid gap-6 sm:grid-cols-2">
                                 <div className="space-y-2">
-                                    <label className="block text-[11px] font-bold uppercase tracking-wider text-[#1A1A1A]">Full Name</label>
+                                    <label className="block text-[11px] font-bold uppercase tracking-wider text-[#1A1A1A]">{RU_DICTIONARY.contact.form.fullName}</label>
                                     <input
                                         type="text"
                                         value={form.name}
                                         onChange={e => setForm({ ...form, name: e.target.value })}
                                         className="w-full rounded-[10px] border border-gray-200 px-4 py-3.5 text-[15px] placeholder:text-gray-400 focus:border-[#5F6F52] focus:ring-1 focus:ring-[#5F6F52] focus:outline-none transition-all shadow-sm"
-                                        placeholder="E.g. Alexander Bennett"
+                                        placeholder={RU_DICTIONARY.contact.form.namePlaceholder}
                                         required
                                         disabled={isSubmitting}
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="block text-[11px] font-bold uppercase tracking-wider text-[#1A1A1A]">Email Address</label>
+                                    <label className="block text-[11px] font-bold uppercase tracking-wider text-[#1A1A1A]">{RU_DICTIONARY.contact.form.email}</label>
                                     <input
                                         type="email"
                                         value={form.email}
                                         onChange={e => setForm({ ...form, email: e.target.value })}
                                         className="w-full rounded-[10px] border border-gray-200 px-4 py-3.5 text-[15px] placeholder:text-gray-400 focus:border-[#5F6F52] focus:ring-1 focus:ring-[#5F6F52] focus:outline-none transition-all shadow-sm"
-                                        placeholder="alex@example.com"
+                                        placeholder={RU_DICTIONARY.contact.form.emailPlaceholder}
                                         required
                                         disabled={isSubmitting}
                                     />
@@ -107,26 +108,26 @@ export default function ContactClientPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="block text-[11px] font-bold uppercase tracking-wider text-[#1A1A1A]">Subject</label>
+                                <label className="block text-[11px] font-bold uppercase tracking-wider text-[#1A1A1A]">{RU_DICTIONARY.contact.form.subject}</label>
                                 <input
                                     type="text"
                                     value={form.subject}
                                     onChange={e => setForm({ ...form, subject: e.target.value })}
                                     className="w-full rounded-[10px] border border-gray-200 px-4 py-3.5 text-[15px] placeholder:text-gray-400 focus:border-[#5F6F52] focus:ring-1 focus:ring-[#5F6F52] focus:outline-none transition-all shadow-sm"
-                                    placeholder="How can we help you?"
+                                    placeholder={RU_DICTIONARY.contact.form.subjectPlaceholder}
                                     required
                                     disabled={isSubmitting}
                                 />
                             </div>
 
                             <div className="space-y-2">
-                                <label className="block text-[11px] font-bold uppercase tracking-wider text-[#1A1A1A]">Message</label>
+                                <label className="block text-[11px] font-bold uppercase tracking-wider text-[#1A1A1A]">{RU_DICTIONARY.contact.form.message}</label>
                                 <textarea
                                     value={form.message}
                                     onChange={e => setForm({ ...form, message: e.target.value })}
                                     rows={6}
                                     className="w-full rounded-[10px] border border-gray-200 px-4 py-3.5 text-[15px] placeholder:text-gray-400 focus:border-[#5F6F52] focus:ring-1 focus:ring-[#5F6F52] focus:outline-none resize-none transition-all shadow-sm"
-                                    placeholder="Tell us more about your inquiry..."
+                                    placeholder={RU_DICTIONARY.contact.form.messagePlaceholder}
                                     required
                                     disabled={isSubmitting}
                                 />
@@ -140,7 +141,7 @@ export default function ContactClientPage() {
                                     disabled={isSubmitting}
                                     className="inline-flex items-center gap-2 rounded-xl bg-[#91C934] px-7 py-3.5 text-[15px] font-semibold text-white hover:bg-[#536148] transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-[0_4px_12px_rgb(95,111,82,0.2)] hover:shadow-[0_8px_16px_rgb(95,111,82,0.3)]"
                                 >
-                                    {isSubmitting ? 'Sending...' : 'Send Message'}
+                                    {isSubmitting ? RU_DICTIONARY.contact.form.sending : RU_DICTIONARY.contact.form.sendBtn}
                                     <Send className={`h-4 w-4 ml-1 ${isSubmitting ? 'animate-pulse' : ''}`} />
                                 </motion.button>
                             </div>
@@ -152,19 +153,18 @@ export default function ContactClientPage() {
                         {[
                             {
                                 icon: MapPin,
-                                title: 'VISIT US',
-                                lines: ['117292, г. Москва, вн.тер.г. муниципальный округ Академический,', 'ул. Шверника, д. 6, к. 1, помещ. 8П', 'Генеральный директор: Андреев Кирилл Павлович']
+                                title: RU_DICTIONARY.contact.info.visit.title,
+                                lines: RU_DICTIONARY.contact.info.visit.lines
                             },
-
                             {
                                 icon: Mail,
-                                title: 'EMAIL US',
-                                lines: ['info@vedashiherbals.com']
+                                title: RU_DICTIONARY.contact.info.email.title,
+                                lines: RU_DICTIONARY.contact.info.email.lines
                             },
                             {
                                 icon: Clock,
-                                title: 'OPENING HOURS',
-                                lines: ['Mon — Fri: 9:00 AM — 6:00 PM', 'Sat: 10:00 AM — 4:00 PM', 'Sun: Closed']
+                                title: RU_DICTIONARY.contact.info.hours.title,
+                                lines: RU_DICTIONARY.contact.info.hours.lines
                             },
                         ].map((info, i) => (
                             <motion.div
@@ -182,7 +182,7 @@ export default function ContactClientPage() {
                                 <div className="space-y-1">
                                     <h3 className="font-bold text-[11px] tracking-wider text-[#1A1A1A] uppercase mb-2">{info.title}</h3>
                                     {info.lines.map((line, j) => (
-                                        info.title === 'EMAIL US' ? (
+                                        info.title === RU_DICTIONARY.contact.info.email.title ? (
                                             <a key={j} href={`mailto:${line}`} className="block text-[14px] text-[#5c5c5c] leading-relaxed hover:text-[#91C934] transition-colors">
                                                 {line}
                                             </a>

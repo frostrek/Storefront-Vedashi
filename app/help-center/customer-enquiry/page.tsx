@@ -11,6 +11,7 @@ import {
 import { submitFeedback } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
+import { RU_DICTIONARY } from '@/content/ru';
 
 const CATEGORIES = [
     { id: 'other', label: 'General Inquiry', icon: HelpCircle, color: '#A8B28B' },
@@ -53,8 +54,8 @@ function CustomerEnquiryContent() {
             setForm(prev => ({
                 ...prev,
                 type: 'complaint',
-                subject: `Issue with Order #${orderIdParam.split('-')[0].toUpperCase()}`,
-                message: `Hi, I need help with my order (ID: ${orderIdParam}).\n\nPlease describe your issue here...`
+                subject: `${RU_DICTIONARY.helpCenter.customerEnquiry.prefill.issueOrder}${orderIdParam.split('-')[0].toUpperCase()}`,
+                message: RU_DICTIONARY.helpCenter.customerEnquiry.prefill.messageTemplate.replace('{orderId}', orderIdParam)
             }));
         }
     }, [orderIdParam]);
@@ -62,7 +63,7 @@ function CustomerEnquiryContent() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!form.message.trim() || !form.subject.trim()) {
-            toast.error('Please fill in both subject and message.');
+            toast.error(RU_DICTIONARY.helpCenter.customerEnquiry.toasts.fillBoth);
             return;
         }
 
@@ -77,13 +78,13 @@ function CustomerEnquiryContent() {
             });
 
             if (res.success) {
-                toast.success('Your enquiry has been received.');
+                toast.success(RU_DICTIONARY.helpCenter.customerEnquiry.toasts.received);
                 setSubmitted(true);
             } else {
-                toast.error(res.message || 'Failed to submit enquiry.');
+                toast.error(res.message || RU_DICTIONARY.helpCenter.customerEnquiry.toasts.failed);
             }
         } catch {
-            toast.error('A network error occurred. Please try again.');
+            toast.error(RU_DICTIONARY.helpCenter.customerEnquiry.toasts.networkError);
         } finally {
             setIsSubmitting(false);
         }
@@ -97,24 +98,23 @@ function CustomerEnquiryContent() {
                         <Leaf className="h-12 w-12 text-[#4A5D23] animate-bounce" />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#4A5D23]/5 to-transparent"></div>
                     </div>
-                    <h2 className="text-3xl md:text-4xl font-bold text-[#1a2408] mb-6">Enquiry Received</h2>
+                    <h2 className="text-3xl md:text-4xl font-bold text-[#1a2408] mb-6">{RU_DICTIONARY.helpCenter.customerEnquiry.submitted.title}</h2>
                     <p className="text-[#5B4A31] text-lg mb-10 leading-relaxed font-medium">
-                        Thank you for reaching out. Your enquiry has been registered in our harmony system. 
-                        Our team will review it and respond shortly.
+                        {RU_DICTIONARY.helpCenter.customerEnquiry.submitted.desc}
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <Link 
                             href={`/help-center`} 
                             className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-[#4A5D23] text-white font-bold hover:bg-[#3a491b] transition-all shadow-xl hover:-translate-y-1"
                         >
-                            Back to Help Center
+                            {RU_DICTIONARY.helpCenter.customerEnquiry.submitted.backBtn}
                         </Link>
                         {isAuthenticated && (
                             <Link 
                                 href={`/account/support`} 
                                 className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-white border border-[#4A5D23]/20 text-[#4A5D23] font-bold hover:bg-[#4A5D23]/5 transition-all shadow-sm"
                             >
-                                Track in My Account <ArrowRight className="h-4 w-4" />
+                                {RU_DICTIONARY.helpCenter.customerEnquiry.submitted.trackBtn} <ArrowRight className="h-4 w-4" />
                             </Link>
                         )}
                     </div>
@@ -142,14 +142,13 @@ function CustomerEnquiryContent() {
                         href={`/help-center`} 
                         className="inline-flex items-center gap-2 text-[#4A5D23] font-bold text-sm uppercase tracking-widest mb-8 hover:gap-3 transition-all"
                     >
-                        <ChevronLeft className="h-4 w-4" /> Help Center
+                        <ChevronLeft className="h-4 w-4" /> {RU_DICTIONARY.helpCenter.customerEnquiry.header.breadcrumb}
                     </Link>
                     <h1 className="text-4xl md:text-6xl font-bold text-[#1a2408] mb-6 tracking-tight">
-                        Customer <span className="text-[#4A5D23]">Enquiry</span>
+                        {RU_DICTIONARY.helpCenter.customerEnquiry.header.titlePart1} <span className="text-[#4A5D23]">{RU_DICTIONARY.helpCenter.customerEnquiry.header.titlePart2}</span>
                     </h1>
                     <p className="text-[#5B4A31] text-lg max-w-2xl mx-auto font-medium leading-relaxed">
-                        Share your thoughts, report an issue, or suggest an improvement. 
-                        Our heart and ears are open to your Vedic journey.
+                        {RU_DICTIONARY.helpCenter.customerEnquiry.header.desc}
                     </p>
                 </div>
             </section>
@@ -163,26 +162,26 @@ function CustomerEnquiryContent() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="space-y-3">
                                     <label className="text-xs font-black text-[#1a2408] uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
-                                        <User className="h-3 w-3 text-[#4A5D23]" /> Full Name
+                                        <User className="h-3 w-3 text-[#4A5D23]" /> {RU_DICTIONARY.helpCenter.customerEnquiry.form.nameLabel}
                                     </label>
                                     <input 
                                         type="text"
                                         value={form.name}
                                         onChange={e => setForm({...form, name: e.target.value})}
-                                        placeholder="Enter your name"
+                                        placeholder={RU_DICTIONARY.helpCenter.customerEnquiry.form.namePlaceholder}
                                         required
                                         className="w-full px-6 py-4 rounded-2xl bg-gray-50/50 border border-transparent focus:bg-white focus:border-[#4A5D23]/30 focus:outline-none focus:ring-4 focus:ring-[#4A5D23]/5 transition-all font-medium text-gray-900"
                                     />
                                 </div>
                                 <div className="space-y-3">
                                     <label className="text-xs font-black text-[#1a2408] uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
-                                        <Mail className="h-3 w-3 text-[#4A5D23]" /> Email Address
+                                        <Mail className="h-3 w-3 text-[#4A5D23]" /> {RU_DICTIONARY.helpCenter.customerEnquiry.form.emailLabel}
                                     </label>
                                     <input 
                                         type="email"
                                         value={form.email}
                                         onChange={e => setForm({...form, email: e.target.value})}
-                                        placeholder="Enter your contact email"
+                                        placeholder={RU_DICTIONARY.helpCenter.customerEnquiry.form.emailPlaceholder}
                                         required
                                         className="w-full px-6 py-4 rounded-2xl bg-gray-50/50 border border-transparent focus:bg-white focus:border-[#4A5D23]/30 focus:outline-none focus:ring-4 focus:ring-[#4A5D23]/5 transition-all font-medium text-gray-900"
                                     />
@@ -190,11 +189,12 @@ function CustomerEnquiryContent() {
                             </div>
 
                             <div className="space-y-4">
-                                <label className="text-xs font-black text-[#1a2408] uppercase tracking-[0.2em] ml-1">Enquiry Category</label>
+                                <label className="text-xs font-black text-[#1a2408] uppercase tracking-[0.2em] ml-1">{RU_DICTIONARY.helpCenter.customerEnquiry.form.categoryLabel}</label>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                                     {CATEGORIES.map(cat => {
                                         const Icon = cat.icon;
                                         const isActive = form.type === cat.id;
+                                        const translatedLabel = (RU_DICTIONARY.helpCenter.customerEnquiry.form.categories as Record<string, string>)[cat.label] || cat.label;
                                         return (
                                             <button
                                                 key={cat.id}
@@ -208,7 +208,7 @@ function CustomerEnquiryContent() {
                                             >
                                                 <Icon className={`h-6 w-6 mb-2 ${isActive ? 'text-white' : 'text-[#4A5D23]'}`} />
                                                 <span className={`text-[10px] font-black uppercase tracking-wider text-center ${isActive ? 'text-white' : 'text-[#1a2408]'}`}>
-                                                    {cat.label.split(' ')[0]}
+                                                    {translatedLabel.split(' ')[0]}
                                                 </span>
                                             </button>
                                         );
@@ -218,13 +218,13 @@ function CustomerEnquiryContent() {
 
                             <div className="space-y-3">
                                 <label className="text-xs font-black text-[#1a2408] uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
-                                    <MessageSquare className="h-3 w-3 text-[#4A5D23]" /> Subject
+                                    <MessageSquare className="h-3 w-3 text-[#4A5D23]" /> {RU_DICTIONARY.helpCenter.customerEnquiry.form.subjectLabel}
                                 </label>
                                 <input 
                                     type="text"
                                     value={form.subject}
                                     onChange={e => setForm({...form, subject: e.target.value})}
-                                    placeholder="Briefly describe your enquiry"
+                                    placeholder={RU_DICTIONARY.helpCenter.customerEnquiry.form.subjectPlaceholder}
                                     required
                                     className="w-full px-6 py-4 rounded-2xl bg-gray-50/50 border border-transparent focus:bg-white focus:border-[#4A5D23]/30 focus:outline-none focus:ring-4 focus:ring-[#4A5D23]/5 transition-all font-medium text-gray-900"
                                 />
@@ -232,12 +232,12 @@ function CustomerEnquiryContent() {
 
                             <div className="space-y-3">
                                 <label className="text-xs font-black text-[#1a2408] uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
-                                    <Send className="h-3 w-3 text-[#4A5D23]" /> Message Details
+                                    <Send className="h-3 w-3 text-[#4A5D23]" /> {RU_DICTIONARY.helpCenter.customerEnquiry.form.messageLabel}
                                 </label>
                                 <textarea 
                                     value={form.message}
                                     onChange={e => setForm({...form, message: e.target.value})}
-                                    placeholder="Provide more context or details here..."
+                                    placeholder={RU_DICTIONARY.helpCenter.customerEnquiry.form.messagePlaceholder}
                                     required
                                     rows={6}
                                     className="w-full px-6 py-6 rounded-[32px] bg-gray-50/50 border border-transparent focus:bg-white focus:border-[#4A5D23]/30 focus:outline-none focus:ring-4 focus:ring-[#4A5D23]/5 transition-all font-medium text-gray-900 resize-none leading-relaxed"
@@ -250,12 +250,12 @@ function CustomerEnquiryContent() {
                                     disabled={isSubmitting}
                                     className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-[#1a2408] text-white px-12 py-5 rounded-2xl font-black text-lg hover:bg-[#4A5D23] transition-all disabled:opacity-50 cursor-pointer shadow-xl hover:-translate-y-1 group"
                                 >
-                                    {isSubmitting ? 'Submitting...' : 'Send Enquiry'}
+                                    {isSubmitting ? RU_DICTIONARY.helpCenter.customerEnquiry.form.submitting : RU_DICTIONARY.helpCenter.customerEnquiry.form.submitBtn}
                                     <Send className={`h-6 w-6 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1 ${isSubmitting ? 'animate-pulse' : ''}`} />
                                 </button>
                                 <div className="flex items-center gap-3 text-sm font-bold text-[#5B4A31]/60">
                                     <ShieldCheck className="h-5 w-5 text-[#4A5D23]" />
-                                    <span>Encrypted & Private</span>
+                                    <span>{RU_DICTIONARY.helpCenter.customerEnquiry.form.encrypted}</span>
                                 </div>
                             </div>
                         </form>
@@ -264,15 +264,15 @@ function CustomerEnquiryContent() {
                     {/* Right: Info Sidebar */}
                     <div className="space-y-8">
                         <div className="bg-[#4A5D23]/5 rounded-[32px] p-8 border border-[#4A5D23]/10">
-                            <h3 className="text-xl font-bold text-[#1a2408] mb-6">Support Guidance</h3>
+                            <h3 className="text-xl font-bold text-[#1a2408] mb-6">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.title}</h3>
                             <div className="space-y-6">
                                 <div className="flex gap-4">
                                     <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
                                         <Leaf className="h-5 w-5 text-[#4A5D23]" />
                                     </div>
                                     <div>
-                                        <h4 className="text-xs font-black uppercase text-[#1a2408] mb-1">Response Time</h4>
-                                        <p className="text-xs text-[#5B4A31] leading-relaxed">Most enquiries are addressed within 24 to 48 business hours.</p>
+                                        <h4 className="text-xs font-black uppercase text-[#1a2408] mb-1">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.responseTime}</h4>
+                                        <p className="text-xs text-[#5B4A31] leading-relaxed">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.responseTimeDesc}</p>
                                     </div>
                                 </div>
                                 <div className="flex gap-4">
@@ -280,8 +280,8 @@ function CustomerEnquiryContent() {
                                         <HelpCircle className="h-5 w-5 text-[#4A5D23]" />
                                     </div>
                                     <div>
-                                        <h4 className="text-xs font-black uppercase text-[#1a2408] mb-1">Check FAQs</h4>
-                                        <p className="text-xs text-[#5B4A31] leading-relaxed">Your question might already have an <Link href={`/help-center/faq`} className="text-[#4A5D23] underline font-bold">answer here</Link>.</p>
+                                        <h4 className="text-xs font-black uppercase text-[#1a2408] mb-1">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.checkFaqs}</h4>
+                                        <p className="text-xs text-[#5B4A31] leading-relaxed">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.checkFaqsDesc1}<Link href={`/help-center/faq`} className="text-[#4A5D23] underline font-bold">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.checkFaqsDesc2}</Link>.</p>
                                     </div>
                                 </div>
                                 <div className="flex gap-4">
@@ -289,8 +289,8 @@ function CustomerEnquiryContent() {
                                         <ShieldCheck className="h-5 w-5 text-[#4A5D23]" />
                                     </div>
                                     <div>
-                                        <h4 className="text-xs font-black uppercase text-[#1a2408] mb-1">Order Issues</h4>
-                                        <p className="text-xs text-[#5B4A31] leading-relaxed">For specific orders, use our <Link href={`/help-center/support`} className="text-[#4A5D23] underline font-bold">Ticket System</Link>.</p>
+                                        <h4 className="text-xs font-black uppercase text-[#1a2408] mb-1">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.orderIssues}</h4>
+                                        <p className="text-xs text-[#5B4A31] leading-relaxed">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.orderIssuesDesc1}<Link href={`/help-center/support`} className="text-[#4A5D23] underline font-bold">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.orderIssuesDesc2}</Link>.</p>
                                     </div>
                                 </div>
                             </div>
@@ -298,23 +298,23 @@ function CustomerEnquiryContent() {
 
                         <div className="bg-[#1a2408] rounded-[32px] p-8 text-white relative overflow-hidden group">
                             <div className="relative z-10">
-                                <h3 className="text-lg font-bold text-[#D4A847] mb-4">Are you a member?</h3>
+                                <h3 className="text-lg font-bold text-[#D4A847] mb-4">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.memberTitle}</h3>
                                 <p className="text-xs text-white/70 mb-6 leading-relaxed">
-                                    Logged-in users can track their enquiries and view replies directly from their dashboard.
+                                    {RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.memberDesc}
                                 </p>
                                 {!isAuthenticated ? (
                                     <Link 
                                         href={`/login`} 
                                         className="inline-flex items-center gap-2 text-xs font-black uppercase bg-white text-[#1a2408] px-6 py-3 rounded-xl hover:bg-[#F2E8CF] transition-all"
                                     >
-                                        Log In Now <ArrowRight className="h-3.5 w-3.5" />
+                                        {RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.loginBtn} <ArrowRight className="h-3.5 w-3.5" />
                                     </Link>
                                 ) : (
                                     <Link 
                                         href={`/account/support`} 
                                         className="inline-flex items-center gap-2 text-xs font-black uppercase bg-[#4A5D23] text-white px-6 py-3 rounded-xl hover:bg-[#3a491b] transition-all"
                                     >
-                                        View My Dashboard <ArrowRight className="h-3.5 w-3.5" />
+                                        {RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.dashboardBtn} <ArrowRight className="h-3.5 w-3.5" />
                                     </Link>
                                 )}
                             </div>
@@ -329,13 +329,12 @@ function CustomerEnquiryContent() {
                 <div className="mt-20 text-center">
                     <p className="text-sm font-bold text-[#5B4A31]/40 uppercase tracking-widest mb-6 flex items-center justify-center gap-3">
                         <span className="h-px w-8 bg-current"></span>
-                        Vedic Support Ethics
+                        {RU_DICTIONARY.helpCenter.customerEnquiry.footer.ethicsTitle}
                         <span className="h-px w-8 bg-current"></span>
                     </p>
                     <div className="max-w-3xl mx-auto p-10 rounded-[40px] border border-dashed border-[#4A5D23]/20">
                         <p className="italic text-[#5B4A31] text-lg font-medium leading-relaxed">
-                            "Every enquiry is a seed of trust. At Vedashi, we nurture this seed with transparency, 
-                            mindfulness, and a commitment to your holistic wellbeing."
+                            {RU_DICTIONARY.helpCenter.customerEnquiry.footer.ethicsQuote}
                         </p>
                     </div>
                 </div>

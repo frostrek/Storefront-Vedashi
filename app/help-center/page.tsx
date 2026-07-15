@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Search, MessageSquare, HelpCircle, BookOpen, FileText, ChevronRight, Send } from 'lucide-react';
 import { getFaqs, getHelpArticles, searchFaqs, searchHelpArticles, searchKBArticles } from '@/lib/api';
+import { RU_DICTIONARY } from '@/content/ru';
 
 export default function HelpCenterPage() {
     const params = useParams();
@@ -45,29 +46,29 @@ export default function HelpCenterPage() {
 
     const sections = [
         {
-            title: 'FAQs',
-            desc: 'Find quick answers to common questions about orders, payments, and more.',
+            title: RU_DICTIONARY.helpCenter.sections.faqs.title,
+            desc: RU_DICTIONARY.helpCenter.sections.faqs.desc,
             icon: HelpCircle,
             href: `/help-center/faq`,
             color: '#722F37',
         },
         {
-            title: 'Knowledge Base',
-            desc: 'Browse detailed guides, tutorials, and documentation.',
+            title: RU_DICTIONARY.helpCenter.sections.knowledgeBase.title,
+            desc: RU_DICTIONARY.helpCenter.sections.knowledgeBase.desc,
             icon: BookOpen,
             href: `/help-center/knowledge-base`,
             color: '#8B4513',
         },
         {
-            title: 'Support Tickets',
-            desc: 'Submit a support request or track your existing tickets.',
+            title: RU_DICTIONARY.helpCenter.sections.supportTickets.title,
+            desc: RU_DICTIONARY.helpCenter.sections.supportTickets.desc,
             icon: MessageSquare,
             href: `/help-center/support`,
             color: '#4b0f1a',
         },
         {
-            title: 'Customer Enquiry',
-            desc: 'Share your thoughts, report an issue or contact us.',
+            title: RU_DICTIONARY.helpCenter.sections.customerEnquiry.title,
+            desc: RU_DICTIONARY.helpCenter.sections.customerEnquiry.desc,
             icon: Send,
             href: `/help-center/customer-enquiry`,
             color: '#5B3A29',
@@ -93,13 +94,13 @@ export default function HelpCenterPage() {
                 
                 <div className="max-w-4xl mx-auto text-center relative z-10">
                     <span className="inline-block px-4 py-1.5 rounded-full bg-[#4A5D23]/50 text-[#2D3A15] text-xs font-bold tracking-widest uppercase mb-6">
-                        Vedic Support
+                        {RU_DICTIONARY.helpCenter.hero.badge}
                     </span>
                     <h1 className="text-4xl md:text-6xl font-bold text-[#1a2408] mb-6 leading-tight">
-                        How can we <span className="text-[#4A5D23]">help you?</span>
+                        {RU_DICTIONARY.helpCenter.hero.titlePart1} <span className="text-[#4A5D23]">{RU_DICTIONARY.helpCenter.hero.titlePart2}</span>
                     </h1>
                     <p className="text-[#5B4A31] text-lg mb-8 max-w-2xl mx-auto font-bold leading-relaxed">
-                        Find guidance, answers, and support for your Ayurvedic journey.
+                        {RU_DICTIONARY.helpCenter.hero.description}
                     </p>
                     <div className="relative max-w-2xl mx-auto group">
                         <div className="absolute -inset-1 bg-gradient-to-r from-[#4A5D23]/20 to-[#8B4513]/20 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
@@ -109,7 +110,7 @@ export default function HelpCenterPage() {
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                                placeholder="Search for help articles, FAQs, guides..."
+                                placeholder={RU_DICTIONARY.helpCenter.hero.searchPlaceholder}
                                 className="w-full pl-14 pr-32 py-5 rounded-2xl bg-white/90 backdrop-blur-sm text-gray-900 placeholder-gray-400 text-lg border border-[#4A5D23]/10 focus:outline-none focus:ring-2 focus:ring-[#4A5D23] shadow-2xl transition-all"
                             />
                             <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-6 w-6 text-[#4A5D23]" />
@@ -117,7 +118,7 @@ export default function HelpCenterPage() {
                                 onClick={handleSearch}
                                 className="absolute right-2.5 top-1/2 -translate-y-1/2 bg-[#4A5D23] text-white px-8 py-3 rounded-xl text-base font-semibold hover:bg-[#3a491b] transition-all shadow-lg active:scale-95"
                             >
-                                Search
+                                {RU_DICTIONARY.helpCenter.hero.searchBtn}
                             </button>
                         </div>
                     </div>
@@ -129,7 +130,7 @@ export default function HelpCenterPage() {
                 <section className="max-w-4xl mx-auto px-6 py-8">
                     <h2 className="text-xl font-bold text-[#1a2408] mb-6 flex items-center gap-2">
                         <div className="w-2 h-8 bg-[#4A5D23] rounded-full"></div>
-                        {searching ? 'Finding answers...' : `${searchResults.length} result${searchResults.length !== 1 ? 's' : ''} found`}
+                        {searching ? RU_DICTIONARY.helpCenter.results.finding : `${searchResults.length} ${searchResults.length !== 1 ? RU_DICTIONARY.helpCenter.results.results : RU_DICTIONARY.helpCenter.results.result} ${RU_DICTIONARY.helpCenter.results.found}`}
                     </h2>
                     {!searching && (
                         <div className="grid gap-4">
@@ -155,7 +156,7 @@ export default function HelpCenterPage() {
                                                     {item.question || item.title}
                                                 </h3>
                                                 <span className="text-[10px] uppercase tracking-widest font-black px-2 py-0.5 rounded-md bg-[#4A5D23]/10 text-[#4A5D23]">
-                                                    {item._type === 'faq' ? 'FAQ' : item._type === 'help' ? 'Help' : 'Guide'}
+                                                    {item._type === 'faq' ? RU_DICTIONARY.helpCenter.results.faq : item._type === 'help' ? RU_DICTIONARY.helpCenter.results.help : RU_DICTIONARY.helpCenter.results.guide}
                                                 </span>
                                             </div>
                                             <p className="text-sm text-[#5B4A31] line-clamp-2">
@@ -204,7 +205,7 @@ export default function HelpCenterPage() {
                                     className="inline-flex items-center gap-2 text-sm font-bold tracking-wide transition-all duration-300 group-hover:gap-3"
                                     style={{ color: theme.text }}
                                 >
-                                    Explore More <ChevronRight className="h-4 w-4" />
+                                    {RU_DICTIONARY.helpCenter.exploreMore} <ChevronRight className="h-4 w-4" />
                                 </div>
                             </Link>
                         );
@@ -216,7 +217,7 @@ export default function HelpCenterPage() {
             {popularFaqs.length > 0 && (
                 <section className="max-w-5xl mx-auto px-6 py-20 bg-[#FDFBF7] rounded-[50px] mb-20 border border-[#4A5D23]/5">
                     <div className="text-center mb-12">
-                        <h2 className="text-3xl md:text-4xl font-bold text-[#1a2408] mb-4">Common Questions</h2>
+                        <h2 className="text-3xl md:text-4xl font-bold text-[#1a2408] mb-4">{RU_DICTIONARY.helpCenter.commonQuestions}</h2>
                         <div className="w-24 h-1 bg-[#4A5D23] mx-auto rounded-full opacity-30"></div>
                     </div>
                     <div className="grid md:grid-cols-1 gap-4 max-w-3xl mx-auto">
@@ -243,7 +244,7 @@ export default function HelpCenterPage() {
                             href={`/help-center/faq`}
                             className="inline-flex items-center gap-2 py-3 px-8 rounded-full border-2 border-[#4A5D23] text-[#4A5D23] font-bold hover:bg-[#4A5D23] hover:text-white transition-all"
                         >
-                            View all FAQs
+                            {RU_DICTIONARY.helpCenter.viewAllFaqs}
                         </Link>
                     </div>
                 </section>
@@ -259,10 +260,10 @@ export default function HelpCenterPage() {
                     
                     <div className="relative z-10">
                         <h2 className="text-3xl md:text-5xl font-bold text-[#F2E8CF] mb-4">
-                            Didn&apos;t find what you need?
+                            {RU_DICTIONARY.helpCenter.cta.title}
                         </h2>
                         <p className="text-[#A6BF8F] mb-10 text-lg max-w-xl mx-auto font-medium">
-                            Our Ayurvedic experts and support team are just a message away.
+                            {RU_DICTIONARY.helpCenter.cta.desc}
                         </p>
                         <div className="flex flex-col sm:flex-row gap-5 justify-center">
                             <Link
@@ -270,13 +271,13 @@ export default function HelpCenterPage() {
                                 className="inline-flex items-center justify-center gap-3 bg-[#4A5D23] text-white px-10 py-5 rounded-2xl font-bold text-lg hover:bg-[#3a491b] hover:shadow-2xl hover:-translate-y-1 transition-all"
                             >
                                 <MessageSquare className="h-6 w-6" />
-                                Submit a Ticket
+                                {RU_DICTIONARY.helpCenter.cta.submitTicket}
                             </Link>
                             <Link
                                 href={`/contact`}
                                 className="inline-flex items-center justify-center gap-3 border-2 border-[#F2E8CF]/30 text-[#F2E8CF] px-10 py-5 rounded-2xl font-bold text-lg hover:bg-[#F2E8CF]/10 transition-all"
                             >
-                                Contact Us
+                                {RU_DICTIONARY.helpCenter.cta.contactUs}
                             </Link>
                         </div>
                     </div>

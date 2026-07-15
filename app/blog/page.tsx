@@ -8,6 +8,7 @@ import BlogSidebar from '@/components/blog/BlogSidebar';
 import FallingLeafBackground from '@/components/blog/FallingLeafBackground';
 import { getBlogPosts, getFeaturedBlogPosts, getBlogCategories, BlogPost, BlogCategory } from '@/lib/api';
 import { Loader2 } from 'lucide-react';
+import { RU_DICTIONARY } from '@/content/ru';
 
 export default function BlogPage() {
     const [loading, setLoading] = useState(true);
@@ -94,12 +95,12 @@ export default function BlogPage() {
                                     <svg className="w-16 h-16 text-warm-gray/30 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
                                     </svg>
-                                    <p className="text-warm-gray text-lg">No wisdom found matching your search.</p>
+                                    <p className="text-warm-gray text-lg">{RU_DICTIONARY.blog.page.noResults}</p>
                                     <button 
                                         onClick={() => { setSearchTerm(''); setActiveCategory('All'); }}
                                         className="mt-4 text-vedic-gold hover:text-vedic-gold-light underline underline-offset-4"
                                     >
-                                        Clear filters
+                                        {RU_DICTIONARY.blog.page.clearFilters}
                                     </button>
                                 </div>
                             ) : (
@@ -117,7 +118,7 @@ export default function BlogPage() {
                                         onClick={loadMore}
                                         className="inline-flex items-center justify-center px-10 py-4 rounded-full bg-charcoal text-white font-semibold hover:bg-charcoal/90 transition-colors duration-300 shadow-xl shadow-charcoal/10"
                                     >
-                                        Load More Wisdom
+                                        {RU_DICTIONARY.blog.page.loadMore}
                                     </button>
                                 </div>
                             )}

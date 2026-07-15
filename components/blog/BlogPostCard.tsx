@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { BlogPost } from '@/lib/api';
+import { RU_DICTIONARY } from '@/content/ru';
 
 interface BlogPostCardProps {
     post: BlogPost;
@@ -12,6 +13,9 @@ export default function BlogPostCard({ post, featured = false }: BlogPostCardPro
     const date = post.published_at
         ? new Date(post.published_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
         : '';
+    const categoryName = post.category_name 
+        ? ((RU_DICTIONARY.blog.categoriesMap as Record<string, string>)[post.category_name] || post.category_name)
+        : null;
 
     return (
         <Link
@@ -36,9 +40,9 @@ export default function BlogPostCard({ post, featured = false }: BlogPostCardPro
                 )}
 
                 {/* Category Badge */}
-                {post.category_name && (
+                {categoryName && (
                     <span className="absolute top-3 left-3 px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider bg-burgundy/90 text-white backdrop-blur-sm">
-                        {post.category_name}
+                        {categoryName}
                     </span>
                 )}
 
@@ -92,13 +96,13 @@ export default function BlogPostCard({ post, featured = false }: BlogPostCardPro
                     {post.reading_time && (
                         <>
                             <span className="w-[3px] h-[3px] rounded-full bg-warm-gray/40" />
-                            <span className="text-xs text-warm-gray">{post.reading_time} min read</span>
+                            <span className="text-xs text-warm-gray">{post.reading_time} {RU_DICTIONARY.blog.meta.minRead}</span>
                         </>
                     )}
 
                     {/* View count */}
                     {(post.view_count ?? 0) > 0 && (
-                        <span className="ml-auto text-xs text-warm-gray/60">{post.view_count?.toLocaleString()} views</span>
+                        <span className="ml-auto text-xs text-warm-gray/60">{post.view_count?.toLocaleString()} {RU_DICTIONARY.blog.meta.views}</span>
                     )}
                 </div>
             </div>

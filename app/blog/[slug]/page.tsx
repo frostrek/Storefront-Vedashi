@@ -7,6 +7,7 @@ import SocialShareBar from '@/components/blog/SocialShareBar';
 import BlogCommentSection from '@/components/blog/BlogCommentSection';
 import BlogPostCard from '@/components/blog/BlogPostCard';
 import { generateBlogPostingJsonLd, generateBreadcrumbJsonLd } from '@/lib/seo';
+import { RU_DICTIONARY } from '@/content/ru';
 
 export default function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
     const resolvedParams = use(params);
@@ -54,10 +55,10 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
         return (
             <div className="min-h-screen bg-white flex items-center justify-center">
                 <div className="text-center">
-                    <h1 className="text-3xl font-bold text-charcoal mb-3">Article Not Found</h1>
-                    <p className="text-warm-gray mb-6">This article might have been moved or deleted.</p>
+                    <h1 className="text-3xl font-bold text-charcoal mb-3">{RU_DICTIONARY.blog.detail.notFoundTitle}</h1>
+                    <p className="text-warm-gray mb-6">{RU_DICTIONARY.blog.detail.notFoundDesc}</p>
                     <Link href="/blog" className="px-6 py-3 rounded-full bg-burgundy text-white font-semibold hover:bg-burgundy-dark transition-colors">
-                        Back to Blog
+                        {RU_DICTIONARY.blog.detail.backToBlog}
                     </Link>
                 </div>
             </div>
@@ -67,6 +68,10 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
     const publishDate = post.published_at
         ? new Date(post.published_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
         : '';
+
+    const categoryName = post.category_name
+        ? ((RU_DICTIONARY.blog.categoriesMap as Record<string, string>)[post.category_name] || post.category_name)
+        : null;
 
     return (
         <div className="min-h-screen bg-white">
@@ -79,9 +84,9 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{
                     __html: JSON.stringify(generateBreadcrumbJsonLd([
-                        { name: 'Home', url: '/' },
-                        { name: 'Blog', url: '/blog' },
-                        { name: post.category_name || 'Category', url: `/blog/category/${post.category_slug}` },
+                        { name: RU_DICTIONARY.about.breadcrumbs.home || 'Home', url: '/' },
+                        { name: RU_DICTIONARY.blog.detail.blog, url: '/blog' },
+                        { name: categoryName || 'Category', url: `/blog/category/${post.category_slug}` },
                         { name: post.title, url: `/blog/${post.slug}` },
                     ]))
                 }}
@@ -90,11 +95,11 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
             <article className="max-w-3xl mx-auto px-4 pt-8 pb-16">
                 {/* Breadcrumb */}
                 <nav className="flex items-center gap-2 text-sm text-warm-gray mb-6">
-                    <Link href="/blog" className="hover:text-burgundy transition-colors">Blog</Link>
+                    <Link href="/blog" className="hover:text-burgundy transition-colors">{RU_DICTIONARY.blog.detail.blog}</Link>
                     <span>/</span>
-                    {post.category_name && (
+                    {categoryName && (
                         <>
-                            <Link href={`/blog/category/${post.category_slug}`} className="hover:text-burgundy transition-colors">{post.category_name}</Link>
+                            <Link href={`/blog/category/${post.category_slug}`} className="hover:text-burgundy transition-colors">{categoryName}</Link>
                             <span>/</span>
                         </>
                     )}
@@ -103,9 +108,9 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
 
                 {/* Category + Blog Type */}
                 <div className="flex items-center gap-3 mb-4">
-                    {post.category_name && (
+                    {categoryName && (
                         <Link href={`/blog/category/${post.category_slug}`} className="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-burgundy/10 text-burgundy hover:bg-burgundy/20 transition-colors">
-                            {post.category_name}
+                            {categoryName}
                         </Link>
                     )}
                     {post.blog_type && (
@@ -141,13 +146,13 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
                             {post.reading_time && (
                                 <>
                                     <span className="w-1 h-1 rounded-full bg-warm-gray/40" />
-                                    <span>{post.reading_time} min read</span>
+                                    <span>{post.reading_time} {RU_DICTIONARY.blog.meta.minRead}</span>
                                 </>
                             )}
                             {(post.view_count ?? 0) > 0 && (
                                 <>
                                     <span className="w-1 h-1 rounded-full bg-warm-gray/40" />
-                                    <span>{post.view_count?.toLocaleString()} views</span>
+                                    <span>{post.view_count?.toLocaleString()} {RU_DICTIONARY.blog.meta.views}</span>
                                 </>
                             )}
                         </div>
@@ -214,7 +219,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
                             )}
                         </div>
                         <div>
-                            <p className="font-bold text-charcoal mb-1">About {post.author_name}</p>
+                            <p className="font-bold text-charcoal mb-1">{RU_DICTIONARY.blog.detail.aboutAuthor} {post.author_name}</p>
                             <p className="text-sm text-warm-gray leading-relaxed">{post.author_bio}</p>
                         </div>
                     </div>
@@ -223,7 +228,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
                 {/* Related Posts */}
                 {related.length > 0 && (
                     <section className="mt-12">
-                        <h3 className="text-xl font-bold text-charcoal mb-6">You Might Also Like</h3>
+                        <h3 className="text-xl font-bold text-charcoal mb-6">{RU_DICTIONARY.blog.detail.youMightLike}</h3>
                         <div className="grid md:grid-cols-3 gap-4">
                             {related.map(p => (
                                 <BlogPostCard key={p.post_id} post={p} />

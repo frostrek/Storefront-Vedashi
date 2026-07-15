@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { getSupportTicketDetail, replySupportTicket } from '@/lib/api';
 import toast from 'react-hot-toast';
+import { RU_DICTIONARY } from '@/content/ru';
 
 const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; dot: string }> = {
     open: { label: 'Open', bg: 'bg-[#4A5D23]/10', text: 'text-[#4A5D23]', dot: 'bg-[#4A5D23]' },
@@ -105,10 +106,10 @@ export default function TicketDetailPage() {
                     <div className="w-24 h-24 rounded-[30px] bg-[#4A5D23]/10 flex items-center justify-center mx-auto mb-10">
                         <MessageSquare className="h-10 w-10 text-[#4A5D23]" />
                     </div>
-                    <h2 className="text-3xl font-bold text-[#1a2408] mb-4">Inquiry Not Found</h2>
-                    <p className="text-[#5B4A31] mb-10 font-medium">This scroll seems to have vanished from our records.</p>
+                    <h2 className="text-3xl font-bold text-[#1a2408] mb-4">{RU_DICTIONARY.helpCenter.support.detail.notFoundTitle}</h2>
+                    <p className="text-[#5B4A31] mb-10 font-medium">{RU_DICTIONARY.helpCenter.support.detail.notFoundDesc}</p>
                     <Link href="/help-center/support" className="inline-flex items-center gap-3 bg-[#4A5D23] text-white px-10 py-5 rounded-[20px] font-black uppercase tracking-widest text-sm hover:bg-[#3a491b] transition-all shadow-xl">
-                        <ChevronLeft className="h-5 w-5" /> Back to Tickets
+                        <ChevronLeft className="h-5 w-5" /> {RU_DICTIONARY.helpCenter.support.detail.backToTickets}
                     </Link>
                 </div>
             </div>
@@ -145,7 +146,7 @@ export default function TicketDetailPage() {
                         className="inline-flex items-center gap-3 text-xs font-black uppercase tracking-widest text-[#5B4A31]/60 hover:text-[#4A5D23] transition-all mb-8 group"
                     >
                         <ChevronLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-                        My Support Tickets
+                        {RU_DICTIONARY.helpCenter.support.detail.myTickets}
                     </Link>
 
                     <h1 className="text-3xl md:text-4xl font-bold text-[#1a2408] mb-6 leading-tight">
@@ -161,18 +162,18 @@ export default function TicketDetailPage() {
 
                         {/* Priority badge */}
                         <span className={`inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full bg-gray-50 border border-gray-100 ${priority.color}`}>
-                            {priority.icon} {priority.label} Priority
+                            {priority.icon} {(RU_DICTIONARY.helpCenter.support.priorities as Record<string, string>)[priority.label] || priority.label} {RU_DICTIONARY.helpCenter.support.detail.priorityLabel}
                         </span>
 
                         {/* Ticket number */}
                         <span className="text-[10px] font-black font-mono text-gray-400 bg-gray-50 uppercase tracking-widest px-4 py-2 rounded-full border border-gray-100">
-                            INQUIRY #{ticket.ticket_number}
+                            {RU_DICTIONARY.helpCenter.support.detail.inquiryLabel}{ticket.ticket_number}
                         </span>
 
                         {/* Meta info */}
                         <span className="text-xs font-bold text-[#5B4A31]/40 flex items-center gap-2 ml-auto">
                             <Clock className="h-4 w-4" />
-                            CREATED {new Date(ticket.created_at).toLocaleDateString()}
+                            {RU_DICTIONARY.helpCenter.support.detail.createdLabel} {new Date(ticket.created_at).toLocaleDateString()}
                         </span>
                     </div>
                 </div>
@@ -186,10 +187,10 @@ export default function TicketDetailPage() {
                         <div className="flex items-center justify-between px-10 py-6 border-b border-gray-50 bg-[#FDFBF7]/30">
                             <div className="flex items-center gap-3">
                                 <div className="w-2.5 h-2.5 rounded-full bg-[#4A5D23] animate-pulse" />
-                                <span className="text-xs font-black uppercase tracking-widest text-[#1a2408]">Live Correspondence</span>
+                                <span className="text-xs font-black uppercase tracking-widest text-[#1a2408]">{RU_DICTIONARY.helpCenter.support.detail.liveChat}</span>
                             </div>
                             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#5B4A31]/40">
-                                {messages.length} MESSAGE{messages.length !== 1 ? 'S' : ''}
+                                {messages.length} {RU_DICTIONARY.helpCenter.support.detail.messages}
                             </span>
                         </div>
 
@@ -200,7 +201,7 @@ export default function TicketDetailPage() {
                                     <div className="w-20 h-20 bg-gray-50 rounded-[30px] flex items-center justify-center mx-auto mb-6">
                                         <MessageSquare className="h-8 w-8 text-gray-200" />
                                     </div>
-                                    <p className="text-lg font-medium text-[#5B4A31]/60">Answering your call to nature soon...</p>
+                                    <p className="text-lg font-medium text-[#5B4A31]/60">{RU_DICTIONARY.helpCenter.support.detail.emptyChat}</p>
                                 </div>
                             ) : (
                                 <div className="space-y-12">
@@ -240,7 +241,7 @@ export default function TicketDetailPage() {
                                                             {/* Sender name + time */}
                                                             <div className={`flex items-center gap-3 mb-2 ${isAdmin ? '' : 'justify-end'}`}>
                                                                 <span className="text-xs font-black uppercase tracking-widest text-[#1a2408]">
-                                                                    {isAdmin ? (msg.sender_name ? `${msg.sender_name} (Support)` : 'Vedic Guard') : msg.sender_name || 'Seeker'}
+                                                                    {isAdmin ? (msg.sender_name ? `${msg.sender_name} (${RU_DICTIONARY.helpCenter.support.detail.supportRole})` : RU_DICTIONARY.helpCenter.support.detail.guardRole) : msg.sender_name || RU_DICTIONARY.helpCenter.support.detail.seekerRole}
                                                                 </span>
                                                                 <span className="text-[10px] font-bold text-[#5B4A31]/30">
                                                                     {formatTime(msg.created_at)}
@@ -280,21 +281,21 @@ export default function TicketDetailPage() {
                                                 if (replyText.trim()) handleReply(e);
                                             }
                                         }}
-                                        placeholder="Add your message to the scroll..."
+                                        placeholder={RU_DICTIONARY.helpCenter.support.detail.inputPlaceholder}
                                         rows={3}
                                         className="w-full px-6 py-4 text-base text-[#1a2408] placeholder-[#5B4A31]/30 bg-transparent border-none focus:outline-none focus:ring-0 resize-none font-medium"
                                     />
                                     <div className="flex items-center justify-between px-6 pb-4">
                                         <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-[#5B4A31]/30">
                                             <Zap className="h-3.5 w-3.5" />
-                                            Press Enter to Send
+                                            {RU_DICTIONARY.helpCenter.support.detail.pressEnter}
                                         </div>
                                         <button
                                             type="submit"
                                             disabled={sending || !replyText.trim()}
                                             className="inline-flex items-center gap-3 bg-[#4A5D23] text-white px-8 py-3 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-[#3a491b] transition-all disabled:opacity-50 cursor-pointer shadow-lg hover:-translate-y-1"
                                         >
-                                            Send Scroll
+                                            {RU_DICTIONARY.helpCenter.support.detail.sendScroll}
                                             <Send className="h-4 w-4" />
                                         </button>
                                     </div>
@@ -307,12 +308,12 @@ export default function TicketDetailPage() {
                                         <Shield className="h-6 w-6 text-gray-400" />
                                     </div>
                                     <p className="text-base font-bold text-[#1a2408] mb-1">
-                                        This scroll has been completed.
+                                        {RU_DICTIONARY.helpCenter.support.detail.completedTitle}
                                     </p>
                                     <p className="text-sm text-[#5B4A31]/60 font-medium">
-                                        If further wisdom is needed, please{' '}
+                                        {RU_DICTIONARY.helpCenter.support.detail.completedDesc1}{' '}
                                         <Link href="/help-center/support" className="text-[#4A5D23] font-black hover:underline">
-                                            create a new inquiry
+                                            {RU_DICTIONARY.helpCenter.support.detail.completedDesc2}
                                         </Link>.
                                     </p>
                                 </div>

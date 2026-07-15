@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { SUPPORTED_COUNTRIES } from '@/lib/currency';
 import { generateBreadcrumbJsonLd } from '@/lib/seo';
 import AboutClientPage from './AboutClient';
+import { RU_DICTIONARY } from '@/content/ru';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.com';
 
@@ -15,16 +16,22 @@ export async function generateMetadata({ params }: { params: Promise<{ country: 
     });
     languages['x-default'] = `${SITE_URL}/in/about`;
 
+    const isRu = country === 'ru';
+
     return {
-        title: "Our Story",
-        description: "Discover the roots of Vedashi. From the foothills of the Himalayas to the spice gardens of Kerala, we bring authentic Ayurvedic wellness to the world.",
+        title: isRu ? RU_DICTIONARY.about.meta.title : "Our Story",
+        description: isRu
+            ? RU_DICTIONARY.about.meta.description
+            : "Discover the roots of Vedashi. From the foothills of the Himalayas to the spice gardens of Kerala, we bring authentic Ayurvedic wellness to the world.",
         alternates: {
             canonical: `${SITE_URL}/${country}/about`,
             languages: languages
         },
         openGraph: {
-            title: "Our Story",
-            description: "Discover the roots of Vedashi. Authentic Ayurvedic wellness.",
+            title: isRu ? RU_DICTIONARY.about.meta.ogTitle : "Our Story",
+            description: isRu
+                ? RU_DICTIONARY.about.meta.ogDescription
+                : "Discover the roots of Vedashi. Authentic Ayurvedic wellness.",
             url: `${SITE_URL}/${country}/about`,
         }
     };
@@ -32,9 +39,10 @@ export async function generateMetadata({ params }: { params: Promise<{ country: 
 
 export default async function AboutPage({ params }: { params: Promise<{ country: string }> }) {
     const { country } = await params;
+    const isRu = country === 'ru';
     const breadcrumbs = generateBreadcrumbJsonLd([
-        { name: 'Home', url: `${SITE_URL}/${country}` },
-        { name: 'Our Story', url: `${SITE_URL}/${country}/about` }
+        { name: isRu ? RU_DICTIONARY.about.breadcrumbs.home : 'Home', url: `${SITE_URL}/${country}` },
+        { name: isRu ? RU_DICTIONARY.about.breadcrumbs.ourStory : 'Our Story', url: `${SITE_URL}/${country}/about` }
     ]);
 
     return (
