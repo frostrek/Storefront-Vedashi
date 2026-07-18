@@ -3,13 +3,14 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Facebook, Instagram, Twitter, Youtube, Linkedin, Globe, MapPin, Phone, Mail, Leaf, Truck, RotateCcw, ShieldCheck, FileText } from 'lucide-react';
+import { Facebook, Instagram, Twitter, Youtube, Linkedin, Globe, MapPin, Phone, Mail, Leaf, Truck, RotateCcw, ShieldCheck, FileText, ExternalLink, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { useCookieConsent } from '@/context/CookieConsentContext';
 import { API_URL, subscribeNewsletter } from '@/lib/api';
 import toast from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
+import { ROUTES } from '@/lib/routes';
 import { buildPath, getCountryFromPathname } from '@/lib/currency';
 import { RU_DICTIONARY } from '@/content/ru';
 
@@ -74,20 +75,20 @@ const FALLBACK: FooterData = {
         {
             title: RU_DICTIONARY.footer.explore,
             items: [
-                { label: RU_DICTIONARY.footer.ourStory, href: '/about' },
-                { label: RU_DICTIONARY.footer.blogs, href: '/blog' },
-                { label: RU_DICTIONARY.footer.allProducts, href: '/products' },
-                { label: RU_DICTIONARY.footer.contactUs, href: '/contact' },
+                { label: RU_DICTIONARY.footer.ourStory, href: ROUTES.about },
+                { label: RU_DICTIONARY.footer.blogs, href: ROUTES.blog },
+                { label: RU_DICTIONARY.footer.allProducts, href: ROUTES.katalog },
+                { label: RU_DICTIONARY.footer.contactUs, href: ROUTES.contact },
             ],
         },
         {
             title: RU_DICTIONARY.footer.support,
             items: [
-                { label: RU_DICTIONARY.footer.helpCenter, href: '/help-center' },
-                { label: RU_DICTIONARY.footer.shippingPolicy, href: '/shipping' },
-                { label: RU_DICTIONARY.footer.returnPolicy, href: '/return-policy' },
-                { label: RU_DICTIONARY.footer.termsOfService, href: '/terms' },
-                { label: RU_DICTIONARY.footer.privacyPolicyFooter, href: '/privacy' },
+                { label: RU_DICTIONARY.footer.helpCenter, href: ROUTES.helpCenter },
+                { label: RU_DICTIONARY.footer.shippingPolicy, href: ROUTES.shipping },
+                { label: RU_DICTIONARY.footer.returnPolicy, href: ROUTES.returnPolicy },
+                { label: RU_DICTIONARY.footer.termsOfService, href: ROUTES.terms },
+                { label: RU_DICTIONARY.footer.privacyPolicyFooter, href: ROUTES.privacy },
             ],
         },
     ],
@@ -150,20 +151,20 @@ export default function Footer() {
             {
                 title: 'Навигация',
                 items: [
-                    { label: 'О нас', href: '/about' },
-                    { label: 'Блог', href: '/blog' },
-                    { label: 'Все товары', href: '/products' },
-                    { label: 'Контакты', href: '/contact' },
+                    { label: 'О нас', href: ROUTES.about },
+                    { label: 'Блог', href: ROUTES.blog },
+                    { label: 'Все товары', href: ROUTES.katalog },
+                    { label: 'Контакты', href: ROUTES.contact },
                 ],
             },
             {
                 title: 'Информация',
                 items: [
-                    { label: 'Центр помощи', href: '/help-center' },
-                    { label: 'Условия доставки и оплаты', href: '/shipping' },
-                    { label: 'Политика возврата', href: '/return-policy' },
-                    { label: 'Условия обслуживания', href: '/terms' },
-                    { label: 'Политика конфиденциальности', href: '/privacy' },
+                    { label: 'Центр помощи', href: ROUTES.helpCenter },
+                    { label: 'Доставка', href: ROUTES.shipping },
+                    { label: 'Возврат', href: ROUTES.returnPolicy },
+                    { label: 'Условия', href: ROUTES.terms },
+                    { label: 'Конфиденциальность', href: ROUTES.privacy },
                 ],
             },
         ];
@@ -249,7 +250,7 @@ export default function Footer() {
                             {RU_DICTIONARY.footer.bulkOrdersSub}
                         </p>
                         <Link
-                            href="/contact"
+                            href={ROUTES.contact}
                             className="inline-flex w-fit items-center justify-center bg-[#91C935] hover:bg-[#7eb02e] text-white text-[9.5px] sm:text-[11px] font-medium py-1 px-3 sm:px-4 rounded-full transition-all duration-300 shadow-[0_4px_12px_rgba(110,147,42,0.2)] hover:shadow-[0_6px_16px_rgba(110,147,42,0.3)] hover:-translate-y-0.5"
                         >
                             {RU_DICTIONARY.footer.inquireNow}

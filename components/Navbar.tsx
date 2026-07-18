@@ -12,6 +12,7 @@ import { getCategories, API_URL } from '@/lib/api';
 import { RU_DICTIONARY } from '@/content/ru';
 import toast from 'react-hot-toast';
 import SearchAutocomplete from './SearchAutocomplete';
+import { ROUTES, ACCOUNT_TABS } from '@/lib/routes';
 
 import NotificationCenter from './account/NotificationCenter';
 import SecondaryNavbar from './SecondaryNavbar';
@@ -23,6 +24,7 @@ interface Category {
   parent_id: string | null;
   name: string;
   slug: string;
+  full_path?: string;
   children?: Category[];
 }
 
@@ -74,14 +76,7 @@ const DEFAULT_CONFIG: HeaderConfig = {
 const MegaMenuLinks = ({ item, country, topLevelSlug, secondLevelSlug, level = 0, buildPath }: { item: Category, country: string, topLevelSlug: string, secondLevelSlug?: string, level?: number, buildPath: (c: string, p: string) => string }) => {
   const hasChildren = item.children && item.children.length > 0;
 
-  let href = buildPath(country, `/products?category=${topLevelSlug}`);
-  if (level === 0) {
-    href += `&sub_category=${item.slug}`;
-  } else if (level === 1) {
-    href += `&sub_category=${secondLevelSlug}&sub_sub_category=${item.slug}`;
-  } else {
-    href += `&sub_category=${secondLevelSlug}&sub_sub_category=${item.slug}`;
-  }
+  const href = buildPath(country, ROUTES.katalogPath(item.full_path || item.slug));
 
   return (
     <div className={`flex flex-col ${level === 0 ? 'gap-3' : 'gap-1.5'}`}>
@@ -156,7 +151,7 @@ const MegaMenuContent = ({ parent, country, colors }: { parent: Category, countr
 
           <div className="mt-8 space-y-3 relative z-10">
             <Link
-              href={`/products?category=${parent.slug}`}
+              href={ROUTES.katalogPath(parent.full_path || parent.slug)}
               className="flex items-center justify-between w-full group/btn text-sm font-bold text-[#FF0000] hover:text-[#CC0000] transition-colors"
             >
               {RU_DICTIONARY.nav.shopAll} {parent.name}
@@ -180,7 +175,7 @@ const MobileNavItem = ({ item, country, onClose, level = 0 }: { item: Category, 
     <div className="flex flex-col">
       <div className="flex items-center justify-between">
         <Link
-          href={`/products?category=${item.slug}`}
+          href={ROUTES.katalogPath(item.full_path || item.slug)}
           onClick={onClose}
           className={`py-3 px-4 font-bold text-sm text-gray-800 hover:text-[#3B5D3B] transition-colors flex-1 ${level > 0 ? 'pl-8 border-l-2 border-gray-100 ml-4' : ''}`}
         >
@@ -246,10 +241,10 @@ export default function Navbar() {
 
   const handleWishlistClick = () => {
     if (isAuthenticated) {
-      router.push(buildPath(currentCountry, `/account/wishlist`));
+      router.push(buildPath(currentCountry, ROUTES.accountTab(ACCOUNT_TABS.wishlist)));
     } else {
       toast(RU_DICTIONARY.nav.signInToViewWishlist);
-      router.push(buildPath(currentCountry, `/login`));
+      router.push(buildPath(currentCountry, ROUTES.login));
     }
   };
 
@@ -305,7 +300,7 @@ export default function Navbar() {
   // Ensure we only treat true roots as the primary navbar categories
   const parentCategories = categories.filter(cat => !cat.parent_id);
 
-  if (pathname?.endsWith('/login') || pathname?.endsWith('/signup')) return null;
+  if (pathname?.endsWith(ROUTES.login) || pathname?.endsWith('/signup')) return null;
 
   return (
     <header className={`w-full sticky top-0 z-[1000] transition-all duration-500 ${scrolled ? 'shadow-lg' : ''}`}>
@@ -319,13 +314,13 @@ export default function Navbar() {
             <div className="flex items-center justify-between h-8 text-[12px] tracking-wide">
               <div className="flex items-center gap-5">
                 {strip.show_track_orders && (
-                  <Link href={buildPath(currentCountry, `/account`)} className="font-medium" style={{ color: colors.strip_text }}>{RU_DICTIONARY.nav.trackOrders}</Link>
+                  <Link href={buildPath(currentCountry, ROUTES.account)} className="font-medium" style={{ color: colors.strip_text }}>{RU_DICTIONARY.nav.trackOrders}</Link>
                 )}
                 {strip.show_categories && (
                   <div className="flex items-center gap-6">
                     {parentCategories.slice(0, 5).map(parent => (
                       <div key={parent.category_id} className="relative group flex items-center h-8">
-                        <Link href={buildPath(currentCountry, `/products?category=${parent.slug}`)} className="flex items-center gap-1 font-medium" style={{ color: colors.strip_text }}>
+                        <Link href={buildPath(currentCountry, ROUTES.katalogPath(parent.full_path || parent.slug))} className="flex items-center gap-1 font-medium" style={{ color: colors.strip_text }}>
                           {parent.name}
                           {parent.children && parent.children.length > 0 && <ChevronDown className="h-3 w-3 transition-transform group-hover:rotate-180" />}
                         </Link>
@@ -415,7 +410,7 @@ export default function Navbar() {
               </button>
 
               <Link
-                href={buildPath(currentCountry, `/cart`)}
+                href={buildPath(currentCountry, ROUTES.korzina)}
                 className="relative p-2 group"
                 title={RU_DICTIONARY.nav.cart}
                 aria-label={RU_DICTIONARY.nav.cart}
@@ -430,7 +425,7 @@ export default function Navbar() {
 
               <div className="relative group">
                 <Link
-                  href={isAuthenticated ? buildPath(currentCountry, `/account`) : buildPath(currentCountry, `/login`)}
+                  href={isAuthenticated ? buildPath(currentCountry, ROUTES.account) : buildPath(currentCountry, ROUTES.login)}
                   className="p-2 block"
                   title={isAuthenticated ? RU_DICTIONARY.nav.account : RU_DICTIONARY.nav.loginRegister}
                   aria-label={isAuthenticated ? RU_DICTIONARY.nav.account : RU_DICTIONARY.nav.loginRegister}
@@ -450,8 +445,8 @@ export default function Navbar() {
                         <p className="text-[13px] font-bold text-gray-800 truncate">{user?.name}</p>
                         <p className="text-[10px] text-gray-500 truncate">{user?.email}</p>
                       </div>
-                      <Link href="/account" className="flex items-center gap-3 px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50"><Settings className="h-4 w-4" /> {RU_DICTIONARY.nav.settings}</Link>
-                      <Link href="/account/orders" className="flex items-center gap-3 px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50"><Package className="h-4 w-4" /> {RU_DICTIONARY.nav.orders}</Link>
+                      <Link href={ROUTES.account} className="flex items-center gap-3 px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50"><Settings className="h-4 w-4" /> {RU_DICTIONARY.nav.settings}</Link>
+                      <Link href={ROUTES.accountTab(ACCOUNT_TABS.orders)} className="flex items-center gap-3 px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50"><Package className="h-4 w-4" /> {RU_DICTIONARY.nav.orders}</Link>
                       <button onClick={() => logout()} className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm text-red-600 hover:bg-red-50 mt-1"><LogOut className="h-4 w-4" /> {RU_DICTIONARY.nav.logout}</button>
                     </div>
                   ) : (
@@ -462,14 +457,14 @@ export default function Navbar() {
                       </div>
                       <div className="p-4 space-y-2">
                         <Link
-                          href={buildPath(currentCountry, `/login`)}
+                          href={buildPath(currentCountry, ROUTES.login)}
                           className="flex items-center gap-3 w-full px-4 py-2.5 bg-[#91C934] text-white rounded-xl text-[13px] font-bold transition-all hover:bg-[#7AA82C] hover:shadow-md active:scale-[0.98]"
                         >
                           <LogIn className="h-4 w-4" />
                           {RU_DICTIONARY.nav.signIn}
                         </Link>
                         <Link
-                          href={buildPath(currentCountry, `/login?mode=register`)}
+                          href={buildPath(currentCountry, `${ROUTES.login}?mode=register`)}
                           className="flex items-center gap-3 w-full px-4 py-2.5 bg-white text-gray-700 rounded-xl text-[13px] font-bold border border-gray-200 transition-all hover:bg-gray-50 active:scale-[0.98]"
                         >
                           <UserPlus className="h-4 w-4" />

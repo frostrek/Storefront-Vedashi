@@ -6,6 +6,7 @@ import { getMyNotifications, getUnreadNotificationCount, markNotificationAsRead,
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RU_DICTIONARY } from '@/content/ru';
+import { ROUTES, ACCOUNT_TABS } from '@/lib/routes';
 
 interface Notification {
   notification_id: string;
@@ -214,7 +215,7 @@ export default function NotificationCenter({ colors }: { colors: any }) {
             {/* Footer */}
             <div className="px-6 py-3 border-t border-gray-50 bg-gray-50/30 text-center">
               <button 
-                onClick={() => { router.push('/account/notifications' as any); setIsOpen(false); }}
+                onClick={() => { router.push(ROUTES.accountTab(ACCOUNT_TABS.notifications) as any); setIsOpen(false); }}
                 className="text-[11px] font-bold text-[#4A5D23] hover:underline flex items-center justify-center gap-1 mx-auto"
               >
                 {RU_DICTIONARY.nav.viewAllNotifications} <ExternalLink className="h-3 w-3" />

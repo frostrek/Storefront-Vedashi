@@ -3,7 +3,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, usePathname, useParams } from 'next/navigation';
 import { Search, X, Loader2 } from 'lucide-react';
+
 import { RU_DICTIONARY } from '@/content/ru';
+import { ROUTES } from '@/lib/routes';
 import { searchAutocomplete, type SearchSuggestion } from '@/lib/api';
 import { useCurrency } from '@/context/CurrencyContext';
 import { buildPath, getCountryFromPathname } from '@/lib/currency';
@@ -126,7 +128,7 @@ export default function SearchAutocomplete({
         setIsOpen(false);
         setQuery('');
         onClose?.();
-        router.push(buildPath(country, `/products/${id}`));
+        router.push(buildPath(country, ROUTES.tovar(id)));
     };
 
     const goToPage = (path: string) => {
@@ -140,7 +142,7 @@ export default function SearchAutocomplete({
         if (!query.trim()) return;
         setIsOpen(false);
         onClose?.();
-        router.push(buildPath(country, `/search?q=${encodeURIComponent(query.trim())}`));
+        router.push(buildPath(country, `${ROUTES.search}?q=${encodeURIComponent(query.trim())}`));
     };
 
     // ── Keyboard navigation ────────────────────────────────────

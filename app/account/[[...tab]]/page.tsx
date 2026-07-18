@@ -3,6 +3,7 @@
 import { createPortal } from 'react-dom';
 
 import { RU_DICTIONARY } from '@/content/ru';
+import { ROUTES, ACCOUNT_TABS } from '@/lib/routes';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useWishlist } from '@/context/WishlistContext';
@@ -1324,7 +1325,7 @@ export default function AccountPage() {
                 {[...coreExperienceTabs, ...identityAccessTabs].map(tab => (
                     <button
                         key={tab.id}
-                        onClick={() => router.push(`/account/${tab.id}`)}
+                        onClick={() => router.push(ROUTES.accountTab(ACCOUNT_TABS[tab.id as keyof typeof ACCOUNT_TABS]))}
                         className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-2 ${activeTab === tab.id
                             ? 'bg-[#91c934] text-white shadow-md'
                             : 'bg-white text-gray-700 border border-gray-100 hover:bg-gray-50'
@@ -1351,7 +1352,7 @@ export default function AccountPage() {
                             {coreExperienceTabs.map(tab => (
                                 <li key={tab.id}>
                                     <button
-                                        onClick={() => router.push(`/account/${tab.id}`)}
+                                        onClick={() => router.push(ROUTES.accountTab(ACCOUNT_TABS[tab.id as keyof typeof ACCOUNT_TABS]))}
                                         className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === tab.id
                                             ? 'bg-[#91c934] text-white shadow-sm'
                                             : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -1380,7 +1381,7 @@ export default function AccountPage() {
                             {identityAccessTabs.map(tab => (
                                 <li key={tab.id}>
                                     <button
-                                        onClick={() => router.push(`/account/${tab.id}`)}
+                                        onClick={() => router.push(ROUTES.accountTab(ACCOUNT_TABS[tab.id as keyof typeof ACCOUNT_TABS]))}
                                         className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === tab.id
                                             ? 'bg-[#91c934] text-white shadow-sm'
                                             : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -1419,7 +1420,7 @@ export default function AccountPage() {
                         </div>
                         <p className="text-xs text-white leading-relaxed mb-3">{RU_DICTIONARY.account.loyaltySidebar.youPossess} <strong className="text-white">{RU_DICTIONARY.account.loyaltySidebar.tiers[activeTier as keyof typeof RU_DICTIONARY.account.loyaltySidebar.tiers] || activeTier}</strong> {RU_DICTIONARY.account.loyaltySidebar.ritualistRank}</p>
                         <button
-                            onClick={() => router.push(`/account/wallet`)}
+                            onClick={() => router.push(ROUTES.accountTab(ACCOUNT_TABS.wallet))}
                             className="text-[10px] uppercase font-bold text-white flex items-center gap-1 hover:text-[#FFD801] transition-colors"
                         >
                             {RU_DICTIONARY.account.loyaltySidebar.viewBenefits} <ChevronRight className="h-3 w-3" />
@@ -1525,13 +1526,13 @@ export default function AccountPage() {
                                         </p>
                                         <div className="flex items-center gap-4">
                                             <button
-                                                onClick={() => router.push('/account/orders')}
+                                                onClick={() => router.push(ROUTES.accountTab(ACCOUNT_TABS.orders))}
                                                 className="bg-[#91c934] text-white px-6 py-3 rounded-xl text-sm font-bold shadow-md shadow-[#91c934]/20 hover:bg-[#7ab52a] hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
                                             >
                                                 {RU_DICTIONARY.account.trackLatestOrder}
                                             </button>
                                             <button
-                                                onClick={() => router.push('/account/profile')}
+                                                onClick={() => router.push(ROUTES.accountTab(ACCOUNT_TABS.profile))}
                                                 className="bg-white border text-gray-900 border-gray-100 px-6 py-3 rounded-xl text-sm font-bold hover:bg-gray-50 transition-colors"
                                             >
                                                 {RU_DICTIONARY.account.updateHealthProfile}
@@ -1583,7 +1584,7 @@ export default function AccountPage() {
 
                                 {/* Stats Row */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-[0_2px_10px_rgb(0,0,0,0.02)] flex items-start gap-4 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 cursor-pointer" onClick={() => router.push('/account/orders')}>
+                                    <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-[0_2px_10px_rgb(0,0,0,0.02)] flex items-start gap-4 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 cursor-pointer" onClick={() => router.push(ROUTES.accountTab(ACCOUNT_TABS.orders))}>
                                         <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center flex-shrink-0">
                                             <Package className="h-6 w-6 text-gray-900" />
                                         </div>
@@ -1594,7 +1595,7 @@ export default function AccountPage() {
                                         </div>
                                     </div>
 
-                                    <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-[0_2px_10px_rgb(0,0,0,0.02)] flex items-start gap-4 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 cursor-pointer" onClick={() => router.push(`/account/wishlist`)}>
+                                    <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-[0_2px_10px_rgb(0,0,0,0.02)] flex items-start gap-4 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 cursor-pointer" onClick={() => router.push(ROUTES.accountTab(ACCOUNT_TABS.wishlist))}>
                                         <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center flex-shrink-0">
                                             <Heart className="h-6 w-6 text-gray-900" />
                                         </div>
@@ -1624,7 +1625,7 @@ export default function AccountPage() {
                                 <div className="mt-2">
                                     <h3 className="font-bold text-gray-900 mb-4 text-sm tracking-wide">{RU_DICTIONARY.account.commonActions}</h3>
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <button onClick={() => router.push(`/account/orders`)} className="bg-white border border-gray-100 p-4 rounded-3xl flex items-center justify-between hover:border-[#91c934]/30 hover:shadow-md transition-all duration-300 group">
+                                        <button onClick={() => router.push(ROUTES.accountTab(ACCOUNT_TABS.orders))} className="bg-white border border-gray-100 p-4 rounded-3xl flex items-center justify-between hover:border-[#91c934]/30 hover:shadow-md transition-all duration-300 group">
                                             <div className="flex items-center gap-4">
                                                 <div className="bg-gray-50 p-2.5 rounded-lg group-hover:bg-[#91c934] transition-colors">
                                                     <List className="h-5 w-5 text-gray-900 group-hover:text-white transition-colors" />
@@ -1637,7 +1638,7 @@ export default function AccountPage() {
                                             <ChevronRight className="h-4 w-4 text-warm-gray group-hover:text-gray-900 transition-colors" />
                                         </button>
 
-                                        <button onClick={() => router.push(`/account/addresses`)} className="bg-white border border-gray-100 p-4 rounded-3xl flex items-center justify-between hover:border-[#91c934]/30 hover:shadow-md transition-all duration-300 group">
+                                        <button onClick={() => router.push(ROUTES.accountTab(ACCOUNT_TABS.addresses))} className="bg-white border border-gray-100 p-4 rounded-3xl flex items-center justify-between hover:border-[#91c934]/30 hover:shadow-md transition-all duration-300 group">
                                             <div className="flex items-center gap-4">
                                                 <div className="bg-gray-50 p-2.5 rounded-lg group-hover:bg-[#91c934] transition-colors">
                                                     <MapPin className="h-5 w-5 text-gray-900 group-hover:text-white transition-colors" />
@@ -1650,7 +1651,7 @@ export default function AccountPage() {
                                             <ChevronRight className="h-4 w-4 text-warm-gray group-hover:text-gray-900 transition-colors" />
                                         </button>
 
-                                        <button onClick={() => router.push(`/account/profile`)} className="bg-white border border-gray-100 p-4 rounded-3xl flex items-center justify-between hover:border-[#91c934]/30 hover:shadow-md transition-all duration-300 group">
+                                        <button onClick={() => router.push(ROUTES.accountTab(ACCOUNT_TABS.profile))} className="bg-white border border-gray-100 p-4 rounded-3xl flex items-center justify-between hover:border-[#91c934]/30 hover:shadow-md transition-all duration-300 group">
                                             <div className="flex items-center gap-4">
                                                 <div className="bg-gray-50 p-2.5 rounded-lg group-hover:bg-[#91c934] transition-colors">
                                                     <User className="h-5 w-5 text-gray-900 group-hover:text-white transition-colors" />
@@ -1675,7 +1676,7 @@ export default function AccountPage() {
                                                 <h3 className="font-bold text-gray-900 text-lg">{RU_DICTIONARY.account.recentOrdersSummary}</h3>
                                                 <p className="text-xs text-warm-gray mt-1">{RU_DICTIONARY.account.latestTransactions}</p>
                                             </div>
-                                            <button onClick={() => router.push(`/account/orders`)} className="text-xs font-bold text-gray-900 hover:underline hover:text-black">{RU_DICTIONARY.account.seeFullHistory}</button>
+                                            <button onClick={() => router.push(ROUTES.accountTab(ACCOUNT_TABS.orders))} className="text-xs font-bold text-gray-900 hover:underline hover:text-black">{RU_DICTIONARY.account.seeFullHistory}</button>
                                         </div>
 
                                         <div className="overflow-x-auto">
@@ -1754,7 +1755,7 @@ export default function AccountPage() {
                                                 )}
                                             </div>
 
-                                            <button onClick={() => router.push('/account/wishlist')} className="w-full mt-6 bg-gray-50 text-gray-900 text-xs font-bold py-3 rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-2">
+                                            <button onClick={() => router.push(ROUTES.accountTab(ACCOUNT_TABS.wishlist))} className="w-full mt-6 bg-gray-50 text-gray-900 text-xs font-bold py-3 rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-2">
                                                 {RU_DICTIONARY.account.manageFullWishlist} <ChevronRight className="h-3 w-3" />
                                             </button>
                                         </div>
@@ -2195,14 +2196,14 @@ export default function AccountPage() {
                                                             const linkedTicket = enquiries.find(e => e._order_id === selectedOrderDetails.order_id && e._source === 'ticket');
                                                             return linkedTicket ? (
                                                                 <button
-                                                                    onClick={() => router.push(`/help-center/support/${linkedTicket._ticket_id}`)}
+                                                                    onClick={() => router.push(ROUTES.helpCenterSupportTicket(linkedTicket._ticket_id))}
                                                                     className="flex-1 flex justify-center items-center gap-2 border border-[#91c934]/20 bg-gray-50 rounded-xl py-2.5 text-xs font-bold text-gray-900 hover:bg-white transition-colors shadow-sm"
                                                                 >
                                                                     <MessageSquare className="h-3.5 w-3.5" /> {RU_DICTIONARY.ordersTab.viewTicket}
                                                                 </button>
                                                             ) : (
                                                                 <button
-                                                                    onClick={() => router.push(`/help-center/support?orderId=${selectedOrderDetails.order_id.split('-')[0].toUpperCase()}`)}
+                                                                    onClick={() => router.push(ROUTES.helpCenterSupport + "?orderId=" + selectedOrderDetails.order_id.split('-')[0].toUpperCase())}
                                                                     className="flex-1 flex justify-center items-center gap-2 border border-gray-100 bg-white rounded-xl py-2.5 text-xs font-bold text-gray-900 hover:bg-gray-50 transition-colors shadow-sm"
                                                                 >
                                                                     <Mail className="h-3.5 w-3.5" /> {RU_DICTIONARY.ordersTab.support}
@@ -2243,7 +2244,7 @@ export default function AccountPage() {
                                                                         </p>
                                                                     </div>
                                                                     <button
-                                                                        onClick={() => router.push(`/help-center/support/${ticket._ticket_id}`)}
+                                                                        onClick={() => router.push(ROUTES.helpCenterSupportTicket(ticket._ticket_id))}
                                                                         className="w-full text-[10px] font-black uppercase tracking-[0.1em] text-gray-900 hover:text-black flex items-center justify-center gap-1.5 mt-2 py-2 rounded-lg bg-white/50 border border-white hover:border-gray-100 transition-all group"
                                                                     >
                                                                         {RU_DICTIONARY.ordersTab.accessAllMessages} <ChevronRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
@@ -3014,7 +3015,7 @@ export default function AccountPage() {
                                                 }
                                             </p>
                                             <button
-                                                onClick={() => router.push(`/account/wallet`)}
+                                                onClick={() => router.push(ROUTES.accountTab(ACCOUNT_TABS.wallet))}
                                                 className="w-full rounded-xl bg-[#FFD801] text-[#1f2937] py-3 text-sm font-bold hover:bg-[#FFD801]/80 transition-all transform active:scale-95 shadow-lg"
                                             >
                                                 {RU_DICTIONARY.profileTab.actions.manageRewards}
@@ -3194,7 +3195,7 @@ export default function AccountPage() {
                                                         <p className="text-sm text-white/80 max-w-md">{RU_DICTIONARY.supportTab.sidebar.teamHereToHelp}</p>
                                                     </div>
                                                     <button
-                                                        onClick={() => router.push(`/help-center/support`)}
+                                                        onClick={() => router.push(ROUTES.helpCenterSupport)}
                                                         className="bg-[#D4A847] text-gray-900 px-8 py-3 rounded-xl text-sm font-bold shadow-md hover:bg-[#B38720] transition-colors whitespace-nowrap"
                                                     >{RU_DICTIONARY.supportTab.sidebar.submitNew}</button>
                                                 </div>
@@ -3229,7 +3230,7 @@ export default function AccountPage() {
                                                 <h3 className="text-lg font-bold text-gray-900 mb-4">{RU_DICTIONARY.supportTab.sidebar.supportPhilosophy}</h3>
                                                 <p className="text-[11px] leading-relaxed text-warm-gray mb-4">{RU_DICTIONARY.supportTab.sidebar.philosophyText}</p>
                                                 <button
-                                                    onClick={() => router.push(`/help-center`)}
+                                                    onClick={() => router.push(ROUTES.helpCenter)}
                                                     className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-gray-100 text-xs font-bold text-gray-900 hover:bg-gray-50 transition-colors"
                                                 >
                                                     <FileText className="h-3.5 w-3.5" /> {RU_DICTIONARY.supportTab.sidebar.viewHelpCenter}</button>
@@ -3270,7 +3271,7 @@ export default function AccountPage() {
                                                     <h3 className="text-2xl font-bold text-gray-900 mb-2">{RU_DICTIONARY.supportTab.empty.noPastEnquiries}</h3>
                                                     <p className="text-sm text-warm-gray max-w-xs mx-auto mb-8">{RU_DICTIONARY.supportTab.empty.pathSmooth}</p>
                                                     <button
-                                                        onClick={() => router.push('/help-center/support')}
+                                                        onClick={() => router.push(ROUTES.helpCenterSupport)}
                                                         className="bg-[#91c934] text-white px-8 py-3 rounded-xl text-sm font-bold shadow-md hover:bg-[#7ab52a] transition-colors"
                                                     >{RU_DICTIONARY.supportTab.empty.createNewTicket}</button>
                                                 </div>
@@ -3282,10 +3283,10 @@ export default function AccountPage() {
                                                             if (enquiry._source === 'ticket') {
                                                                 if (enquiry._order_id) {
                                                                     // Redirect to the Orders tab with the specific order selected
-                                                                    router.push(`/account/orders?orderId=${enquiry._order_id}`);
+                                                                    router.push(ROUTES.accountTab(ACCOUNT_TABS.orders) + '?orderId=' + enquiry._order_id);
                                                                 } else {
                                                                     // Redirect to the dedicated ticket detail page
-                                                                    router.push(`/help-center/support/${enquiry._ticket_id}`);
+                                                                    router.push(ROUTES.helpCenterSupportTicket(enquiry._ticket_id));
                                                                 }
                                                             } else {
                                                                 setSelectedEnquiry(enquiry);

@@ -12,6 +12,7 @@ import {
 import { createSupportTicket, getMySupportTickets } from '@/lib/api';
 import toast from 'react-hot-toast';
 import { RU_DICTIONARY } from '@/content/ru';
+import { ROUTES } from '@/lib/routes';
 
 const CATEGORIES = ['Orders', 'Payments', 'Shipping & Delivery', 'Product Issues', 'Returns & Refunds', 'Account Support', 'Other'];
 const PRIORITIES = ['low', 'medium', 'high', 'urgent'] as const;
@@ -166,7 +167,7 @@ function SupportContent() {
                             {RU_DICTIONARY.helpCenter.support.authGate.desc}
                         </p>
                         <Link 
-                            href={`/login`} 
+                            href={ROUTES.login} 
                             className="inline-flex items-center gap-3 bg-[#4A5D23] text-white px-10 py-4 rounded-[20px] font-bold text-lg hover:bg-[#3a491b] hover:shadow-2xl hover:-translate-y-1 transition-all shadow-xl"
                         >
                             {RU_DICTIONARY.helpCenter.support.authGate.signIn}
@@ -180,9 +181,9 @@ function SupportContent() {
                     <div className="bg-white/80 backdrop-blur-md border-b border-[#4A5D23]/5 sticky top-0 z-50">
                         <div className="max-w-4xl mx-auto px-6 py-5">
                             <nav className="flex items-center gap-3 text-sm font-bold tracking-wide">
-                                <Link href={`/help-center`} className="text-[#5B4A31] hover:text-[#4A5D23] transition-colors">{RU_DICTIONARY.helpCenter.support.create.breadcrumbHelp}</Link>
+                                <Link href={ROUTES.helpCenter} className="text-[#4A5D23] transition-colors">{RU_DICTIONARY.helpCenter.support.create.breadcrumbHelp}</Link>
                                 <ChevronDown className="h-4 w-4 text-gray-300 -rotate-90" />
-                                <Link href={`/help-center/support`} onClick={(e) => { e.preventDefault(); setView('list'); }} className="text-[#5B4A31] hover:text-[#4A5D23] transition-colors cursor-pointer">{RU_DICTIONARY.helpCenter.support.create.breadcrumbList}</Link>
+                                <Link href={`${ROUTES.helpCenter}/support`} onClick={(e) => { e.preventDefault(); setView('list'); }} className="text-[#5B4A31] hover:text-[#4A5D23] transition-colors cursor-pointer">{RU_DICTIONARY.helpCenter.support.create.breadcrumbList}</Link>
                                 <ChevronDown className="h-4 w-4 text-gray-300 -rotate-90" />
                                 <span className="text-[#4A5D23] font-black uppercase text-xs">{RU_DICTIONARY.helpCenter.support.create.breadcrumbCreate}</span>
                             </nav>
@@ -303,7 +304,7 @@ function SupportContent() {
                                 </button>
                                 <p className="text-sm font-bold text-[#5B4A31]/60 max-w-xs text-center sm:text-right">
                                     {RU_DICTIONARY.helpCenter.support.create.agree}{' '}
-                                    <Link href={`/help-center`} className="underline hover:text-[#4A5D23]">{RU_DICTIONARY.helpCenter.support.create.terms}</Link>.
+                                    <Link href={ROUTES.helpCenter} className="underline hover:text-[#4A5D23]">{RU_DICTIONARY.helpCenter.support.create.terms}</Link>.
                                 </p>
                             </div>
                         </form>
@@ -427,7 +428,7 @@ function SupportContent() {
                                             return (
                                                 <Link
                                                     key={ticket.ticket_id}
-                                                    href={`/help-center/support/${ticket.ticket_id}`}
+                                                    href={ROUTES.helpCenterSupportTicket(ticket.ticket_id)}
                                                     className="block hover:bg-[#4A5D23]/[0.02] transition-colors group p-8 md:px-10"
                                                 >
                                                     <div className="flex flex-col md:flex-row md:items-center gap-6 justify-between">
@@ -470,7 +471,7 @@ function SupportContent() {
                         {/* Footer */}
                         <div className="mt-20 flex justify-center">
                             <Link
-                                href={`/help-center`}
+                                href={ROUTES.helpCenter}
                                 className="inline-flex items-center gap-3 text-lg font-bold text-[#5B4A31] hover:text-[#4A5D23] transition-all group"
                             >
                                 <div className="w-12 h-12 rounded-2xl bg-white shadow-xl flex items-center justify-center group-hover:bg-[#4A5D23] group-hover:text-white transition-all">

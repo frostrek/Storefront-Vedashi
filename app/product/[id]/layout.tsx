@@ -90,7 +90,7 @@ export default function ProductLayout({
 }
 
 /** Fetch the full category ancestor path for breadcrumbs (fail-silent) */
-async function fetchCategoryBreadcrumb(categoryId: string): Promise<Array<{ category_id: string; name: string; slug: string }>> {
+async function fetchCategoryBreadcrumb(categoryId: string): Promise<Array<{ category_id: string; name: string; slug: string; full_path?: string }>> {
     try {
         const res = await fetch(`${API_URL}/api/categories/${categoryId}/breadcrumb`, {
             next: { revalidate: 3600 }, // cache for 1 hour — hierarchy changes rarely
@@ -141,7 +141,7 @@ async function ProductJsonLd({ paramsPromise }: { paramsPromise: Promise<any> })
     // Build breadcrumb from full category hierarchy (closure table)
     const breadcrumbItems = [
         { name: 'Home', url: `${SITE_URL}` },
-        { name: 'Shop', url: `${SITE_URL}/products` },
+        { name: 'Каталог', url: `${SITE_URL}/katalog` },
     ];
 
     // Fetch real ancestor path when category_id is available
@@ -150,14 +150,14 @@ async function ProductJsonLd({ paramsPromise }: { paramsPromise: Promise<any> })
         for (const cat of ancestors) {
             breadcrumbItems.push({
                 name: cat.name,
-                url: `${SITE_URL}/products?category=${encodeURIComponent(cat.slug)}`,
+                url: `${SITE_URL}/katalog/${cat.full_path || cat.slug}`,
             });
         }
     }
 
     breadcrumbItems.push({
         name: product.product_name,
-        url: `${SITE_URL}/products/${product.slug || product.product_id}` 
+        url: `${SITE_URL}/tovar/${product.slug || product.product_id}` 
     });
 
     const breadcrumbJsonLd = generateBreadcrumbJsonLd(breadcrumbItems);

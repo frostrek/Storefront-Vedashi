@@ -72,6 +72,7 @@ export interface Category {
     parent_id: string | null;
     name: string;
     slug: string;
+    full_path?: string;
     children?: Category[];
 }
 

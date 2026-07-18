@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { ROUTES } from '@/lib/routes';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -192,7 +193,7 @@ export default function HomeClientPage({
               <div className="relative text-center mb-2 px-4">
                 <div className="absolute right-6 top-3 hidden lg:block">
                   <Link
-                    href={buildPath(country, `/products`)}
+                    href={buildPath(country, ROUTES.katalog)}
                     className="group flex items-center gap-2 text-[13px] font-medium text-[#FF0000] hover:text-[#CC0000] transition-all underline decoration-[#FF0000]/30 underline-offset-2 hover:decoration-[#FF0000]"
                   >
                     {RU_DICTIONARY.home.exploreAllProducts}
@@ -231,7 +232,7 @@ export default function HomeClientPage({
                         <div
                           key={cat.category_id}
                           onClick={() => {
-                            router.push(buildPath(country, `/products?category=${cat.slug}`));
+                            router.push(buildPath(country, ROUTES.katalogPath(cat.full_path || cat.slug)));
                           }}
                           className="group flex flex-col items-center gap-3 transition-all duration-500 hover:-translate-y-2 cursor-pointer"
                         >
@@ -267,7 +268,7 @@ export default function HomeClientPage({
               {/* Mobile View All - Shop all products */}
               <div className="sm:hidden flex justify-end mt-4">
                 <Link
-                  href={buildPath(country, `/products`)}
+                  href={buildPath(country, ROUTES.katalog)}
                   className="text-[10px] font-medium text-[#FF0000] hover:text-[#CC0000] transition-colors underline decoration-[#FF0000]/30 underline-offset-2"
                 >
                   {RU_DICTIONARY.home.exploreAllProducts}
@@ -283,7 +284,7 @@ export default function HomeClientPage({
                 loading={loading}
                 title={RU_DICTIONARY.home.bestSellers}
                 subtitle={RU_DICTIONARY.home.bestSellersSubtitle}
-                viewAllLink={buildPath(country, `/products?bestSeller=true`)}
+                viewAllLink={buildPath(country, `${ROUTES.katalog}?bestSeller=true`)}
                 viewAllText={RU_DICTIONARY.home.viewAll}
               />
             </div>
@@ -312,7 +313,7 @@ export default function HomeClientPage({
               loading={loading}
               title={RU_DICTIONARY.home.newArrivals}
               subtitle={RU_DICTIONARY.home.newArrivalsSubtitle}
-              viewAllLink={buildPath(country, `/products?sort=newest`)}
+              viewAllLink={buildPath(country, `${ROUTES.katalog}?sort=newest`)}
               viewAllText={RU_DICTIONARY.home.viewAll}
             />
           </div>
@@ -326,7 +327,7 @@ export default function HomeClientPage({
                 loading={loading}
                 title={RU_DICTIONARY.home.faceWash}
                 subtitle={RU_DICTIONARY.home.faceWashSubtitle}
-                viewAllLink={buildPath(country, `/products?category=cosmetics&sub_category=face-care&sub_sub_category=cleansers-and-face-wash`)}
+                viewAllLink={buildPath(country, ROUTES.katalogPath('kosmetika/uhod-za-licom/ochishchayushchie-sredstva'))}
                 viewAllText={RU_DICTIONARY.home.shopFaceWash}
               />
           </div>
@@ -339,7 +340,7 @@ export default function HomeClientPage({
                 loading={loading}
                 title={RU_DICTIONARY.home.hairOils}
                 subtitle={RU_DICTIONARY.home.hairOilsSubtitle}
-                viewAllLink={buildPath(country, `/products?category=cosmetics&sub_category=hair-care&sub_sub_category=shampoos-and-conditioners`)}
+                viewAllLink={buildPath(country, ROUTES.katalogPath('kosmetika/uhod-za-volosami/shampuni-i-kondicionery'))}
                 viewAllText={RU_DICTIONARY.home.shopHairOils}
               />
           </div>

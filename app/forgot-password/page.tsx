@@ -4,9 +4,10 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { forgotPassword } from '@/lib/api';
-import { ArrowLeft, Mail } from 'lucide-react';
+import { ArrowLeft, Mail, Loader2, CheckCircle2 } from 'lucide-react';
+import { forgotPassword, API_URL } from '@/lib/api';
 import { RU_DICTIONARY } from '@/content/ru';
+import { ROUTES } from '@/lib/routes';
 
 function ForgotPasswordContent() {
     const router = useRouter();
@@ -50,7 +51,7 @@ function ForgotPasswordContent() {
         <div className="bg-white flex flex-col items-center pt-10 md:pt-16 px-4 pb-25 min-h-screen">
             <div className="w-full max-w-md">
 
-                <Link href="/login" className="inline-flex items-center gap-2 mb-6 text-sm font-medium text-warm-gray hover:text-[#91C934] transition-colors">
+                <Link href={ROUTES.login} className="inline-flex items-center gap-2 mb-6 text-sm font-medium text-warm-gray hover:text-[#91C934] transition-colors">
                     <ArrowLeft className="w-4 h-4" />
                     {RU_DICTIONARY.auth.back}
                 </Link>

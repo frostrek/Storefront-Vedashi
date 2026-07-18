@@ -17,6 +17,7 @@ import Select from 'react-select';
 import { COUNTRY_CODES } from '@/lib/country-codes';
 import { getDefaultCountry } from '@/lib/addressConfig';
 import { RU_DICTIONARY } from '@/content/ru';
+import { ROUTES } from '@/lib/routes';
 
 // API_URL imported from @/lib/api
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? 'YOUR_SITE_KEY';
@@ -686,7 +687,7 @@ function LoginContent() {
                                                     className="hidden"
                                                 />
                                             </label>
-                                            <Link href="/forgot-password" className="text-xs font-semibold text-[#91C934] hover:underline transition-colors cursor-pointer">
+                                            <Link href={ROUTES.forgotPassword} className="text-xs font-semibold text-[#91C934] hover:underline transition-colors cursor-pointer">
                                                 {RU_DICTIONARY.auth.forgotPassword}
                                             </Link>
                                         </div>

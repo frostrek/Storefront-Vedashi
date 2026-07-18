@@ -24,6 +24,7 @@ import { useRouter, useSearchParams, notFound } from 'next/navigation';
 import { CheckCircle2, FlaskConical, Leaf as LeafIcon, ShieldCheck } from 'lucide-react';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { buildPath, getCountryFromPathname } from '@/lib/currency';
+import { ROUTES } from '@/lib/routes';
 
 
 // Dynamic imports for below-fold sections
@@ -426,11 +427,11 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                     <nav className="flex items-center gap-2 text-sm text-gray-500">
                         <Link href={buildPath(country, '/')}>Home</Link>
                         <ChevronRight className="h-3 w-3" />
-                        <Link href={buildPath(country, `/products`)}>Shop</Link>
+                        <Link href={buildPath(country, ROUTES.katalog)}>Shop</Link>
                         <ChevronRight className="h-3 w-3" />
                         {product.category && (
                             <>
-                                <Link href={buildPath(country, `/products?category=${encodeURIComponent(product.category.toLowerCase().replace(/\s+/g, '-'))}`)} className="hover:text-gray-900 transition-colors">
+                                <Link href={buildPath(country, ROUTES.katalogPath((product as any).category_slug || product.category || ''))} className="hover:text-amber-700 transition-colors">
                                     {product.category}
                                 </Link>
                                 <ChevronRight className="h-3 w-3" />
@@ -478,7 +479,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                 {product.brand && (
                                     <div className="mt-1">
                                         <Link
-                                            href={buildPath(country, `/products?brand=${encodeURIComponent(product.brand)}`)}
+                                            href={buildPath(country, `${ROUTES.katalog}?brand=${encodeURIComponent(product.brand)}`)}
                                             className="text-sm font-semibold underline text-gray-500 hover:text-gray-700 transition-all"
                                         >
                                             {product.brand}

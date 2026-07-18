@@ -3,6 +3,7 @@
 
 import { useState, useEffect, Suspense, useRef } from 'react';
 import { RU_DICTIONARY } from '@/content/ru';
+import { ROUTES } from '@/lib/routes';
 import { createPortal } from 'react-dom';
 import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
@@ -1242,10 +1243,10 @@ function CheckoutContent() {
                             Your sacred herbs and authentic formulations are being prepared with care. We&apos;ll notify you regarding the delivery schedule.
                         </p>
                         <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-                            <Link href={`/${routeCountry}/products`} className="cart-checkout-btn !w-auto bg-[#E8E4DC] hover:bg-[#D4CFC0] order-2 sm:order-1">
+                            <Link href={`/${routeCountry}${ROUTES.katalog}`} className="cart-checkout-btn !w-auto bg-[#E8E4DC] hover:bg-[#D4CFC0] order-2 sm:order-1">
                                 {RU_DICTIONARY.checkoutFlow.continueExploring}
                             </Link>
-                            <Link href={`/${routeCountry}/account`} className="cart-checkout-btn !w-auto order-1 sm:order-2">
+                            <Link href={`/${routeCountry}${ROUTES.account}`} className="cart-checkout-btn !w-auto order-1 sm:order-2">
                                 {RU_DICTIONARY.checkoutFlow.trackYourJourney}
                             </Link>
                         </div>

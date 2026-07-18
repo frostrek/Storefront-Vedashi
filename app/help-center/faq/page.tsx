@@ -10,6 +10,7 @@ import {
 import { getFaqs, searchFaqs } from '@/lib/api';
 import { generateFAQPageJsonLd } from '@/lib/seo';
 import { RU_DICTIONARY } from '@/content/ru';
+import { ROUTES } from '@/lib/routes';
 
 interface Faq {
     faq_id: string;
@@ -319,7 +320,7 @@ export default function FAQPage() {
                                     {RU_DICTIONARY.helpCenter.faqPage.sidebar.needHelpDesc}
                                 </p>
                                 <Link
-                                    href="/help-center/support"
+                                    href={ROUTES.helpCenterSupport}
                                     className="flex items-center justify-center gap-3 bg-[#4A5D23] text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-[#3a491b] transition-all shadow-lg hover:-translate-y-1"
                                 >
                                     <Mail className="h-5 w-5" />
@@ -344,7 +345,7 @@ export default function FAQPage() {
                 {/* Back + CTA footer */}
                 <div className="mt-24 flex flex-col sm:flex-row items-center justify-between gap-8 border-t-2 border-[#4A5D23]/5 pt-12">
                     <Link
-                        href="/help-center"
+                        href={ROUTES.helpCenter}
                         className="inline-flex items-center gap-3 text-lg font-bold text-[#5B4A31] hover:text-[#4A5D23] transition-all group"
                     >
                         <div className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center group-hover:bg-[#4A5D23] group-hover:text-white transition-all">
@@ -353,7 +354,7 @@ export default function FAQPage() {
                         {RU_DICTIONARY.helpCenter.faqPage.footer.home}
                     </Link>
                     <Link
-                        href="/help-center/support"
+                        href={ROUTES.helpCenterSupport}
                         className="inline-flex items-center gap-3 bg-white text-[#4A5D23] border-2 border-[#4A5D23] px-10 py-5 rounded-[20px] font-black text-lg hover:bg-[#4A5D23] hover:text-white transition-all shadow-xl hover:-translate-y-1"
                     >
                         {RU_DICTIONARY.helpCenter.faqPage.footer.submitTicket}

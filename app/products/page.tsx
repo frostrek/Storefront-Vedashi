@@ -37,9 +37,9 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     Object.keys(SUPPORTED_COUNTRIES).forEach((c) => {
         const locale = SUPPORTED_COUNTRIES[c as keyof typeof SUPPORTED_COUNTRIES].locale;
         const query = categorySlug ? `?category=${categorySlug}` : '';
-        languages[locale] = `${SITE_URL}/${c}/products${query}`;
+        languages[locale] = `${SITE_URL}/${c}/katalog${query}`;
     });
-    languages['x-default'] = `${SITE_URL}/in/products${categorySlug ? `?category=${categorySlug}` : ''}`;
+    languages['x-default'] = `${SITE_URL}/in/katalog${categorySlug ? `?category=${categorySlug}` : ''}`;
 
     const title = categoryName 
         ? RU_DICTIONARY.plp.seo.buyOnline.replace('{category}', categoryName) 
@@ -49,7 +49,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
         ? RU_DICTIONARY.plp.seo.categoryDesc.replace('{category}', categoryName)
         : RU_DICTIONARY.plp.seo.allProductsDesc;
 
-    const canonicalPath = categorySlug ? `/products?category=${categorySlug}` : '/products';
+    const canonicalPath = categorySlug ? `/katalog?category=${categorySlug}` : '/katalog';
 
     return {
         title,
@@ -87,13 +87,13 @@ export default async function ProductsPage({ params, searchParams }: Props) {
 
     const breadcrumbItems = [
         { name: 'Home', url: `${SITE_URL}/${country}` },
-        { name: 'Products', url: `${SITE_URL}/${country}/products` }
+        { name: 'Products', url: `${SITE_URL}/${country}/katalog` }
     ];
 
     if (category) {
         breadcrumbItems.push({ 
             name: category.name, 
-            url: `${SITE_URL}/${country}/products?category=${category.slug}` 
+            url: `${SITE_URL}/${country}/katalog?category=${category.slug}` 
         });
     }
 

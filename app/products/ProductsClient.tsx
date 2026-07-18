@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, Suspense, useCallback, useRef, useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { getCategories, getFilterOptions, getBestSellers, getNewArrivals, getFilteredProducts, subscribeNewsletter, getFormEnumOptions, getSpecialityEnumOptions } from '@/lib/api';
 import { useCurrency } from '@/context/CurrencyContext';
+import { ROUTES } from '@/lib/routes';
 import { FilteredProduct, FilterMeta, Category } from '@/types';
 import ProductCard from '@/components/ProductCard';
 import { getValidPrices } from '@/utils/discount';
@@ -39,7 +40,13 @@ interface FilterAttribute {
 
 const ITEMS_PER_PAGE = 24;
 
-function ProductsContent() {
+interface CategoryContext {
+    category?: string;
+    sub_category?: string;
+    sub_sub_category?: string;
+}
+
+function ProductsContent({ categoryContext }: { categoryContext?: CategoryContext }) {
     const { formatPrice, format, resolvePrice, countryCode } = useCurrency();
     const {
         filters,
@@ -66,6 +73,30 @@ function ProductsContent() {
     } = useFilters(format);
 
     const searchParams = useSearchParams();
+
+    // Override the filters from the URL query params with the hierarchical path context
+    const activeCategory = categoryContext?.category || filters.category;
+    const activeSubCategory = categoryContext?.sub_category || filters.sub_category;
+    const activeSubSubCategory = categoryContext?.sub_sub_category || filters.sub_sub_category;
+
+    const router = useRouter();
+    const handleCategoryRoute = (level: 'category' | 'sub_category' | 'sub_sub_category', slug: string) => {
+        if (!slug) {
+            router.push(ROUTES.katalog);
+            return;
+        }
+
+        let newPath = '';
+        if (level === 'category') {
+            newPath = slug;
+        } else if (level === 'sub_category') {
+            newPath = `${activeCategory}/${slug}`;
+        } else if (level === 'sub_sub_category') {
+            newPath = `${activeCategory}/${activeSubCategory}/${slug}`;
+        }
+
+        router.push(ROUTES.katalogPath(newPath));
+    };
 
     const gridRef = useRef<HTMLDivElement>(null);
     // Sentinel ref for IntersectionObserver (infinite scroll trigger)
@@ -113,8 +144,24 @@ function ProductsContent() {
     const [specialityFilterOptions, setSpecialityFilterOptions] = useState<string[]>([]);
 
     // Resolve slug values → real display names for category/sub_category chips
-    const resolvedChips = useMemo(() =>
-        activeChips.map(chip => {
+    const resolvedChips = useMemo(() => {
+        // Filter out categories from activeChips to prevent duplicates, we'll add them manually from active*
+        const baseChips = activeChips.filter(c => !['category', 'sub_category', 'sub_sub_category'].includes(c.key));
+        
+        const pathChips = [];
+        if (activeCategory) {
+            pathChips.push({ key: 'category', label: 'Category', value: activeCategory });
+        }
+        if (activeSubCategory) {
+            pathChips.push({ key: 'sub_category', label: 'Subcategory', value: activeSubCategory });
+        }
+        if (activeSubSubCategory) {
+            pathChips.push({ key: 'sub_sub_category', label: 'Sub-subcategory', value: activeSubSubCategory });
+        }
+
+        const allChips = [...pathChips, ...baseChips];
+
+        return allChips.map(chip => {
             if (chip.key === 'category') {
                 const cat = categories.find(c => c.slug === chip.value);
                 return cat ? { ...chip, value: cat.name } : chip;
@@ -133,9 +180,8 @@ function ProductsContent() {
                 return subSubCat ? { ...chip, value: subSubCat.name } : chip;
             }
             return chip;
-        }),
-        [activeChips, categories]
-    );
+        });
+    }, [activeChips, categories, activeCategory, activeSubCategory, activeSubSubCategory]);
 
     const displayCountryOptions = Array.from(
         new Set([...COUNTRIES.map(c => c.name), ...countryOptions])
@@ -165,9 +211,9 @@ function ProductsContent() {
 
         if (filters.search) params.search = filters.search;
         if (filters.sort) params.sort = filters.sort;
-        if (filters.category) params.category = filters.category;
-        if (filters.sub_category) params.sub_category = filters.sub_category;
-        if (filters.sub_sub_category) params.sub_sub_category = filters.sub_sub_category;
+        if (activeCategory) params.category = activeCategory;
+        if (activeSubCategory) params.sub_category = activeSubCategory;
+        if (activeSubSubCategory) params.sub_sub_category = activeSubSubCategory;
         if (filters.brands.length > 0) params.brand = filters.brands.join(',');
         if (filters.priceRange[0] !== 0) params.min_price = filters.priceRange[0];
         if (filters.priceRange[1] !== Infinity) params.max_price = filters.priceRange[1];
@@ -388,9 +434,9 @@ function ProductsContent() {
                     <div className="space-y-3 pt-1">
                         <select
                             className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] font-medium focus:border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-colors cursor-pointer"
-                            value={filters.category}
+                            value={activeCategory || ""}
                             onChange={(e) => {
-                                setCategory(e.target.value);
+                                handleCategoryRoute('category', e.target.value);
                             }}
                         >
                             <option value="">{RU_DICTIONARY.plp.allCategories}</option>
@@ -400,28 +446,28 @@ function ProductsContent() {
                         </select>
 
                         {/* Subcategory */}
-                        {filters.category && (categories.find((c: any) => c.slug === filters.category)?.children?.length ?? 0) > 0 && (
+                        {activeCategory && (categories.find((c: any) => c.slug === activeCategory)?.children?.length ?? 0) > 0 && (
                             <select
                                 className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] font-medium focus:border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-colors cursor-pointer"
-                                value={filters.sub_category}
-                                onChange={(e) => setSubCategory(e.target.value)}
+                                value={activeSubCategory || ""}
+                                onChange={(e) => handleCategoryRoute('sub_category', e.target.value)}
                             >
                                 <option value="">{RU_DICTIONARY.plp.allSubcategories}</option>
-                                {categories.find((c: Category) => c.slug === filters.category)?.children?.map((sub: Category) => (
+                                {categories.find((c: Category) => c.slug === activeCategory)?.children?.map((sub: Category) => (
                                     <option key={sub.category_id} value={sub.slug}>{sub.name}</option>
                                 ))}
                             </select>
                         )}
                         
                         {/* Sub Subcategory */}
-                        {filters.sub_category && (categories.find((c: any) => c.slug === filters.category)?.children?.find((s: any) => s.slug === filters.sub_category)?.children?.length ?? 0) > 0 && (
+                        {activeSubCategory && (categories.find((c: any) => c.slug === activeCategory)?.children?.find((s: any) => s.slug === activeSubCategory)?.children?.length ?? 0) > 0 && (
                             <select
                                 className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] font-medium focus:border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-colors cursor-pointer"
-                                value={filters.sub_sub_category}
-                                onChange={(e) => setSubSubCategory(e.target.value)}
+                                value={activeSubSubCategory || ""}
+                                onChange={(e) => handleCategoryRoute('sub_sub_category', e.target.value)}
                             >
                                 <option value="">{RU_DICTIONARY.plp.allTypes}</option>
-                                {categories.find((c: any) => c.slug === filters.category)?.children?.find((s: any) => s.slug === filters.sub_category)?.children?.map((sub: Category) => (
+                                {categories.find((c: any) => c.slug === activeCategory)?.children?.find((s: any) => s.slug === activeSubCategory)?.children?.map((sub: Category) => (
                                     <option key={sub.category_id} value={sub.slug}>{sub.name}</option>
                                 ))}
                             </select>
@@ -642,34 +688,34 @@ function ProductsContent() {
                                                 <div className="space-y-3">
                                                     <select
                                                         className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] font-medium focus:border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-colors cursor-pointer"
-                                                        value={filters.category}
-                                                        onChange={(e) => setCategory(e.target.value)}
+                                                        value={activeCategory || ""}
+                                                        onChange={(e) => handleCategoryRoute('category', e.target.value)}
                                                     >
                                                         <option value="">{RU_DICTIONARY.plp.allCategories}</option>
                                                         {categories.map((cat: Category) => (
                                                             <option key={cat.category_id} value={cat.slug}>{cat.name}</option>
                                                         ))}
                                                     </select>
-                                                    {filters.category && (categories.find((c: any) => c.slug === filters.category)?.children?.length ?? 0) > 0 && (
+                                                    {activeCategory && (categories.find((c: any) => c.slug === activeCategory)?.children?.length ?? 0) > 0 && (
                                                         <select
                                                             className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] font-medium focus:border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-colors cursor-pointer"
-                                                            value={filters.sub_category}
-                                                            onChange={(e) => setSubCategory(e.target.value)}
+                                                            value={activeSubCategory || ""}
+                                                            onChange={(e) => handleCategoryRoute('sub_category', e.target.value)}
                                                         >
                                                             <option value="">{RU_DICTIONARY.plp.allSubcategories}</option>
-                                                            {categories.find((c: Category) => c.slug === filters.category)?.children?.map((sub: Category) => (
+                                                            {categories.find((c: Category) => c.slug === activeCategory)?.children?.map((sub: Category) => (
                                                                 <option key={sub.category_id} value={sub.slug}>{sub.name}</option>
                                                             ))}
                                                         </select>
                                                     )}
-                                                    {filters.sub_category && (categories.find((c: any) => c.slug === filters.category)?.children?.find((s: any) => s.slug === filters.sub_category)?.children?.length ?? 0) > 0 && (
+                                                    {activeSubCategory && (categories.find((c: any) => c.slug === activeCategory)?.children?.find((s: any) => s.slug === activeSubCategory)?.children?.length ?? 0) > 0 && (
                                                         <select
                                                             className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] font-medium focus:border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-colors cursor-pointer"
-                                                            value={filters.sub_sub_category}
-                                                            onChange={(e) => setSubSubCategory(e.target.value)}
+                                                            value={activeSubSubCategory || ""}
+                                                            onChange={(e) => handleCategoryRoute('sub_sub_category', e.target.value)}
                                                         >
                                                             <option value="">{RU_DICTIONARY.plp.allTypes}</option>
-                                                            {categories.find((c: any) => c.slug === filters.category)?.children?.find((s: any) => s.slug === filters.sub_category)?.children?.map((sub: Category) => (
+                                                            {categories.find((c: any) => c.slug === activeCategory)?.children?.find((s: any) => s.slug === activeSubCategory)?.children?.map((sub: Category) => (
                                                                 <option key={sub.category_id} value={sub.slug}>{sub.name}</option>
                                                             ))}
                                                         </select>
@@ -897,8 +943,23 @@ function ProductsContent() {
 
                         <ActiveFilterChips
                             chips={resolvedChips}
-                            onRemove={removeFilter}
-                            onClearAll={clearAll}
+                            onRemove={(key, value) => {
+                                if (key === 'category' && categoryContext?.category) {
+                                    router.push(ROUTES.katalog);
+                                } else if (key === 'sub_category' && categoryContext?.category) {
+                                    router.push(ROUTES.katalogPath(categoryContext.category));
+                                } else if (key === 'sub_sub_category' && categoryContext?.category && categoryContext?.sub_category) {
+                                    router.push(ROUTES.katalogPath(`${categoryContext.category}/${categoryContext.sub_category}`));
+                                } else {
+                                    removeFilter(key, value);
+                                }
+                            }}
+                            onClearAll={() => {
+                                if (categoryContext?.category) {
+                                    router.push(ROUTES.katalog);
+                                }
+                                clearAll();
+                            }}
                         />
 
                         {loading ? (
@@ -1054,10 +1115,10 @@ function ProductsContent() {
     );
 }
 
-export default function ProductsClientPage() {
+export default function ProductsClientPage({ categoryContext }: { categoryContext?: CategoryContext }) {
     return (
         <Suspense fallback={<div className="min-h-screen bg-white p-8 pt-24"><SkeletonProductGrid count={8} /></div>}>
-            <ProductsContent />
+            <ProductsContent categoryContext={categoryContext} />
         </Suspense>
     );
 }

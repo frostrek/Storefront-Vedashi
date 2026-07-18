@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { getKBCategories, getKBArticles, searchKBArticles } from '@/lib/api';
 import { RU_DICTIONARY } from '@/content/ru';
+import { ROUTES } from '@/lib/routes';
 
 /* ── Category icon mapping ─────────────────────────────────── */
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
@@ -274,7 +275,7 @@ export default function KnowledgeBasePage() {
                                                 <ChevronDown className={`h-4 w-4 transition-transform duration-500 ${isExpanded ? 'rotate-180' : ''}`} />
                                             </button>
                                             <Link
-                                                href={`/help-center/knowledge-base/${article.slug}`}
+                                                href={ROUTES.helpCenterKnowledgeBaseArticle(article.slug)}
                                                 className="inline-flex items-center gap-3 bg-[#4A5D23]/5 text-[#4A5D23] px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-[#4A5D23] hover:text-white transition-all ml-auto hover:shadow-lg"
                                             >
                                                 {RU_DICTIONARY.helpCenter.knowledgeBase.article.openArticle}
@@ -291,7 +292,7 @@ export default function KnowledgeBasePage() {
                 {/* Back + Help footer */}
                 <div className="mt-32 flex flex-col sm:flex-row items-center justify-between gap-8 border-t border-[#4A5D23]/10 pt-16">
                     <Link
-                        href="/help-center"
+                        href={ROUTES.helpCenter}
                         className="inline-flex items-center gap-4 text-lg font-bold text-[#5B4A31] hover:text-[#4A5D23] transition-all group"
                     >
                         <div className="w-14 h-14 rounded-2xl bg-white shadow-xl flex items-center justify-center group-hover:bg-[#4A5D23] group-hover:text-white transition-all">
@@ -300,7 +301,7 @@ export default function KnowledgeBasePage() {
                         {RU_DICTIONARY.helpCenter.knowledgeBase.footer.home}
                     </Link>
                     <Link
-                        href="/help-center/support"
+                        href={ROUTES.helpCenterSupport}
                         className="inline-flex items-center gap-4 bg-[#4A5D23] text-white px-10 py-5 rounded-2xl text-lg font-black uppercase tracking-widest hover:bg-[#3a491b] transition-all shadow-2xl hover:-translate-y-1"
                     >
                         <HeadphonesIcon className="h-6 w-6" />

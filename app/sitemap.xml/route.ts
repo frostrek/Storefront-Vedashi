@@ -1,7 +1,14 @@
 import { API_URL } from '@/lib/api';
 import { SUPPORTED_COUNTRIES, buildPath } from '@/lib/currency';
+import { ROUTES } from '@/lib/routes';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.com';
+
+interface StaticPageEntry {
+    path: string;
+    changefreq: string;
+    priority: string;
+}
 
 async function fetchSitemapData() {
     try {
@@ -21,6 +28,17 @@ async function fetchSitemapData() {
             console.error('[Sitemap] Fetch error:', error);
         }
         return { products: [], categories: [] };
+    }
+}
+
+async function fetchBlogPosts(): Promise<Array<{ slug: string; updated_at?: string }>> {
+    try {
+        const res = await fetch(`${API_URL}/api/blogs?limit=500&status=published`, { next: { revalidate: 3600 } });
+        if (!res.ok) return [];
+        const json = await res.json();
+        return json.success ? (json.data?.posts || json.data || []) : [];
+    } catch {
+        return [];
     }
 }
 
@@ -54,9 +72,29 @@ function addHreflangLinks(
  * remaining fully standards-compliant for crawlers.
  */
 export async function GET() {
-    const { products, categories } = await fetchSitemapData();
+    const [{ products, categories }, blogPosts] = await Promise.all([
+        fetchSitemapData(),
+        fetchBlogPosts(),
+    ]);
     const lastMod = new Date().toISOString();
     const countries = Object.keys(SUPPORTED_COUNTRIES);
+
+    // All indexable static pages with their Russian paths
+    const staticPages: StaticPageEntry[] = [
+        { path: '', changefreq: 'daily', priority: '1.0' },
+        { path: ROUTES.katalog.slice(1), changefreq: 'daily', priority: '0.9' },
+        { path: ROUTES.about.slice(1), changefreq: 'monthly', priority: '0.6' },
+        { path: ROUTES.contact.slice(1), changefreq: 'monthly', priority: '0.5' },
+        { path: ROUTES.blog.slice(1), changefreq: 'daily', priority: '0.8' },
+        { path: ROUTES.helpCenter.slice(1), changefreq: 'monthly', priority: '0.5' },
+        { path: ROUTES.helpCenterFaq.slice(1), changefreq: 'monthly', priority: '0.5' },
+        { path: ROUTES.helpCenterKnowledgeBase.slice(1), changefreq: 'weekly', priority: '0.5' },
+        { path: ROUTES.shipping.slice(1), changefreq: 'monthly', priority: '0.4' },
+        { path: ROUTES.returnPolicy.slice(1), changefreq: 'monthly', priority: '0.4' },
+        { path: ROUTES.privacy.slice(1), changefreq: 'yearly', priority: '0.3' },
+        { path: ROUTES.terms.slice(1), changefreq: 'yearly', priority: '0.3' },
+        { path: ROUTES.vendorRegistration.slice(1), changefreq: 'monthly', priority: '0.3' },
+    ];
 
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
     xml += `<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>\n`;
@@ -64,43 +102,56 @@ export async function GET() {
 
     for (const country of countries) {
         // Static Pages
-        const staticPages = ['', '/about', '/contact', '/blog'];
-        for (const p of staticPages) {
-            const loc = `${SITE_URL}${buildPath(country, p)}`;
-            const changefreq = p === '' ? 'daily' : 'weekly';
-            const priority = p === '' ? '1.0' : '0.8';
+        for (const sp of staticPages) {
+            const loc = `${SITE_URL}${buildPath(country, sp.path)}`;
 
             xml += `  <url>\n`;
             xml += `    <loc>${escapeXml(loc)}</loc>\n`;
             xml += `    <lastmod>${lastMod}</lastmod>\n`;
-            xml += `    <changefreq>${changefreq}</changefreq>\n`;
-            xml += `    <priority>${priority}</priority>\n`;
-            xml += addHreflangLinks(countries, (c) => `${SITE_URL}${buildPath(c, p)}`);
+            xml += `    <changefreq>${sp.changefreq}</changefreq>\n`;
+            xml += `    <priority>${sp.priority}</priority>\n`;
+            xml += addHreflangLinks(countries, (c) => `${SITE_URL}${buildPath(c, sp.path)}`);
             xml += `  </url>\n`;
         }
 
         // Category Pages
         for (const c of categories) {
-            const loc = `${SITE_URL}${buildPath(country, `/products?category=${c.slug}`)}`;
+            const catPath = ROUTES.katalogPath(c.full_path || c.slug).slice(1);
+            const loc = `${SITE_URL}${buildPath(country, catPath)}`;
             xml += `  <url>\n`;
             xml += `    <loc>${escapeXml(loc)}</loc>\n`;
             xml += `    <lastmod>${lastMod}</lastmod>\n`;
             xml += `    <changefreq>weekly</changefreq>\n`;
             xml += `    <priority>0.7</priority>\n`;
-            xml += addHreflangLinks(countries, (cc) => `${SITE_URL}${buildPath(cc, `/products?category=${c.slug}`)}`);
+            xml += addHreflangLinks(countries, (cc) => `${SITE_URL}${buildPath(cc, catPath)}`);
             xml += `  </url>\n`;
         }
 
         // Product Pages
         for (const p of products) {
-            const loc = `${SITE_URL}${buildPath(country, `/products/${p.slug}`)}`;
+            const prodPath = ROUTES.tovar(p.slug).slice(1);
+            const loc = `${SITE_URL}${buildPath(country, prodPath)}`;
             const pMod = p.updated_at ? new Date(p.updated_at).toISOString() : lastMod;
             xml += `  <url>\n`;
             xml += `    <loc>${escapeXml(loc)}</loc>\n`;
             xml += `    <lastmod>${pMod}</lastmod>\n`;
             xml += `    <changefreq>weekly</changefreq>\n`;
             xml += `    <priority>0.9</priority>\n`;
-            xml += addHreflangLinks(countries, (cc) => `${SITE_URL}${buildPath(cc, `/products/${p.slug}`)}`);
+            xml += addHreflangLinks(countries, (cc) => `${SITE_URL}${buildPath(cc, prodPath)}`);
+            xml += `  </url>\n`;
+        }
+
+        // Blog Posts
+        for (const post of blogPosts) {
+            const blogPath = `${ROUTES.blog.slice(1)}/${post.slug}`;
+            const loc = `${SITE_URL}${buildPath(country, blogPath)}`;
+            const bMod = post.updated_at ? new Date(post.updated_at).toISOString() : lastMod;
+            xml += `  <url>\n`;
+            xml += `    <loc>${escapeXml(loc)}</loc>\n`;
+            xml += `    <lastmod>${bMod}</lastmod>\n`;
+            xml += `    <changefreq>monthly</changefreq>\n`;
+            xml += `    <priority>0.6</priority>\n`;
+            xml += addHreflangLinks(countries, (cc) => `${SITE_URL}${buildPath(cc, blogPath)}`);
             xml += `  </url>\n`;
         }
     }

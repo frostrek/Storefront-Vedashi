@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { ArrowRight, Leaf, ShieldCheck, MapPin, BookOpen, Globe, Rocket, ShoppingBag, TrendingUp } from 'lucide-react';
+import { ROUTES } from '@/lib/routes';
 import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
 import { useParams } from 'next/navigation';
 import { RU_DICTIONARY } from '@/content/ru';
@@ -64,8 +65,8 @@ export default function AboutClientPage() {
                     <AnimateOnScroll animation="fadeUp" delay={0.4}>
                         <div className="mt-10 flex flex-wrap justify-center gap-4">
                             <Link
-                                href={`/products`}
-                                className="inline-flex items-center gap-2.5 rounded-full bg-[#5F6F52] px-8 py-4 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:bg-[#4A5A3E] hover:-translate-y-0.5 hover:shadow-xl"
+                                href={ROUTES.katalog}
+                                className="group inline-flex items-center gap-2 bg-[#91c934] text-white px-8 py-4 rounded-xl font-bold hover:bg-[#7aab2c] transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
                             >
                                 {t.hero.exploreCollections}
                                 <ArrowRight className="h-4 w-4" />

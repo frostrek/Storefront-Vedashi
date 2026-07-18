@@ -28,14 +28,14 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     const categoryTitle = product.category ? `${product.category} | ` : '';
     const title = `${product.product_name} | Buy Authentic Ayurvedic ${categoryTitle}Vedashi`;
     const description = product.short_description || `Buy ${product.product_name} directly from India. Authentic Ayurvedic wellness and natural remedies.`;
-    const productUrl = `${SITE_URL}/products/${product.slug || product.product_id}`;
+    const productUrl = `${SITE_URL}/tovar/${product.slug || product.product_id}`;
 
     const languages: Record<string, string> = {};
     Object.keys(SUPPORTED_COUNTRIES).forEach((c) => {
         const locale = SUPPORTED_COUNTRIES[c as keyof typeof SUPPORTED_COUNTRIES].locale;
-        languages[locale] = `${SITE_URL}/products/${product.slug || product.product_id}`;
+        languages[locale] = `${SITE_URL}/tovar/${product.slug || product.product_id}`;
     });
-    languages['x-default'] = `${SITE_URL}/products/${product.slug || product.product_id}`;
+    languages['x-default'] = `${SITE_URL}/tovar/${product.slug || product.product_id}`;
 
     // Get a default image string
     let ogImage: string | undefined = product.thumbnail_url;
@@ -84,9 +84,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
     const breadcrumbs = generateBreadcrumbJsonLd([
         { name: 'Home', url: `${SITE_URL}` },
-        { name: 'Shop', url: `${SITE_URL}/products` },
-        { name: product.category || 'Category', url: `${SITE_URL}/products?category=${encodeURIComponent((product.category || '').toLowerCase().replace(/\s+/g, '-'))}` },
-        { name: product.product_name, url: `${SITE_URL}/products/${product.slug || product.product_id}` },
+        { name: 'Shop', url: `${SITE_URL}/katalog` },
+        { name: product.category || 'Category', url: `${SITE_URL}/katalog/${(product as any).category_slug || product.category || ''}` },
+        { name: product.product_name, url: `${SITE_URL}/tovar/${product.slug || product.product_id}` },
     ]);
 
     return (

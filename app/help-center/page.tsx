@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation';
 import { Search, MessageSquare, HelpCircle, BookOpen, FileText, ChevronRight, Send } from 'lucide-react';
 import { getFaqs, getHelpArticles, searchFaqs, searchHelpArticles, searchKBArticles } from '@/lib/api';
 import { RU_DICTIONARY } from '@/content/ru';
+import { ROUTES } from '@/lib/routes';
 
 export default function HelpCenterPage() {
     const params = useParams();
@@ -49,28 +50,28 @@ export default function HelpCenterPage() {
             title: RU_DICTIONARY.helpCenter.sections.faqs.title,
             desc: RU_DICTIONARY.helpCenter.sections.faqs.desc,
             icon: HelpCircle,
-            href: `/help-center/faq`,
+            href: ROUTES.helpCenterFaq,
             color: '#722F37',
         },
         {
             title: RU_DICTIONARY.helpCenter.sections.knowledgeBase.title,
             desc: RU_DICTIONARY.helpCenter.sections.knowledgeBase.desc,
             icon: BookOpen,
-            href: `/help-center/knowledge-base`,
+            href: ROUTES.helpCenterKnowledgeBase,
             color: '#8B4513',
         },
         {
             title: RU_DICTIONARY.helpCenter.sections.supportTickets.title,
             desc: RU_DICTIONARY.helpCenter.sections.supportTickets.desc,
             icon: MessageSquare,
-            href: `/help-center/support`,
+            href: ROUTES.helpCenterSupport,
             color: '#4b0f1a',
         },
         {
             title: RU_DICTIONARY.helpCenter.sections.customerEnquiry.title,
             desc: RU_DICTIONARY.helpCenter.sections.customerEnquiry.desc,
             icon: Send,
-            href: `/help-center/customer-enquiry`,
+            href: ROUTES.helpCenterCustomerEnquiry,
             color: '#5B3A29',
         },
     ];
@@ -139,10 +140,10 @@ export default function HelpCenterPage() {
                                     key={i}
                                     href={
                                         item._type === 'faq'
-                                            ? `/help-center/faq`
+                                            ? ROUTES.helpCenterFaq
                                             : item._type === 'help'
-                                                ? `/help-center/${item.slug || ''}`
-                                                : `/help-center/knowledge-base/${item.slug || ''}`
+                                                ? ROUTES.helpCenter + "/" + (item.slug || "")
+                                                : ROUTES.helpCenterKnowledgeBaseArticle(item.slug || "")
                                     }
                                     className="block bg-white/60 backdrop-blur-sm rounded-2xl p-5 border border-[#4A5D23]/5 hover:border-[#4A5D23]/30 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 group"
                                 >
@@ -224,7 +225,7 @@ export default function HelpCenterPage() {
                         {popularFaqs.map((faq: any) => (
                             <Link
                                 key={faq.faq_id}
-                                href={`/help-center/faq`}
+                                href={ROUTES.helpCenterFaq}
                                 className="flex items-center justify-between bg-white rounded-2xl p-6 border border-[#4A5D23]/5 hover:border-[#4A5D23]/20 hover:shadow-md transition-all group"
                             >
                                 <div className="flex items-center gap-4">
@@ -241,7 +242,7 @@ export default function HelpCenterPage() {
                     </div>
                     <div className="text-center mt-10">
                         <Link
-                            href={`/help-center/faq`}
+                            href={ROUTES.helpCenterFaq}
                             className="inline-flex items-center gap-2 py-3 px-8 rounded-full border-2 border-[#4A5D23] text-[#4A5D23] font-bold hover:bg-[#4A5D23] hover:text-white transition-all"
                         >
                             {RU_DICTIONARY.helpCenter.viewAllFaqs}
@@ -267,7 +268,7 @@ export default function HelpCenterPage() {
                         </p>
                         <div className="flex flex-col sm:flex-row gap-5 justify-center">
                             <Link
-                                href={`/help-center/support`}
+                                href={ROUTES.helpCenterSupport}
                                 className="inline-flex items-center justify-center gap-3 bg-[#4A5D23] text-white px-10 py-5 rounded-2xl font-bold text-lg hover:bg-[#3a491b] hover:shadow-2xl hover:-translate-y-1 transition-all"
                             >
                                 <MessageSquare className="h-6 w-6" />

@@ -11,6 +11,7 @@ import {
 import { getSupportTicketDetail, replySupportTicket } from '@/lib/api';
 import toast from 'react-hot-toast';
 import { RU_DICTIONARY } from '@/content/ru';
+import { ROUTES } from '@/lib/routes';
 
 const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; dot: string }> = {
     open: { label: 'Open', bg: 'bg-[#4A5D23]/10', text: 'text-[#4A5D23]', dot: 'bg-[#4A5D23]' },
@@ -108,7 +109,7 @@ export default function TicketDetailPage() {
                     </div>
                     <h2 className="text-3xl font-bold text-[#1a2408] mb-4">{RU_DICTIONARY.helpCenter.support.detail.notFoundTitle}</h2>
                     <p className="text-[#5B4A31] mb-10 font-medium">{RU_DICTIONARY.helpCenter.support.detail.notFoundDesc}</p>
-                    <Link href="/help-center/support" className="inline-flex items-center gap-3 bg-[#4A5D23] text-white px-10 py-5 rounded-[20px] font-black uppercase tracking-widest text-sm hover:bg-[#3a491b] transition-all shadow-xl">
+                    <Link href={ROUTES.helpCenterSupport} className="inline-flex items-center gap-3 bg-[#4A5D23] text-white px-10 py-5 rounded-[20px] font-black uppercase tracking-widest text-sm hover:bg-[#3a491b] transition-all shadow-xl">
                         <ChevronLeft className="h-5 w-5" /> {RU_DICTIONARY.helpCenter.support.detail.backToTickets}
                     </Link>
                 </div>
@@ -142,7 +143,7 @@ export default function TicketDetailPage() {
                 
                 <div className="max-w-4xl mx-auto px-6 py-10 relative z-10">
                     <Link
-                        href="/help-center/support"
+                        href={ROUTES.helpCenterSupport}
                         className="inline-flex items-center gap-3 text-xs font-black uppercase tracking-widest text-[#5B4A31]/60 hover:text-[#4A5D23] transition-all mb-8 group"
                     >
                         <ChevronLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
@@ -312,7 +313,7 @@ export default function TicketDetailPage() {
                                     </p>
                                     <p className="text-sm text-[#5B4A31]/60 font-medium">
                                         {RU_DICTIONARY.helpCenter.support.detail.completedDesc1}{' '}
-                                        <Link href="/help-center/support" className="text-[#4A5D23] font-black hover:underline">
+                                        <Link href={ROUTES.helpCenterSupport} className="text-[#4A5D23] font-black hover:underline">
                                             {RU_DICTIONARY.helpCenter.support.detail.completedDesc2}
                                         </Link>.
                                     </p>

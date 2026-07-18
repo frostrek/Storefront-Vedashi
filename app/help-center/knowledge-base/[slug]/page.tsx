@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation';
 import { ChevronLeft, BookOpen, Eye, Clock, ChevronRight } from 'lucide-react';
 import { getKBArticle } from '@/lib/api';
 import { RU_DICTIONARY } from '@/content/ru';
+import { ROUTES } from '@/lib/routes';
 
 export default function KBArticlePage() {
     const params = useParams();
@@ -44,7 +45,7 @@ export default function KBArticlePage() {
                     </div>
                     <h2 className="text-3xl font-bold text-[#1a2408] mb-4">{RU_DICTIONARY.helpCenter.knowledgeBase.detail.notFoundTitle}</h2>
                     <p className="text-[#5B4A31] mb-10 font-medium">{RU_DICTIONARY.helpCenter.knowledgeBase.detail.notFoundDesc}</p>
-                    <Link href="/help-center/knowledge-base" className="inline-flex items-center gap-3 bg-[#4A5D23] text-white px-10 py-5 rounded-[20px] font-black uppercase tracking-widest text-sm hover:bg-[#3a491b] transition-all shadow-xl">
+                    <Link href={ROUTES.helpCenterKnowledgeBase} className="inline-flex items-center gap-3 bg-[#4A5D23] text-white px-10 py-5 rounded-[20px] font-black uppercase tracking-widest text-sm hover:bg-[#3a491b] transition-all shadow-xl">
                         <ChevronLeft className="h-5 w-5" /> {RU_DICTIONARY.helpCenter.knowledgeBase.detail.returnArchive}
                     </Link>
                 </div>
@@ -69,7 +70,7 @@ export default function KBArticlePage() {
                 ></div>
                 
                 <div className="max-w-4xl mx-auto relative z-10">
-                    <Link href="/help-center/knowledge-base" className="inline-flex items-center gap-3 text-[#4A5D23] text-sm font-black uppercase tracking-widest mb-10 hover:text-[#3a491b] transition-all group">
+                    <Link href={ROUTES.helpCenterKnowledgeBase} className="inline-flex items-center gap-3 text-[#4A5D23] text-sm font-black uppercase tracking-widest mb-10 hover:text-[#3a491b] transition-all group">
                         <div className="w-10 h-10 rounded-xl bg-white shadow-md flex items-center justify-center group-hover:bg-[#4A5D23] group-hover:text-white transition-all">
                             <ChevronLeft className="h-5 w-5" />
                         </div>
@@ -117,7 +118,7 @@ export default function KBArticlePage() {
                             {related.map((r: any) => (
                                 <Link
                                     key={r.article_id}
-                                    href={`/help-center/knowledge-base/${r.slug}`}
+                                    href={ROUTES.helpCenterKnowledgeBaseArticle(r.slug)}
                                     className="group bg-white rounded-[32px] p-8 border border-[#4A5D23]/5 hover:border-[#4A5D23]/20 hover:shadow-xl transition-all flex items-center justify-between"
                                 >
                                     <div className="flex-1">

@@ -12,6 +12,7 @@ import { submitFeedback } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 import { RU_DICTIONARY } from '@/content/ru';
+import { ROUTES } from '@/lib/routes';
 
 const CATEGORIES = [
     { id: 'other', label: 'General Inquiry', icon: HelpCircle, color: '#A8B28B' },
@@ -104,14 +105,14 @@ function CustomerEnquiryContent() {
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <Link 
-                            href={`/help-center`} 
+                            href={ROUTES.helpCenter} 
                             className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-[#4A5D23] text-white font-bold hover:bg-[#3a491b] transition-all shadow-xl hover:-translate-y-1"
                         >
                             {RU_DICTIONARY.helpCenter.customerEnquiry.submitted.backBtn}
                         </Link>
                         {isAuthenticated && (
                             <Link 
-                                href={`/account/support`} 
+                                href={`${ROUTES.account}/support`} 
                                 className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-white border border-[#4A5D23]/20 text-[#4A5D23] font-bold hover:bg-[#4A5D23]/5 transition-all shadow-sm"
                             >
                                 {RU_DICTIONARY.helpCenter.customerEnquiry.submitted.trackBtn} <ArrowRight className="h-4 w-4" />
@@ -139,7 +140,7 @@ function CustomerEnquiryContent() {
                 
                 <div className="max-w-4xl mx-auto text-center relative z-10">
                     <Link 
-                        href={`/help-center`} 
+                        href={ROUTES.helpCenter} 
                         className="inline-flex items-center gap-2 text-[#4A5D23] font-bold text-sm uppercase tracking-widest mb-8 hover:gap-3 transition-all"
                     >
                         <ChevronLeft className="h-4 w-4" /> {RU_DICTIONARY.helpCenter.customerEnquiry.header.breadcrumb}
@@ -281,7 +282,7 @@ function CustomerEnquiryContent() {
                                     </div>
                                     <div>
                                         <h4 className="text-xs font-black uppercase text-[#1a2408] mb-1">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.checkFaqs}</h4>
-                                        <p className="text-xs text-[#5B4A31] leading-relaxed">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.checkFaqsDesc1}<Link href={`/help-center/faq`} className="text-[#4A5D23] underline font-bold">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.checkFaqsDesc2}</Link>.</p>
+                                        <p className="text-xs text-[#5B4A31] leading-relaxed">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.checkFaqsDesc1}<Link href={ROUTES.helpCenterFaq} className="text-[#4A5D23] underline font-bold">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.checkFaqsDesc2}</Link>.</p>
                                     </div>
                                 </div>
                                 <div className="flex gap-4">
@@ -290,7 +291,7 @@ function CustomerEnquiryContent() {
                                     </div>
                                     <div>
                                         <h4 className="text-xs font-black uppercase text-[#1a2408] mb-1">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.orderIssues}</h4>
-                                        <p className="text-xs text-[#5B4A31] leading-relaxed">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.orderIssuesDesc1}<Link href={`/help-center/support`} className="text-[#4A5D23] underline font-bold">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.orderIssuesDesc2}</Link>.</p>
+                                        <p className="text-xs text-[#5B4A31] leading-relaxed">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.orderIssuesDesc1}<Link href={ROUTES.helpCenterSupport} className="text-[#4A5D23] underline font-bold">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.orderIssuesDesc2}</Link>.</p>
                                     </div>
                                 </div>
                             </div>
@@ -304,14 +305,14 @@ function CustomerEnquiryContent() {
                                 </p>
                                 {!isAuthenticated ? (
                                     <Link 
-                                        href={`/login`} 
+                                        href={ROUTES.login} 
                                         className="inline-flex items-center gap-2 text-xs font-black uppercase bg-white text-[#1a2408] px-6 py-3 rounded-xl hover:bg-[#F2E8CF] transition-all"
                                     >
                                         {RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.loginBtn} <ArrowRight className="h-3.5 w-3.5" />
                                     </Link>
                                 ) : (
                                     <Link 
-                                        href={`/account/support`} 
+                                        href={`${ROUTES.account}/support`} 
                                         className="inline-flex items-center gap-2 text-xs font-black uppercase bg-[#4A5D23] text-white px-6 py-3 rounded-xl hover:bg-[#3a491b] transition-all"
                                     >
                                         {RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.dashboardBtn} <ArrowRight className="h-3.5 w-3.5" />

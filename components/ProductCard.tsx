@@ -16,6 +16,7 @@ import toast from 'react-hot-toast';
 import { trackEcommerce } from '@/lib/analytics/gtag';
 import { hasDiscount, getDiscountPercent, getValidPrices } from '@/utils/discount';
 import { buildPath, getCountryFromPathname } from '@/lib/currency';
+import { ROUTES } from '@/lib/routes';
 import { RU_DICTIONARY } from '@/content/ru';
 
 
@@ -103,7 +104,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
         const shareData = {
             title: product.product_name,
             text: `Check out ${product.product_name} on Vedashi — Premium Ayurvedic Wellness.`,
-            url: `${window.location.origin}/products/${product.slug || product.product_id}`,
+            url: `${window.location.origin}${ROUTES.tovar(product.slug || product.product_id)}`,
         };
 
         if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
@@ -130,7 +131,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
     const imageSrc = product.thumbnail_url || product.images?.[0] || '/herbal_placeholder.png';
     const isExternal = imageSrc.startsWith('http');
     const isBase64 = imageSrc.startsWith('data:');
-    const productUrl = `/products/${product.slug || product.product_id}`;
+    const productUrl = buildPath(params.country as string || 'in', ROUTES.tovar(product.slug || product.product_id));
 
     const closeCartModal = useCallback((e?: React.MouseEvent) => {
         if (e) {
@@ -1114,7 +1115,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
 
                         {product.brand && (
                             <Link
-                                href={buildPath(params.country as string || 'us', `/products?brand=${encodeURIComponent(product.brand)}`)}
+                                href={buildPath(params.country as string || 'us', `${ROUTES.katalog}?brand=${encodeURIComponent(product.brand)}`)}
                                 className={`relative z-20 block uppercase tracking-[0.12em] text-gray-400 font-medium mb-1 sm:mb-1.5 hover:text-[#3d5c3a] transition-colors cursor-pointer ${isList ? 'text-[10px] sm:text-[11px]' : 'text-[9px]'}`}
                             >
                                 {product.brand}

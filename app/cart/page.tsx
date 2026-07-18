@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { RU_DICTIONARY } from '@/content/ru';
+import { ROUTES } from '@/lib/routes';
 import { useRouter, useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
@@ -129,13 +130,13 @@ export default function CartPage() {
                     </div>
                 </div>
                 <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12 relative z-10">
-                    <Link href={`/products`} className="inline-flex items-center gap-2 text-sm font-semibold text-[#91c934] hover:text-[#5A7A4E] mb-6 transition-colors uppercase tracking-wider">
+                    <Link href={ROUTES.katalog} className="inline-flex items-center gap-2 text-sm font-semibold text-[#91c934] hover:text-[#5A7A4E] mb-6 transition-colors uppercase tracking-wider">
                         <ArrowLeft className="h-4 w-4 text-[#91c934]" /> {RU_DICTIONARY.cart.continueShopping}
                     </Link>
                     <div className="cart-item-card text-center py-10 mb-6">
                         <ShoppingCart className="h-8 w-8 text-[#8B7A3D] mx-auto mb-3" />
                         <p className="text-[#4A4A4A] font-medium">{RU_DICTIONARY.cart.yourActiveCartIsEmpty}</p>
-                        <Link href={`/products`} className="text-sm text-[#91c934] font-semibold hover:underline mt-2 inline-block">{RU_DICTIONARY.cart.browseProducts}</Link>
+                        <Link href={ROUTES.katalog} className="text-sm text-[#91c934] font-semibold hover:underline mt-2 inline-block">{RU_DICTIONARY.cart.browseProducts}</Link>
                     </div>
                     <div>
                         <h3 className="cart-saved-section-title">
@@ -148,11 +149,11 @@ export default function CartPage() {
                                 const resolvedSp = resolvePrice(price, item.country_prices);
                                 return (
                                     <div key={item.cart_item_id} className="cart-item-card flex items-center gap-4 bg-[#FAFAFA]">
-                                        <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img w-16 h-16 rounded-lg flex-shrink-0">
+                                        <Link href={`${ROUTES.tovar((item as any).slug || item.product_id || item.product?.product_id || '')}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img w-16 h-16 rounded-lg flex-shrink-0">
                                             {item.image_url ? <img src={item.image_url} alt="" /> : <span className="text-xl">🌿</span>}
                                         </Link>
                                         <div className="flex-1">
-                                            <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
+                                            <Link href={`${ROUTES.tovar((item as any).slug || item.product_id || item.product?.product_id || '')}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
                                                 <h3 className="text-sm font-bold text-[#1A1A1A] hover:text-[#3d5c3a] transition-colors">{item.product_name || RU_DICTIONARY.cart.product}</h3>
                                             </Link>
                                             <p className="text-[#4A4A4A] mt-1">{format(resolvedSp)}</p>
@@ -231,7 +232,7 @@ export default function CartPage() {
             {/* Main Content */}
             <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12 relative z-10">
                 {/* Back Link */}
-                <Link href={`/products`} className="inline-flex items-center gap-2 text-sm font-semibold text-[#91c934] hover:text-[#5A7A4E] mb-6 transition-colors uppercase tracking-wider">
+                <Link href={ROUTES.katalog} className="inline-flex items-center gap-2 text-sm font-semibold text-[#91c934] hover:text-[#5A7A4E] mb-6 transition-colors uppercase tracking-wider">
                     <ArrowLeft className="h-4 w-4 text-[#91c934]" /> {RU_DICTIONARY.cart.continueShopping}
                 </Link>
 
@@ -284,7 +285,7 @@ export default function CartPage() {
                                     return (
                                         <div key={item.cart_item_id} className="cart-item-card flex flex-col sm:flex-row gap-6">
                                             {/* Image */}
-                                            <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img flex-shrink-0">
+                                            <Link href={`${ROUTES.tovar((item as any).slug || item.product_id || item.product?.product_id || '')}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img flex-shrink-0">
                                                 {item.image_url ? (
                                                     <img src={item.image_url} alt={item.product_name || ''} />
                                                 ) : (
@@ -295,7 +296,7 @@ export default function CartPage() {
                                             <div className="flex-1 flex flex-col justify-between">
                                                 <div className="flex justify-between items-start">
                                                     <div>
-                                                        <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
+                                                        <Link href={`${ROUTES.tovar((item as any).slug || item.product_id || item.product?.product_id || '')}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
                                                             <h3 className="cart-item-title text-lg font-bold">{item.product_name || RU_DICTIONARY.cart.product}</h3>
                                                         </Link>
                                                         {item.size_label && (
@@ -371,11 +372,11 @@ export default function CartPage() {
                                         const resolvedSp = resolvePrice(price, item.country_prices);
                                         return (
                                             <div key={item.cart_item_id} className="cart-item-card flex items-center gap-4 bg-[#FAFAFA]">
-                                                <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img w-16 h-16 rounded-lg flex-shrink-0">
+                                                <Link href={`${ROUTES.tovar((item as any).slug || item.product_id || item.product?.product_id || '')}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img w-16 h-16 rounded-lg flex-shrink-0">
                                                     {item.image_url ? <img src={item.image_url} alt="" /> : <span className="text-xl">🌿</span>}
                                                 </Link>
                                                 <div className="flex-1">
-                                                    <Link href={`/products/${(item as any).slug || item.product_id || item.product?.product_id || ''}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
+                                                    <Link href={`${ROUTES.tovar((item as any).slug || item.product_id || item.product?.product_id || '')}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
                                                         <h3 className="text-sm font-bold text-[#1A1A1A] hover:text-[#3d5c3a] transition-colors">{item.product_name || RU_DICTIONARY.cart.product}</h3>
                                                     </Link>
                                                     <p className="text-[#4A4A4A] mt-1">{format(resolvedSp)}</p>
@@ -592,7 +593,7 @@ export default function CartPage() {
                                 </div>
                             </div>
 
-                            <Link href="/help-center/support" className="cart-advisor-card cursor-pointer flex">
+                            <Link href={ROUTES.helpCenterSupport} className="cart-advisor-card cursor-pointer flex">
                                 <div className="icon-wrapper border border-[#D4CFC0]">
                                     <Leaf className="w-5 h-5" />
                                 </div>

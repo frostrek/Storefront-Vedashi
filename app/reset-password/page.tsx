@@ -4,8 +4,10 @@ import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { resetPassword } from '@/lib/api';
-import { KeyRound, ArrowLeft } from 'lucide-react';
+import { resetPassword, API_URL } from '@/lib/api';
+import { Eye, EyeOff, Lock, ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
+import { ROUTES } from '@/lib/routes';
+import { KeyRound } from 'lucide-react';
 
 function ResetPasswordContent() {
     const router = useRouter();
@@ -69,7 +71,7 @@ function ResetPasswordContent() {
                         This password reset link is invalid or has expired. Please request a new one.
                     </p>
                     <Link
-                        href="/forgot-password"
+                        href={ROUTES.forgotPassword}
                         className="inline-flex items-center justify-center w-full rounded-lg bg-[#91C934] py-3 text-sm font-semibold text-white transition-all hover:bg-[#91C934]/60"
                     >
                         Request New Link
@@ -150,7 +152,7 @@ function ResetPasswordContent() {
                         </button>
 
                         <div className="mt-6 text-center">
-                            <Link href="/login" className="inline-flex items-center gap-2 text-sm font-medium text-warm-gray hover:text-[#91C934] transition-colors">
+                            <Link href={ROUTES.login} className="inline-flex items-center gap-2 text-sm font-medium text-warm-gray hover:text-[#91C934] transition-colors">
                                 <ArrowLeft className="w-4 h-4" />
                                 Back to login
                             </Link>
