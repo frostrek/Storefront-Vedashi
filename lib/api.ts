@@ -1330,6 +1330,17 @@ export async function getBestAutoApplyCoupon(cart_total: number) {
     }
 }
 
+// ====== HOMEPAGE REELS ======
+export async function getHomepageReels() {
+    try {
+        const res = await fetch(`${API_URL}/api/homepage-reels`);
+        const json = await res.json();
+        return json.success ? (json.data || []) : [];
+    } catch {
+        return [];
+    }
+}
+
 export async function getMyOrders(customerId: string) {
     try {
         const res = await authFetch(`${API_URL}/api/orders/my`);

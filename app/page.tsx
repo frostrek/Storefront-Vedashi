@@ -19,19 +19,20 @@ export async function generateMetadata(): Promise<Metadata> {
     };
 }
 
-import { getBestSellers, getNewArrivals, getCategories, API_URL, getHeroSlides, getHeroSettings } from '@/lib/api';
+import { getBestSellers, getNewArrivals, getCategories, API_URL, getHeroSlides, getHeroSettings, getHomepageReels } from '@/lib/api';
 
 export default async function HomePage() {
     let heroSlides = [];
     let heroSettings = null;
 
     try {
-        const [bestRes, newRes, catRes, slidesRes, settingsRes] = await Promise.all([
+        const [bestRes, newRes, catRes, slidesRes, settingsRes, reelsRes] = await Promise.all([
             getBestSellers({ limit: 10 }),
             getNewArrivals({ limit: 10 }),
             getCategories(true),
             getHeroSlides(),
-            getHeroSettings()
+            getHeroSettings(),
+            getHomepageReels()
         ]);
 
         if (slidesRes.success && slidesRes.data?.length > 0) {
@@ -51,6 +52,7 @@ export default async function HomePage() {
                 initialCategories={catRes || []}
                 initialHeroSlides={heroSlides}
                 initialHeroSettings={heroSettings}
+                initialReels={reelsRes || []}
             />
         );
     } catch (e) {

@@ -43,6 +43,7 @@ export interface HomeClientProps {
   initialCategories?: any[];
   initialHeroSlides?: HeroSlide[];
   initialHeroSettings?: HeroSettings;
+  initialReels?: any[];
 }
 
 export default function HomeClientPage({
@@ -51,6 +52,7 @@ export default function HomeClientPage({
   initialCategories = [],
   initialHeroSlides = [],
   initialHeroSettings = undefined,
+  initialReels = [],
 }: HomeClientProps) {
   const router = useRouter();
   const params = useParams();
@@ -58,8 +60,7 @@ export default function HomeClientPage({
 
   const [bestSellers, setBestSellers] = useState<Product[]>(initialBestSellers);
   const [newArrivals, setNewArrivals] = useState<Product[]>(initialNewArrivals);
-  const [faceWash, setFaceWash] = useState<Product[]>([]);
-  const [hairOils, setHairOils] = useState<Product[]>([]);
+  const [reels, setReels] = useState<any[]>(initialReels);
   const [allCategories, setAllCategories] = useState<any[]>(initialCategories);
   const [loading, setLoading] = useState(false);
 
@@ -85,19 +86,6 @@ export default function HomeClientPage({
       }
     }
     loadData();
-  }, []);
-
-  // Fetch Additional Reels independently (not gated by SSR data)
-  useEffect(() => {
-    // Face Wash
-    getFilteredProducts({ category: 'cosmetics', sub_category: 'face-care', limit: 10 })
-      .then(res => setFaceWash(res.data as any[]))
-      .catch(() => {});
-    
-    // Hair Oils
-    getFilteredProducts({ category: 'cosmetics', sub_category: 'hair-care', limit: 10 })
-      .then(res => setHairOils(res.data as any[]))
-      .catch(() => {});
   }, []);
 
   const viewListHashRef = useRef<string>('');
@@ -319,32 +307,21 @@ export default function HomeClientPage({
           </div>
         </section>
 
-        {/* 6. FACE WASH REEL */}
-        <section className="relative py-0 overflow-hidden bg-white content-lazy">
-          <div className="max-w-[1500px] mx-auto relative z-10">
-              <ProductReel
-                products={faceWash}
-                loading={loading}
-                title={RU_DICTIONARY.home.faceWash}
-                subtitle={RU_DICTIONARY.home.faceWashSubtitle}
-                viewAllLink={buildPath(country, ROUTES.katalogPath('kosmetika/uhod-za-licom/ochishchayushchie-sredstva'))}
-                viewAllText={RU_DICTIONARY.home.shopFaceWash}
-              />
-          </div>
-        </section>
-        {/* 7. HAIR OILS REEL */}
-        <section className="relative py-0 overflow-hidden bg-white content-lazy">
-          <div className="max-w-[1500px] mx-auto relative z-10">
-              <ProductReel
-                products={hairOils}
-                loading={loading}
-                title={RU_DICTIONARY.home.hairOils}
-                subtitle={RU_DICTIONARY.home.hairOilsSubtitle}
-                viewAllLink={buildPath(country, ROUTES.katalogPath('kosmetika/uhod-za-volosami/shampuni-i-kondicionery'))}
-                viewAllText={RU_DICTIONARY.home.shopHairOils}
-              />
-          </div>
-        </section>
+        {/* 6. DYNAMIC HOMEPAGE REELS */}
+        {reels.map((reel) => (
+          <section key={reel.reel_id} className="relative py-0 overflow-hidden bg-white content-lazy">
+            <div className="max-w-[1500px] mx-auto relative z-10">
+                <ProductReel
+                  products={reel.products}
+                  loading={loading}
+                  title={reel.title}
+                  subtitle={reel.subtitle}
+                  viewAllLink={reel.view_all_url || buildPath(country, ROUTES.katalog)}
+                  viewAllText={RU_DICTIONARY.home.viewAll || 'See All'}
+                />
+            </div>
+          </section>
+        ))}
       </div>
 
 
