@@ -100,7 +100,7 @@ export default function CartPage() {
                 <div className="cart-noise-overlay" aria-hidden="true" />
                 <div className="text-center relative z-10 px-4 py-20">
                     <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-white border border-[#E8E4DC]">
-                        <ShoppingCart className="h-10 w-10 text-[#8B7A3D]" />
+                        <ShoppingCart className="h-10 w-10 text-[#91C934]" />
                     </div>
                     <h1 className="cart-page-title justify-center">{RU_DICTIONARY.cart.yourHealingBundleIsEmpty}</h1>
                     <p className="mt-3 max-w-md mx-auto text-[#4A4A4A] text-sm">
@@ -134,14 +134,14 @@ export default function CartPage() {
                         <ArrowLeft className="h-4 w-4 text-[#91c934]" /> {RU_DICTIONARY.cart.continueShopping}
                     </Link>
                     <div className="cart-item-card text-center py-10 mb-6">
-                        <ShoppingCart className="h-8 w-8 text-[#8B7A3D] mx-auto mb-3" />
+                        <ShoppingCart className="h-8 w-8 text-[#91C934] mx-auto mb-3" />
                         <p className="text-[#4A4A4A] font-medium">{RU_DICTIONARY.cart.yourActiveCartIsEmpty}</p>
                         <Link href={ROUTES.katalog} className="text-sm text-[#91c934] font-semibold hover:underline mt-2 inline-block">{RU_DICTIONARY.cart.browseProducts}</Link>
                     </div>
                     <div>
                         <h3 className="cart-saved-section-title">
                             <Bookmark className="h-5 w-5 text-[#91C934]" />
-                            Saved for Later ({savedItems.length})
+                            {RU_DICTIONARY.cart.savedForLater} ({savedItems.length})
                         </h3>
                         <div className="space-y-4">
                             {savedItems.map(item => {
@@ -209,12 +209,12 @@ export default function CartPage() {
     }, 0);
     const saleDiscount = totalMRP - inStockTotal;
     const deliveryFee = 0; // Shipping is free for all regions
-    
+
     // We should resolve the couponDiscount to local currency too.
     // Assuming couponDiscount is in USD right now.
     const localCouponDiscount = resolvePrice(couponDiscount, null);
     const localDeliveryFee = 0;
-    
+
     const grandTotal = inStockTotal - localCouponDiscount + localDeliveryFee;
     const inStockItemCount = inStockItems.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -274,10 +274,10 @@ export default function CartPage() {
                                 items.map(item => {
                                     const price = item.price ?? 0;
                                     const unitPrice = item.original_price ?? price;
-                                    
+
                                     const resolvedSp = resolvePrice(price, item.country_prices);
                                     const resolvedMrp = resolveMrp(unitPrice, price, item.country_prices);
-                                    
+
                                     const isOutOfStock = (item.stock_quantity ?? 0) === 0;
                                     const hasInsufficientStock = !isOutOfStock && item.quantity > (item.stock_quantity ?? 0);
                                     const isAtStockLimit = !isOutOfStock && item.quantity >= (item.stock_quantity ?? Infinity);
@@ -309,26 +309,26 @@ export default function CartPage() {
                                                             <p className="text-xs mt-2 text-[#D35400] font-bold">Only {item.stock_quantity} left in stock</p>
                                                         )}
                                                     </div>
-                                                        <div className="text-right">
-                                                            <div className="text-lg font-bold text-[#1A1A1A]">
-                                                                {format(resolvedSp * item.quantity)}
-                                                            </div>
-                                                            {unitPrice > price && (
-                                                                <div className="flex items-center justify-end gap-1.5 mt-0.5">
-                                                                    <span className="text-red-500 font-bold text-xs">
-                                                                        {Math.round((1 - price / unitPrice) * 100)}% OFF
-                                                                    </span>
-                                                                    <span className="text-gray-400 line-through text-xs">
-                                                                        {format(resolvedMrp * item.quantity)}
-                                                                    </span>
-                                                                </div>
-                                                            )}
-                                                            {item.quantity > 1 && (
-                                                                <div className="text-[10px] text-gray-400 mt-1 uppercase tracking-tight">
-                                                                    {format(resolvedSp)} each
-                                                                </div>
-                                                            )}
+                                                    <div className="text-right">
+                                                        <div className="text-lg font-bold text-[#1A1A1A]">
+                                                            {format(resolvedSp * item.quantity)}
                                                         </div>
+                                                        {unitPrice > price && (
+                                                            <div className="flex items-center justify-end gap-1.5 mt-0.5">
+                                                                <span className="text-red-500 font-bold text-xs">
+                                                                    {Math.round((1 - price / unitPrice) * 100)}% OFF
+                                                                </span>
+                                                                <span className="text-gray-400 line-through text-xs">
+                                                                    {format(resolvedMrp * item.quantity)}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                        {item.quantity > 1 && (
+                                                            <div className="text-[10px] text-gray-400 mt-1 uppercase tracking-tight">
+                                                                {format(resolvedSp)} each
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
 
                                                 <div className="flex items-center justify-between mt-4">
@@ -344,7 +344,7 @@ export default function CartPage() {
                                                     </div>
 
                                                     <div className="flex items-center gap-2">
-                                                        <button onClick={() => { saveForLater(item.cart_item_id); toast.success('Saved for later'); }} disabled={loading} className="text-[#] text-[13px] font-semibold hover:underline px-2">
+                                                        <button onClick={() => { saveForLater(item.cart_item_id); toast.success(RU_DICTIONARY.cart.itemSaved); }} disabled={loading} className="text-[#] text-[13px] font-semibold hover:underline px-2">
                                                             {RU_DICTIONARY.cart.saveForLater}
                                                         </button>
                                                         <button onClick={() => setItemToRemove(item.cart_item_id)} disabled={loading} className="cart-remove-btn">
@@ -364,7 +364,7 @@ export default function CartPage() {
                             <div className="mt-4">
                                 <h3 className="cart-saved-section-title">
                                     <Bookmark className="h-5 w-5 text-[#91c934]" />
-                                    Saved for Later ({savedItems.length})
+                                    {RU_DICTIONARY.cart.savedForLater} ({savedItems.length})
                                 </h3>
                                 <div className="space-y-4">
                                     {savedItems.map(item => {
@@ -429,7 +429,7 @@ export default function CartPage() {
                                                 <div className="coupon-info text-[#1A1A1A] font-semibold text-sm">
                                                     {couponCode} <span className="text-[#6B8F5E]">(-{formatPrice(couponDiscount)})</span>
                                                 </div>
-                                                <button onClick={() => { removeCoupon(); toast.success('Coupon removed'); }} className="text-[#C0392B] text-xs font-semibold uppercase hover:underline">{RU_DICTIONARY.cart.remove}</button>
+                                                <button onClick={() => { removeCoupon(); toast.success(RU_DICTIONARY.cart.couponRemoved); }} className="text-[#C0392B] text-xs font-semibold uppercase hover:underline">{RU_DICTIONARY.cart.remove}</button>
                                             </div>
                                         ) : (
                                             <div className="flex gap-2">
@@ -576,7 +576,7 @@ export default function CartPage() {
                                                     console.warn('Failed to save OOS item for later:', e);
                                                 }
                                             }
-                                            toast.success(`${outOfStockItems.length} out-of-stock item${outOfStockItems.length > 1 ? 's' : ''} saved for later`);
+                                            toast.success(RU_DICTIONARY.cart.outOfStockItemsSaved);
                                         }
                                         router.push('/checkout');
                                     }}

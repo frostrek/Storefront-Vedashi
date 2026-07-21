@@ -426,6 +426,8 @@ export const RU_DICTIONARY = {
     leftInStock: "осталось в наличии",
     maximumStockReached: "Достигнут максимум",
     saveForLater: "Отложить",
+    itemSaved: "Товар отложен",
+    outOfStockItemsSaved: "Товары, которых нет в наличии, отложены",
     orderNotes: "Примечания к заказу",
     optional: "(необязательно)",
     addSpecificAllergies: "Добавьте информацию о специфических аллергиях, предпочтениях или инструкциях по доставке для наших специалистов.",

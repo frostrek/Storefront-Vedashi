@@ -61,7 +61,7 @@ function flattenCartItem(item: BackendCartItem): BackendCartItem {
         size_label: item.variant?.size_label || item.size_label || '',
         image_url: item.product?.thumbnail_url || item.image_url || '',
         stock_quantity: item.variant?.stock_quantity ?? (item as unknown as Record<string, unknown>).stock_quantity as number ?? 0,
-        country_prices: item.product?.country_prices || [],
+        country_prices: (item.product?.country_prices || []).filter((cp: any) => !cp.variant_id || cp.variant_id === (item.variant_id || item.variant?.variant_id)),
     };
 }
 
