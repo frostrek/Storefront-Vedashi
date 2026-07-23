@@ -6,6 +6,7 @@ import { Search, SlidersHorizontal } from 'lucide-react';
 import { advancedSearch, type SearchParams } from '@/lib/api';
 import { FilteredProduct, FilterMeta } from '@/types';
 import ProductCard from '@/components/ProductCard';
+import { RU_DICTIONARY } from '@/content/ru';
 
 const SORT_OPTIONS = [
     { value: 'relevance', label: 'Most Relevant' },
@@ -97,17 +98,17 @@ function SearchPageContent() {
                             <p className="text-gray-600 text-sm">
                                 {meta.total_count > 0 ? (
                                     <>
-                                        Showing{' '}
+                                        {RU_DICTIONARY.search.showing}{' '}
                                         <span className="font-semibold text-gray-900">
                                             {(currentPage - 1) * 20 + 1}–{Math.min(currentPage * 20, meta.total_count)}
                                         </span>{' '}
-                                        of{' '}
+                                        {RU_DICTIONARY.search.of}{' '}
                                         <span className="font-semibold text-gray-900">{meta.total_count}</span>{' '}
-                                        results for &ldquo;<span className="font-semibold text-[#4b0f1a]">{q}</span>&rdquo;
+                                        {RU_DICTIONARY.search.resultsFor} &ldquo;<span className="font-semibold text-[#4b0f1a]">{q}</span>&rdquo;
                                     </>
                                 ) : (
                                     <>
-                                        No results found for &ldquo;<span className="font-semibold text-[#4b0f1a]">{q}</span>&rdquo;
+                                        {RU_DICTIONARY.search.noResultsFoundFor} &ldquo;<span className="font-semibold text-[#4b0f1a]">{q}</span>&rdquo;
                                     </>
                                 )}
                             </p>
@@ -233,11 +234,10 @@ function SearchPageContent() {
                             <Search className="h-8 w-8 text-gray-300" />
                         </div>
                         <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                            No results found
+                            {RU_DICTIONARY.search.noResults}
                         </h2>
                         <p className="text-gray-500 text-center max-w-md mb-6">
-                            We couldn&apos;t find any products matching &ldquo;{q}&rdquo;. Try adjusting your search
-                            or browse our categories.
+                            {RU_DICTIONARY.search.noProductsMatching} &ldquo;{q}&rdquo;. {RU_DICTIONARY.search.tryAdjusting}
                         </p>
                         <div className="flex gap-3">
                             <button
@@ -248,7 +248,7 @@ function SearchPageContent() {
                   transition-colors
                 "
                             >
-                                Browse All Products
+                                {RU_DICTIONARY.search.browseAllProducts}
                             </button>
                         </div>
                     </div>
@@ -259,10 +259,10 @@ function SearchPageContent() {
                             <Search className="h-8 w-8 text-[#C6A75E]" />
                         </div>
                         <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                            Search Our Collection
+                            {RU_DICTIONARY.search.searchOurCollection}
                         </h2>
                         <p className="text-gray-500 text-center max-w-md">
-                            Enter a search term above to find products by name, brand, category, or description.
+                            {RU_DICTIONARY.search.enterSearchTerm}
                         </p>
                     </div>
                 )}
@@ -275,7 +275,7 @@ export default function SearchClientPage() {
     return (
         <Suspense fallback={
             <main className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="animate-pulse text-gray-400">Loading search…</div>
+                <div className="animate-pulse text-gray-400">{RU_DICTIONARY.common.loading}</div>
             </main>
         }>
             <SearchPageContent />

@@ -425,9 +425,9 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
             <div className="border-b border-light-border bg-white py-1">
                 <div className="mx-auto max-w-[1440px] px-4 py-1">
                     <nav className="flex items-center gap-2 text-sm text-gray-500">
-                        <Link href={buildPath(country, '/')}>Home</Link>
+                        <Link href={buildPath(country, '/')}>{RU_DICTIONARY.nav.home}</Link>
                         <ChevronRight className="h-3 w-3" />
-                        <Link href={buildPath(country, ROUTES.katalog)}>Shop</Link>
+                        <Link href={buildPath(country, ROUTES.katalog)}>{RU_DICTIONARY.nav.products}</Link>
                         <ChevronRight className="h-3 w-3" />
                         {product.category && (
                             <>

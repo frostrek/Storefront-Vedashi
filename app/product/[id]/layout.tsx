@@ -7,6 +7,7 @@
 import type { Metadata } from 'next';
 import { buildProductMeta, generateProductJsonLd, generateBreadcrumbJsonLd } from '@/lib/seo';
 import { API_URL } from '@/lib/api';
+import { RU_DICTIONARY } from '@/content/ru';
 
 // API_URL imported from @/lib/api
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.com';
@@ -140,8 +141,8 @@ async function ProductJsonLd({ paramsPromise }: { paramsPromise: Promise<any> })
 
     // Build breadcrumb from full category hierarchy (closure table)
     const breadcrumbItems = [
-        { name: 'Home', url: `${SITE_URL}` },
-        { name: 'Каталог', url: `${SITE_URL}/katalog` },
+        { name: RU_DICTIONARY.nav.home, url: `${SITE_URL}` },
+        { name: RU_DICTIONARY.nav.products, url: `${SITE_URL}/katalog` },
     ];
 
     // Fetch real ancestor path when category_id is available

@@ -4,6 +4,7 @@ import { getProduct, getProductDetails } from '@/lib/api';
 import { SUPPORTED_COUNTRIES } from '@/lib/currency';
 import { generateProductJsonLd, generateBreadcrumbJsonLd } from '@/lib/seo';
 import ProductClientPage from './ProductClient';
+import { RU_DICTIONARY } from '@/content/ru';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.com';
 
@@ -83,8 +84,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     } as any);
 
     const breadcrumbs = generateBreadcrumbJsonLd([
-        { name: 'Home', url: `${SITE_URL}` },
-        { name: 'Shop', url: `${SITE_URL}/katalog` },
+        { name: RU_DICTIONARY.nav.home, url: `${SITE_URL}` },
+        { name: RU_DICTIONARY.nav.products, url: `${SITE_URL}/katalog` },
         { name: product.category || 'Category', url: `${SITE_URL}/katalog/${(product as any).category_slug || product.category || ''}` },
         { name: product.product_name, url: `${SITE_URL}/tovar/${product.slug || product.product_id}` },
     ]);

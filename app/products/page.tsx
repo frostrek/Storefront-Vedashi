@@ -86,8 +86,8 @@ export default async function ProductsPage({ params, searchParams }: Props) {
     const category = categorySlug ? findCategory(categories, categorySlug) : null;
 
     const breadcrumbItems = [
-        { name: 'Home', url: `${SITE_URL}/${country}` },
-        { name: 'Products', url: `${SITE_URL}/${country}/katalog` }
+        { name: RU_DICTIONARY.nav.home, url: `${SITE_URL}/${country}` },
+        { name: RU_DICTIONARY.nav.products, url: `${SITE_URL}/${country}/katalog` }
     ];
 
     if (category) {

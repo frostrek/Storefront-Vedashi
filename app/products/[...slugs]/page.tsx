@@ -60,8 +60,8 @@ export default async function CategoryPage({ params }: Props) {
     const categoryData = res.ok ? (await res.json()).data : null;
 
     const breadcrumbItems = [
-        { name: 'Home', url: `${SITE_URL}/${country}` },
-        { name: 'Products', url: `${SITE_URL}/${country}/katalog` }
+        { name: RU_DICTIONARY.nav.home, url: `${SITE_URL}/${country}` },
+        { name: RU_DICTIONARY.nav.products, url: `${SITE_URL}/${country}/katalog` }
     ];
 
     if (categoryData) {
