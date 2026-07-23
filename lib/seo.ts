@@ -359,7 +359,7 @@ export function generateLocalBusinessJsonLd(): Record<string, unknown> {
         logo: `${SITE_URL}/logo.png`,
         image: `${SITE_URL}/og-default.jpg`,
         description: 'Premium Ayurvedic Wellness and Natural Herbal Remedies.',
-        email: 'info@vedashi.com',
+        email: 'info@vedashiherbals.com',
         // telephone: '+91-XXXXXXXXXX', // TODO: Add real business phone number when available
         address: {
             '@type': 'PostalAddress',
