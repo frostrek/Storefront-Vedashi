@@ -1,4 +1,4 @@
-import { API_URL } from '@/lib/api';
+import { API_URL, getLegalDocumentsList } from '@/lib/api';
 import { SUPPORTED_COUNTRIES, buildPath } from '@/lib/currency';
 import { ROUTES } from '@/lib/routes';
 
@@ -72,9 +72,10 @@ function addHreflangLinks(
  * remaining fully standards-compliant for crawlers.
  */
 export async function GET() {
-    const [{ products, categories }, blogPosts] = await Promise.all([
+    const [{ products, categories }, blogPosts, legalDocs] = await Promise.all([
         fetchSitemapData(),
         fetchBlogPosts(),
+        getLegalDocumentsList(),
     ]);
     const lastMod = new Date().toISOString();
     const countries = Object.keys(SUPPORTED_COUNTRIES);
@@ -89,10 +90,8 @@ export async function GET() {
         { path: ROUTES.helpCenter.slice(1), changefreq: 'monthly', priority: '0.5' },
         { path: ROUTES.helpCenterFaq.slice(1), changefreq: 'monthly', priority: '0.5' },
         { path: ROUTES.helpCenterKnowledgeBase.slice(1), changefreq: 'weekly', priority: '0.5' },
-        { path: ROUTES.shipping.slice(1), changefreq: 'monthly', priority: '0.4' },
-        { path: ROUTES.returnPolicy.slice(1), changefreq: 'monthly', priority: '0.4' },
-        { path: ROUTES.privacy.slice(1), changefreq: 'yearly', priority: '0.3' },
-        { path: ROUTES.terms.slice(1), changefreq: 'yearly', priority: '0.3' },
+        // Legal documents — dynamically fetched from DB
+        ...legalDocs.map(doc => ({ path: doc.slug, changefreq: 'monthly', priority: '0.4' })),
         { path: ROUTES.vendorRegistration.slice(1), changefreq: 'monthly', priority: '0.3' },
     ];
 

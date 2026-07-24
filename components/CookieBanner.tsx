@@ -73,7 +73,7 @@ export default function CookieBanner() {
         if (!policyContent) {
             setIsLoadingPolicy(true);
             try {
-                const res = await fetch(`${API_URL}/api/legal/public/privacy-policy`);
+                const res = await fetch(`${API_URL}/api/legal/public/type/privacy_policy`);
                 const json = await res.json();
                 if (json.success && json.data) {
                     let blocks: any[] = [];

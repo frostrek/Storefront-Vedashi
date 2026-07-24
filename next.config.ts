@@ -87,10 +87,7 @@ const nextConfig: NextConfig = {
       { source: '/help-center/support', destination: '/pomoshch/podderzhka', permanent: true },
       { source: '/help-center/customer-enquiry', destination: '/pomoshch/zapros-klienta', permanent: true },
       { source: '/help-center', destination: '/pomoshch', permanent: true },
-      { source: '/shipping', destination: '/dostavka', permanent: true },
-      { source: '/return-policy', destination: '/vozvrat', permanent: true },
-      { source: '/privacy', destination: '/konfidentsialnost', permanent: true },
-      { source: '/terms', destination: '/usloviya', permanent: true },
+
     ];
   },
   async rewrites() {
@@ -123,10 +120,7 @@ const nextConfig: NextConfig = {
       { source: '/pomoshch/podderzhka', destination: '/help-center/support' },
       { source: '/pomoshch/podderzhka/:id*', destination: '/help-center/support/:id*' },
       { source: '/pomoshch/zapros-klienta', destination: '/help-center/customer-enquiry' },
-      { source: '/dostavka', destination: '/shipping' },
-      { source: '/vozvrat', destination: '/return-policy' },
-      { source: '/konfidentsialnost', destination: '/privacy' },
-      { source: '/usloviya', destination: '/terms' },
+
       { source: '/zabyly-parol', destination: '/forgot-password' },
       { source: '/sbros-parolya', destination: '/reset-password' },
       { source: '/podtverzhdenie-email', destination: '/verify-email' },

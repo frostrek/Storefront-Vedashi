@@ -1,5 +1,5 @@
 'use client';
-import { authFetch, getLegalDocument, API_URL } from '@/lib/api';
+import { authFetch, getLegalDocumentByType, API_URL } from '@/lib/api';
 
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -69,8 +69,8 @@ function LoginContent() {
     useEffect(() => {
         const fetchLegal = async () => {
             const [terms, privacy] = await Promise.all([
-                getLegalDocument('terms-of-service'),
-                getLegalDocument('privacy-policy')
+                getLegalDocumentByType('terms_of_service'),
+                getLegalDocumentByType('privacy_policy')
             ]);
             setLegalContent({
                 'terms-of-service': terms ? { title: terms.title, content: terms.content } : { title: 'Terms of Service', content: '' },

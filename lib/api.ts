@@ -2291,6 +2291,30 @@ export async function getLegalDocument(slug: string) {
     }
 }
 
+export async function getLegalDocumentByType(type: string) {
+    try {
+        const res = await fetch(`${API_URL}/api/legal/public/type/${type}`, { credentials: 'include' });
+        if (!res.ok) return null;
+        const json: ApiResponse<any> = await res.json();
+        return json.success ? json.data : null;
+    } catch (error) {
+        console.warn(`[API] Failed to fetch legal document by type: ${type}`);
+        return null;
+    }
+}
+
+export async function getLegalDocumentsList(): Promise<Array<{ slug: string; title: string }>> {
+    try {
+        const res = await fetch(`${API_URL}/api/legal/public/list`, { credentials: 'include' });
+        if (!res.ok) return [];
+        const json: ApiResponse<Array<{ slug: string; title: string }>> = await res.json();
+        return json.success && json.data ? json.data : [];
+    } catch (error) {
+        console.warn('[API] Failed to fetch legal documents list');
+        return [];
+    }
+}
+
 export async function trackOrder(orderId: string) {
     try {
         const res = await authFetch(`${API_URL}/api/orders/${orderId}/track`);

@@ -7,7 +7,7 @@ import { Facebook, Instagram, Twitter, Youtube, Linkedin, Globe, MapPin, Phone, 
 import { useEffect, useState } from 'react';
 
 import { useCookieConsent } from '@/context/CookieConsentContext';
-import { API_URL, subscribeNewsletter } from '@/lib/api';
+import { API_URL, subscribeNewsletter, getLegalDocumentsList } from '@/lib/api';
 import toast from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
 import { ROUTES } from '@/lib/routes';
@@ -85,10 +85,6 @@ const FALLBACK: FooterData = {
             title: RU_DICTIONARY.footer.support,
             items: [
                 { label: RU_DICTIONARY.footer.helpCenter, href: ROUTES.helpCenter },
-                { label: RU_DICTIONARY.footer.shippingPolicy, href: ROUTES.shipping },
-                { label: RU_DICTIONARY.footer.returnPolicy, href: ROUTES.returnPolicy },
-                { label: RU_DICTIONARY.footer.termsOfService, href: ROUTES.terms },
-                { label: RU_DICTIONARY.footer.privacyPolicyFooter, href: ROUTES.privacy },
             ],
         },
     ],
@@ -116,12 +112,15 @@ export default function Footer() {
     const { openSettings } = useCookieConsent();
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
+    const [legalDocs, setLegalDocs] = useState<Array<{ slug: string; title: string }>>([]);
 
     useEffect(() => {
         fetch(`${API_URL}/api/footer`, { credentials: 'include' })
             .then(r => r.json())
             .then(res => { if (res.success && res.data) setData(res.data); })
             .catch(() => { /* Use fallback silently */ });
+
+        getLegalDocumentsList().then(setLegalDocs);
     }, []);
 
     const handleSubscribe = async (e: React.FormEvent) => {
@@ -145,7 +144,9 @@ export default function Footer() {
     const social = (isDynamic && data?.social && data.social.length > 0) ? data.social : (FALLBACK.social ?? []);
     const bottomBar = (isDynamic && data?.bottom_bar) ? data.bottom_bar : FALLBACK.bottom_bar;
 
-    // ─── Russia-only: always use Russian footer links when not dynamic ───
+    // ─── Dynamically inject legal document links into the Support/Информация column ───
+    const legalLinks = legalDocs.map(doc => ({ label: doc.title, href: ROUTES.legal(doc.slug) }));
+
     if (!isDynamic) {
         columns = [
             {
@@ -161,13 +162,21 @@ export default function Footer() {
                 title: 'Информация',
                 items: [
                     { label: 'Центр помощи', href: ROUTES.helpCenter },
-                    { label: 'Доставка', href: ROUTES.shipping },
-                    { label: 'Возврат', href: ROUTES.returnPolicy },
-                    { label: 'Условия', href: ROUTES.terms },
-                    { label: 'Конфиденциальность', href: ROUTES.privacy },
+                    ...legalLinks,
                 ],
             },
         ];
+    } else {
+        // For dynamic footer, append legal docs to the support column (2nd column) if it exists
+        columns = columns.map((col, idx) => {
+            if (idx === 1) {
+                // Merge: keep existing items, add legal docs that aren't already there
+                const existingHrefs = new Set(col.items.map(i => i.href));
+                const newLegalItems = legalLinks.filter(l => !existingHrefs.has(l.href));
+                return { ...col, items: [...col.items, ...newLegalItems] };
+            }
+            return col;
+        });
     }
 
     const FollowUsContent = (
