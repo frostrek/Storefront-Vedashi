@@ -110,7 +110,6 @@ const nextConfig: NextConfig = {
       { source: '/lichnyy-kabinet/podderzhka', destination: '/account/support' },
       { source: '/vhod', destination: '/login' },
       { source: '/poisk', destination: '/search' },
-      { source: '/podborki/:slug', destination: '/collections/:slug' },
       { source: '/o-nas', destination: '/about' },
       { source: '/kontakty', destination: '/contact' },
       { source: '/pomoshch', destination: '/help-center' },

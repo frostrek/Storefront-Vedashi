@@ -9,7 +9,6 @@ export const ROUTES = {
   accountTab: (tab: string) => `/lichnyy-kabinet/${tab}`,
   login: '/vhod',
   search: '/poisk',
-  collections: (slug: string) => `/podborki/${slug}`,
   about: '/o-nas',
   contact: '/kontakty',
   helpCenter: '/pomoshch',

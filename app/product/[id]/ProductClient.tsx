@@ -303,6 +303,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                     quantity: 1, // Default to 1 on express redirect
                     unit_price: Number(selectedVariant?.price ?? product.price ?? 0),
                     image_url: product.thumbnail_url || '',
+                    country_prices: (selectedVariant as any)?.country_prices || (product as any).country_prices
                 };
                 sessionStorage.setItem('ksp_buy_now_item', JSON.stringify(buyNowItem));
                 router.push(buildPath(country, `/checkout?buyNow=true`));
@@ -413,6 +414,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
             unit_price: displayPrice,
             original_price: originalPrice,
             image_url: product.thumbnail_url || '',
+            country_prices: (selectedVariant as any)?.country_prices || (product as any).country_prices
         };
         sessionStorage.setItem('ksp_buy_now_item', JSON.stringify(buyNowItem));
         sessionStorage.removeItem('vedashi_checkout_draft');

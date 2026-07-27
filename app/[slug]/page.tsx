@@ -1,11 +1,20 @@
 import React from 'react';
 import Link from 'next/link';
-import { getLegalDocument } from '@/lib/api';
+import { getLegalDocument, getLegalDocumentByType } from '@/lib/api';
 import LegalContentRenderer from '@/components/ui/LegalContentRenderer';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 
 type Props = { params: Promise<{ slug: string }> };
+
+// Map of legacy hardcoded URLs to their new dynamic document_type system roles
+const LEGACY_SLUG_MAP: Record<string, string> = {
+    'dostavka': 'shipping_policy',
+    'vozvrat': 'return_policy',
+    'usloviya': 'terms_of_service',
+    'politika-konfidentsialnosti': 'privacy_policy',
+    'politika-obrabotki-personalnykh-dannykh': 'privacy_policy'
+};
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
@@ -25,6 +34,18 @@ export default async function DynamicLegalPage({ params }: Props) {
     const doc = await getLegalDocument(slug);
 
     if (!doc) {
+        // If the slug doesn't exist, check if it's a known legacy URL (e.g. from a bookmark or Google)
+        if (LEGACY_SLUG_MAP[slug]) {
+            const documentType = LEGACY_SLUG_MAP[slug];
+            const activeDoc = await getLegalDocumentByType(documentType);
+            
+            // If we found the new document that represents this policy, issue a 301 Permanent Redirect!
+            if (activeDoc && activeDoc.slug) {
+                redirect(`/${activeDoc.slug}`);
+            }
+        }
+        
+        // If it's not a legacy URL or the document type doesn't exist, return 404
         notFound();
     }
 

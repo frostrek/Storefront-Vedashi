@@ -556,7 +556,7 @@ function LoginContent() {
         : RU_DICTIONARY.auth.signInToAccount;
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[#f7f9f7] relative overflow-hidden py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen flex items-center justify-center bg-[#ffffff] relative overflow-hidden py-12 px-4 sm:px-6 lg:px-8">
             {/* Background Decoration */}
             <div className="absolute top-0 left-0 w-full h-1 bg-[#8EC433]" />
             <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#8EC433]/5 rounded-full blur-3xl" />

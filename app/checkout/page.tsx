@@ -290,11 +290,11 @@ function CheckoutContent() {
     const itemsCount = isBuyNow && buyNowItem ? buyNowItem.quantity : totalItems;
 
     const baseSubtotal = isBuyNow && buyNowItem
-        ? resolvePrice(buyNowItem.unit_price, null) * buyNowItem.quantity
+        ? resolvePrice(buyNowItem.unit_price, (buyNowItem as any).country_prices) * buyNowItem.quantity
         : items.reduce((sum, item) => sum + resolvePrice(item.price ?? 0, item.country_prices) * item.quantity, 0);
 
     const totalMrp = isBuyNow && buyNowItem
-        ? resolveMrp(buyNowItem.original_price || buyNowItem.unit_price, buyNowItem.unit_price, null) * buyNowItem.quantity
+        ? resolveMrp(buyNowItem.original_price || buyNowItem.unit_price, buyNowItem.unit_price, (buyNowItem as any).country_prices) * buyNowItem.quantity
         : items.reduce((sum, item) => {
               return sum + resolveMrp((item as any).original_price ?? item.price ?? 0, item.price ?? 0, item.country_prices) * item.quantity;
           }, 0);
@@ -302,7 +302,7 @@ function CheckoutContent() {
     const mrpDiscount = totalMrp - baseSubtotal;
 
     const shippingCost = 0; // Shipping is free for all regions
-    const discount = isBuyNow ? 0 : couponDiscount;
+    const discount = isBuyNow ? 0 : resolvePrice(couponDiscount, null);
     const minPayable = Number(process.env.NEXT_PUBLIC_MINIMUM_PAYABLE_AMOUNT) || 1;
 
     const prePointsTotal = baseSubtotal + shippingCost - discount;
@@ -1745,7 +1745,21 @@ function CheckoutContent() {
                                     <button onClick={handlePlaceOrder} disabled={placing || paymentProcessing} className="cart-checkout-btn w-full text-center flex items-center justify-center gap-2 py-4 text-base">
                                         {placing || paymentProcessing ? <><Loader2 className="h-5 w-5 animate-spin" /> {RU_DICTIONARY.checkoutFlow.processingRitual}</> : <><Lock className="w-4 h-4" /> Place Final Order — {format(grandTotal)}</>}
                                     </button>
-                                    <p className="text-center text-xs text-[#6B6B60] mt-4 max-w-lg mx-auto leading-relaxed">By placing your order, you agree to Vedashi&apos;s <span className="underline cursor-pointer hover:text-[#2D3B2D]">{RU_DICTIONARY.checkoutFlow.termsOfService}</span> {RU_DICTIONARY.checkoutFlow.and} <span className="underline cursor-pointer hover:text-[#2D3B2D]">{RU_DICTIONARY.checkoutFlow.privacyPolicy}</span>.</p>
+                                    <p className="text-center text-xs text-[#6B6B60] mt-4 max-w-lg mx-auto leading-relaxed">
+                                        Оформляя заказ, вы соглашаетесь с{' '}
+                                        <Link href="/usloviya" target="_blank" className="underline cursor-pointer hover:text-[#2D3B2D]">
+                                            Условиями обслуживания
+                                        </Link>
+                                        ,{' '}
+                                        <Link href="/politika-konfidentsialnosti" target="_blank" className="underline cursor-pointer hover:text-[#2D3B2D]">
+                                            Политикой конфиденциальности
+                                        </Link>
+                                        {' '}и{' '}
+                                        <Link href="/vozvrat" target="_blank" className="underline cursor-pointer hover:text-[#2D3B2D]">
+                                            Политикой возврата и возмещения
+                                        </Link>
+                                        {' '}Vedashi.
+                                    </p>
                                 </div>
                             </div>
                         )}
@@ -1850,10 +1864,10 @@ function CheckoutContent() {
                                     )}
                                 </div>
 
-                                {(mrpDiscount + (isBuyNow ? 0 : couponDiscount) + pointsToRedeem) > 0 && (
+                                {(mrpDiscount + discount + pointsToRedeem) > 0 && (
                                     <div className="mt-4 p-3 bg-[#91C934]/10 rounded-xl border border-[#91C934]/20 text-center">
                                         <p className="text-[11px] font-bold text-[#91C934] uppercase tracking-wider">
-                                            You are saving {format(mrpDiscount + resolvePrice((isBuyNow ? 0 : couponDiscount), null) + resolvePrice(pointsToRedeem, null))} on this order
+                                            You are saving {format(mrpDiscount + discount + resolvePrice(pointsToRedeem, null))} on this order
                                         </p>
                                     </div>
                                 )}

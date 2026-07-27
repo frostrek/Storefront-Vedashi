@@ -274,60 +274,7 @@ export async function getFeaturedProducts(): Promise<Product[]> {
 
 import { TrafficSource } from '@/lib/analytics/attribution';
 
-export interface StorefrontCollection {
-    collection_id: string;
-    name: string;
-    slug: string;
-    description?: string;
-    image_url?: string;
-    icon?: string;
-    color_gradient?: string;
-    sort_order: number;
-    start_date?: string;
-    end_date?: string;
-    product_count?: number;
-    preview_products?: Array<{ product_id: string; product_name: string; thumbnail_url?: string }>;
-}
 
-export interface StorefrontCollectionDetail extends StorefrontCollection {
-    products: Product[];
-    total_products: number;
-}
-
-/** Fetch featured collections for the storefront homepage. */
-export async function getFeaturedCollections(limit: number = 6): Promise<StorefrontCollection[]> {
-    try {
-        const res = await fetch(`${API_URL}/api/collections/featured?limit=${limit}`, { cache: 'no-store', credentials: 'include' });
-        if (!res.ok) return [];
-        const json: ApiResponse<any> = await res.json();
-        return json.success && Array.isArray(json.data) ? json.data : [];
-    } catch (error) {
-        console.warn('[API] Failed to fetch featured collections.');
-        return [];
-    }
-}
-
-/** Fetch a single collection by slug with its products. */
-export async function getCollectionBySlug(slug: string, limit: number = 20, offset: number = 0): Promise<StorefrontCollectionDetail | null> {
-    try {
-        const res = await fetch(`${API_URL}/api/collections/${slug}?limit=${limit}&offset=${offset}`, { cache: 'no-store', credentials: 'include' });
-        if (!res.ok) return null;
-        const json: ApiResponse<any> = await res.json();
-        if (json.success && json.data) {
-            return {
-                ...json.data,
-                products: (json.data.products || []).map((p: any) => ({
-                    ...p,
-                    images: p.thumbnail_url ? [p.thumbnail_url] : [],
-                })),
-            };
-        }
-        return null;
-    } catch (error) {
-        console.warn(`[API] Failed to fetch collection: ${slug}`);
-        return null;
-    }
-}
 
 /* ─── Filtered Products (backend-powered) ─── */
 
