@@ -14,7 +14,8 @@ import {
     updateAddress as apiUpdateAddress, deleteAddress as apiDeleteAddress,
     getCustomerProfile, updateCustomerProfile, deactivateAccount,
     uploadProfileImage, getProfileImage, removeProfileImage, getOrderById,
-    cancelOrder as apiCancelOrder, downloadInvoice,
+    cancelOrder as apiCancelOrder, downloadInvoice, requestReturn as apiRequestReturn,
+    cancelReturn as apiCancelReturn,
     getMyEnquiries, replyToEnquiry, changePassword,
     requestEmailChange, verifyEmailChangeProfile,
     requestPhoneChange, verifyPhoneChangeProfile,
@@ -33,7 +34,7 @@ import {
     Loader2, ShieldOff, Camera, X, Check, Star, Phone, Calendar, Mail,
     CheckCircle2, AlertCircle, Shield, FileText, MessageSquare, Send, Clock, User2, MessageCircle, Sparkles,
     ChevronRight,
-    BadgeCheck, BellRing, Download, Search, ShoppingCart, LayoutGrid, List, Wallet, Eye, EyeOff
+    BadgeCheck, BellRing, Download, Search, ShoppingCart, LayoutGrid, List, Wallet, Eye, EyeOff, PackageMinus, Truck
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import toast from 'react-hot-toast';
@@ -285,6 +286,12 @@ export default function AccountPage() {
     const [cancelReason, setCancelReason] = useState('');
     const [cancelSubmitting, setCancelSubmitting] = useState(false);
 
+    // Return order state
+    const [returningOrderId, setReturningOrderId] = useState<string | null>(null);
+    const [returnReason, setReturnReason] = useState('');
+    const [returnDetails, setReturnDetails] = useState('');
+    const [returnSubmitting, setReturnSubmitting] = useState(false);
+
     const handleCancelOrder = async (orderId: string) => {
         setCancelSubmitting(true);
         try {
@@ -326,6 +333,48 @@ export default function AccountPage() {
         }
     };
 
+    const handleRequestReturn = async (orderId: string) => {
+        setReturnSubmitting(true);
+        try {
+            const reasonWithDetails = returnDetails ? `${returnReason} - ${returnDetails}` : returnReason;
+            const res = await apiRequestReturn(orderId, reasonWithDetails);
+            if (res.success || res.return_id) {
+                toast.success(RU_DICTIONARY.ordersTab.toast?.returnSubmitted || "Запрос на возврат успешно отправлен!");
+                setReturningOrderId(null);
+                setReturnReason('');
+                setReturnDetails('');
+                fetchOrders(); // refresh the list
+                if (selectedOrderDetails?.order_id === orderId) {
+                    handleViewOrderDetails(orderId); // refresh details
+                }
+            } else {
+                toast.error(res.message || RU_DICTIONARY.ordersTab.toast?.returnFailed || "Не удалось отправить запрос на возврат.");
+            }
+        } catch {
+            toast.error(RU_DICTIONARY.ordersTab.toast?.returnError || "Произошла ошибка при отправке запроса.");
+        } finally {
+            setReturnSubmitting(false);
+        }
+    };
+
+    const handleCancelReturn = async (orderId: string) => {
+        if (!confirm((RU_DICTIONARY.ordersTab as any)?.cancelReturnConfirm || "Вы уверены, что хотите отменить запрос на возврат?")) return;
+        try {
+            const res = await apiCancelReturn(orderId);
+            if (res.success || res.data?.status === 'CANCELLED') {
+                toast.success((RU_DICTIONARY.ordersTab?.toast as any)?.returnCancelled || "Запрос на возврат отменён.");
+                fetchOrders();
+                if (selectedOrderDetails?.order_id === orderId) {
+                    handleViewOrderDetails(orderId);
+                }
+            } else {
+                toast.error(res.message || (RU_DICTIONARY.ordersTab?.toast as any)?.cancelReturnFailed || "Не удалось отменить запрос на возврат.");
+            }
+        } catch {
+            toast.error((RU_DICTIONARY.ordersTab?.toast as any)?.cancelReturnError || "Произошла ошибка при отмене запроса.");
+        }
+    };
+
     // Review modal state
     const [reviewModal, setReviewModal] = useState<{ orderId: string; productId: string; productName: string } | null>(null);
 
@@ -358,7 +407,7 @@ export default function AccountPage() {
     // Body scroll lock for all modals
     useEffect(() => {
         const isAnyModalOpen = isTrackOrderModalOpen || showDeactivateModal || deletingAddressId ||
-            cancellingOrderId || reviewModal || showNotificationOverlay ||
+            cancellingOrderId || returningOrderId || reviewModal || showNotificationOverlay ||
             showExportModal || showPasswordModal || showEmailOtpModal ||
             showNotificationModal || isZoomModalOpen || showPhoneOtpModal;
 
@@ -370,7 +419,7 @@ export default function AccountPage() {
         return () => {
             document.body.style.overflow = 'unset';
         };
-    }, [isTrackOrderModalOpen, showDeactivateModal, deletingAddressId, cancellingOrderId,
+    }, [isTrackOrderModalOpen, showDeactivateModal, deletingAddressId, cancellingOrderId, returningOrderId,
         reviewModal, showNotificationOverlay, showExportModal, showPasswordModal,
         showEmailOtpModal, showNotificationModal, isZoomModalOpen, showPhoneOtpModal]);
 
@@ -1289,6 +1338,16 @@ export default function AccountPage() {
         if (s === 'shipped' || s === 'processing') return 'bg-blue-100 text-blue-700';
         if (s === 'delivered') return 'bg-purple-100 text-purple-700';
         if (s === 'cancelled') return 'bg-red-100 text-red-700';
+        // Return statuses
+        if (s === 'requested' || s === 'return_requested') return 'bg-amber-100 text-amber-700';
+        if (s === 'approved' || s === 'return_approved') return 'bg-blue-100 text-blue-700';
+        if (s === 'rejected' || s === 'return_rejected') return 'bg-red-100 text-red-700';
+        if (s === 'pickup_scheduled') return 'bg-violet-100 text-violet-700';
+        if (s === 'picked_up') return 'bg-orange-100 text-orange-700';
+        if (s === 'in_transit') return 'bg-purple-100 text-purple-700';
+        if (s === 'received') return 'bg-teal-100 text-teal-700';
+        if (s === 'rto' || s === 'rto_initiated') return 'bg-rose-100 text-rose-700';
+        if (s === 'rto_completed' || s === 'rto_delivered') return 'bg-emerald-100 text-emerald-700';
         return 'bg-yellow-100 text-yellow-700';
     };
 
@@ -1916,17 +1975,25 @@ export default function AccountPage() {
                                                                     </span>
                                                                 </div>
                                                             </div>
-                                                            <div className="mt-3 sm:mt-0">
-                                                                <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest border border-gray-100
-                                                                    ${order.order_status === 'DELIVERED' ? 'bg-[#F2F4EB] text-[#4A5D23]' :
-                                                                        order.order_status === 'SHIPPED' ? 'bg-[#EEF2F6] text-[#2C4B7D]' :
-                                                                            order.order_status === 'CANCELLED' ? 'bg-[#FCEAE8] text-[#9E2A2B]' :
-                                                                                'bg-[#FCF6E5] text-[#8C6B23]'}`
-                                                                }>
-                                                                    {order.order_status === 'DELIVERED' && <CheckCircle2 className="h-3 w-3 mr-1" />}
-                                                                    {order.order_status === 'PENDING' && <Loader2 className="h-3 w-3 mr-1" />}
-                                                                    {order.order_status === 'DELIVERED' ? RU_DICTIONARY.ordersTab.delivered.toUpperCase() : order.order_status === 'SHIPPED' ? RU_DICTIONARY.ordersTab.shipped.toUpperCase() : order.order_status === 'CANCELLED' ? RU_DICTIONARY.ordersTab.cancelled.toUpperCase() : order.order_status === 'PENDING' ? RU_DICTIONARY.ordersTab.pending.toUpperCase() : order.order_status}
-                                                                </span>
+                                                            <div className="mt-3 sm:mt-0 flex flex-wrap gap-2 justify-end">
+                                                                {!order.return_status && (
+                                                                    <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest border border-gray-100
+                                                                        ${order.order_status === 'DELIVERED' ? 'bg-[#F2F4EB] text-[#4A5D23]' :
+                                                                            order.order_status === 'SHIPPED' ? 'bg-[#EEF2F6] text-[#2C4B7D]' :
+                                                                                order.order_status === 'CANCELLED' ? 'bg-[#FCEAE8] text-[#9E2A2B]' :
+                                                                                    'bg-[#FCF6E5] text-[#8C6B23]'}`
+                                                                    }>
+                                                                        {order.order_status === 'DELIVERED' && <CheckCircle2 className="h-3 w-3 mr-1" />}
+                                                                        {order.order_status === 'PENDING' && <Loader2 className="h-3 w-3 mr-1" />}
+                                                                        {order.order_status === 'DELIVERED' ? RU_DICTIONARY.ordersTab.delivered.toUpperCase() : order.order_status === 'SHIPPED' ? RU_DICTIONARY.ordersTab.shipped.toUpperCase() : order.order_status === 'CANCELLED' ? RU_DICTIONARY.ordersTab.cancelled.toUpperCase() : order.order_status === 'PENDING' ? RU_DICTIONARY.ordersTab.pending.toUpperCase() : order.order_status}
+                                                                    </span>
+                                                                )}
+                                                                {order.return_status && (
+                                                                    <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest border border-gray-100 ${getStatusColor(order.return_status)}`}>
+                                                                        <PackageMinus className="h-3 w-3 mr-1" />
+                                                                        {((RU_DICTIONARY.ordersTab?.returnStatusLabels as Record<string, string>)?.[order.return_status?.toLowerCase()] || order.return_status).toUpperCase()}
+                                                                    </span>
+                                                                )}
                                                             </div>
                                                         </div>
 
@@ -2110,9 +2177,7 @@ export default function AccountPage() {
                                                                         </div>
                                                                         <span className="text-xs font-bold text-gray-900 whitespace-nowrap">
                                                                             {formatLocal(
-                                                                                selectedOrderDetails.currency === 'USD' 
-                                                                                    ? (item.unit_price || item.price || 0)
-                                                                                    : Math.round((item.unit_price || item.price || 0) * (selectedOrderDetails.exchange_rate || 1)), 
+                                                                                item.unit_price || item.price || 0,
                                                                                 selectedOrderDetails.currency || 'USD', 
                                                                                 selectedOrderDetails.currency === 'RUB' ? 'ru-RU' : selectedOrderDetails.currency === 'KRW' ? 'ko-KR' : 'en-US'
                                                                             )}
@@ -2172,8 +2237,41 @@ export default function AccountPage() {
                                                         </div>
                                                     </div>
 
+                                                    {/* Return Status Banner */}
+                                                    {selectedOrderDetails?.return_status && (
+                                                        <div className="mt-6 p-4 rounded-2xl bg-amber-50 border border-amber-100 relative overflow-hidden">
+                                                            <div className="absolute top-0 left-0 w-1 h-full bg-amber-400"></div>
+                                                            <div className="flex flex-col sm:flex-row gap-4 justify-between sm:items-center">
+                                                                <div>
+                                                                    <div className="flex items-center gap-2 mb-1">
+                                                                        <span className="text-xs font-bold text-amber-900">{RU_DICTIONARY.ordersTab?.returnStatusLabel || "Статус возврата"}:</span>
+                                                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${getStatusColor(selectedOrderDetails.return_status)}`}>
+                                                                            {(RU_DICTIONARY.ordersTab?.returnStatusLabels as Record<string, string>)?.[selectedOrderDetails.return_status?.toLowerCase()] || selectedOrderDetails.return_status}
+                                                                        </span>
+                                                                    </div>
+                                                                    <p className="text-[11px] text-amber-800 line-clamp-1">{RU_DICTIONARY.ordersTab?.returnReason || "Причина"}: {selectedOrderDetails.return_reason}</p>
+                                                                </div>
+                                                                {selectedOrderDetails.return_tracking_url && (
+                                                                    <a href={selectedOrderDetails.return_tracking_url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white border border-amber-200 text-amber-700 hover:bg-amber-100 rounded-lg text-xs font-bold shadow-sm transition-colors">
+                                                                        <Truck className="h-3.5 w-3.5" />
+                                                                        {RU_DICTIONARY.ordersTab?.returnTrackShipment || "Отследить"}
+                                                                    </a>
+                                                                )}
+                                                                {selectedOrderDetails.return_status?.toLowerCase() === 'requested' && (
+                                                                    <button
+                                                                        onClick={() => handleCancelReturn(selectedOrderDetails.order_id)}
+                                                                        className="flex-shrink-0 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 rounded-lg text-xs font-bold shadow-sm transition-colors"
+                                                                    >
+                                                                        <X className="h-3.5 w-3.5" />
+                                                                        {(RU_DICTIONARY.ordersTab as any)?.cancelReturnButton || "Отменить возврат"}
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
                                                     {/* Action Buttons */}
-                                                    <div className="flex gap-3 pt-6 border-t border-gray-100">
+                                                    <div className="flex gap-3 pt-6 border-t border-gray-100 mt-6">
                                                         <button
                                                             onClick={async () => {
                                                                 if (isDownloadingInvoice) return;
@@ -2216,6 +2314,14 @@ export default function AccountPage() {
                                                                 className="flex-1 flex justify-center items-center gap-2 border border-red-200 bg-red-50 rounded-xl py-2.5 text-xs font-bold text-red-600 hover:bg-red-100 transition-colors shadow-sm"
                                                             >
                                                                 <X className="h-3.5 w-3.5" /> {RU_DICTIONARY.ordersTab.cancelOrder}
+                                                            </button>
+                                                        )}
+                                                        {selectedOrderDetails?.order_status === 'DELIVERED' && (!selectedOrderDetails?.return_status || ['rejected', 'completed', 'cancelled'].includes(selectedOrderDetails?.return_status)) && (
+                                                            <button
+                                                                onClick={() => setReturningOrderId(selectedOrderDetails.order_id)}
+                                                                className="flex-1 flex justify-center items-center gap-2 border border-amber-200 bg-amber-50 rounded-xl py-2.5 text-xs font-bold text-amber-700 hover:bg-amber-100 transition-colors shadow-sm"
+                                                            >
+                                                                <PackageMinus className="h-3.5 w-3.5" /> {RU_DICTIONARY.ordersTab?.returnOrder || "Вернуть товар"}
                                                             </button>
                                                         )}
                                                     </div>
@@ -2308,6 +2414,72 @@ export default function AccountPage() {
                                                 className="flex-1 py-3 text-sm font-semibold text-white bg-burgundy hover:opacity-90 transition-all rounded-xl disabled:opacity-50"
                                             >
                                                 {cancelSubmitting ? RU_DICTIONARY.ordersTab.cancelling : RU_DICTIONARY.ordersTab.cancelOrder}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>,
+                            document.body
+                        )}
+
+                        {/* ─── Return Order Modal ─── */}
+                        {isMounted && returningOrderId && createPortal(
+                            <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+                                <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                                    <div className="p-6">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h3 className="text-xl font-bold text-amber-900">{RU_DICTIONARY.ordersTab?.returnOrderTitle || "Запрос на возврат"}</h3>
+                                            <button onClick={() => setReturningOrderId(null)} className="text-amber-800/50 hover:text-amber-900"><X size={20} /></button>
+                                        </div>
+                                        <p className="text-sm text-amber-800/80 mb-4">{RU_DICTIONARY.ordersTab?.returnOrderDesc || "Выберите причину возврата. После отправки наша команда рассмотрит ваш запрос и организует обратную доставку."}</p>
+                                        
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="block text-xs font-bold text-amber-900 mb-1.5">{RU_DICTIONARY.ordersTab?.returnReasonLabel || "Причина возврата"}</label>
+                                                <select
+                                                    value={returnReason}
+                                                    onChange={e => setReturnReason(e.target.value)}
+                                                    className="w-full bg-amber-50 rounded-xl p-3 text-sm focus:outline-none border border-amber-100 focus:border-amber-300 text-amber-900"
+                                                >
+                                                    <option value="" disabled>{RU_DICTIONARY.ordersTab?.returnReasonPlaceholder || "Выберите причину..."}</option>
+                                                    {Object.entries(RU_DICTIONARY.ordersTab?.returnReasons || {}).map(([key, value]) => (
+                                                        <option key={key} value={value as string}>{value as string}</option>
+                                                    ))}
+                                                    {!RU_DICTIONARY.ordersTab?.returnReasons && (
+                                                        <>
+                                                            <option value="Damaged">Товар повреждён</option>
+                                                            <option value="Wrong Item">Получен не тот товар</option>
+                                                            <option value="Quality Issue">Качество не устраивает</option>
+                                                            <option value="Other">Другое</option>
+                                                        </>
+                                                    )}
+                                                </select>
+                                            </div>
+                                            
+                                            <div>
+                                                <label className="block text-xs font-bold text-amber-900 mb-1.5">{RU_DICTIONARY.ordersTab?.returnDetailsLabel || "Дополнительные детали (необязательно)"}</label>
+                                                <textarea
+                                                    value={returnDetails}
+                                                    onChange={e => setReturnDetails(e.target.value)}
+                                                    placeholder={RU_DICTIONARY.ordersTab?.returnDetailsPlaceholder || "Опишите проблему подробнее..."}
+                                                    className="w-full bg-amber-50 rounded-xl p-3 text-sm focus:outline-none border border-amber-100 focus:border-amber-300 min-h-[80px] text-amber-900 placeholder:text-amber-900/40"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="flex gap-3 mt-6">
+                                            <button
+                                                onClick={() => setReturningOrderId(null)}
+                                                className="flex-1 py-3 text-sm font-semibold text-amber-900 hover:bg-amber-50 transition-colors rounded-xl border border-amber-200"
+                                            >
+                                                {RU_DICTIONARY.ordersTab?.keepOrderReturn || "Оставить заказ"}
+                                            </button>
+                                            <button
+                                                onClick={() => handleRequestReturn(returningOrderId)}
+                                                disabled={returnSubmitting || !returnReason}
+                                                className="flex-1 py-3 text-sm font-semibold text-white bg-amber-600 hover:bg-amber-700 transition-all rounded-xl disabled:opacity-50 disabled:bg-amber-400"
+                                            >
+                                                {returnSubmitting ? (RU_DICTIONARY.ordersTab?.submittingReturn || "Отправляем...") : (RU_DICTIONARY.ordersTab?.submitReturn || "Отправить запрос")}
                                             </button>
                                         </div>
                                     </div>

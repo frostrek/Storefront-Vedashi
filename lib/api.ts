@@ -1322,6 +1322,33 @@ export async function cancelOrder(orderId: string, reason: string = '') {
     }
 }
 
+export async function requestReturn(orderId: string, reason: string) {
+    try {
+        const res = await authFetch(`${API_URL}/api/orders/${orderId}/return`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reason }),
+        });
+        return res.json();
+    } catch (error) {
+        console.warn('[API] requestReturn failed:', error);
+        return { success: false, message: 'Network error' };
+    }
+}
+
+export async function cancelReturn(orderId: string) {
+    try {
+        const res = await authFetch(`${API_URL}/api/orders/${orderId}/cancel-return`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        });
+        return res.json();
+    } catch (error) {
+        console.warn('[API] cancelReturn failed:', error);
+        return { success: false, message: 'Network error' };
+    }
+}
+
 export async function downloadInvoice(orderId: string) {
     try {
         const url = `${API_URL}/api/invoices/${orderId}/download`;
