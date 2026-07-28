@@ -148,6 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                                 setUser(null);
                                 localStorage.removeItem(USER_KEY);
                                 notifyListeners('logout', null);
+                                authFetch(`${API_URL}/api/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
                                 return;
                             }
 
@@ -185,6 +186,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                             localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
                             pushUserId(updatedUser.id);
                             notifyListeners('login', updatedUser);
+                        } else {
+                            authFetch(`${API_URL}/api/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
                         }
                     }
                 })

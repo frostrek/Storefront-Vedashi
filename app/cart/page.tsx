@@ -29,7 +29,7 @@ function StepIndicator({ currentStep = 0 }: { currentStep?: number }) {
                             {i < currentStep ? '✓' : i + 1}
                         </div>
                         <span className={`cart-step-label ${i <= currentStep ? 'active' : ''}`}>
-                            {step}
+                            {RU_DICTIONARY.cart[step.toLowerCase() as keyof typeof RU_DICTIONARY.cart] || step}
                         </span>
                     </div>
                     {i < STEPS.length - 1 && (
@@ -411,7 +411,7 @@ export default function CartPage() {
                                         onChange={e => setOrderNotes(e.target.value.slice(0, 200))}
                                         maxLength={200}
                                         rows={3}
-                                        placeholder="Type your notes here..."
+                                        placeholder={RU_DICTIONARY.cart.typeNotesHere}
                                         className="w-full rounded-lg border border-[#D4CFC0] bg-[#F5F4F0] px-4 py-3 text-sm focus:border-[#2D3B2D] focus:outline-none resize-none font-medium"
                                     />
                                     <p className="mt-1 text-[10px] text-[#6B6B60] text-right font-bold tracking-wider">{orderNotes.length}/200</p>
@@ -472,7 +472,7 @@ export default function CartPage() {
                                         <Leaf className="w-4 h-4 text-[#91C934]" />
                                     </div>
                                     {RU_DICTIONARY.cart.investmentSummary}
-                                    <span className="ritual-summary-badge">{inStockItemCount} Item{inStockItemCount !== 1 ? 's' : ''}</span>
+                                    <span className="ritual-summary-badge">{inStockItemCount} {inStockItemCount === 1 ? RU_DICTIONARY.cart.item : RU_DICTIONARY.cart.items}</span>
                                 </div>
                                 <p className="text-[10px] uppercase tracking-[2px] text-[rgba(255,255,255,0.5)] mb-4 -mt-2">{RU_DICTIONARY.cart.preparingPath}</p>
 
@@ -544,7 +544,7 @@ export default function CartPage() {
                                 {(saleDiscount + couponDiscount) > 0 && (
                                     <div className="mt-4 p-3 bg-white/10 rounded-xl border border-white/10 text-center">
                                         <p className="text-[10px] font-bold text-[#86EFAC] uppercase tracking-widest">
-                                            Total Savings: {format(saleDiscount + localCouponDiscount)}
+                                            {RU_DICTIONARY.cart.totalSavings} {format(saleDiscount + localCouponDiscount)}
                                         </p>
                                     </div>
                                 )}

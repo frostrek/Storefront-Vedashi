@@ -567,7 +567,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                                 {formatMrp(vOriginalPrice, vDisplayPrice, v.country_prices || product.country_prices)}
                                                             </span>
                                                             <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isSelected ? 'bg-red-500/20 text-red-100' : 'text-red-500 bg-red-50'}`}>
-                                                                {getDiscountPercent(v)}% {RU_DICTIONARY.product.off}
+                                                                -{getDiscountPercent(v)}%
                                                             </span>
                                                         </>
                                                     )}
@@ -796,22 +796,6 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                             key={v.variant_id}
                                             className={`flex items-center gap-2.5 px-3 py-2.5 ${isDisabled ? 'opacity-40' : ''}`}
                                         >
-                                            {/* Variant thumbnail */}
-                                            <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-50 flex-shrink-0 border border-gray-100 relative">
-                                                {vIsDiscounted && (
-                                                    <span className="absolute top-0 left-0 bg-blue-600 text-white text-[6px] font-bold px-1 py-[1px] rounded-br-md leading-none z-10">
-                                                        {getDiscountPercent(v)}% {RU_DICTIONARY.product.off}
-                                                    </span>
-                                                )}
-                                                <Image
-                                                    src={imageSrc}
-                                                    alt={`${product.product_name} ${label} - Premium ${product.category || 'Wellness'} by ${product.brand || 'Vedashi'}`}
-                                                    width={40}
-                                                    height={40}
-                                                    className="object-contain w-full h-full"
-                                                />
-                                            </div>
-
                                             {/* Label + Price */}
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-[11px] font-semibold text-gray-800 leading-tight line-clamp-1">{label}</p>
@@ -822,7 +806,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                     {vIsDiscounted && (
                                                         <div className="flex items-center gap-1.5 mt-1">
                                                             <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full text-red-500 bg-red-50">
-                                                                {getDiscountPercent(v)}% {RU_DICTIONARY.product.off}
+                                                                -{getDiscountPercent(v)}%
                                                             </span>
                                                             <span className="text-[10px] text-gray-400 line-through">
                                                                 {RU_DICTIONARY.product.mrp} {formatMrp(vOriginalPrice, vDisplayPrice, v.country_prices || product.country_prices)}
@@ -843,21 +827,21 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                 {isDisabled ? (
                                                     <span className="text-[10px] text-gray-400 font-semibold">—</span>
                                                 ) : variantInCart ? (
-                                                    <div className="flex items-center gap-0 border border-[#FF0000] rounded-lg overflow-hidden shadow-sm">
+                                                    <div className="flex items-center gap-0 border border-[#FF0000] rounded-md overflow-hidden shadow-sm">
                                                         <button
                                                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleVariantDecrement(variantCartItem!); }}
                                                             disabled={addingToCart}
-                                                            className="w-7 h-7 flex items-center justify-center bg-white hover:bg-red-50 transition-colors cursor-pointer text-gray-500 hover:text-red-500"
+                                                            className="w-6 h-6 flex items-center justify-center bg-white hover:bg-red-50 transition-colors cursor-pointer text-gray-500 hover:text-red-500"
                                                         >
                                                             {variantCartItem!.quantity > 1 ? <Minus className="h-3 w-3" /> : <X className="h-3 w-3" />}
                                                         </button>
-                                                        <span className="w-6 text-center text-[12px] font-bold text-[#FF0000] bg-[#FF0000]/5">
+                                                        <span className="w-5 text-center text-[11px] font-bold text-[#FF0000] bg-[#FF0000]/5">
                                                             {variantCartItem!.quantity}
                                                         </span>
                                                         <button
                                                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleVariantIncrement(variantCartItem!); }}
                                                             disabled={addingToCart}
-                                                            className="w-7 h-7 flex items-center justify-center bg-[#FF0000] hover:bg-red-700 transition-colors cursor-pointer text-white"
+                                                            className="w-6 h-6 flex items-center justify-center bg-[#FF0000] hover:bg-red-700 transition-colors cursor-pointer text-white"
                                                         >
                                                             <Plus className="h-3 w-3" />
                                                         </button>
@@ -866,7 +850,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                                                     <button
                                                         onClick={(e) => handleVariantDirectAdd(v, e)}
                                                         disabled={addingToCart}
-                                                        className="px-2 py-1.5 border border-[#FF0000] rounded-lg text-[11px] font-bold text-[#FF0000] bg-white hover:bg-[#FF0000]/5 transition-all cursor-pointer shadow-sm"
+                                                        className="px-2 py-1 border border-[#FF0000] rounded-md text-[10px] font-bold text-[#FF0000] bg-white hover:bg-[#FF0000]/5 transition-all cursor-pointer shadow-sm"
                                                     >
                                                         {RU_DICTIONARY.product.add}
                                                     </button>

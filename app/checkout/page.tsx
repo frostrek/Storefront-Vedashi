@@ -81,7 +81,7 @@ function StepIndicator({
                             </div>
                             <span className={`cart-step-label ${i <= currentStep ? 'active' : ''
                                 } ${isReachable ? 'group-hover/step:text-[#1A1A1A]' : ''} transition-colors uppercase tracking-widest`}>
-                                {step}
+                                {RU_DICTIONARY.cart[step.toLowerCase() as keyof typeof RU_DICTIONARY.cart] || step}
                             </span>
                         </button>
                         {i < STEPS.length - 1 && (
@@ -1570,9 +1570,9 @@ function CheckoutContent() {
                                                         <p className="text-xs text-[#6B6B60]">{RU_DICTIONARY.checkoutFlow.mirVisaMastercard}</p>
                                                     </div>
                                                     <div className="flex flex-wrap items-center gap-2 opacity-80">
-                                                        <div className="bg-[#009E4B] border border-[#009E4B] rounded px-2 py-1 text-[9px] font-bold text-white">MIR</div>
-                                                        <div className="bg-white border border-[#D4CFC0] rounded px-2 py-1 text-[9px] font-bold text-blue-800">VISA</div>
-                                                        <div className="bg-white border border-[#D4CFC0] rounded px-2 py-1 text-[9px] font-bold text-red-600">MasterCard</div>
+                                                        <div className="bg-[#009E4B] border border-[#009E4B] rounded px-2 py-1 text-[9px] font-bold text-white">МИР</div>
+                                                        <div className="bg-white border border-[#D4CFC0] rounded px-2 py-1 text-[9px] font-bold text-blue-800">ВИЗА</div>
+                                                        <div className="bg-white border border-[#D4CFC0] rounded px-2 py-1 text-[9px] font-bold text-red-600">МастерКард</div>
                                                     </div>
                                                 </div>
                                             </label>
@@ -1726,7 +1726,7 @@ function CheckoutContent() {
                                         </div>
                                         <div className="flex items-center gap-3">
                                             {paymentMethod === 'razorpay' || paymentMethod === 'cloudpayments' ? (
-                                                <><CreditCard className="w-5 h-5 text-[#91C934]" /> <span className="font-bold text-[#4A4A4A]">Online Payment</span></>
+                                                <><CreditCard className="w-5 h-5 text-[#91C934]" /> <span className="font-bold text-[#4A4A4A]">{RU_DICTIONARY.checkoutFlow.onlinePayment}</span></>
                                             ) : (
                                                 <><Banknote className="w-5 h-5 text-[#91C934]" /> <span className="font-bold text-[#4A4A4A]">{RU_DICTIONARY.checkoutFlow.unknownPaymentMethod}</span></>
                                             )}
@@ -1734,7 +1734,7 @@ function CheckoutContent() {
                                         <div className="mt-3 pt-2 border-t border-[#D4CFC0]/50">
                                             <p className="text-[10px] uppercase tracking-wider text-[#6B6B60] font-bold mb-1">{RU_DICTIONARY.checkoutFlow.billingAddress}</p>
                                             <p className="text-xs text-[#4A4A4A] leading-tight">
-                                                {billingSameAsShipping ? 'Same as shipping' : getSelectedBillingAddressText()}
+                                                {billingSameAsShipping ? RU_DICTIONARY.checkoutFlow.sameAsShipping : getSelectedBillingAddressText()}
                                             </p>
                                         </div>
                                     </div>
@@ -1743,7 +1743,7 @@ function CheckoutContent() {
 
                                 <div className="mt-8">
                                     <button onClick={handlePlaceOrder} disabled={placing || paymentProcessing} className="cart-checkout-btn w-full text-center flex items-center justify-center gap-2 py-4 text-base">
-                                        {placing || paymentProcessing ? <><Loader2 className="h-5 w-5 animate-spin" /> {RU_DICTIONARY.checkoutFlow.processingRitual}</> : <><Lock className="w-4 h-4" /> Place Final Order — {format(grandTotal)}</>}
+                                        {placing || paymentProcessing ? <><Loader2 className="h-5 w-5 animate-spin" /> {RU_DICTIONARY.checkoutFlow.processingRitual}</> : <><Lock className="w-4 h-4" /> {RU_DICTIONARY.checkoutFlow.placeFinalOrder} {format(grandTotal)}</>}
                                     </button>
                                     <p className="text-center text-xs text-[#6B6B60] mt-4 max-w-lg mx-auto leading-relaxed">
                                         Оформляя заказ, вы соглашаетесь с{' '}
@@ -1773,7 +1773,7 @@ function CheckoutContent() {
                                         <Leaf className="w-4 h-4 text-[#91C934]" />
                                     </div>
                                     {RU_DICTIONARY.checkoutFlow.ritualInvestment}
-                                    <span className="ritual-summary-badge">{itemsCount} Item{itemsCount !== 1 ? 's' : ''}</span>
+                                    <span className="ritual-summary-badge">{itemsCount} {itemsCount === 1 ? RU_DICTIONARY.cart.item : RU_DICTIONARY.cart.items}</span>
                                 </div>
 
                                 <div className="space-y-1 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar mt-4">

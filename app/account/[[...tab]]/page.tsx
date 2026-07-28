@@ -531,9 +531,9 @@ export default function AccountPage() {
                 // Priority: S3 URL > Base64
                 setProfileImageUrl(s3Url || parsedBase64);
 
-                // Keep global AuthContext user state synced
+                // Keep global AuthContext user state synced ONLY if it's a valid remote URL, NOT a massive base64 string
                 const finalUrl = s3Url || parsedBase64;
-                if (user?.avatar_url !== finalUrl) {
+                if (finalUrl && finalUrl.startsWith('http') && user?.avatar_url !== finalUrl) {
                     updateUser({ avatar_url: finalUrl });
                 }
             } else if (user?.avatar_url) {
@@ -1051,7 +1051,7 @@ export default function AccountPage() {
                     const res = await uploadProfileImage(user.id, base64);
                     if (res.success) {
                         toast.success(RU_DICTIONARY.profileTab.toasts.photoUpdated);
-                        updateUser({ avatar_url: base64 });
+                        fetchProfileImage();
                     } else {
                         toast.error(res.message || RU_DICTIONARY.profileTab.toasts.uploadFailed);
                         setProfileImageUrl(null);

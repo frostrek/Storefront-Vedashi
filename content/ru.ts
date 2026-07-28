@@ -507,7 +507,7 @@ export const RU_DICTIONARY = {
     secureCheckout: "БЕЗОПАСНАЯ ОПЛАТА",
     selectPaymentOption: "Выберите способ оплаты для вашего заказа:",
     onlinePayment: "Онлайн-оплата (CloudPayments)",
-    mirVisaMastercard: "МИР, Visa, MasterCard, Maestro",
+    mirVisaMastercard: "МИР, Виза, МастерКард, Маэстро",
     billingAddress: "Адрес для выставления счета",
     sameAsShipping: "Совпадает с адресом доставки",
     useDifferentBilling: "Использовать другой адрес",
