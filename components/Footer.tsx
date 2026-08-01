@@ -230,7 +230,7 @@ export default function Footer() {
                             {RU_DICTIONARY.footer.becomePartnerSub}
                         </p>
                         <Link
-                            href="/vendor-registration"
+                            href="/registratsiya-postavshchika"
                             className="inline-flex w-fit items-center justify-center bg-[#91C935] hover:bg-[#7eb02e] text-white text-[9.5px] sm:text-[11px] font-medium py-1 px-3 sm:px-4 rounded-full transition-all duration-300 shadow-[0_4px_12px_rgba(110,147,42,0.2)] hover:shadow-[0_6px_16px_rgba(110,147,42,0.3)] hover:-translate-y-0.5"
                         >
                             {RU_DICTIONARY.footer.registerNow}

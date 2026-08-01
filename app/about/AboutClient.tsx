@@ -160,7 +160,7 @@ export default function AboutClientPage() {
                                     {t.whatWeDo.forBrands.description}
                                 </p>
                                 <div className="relative z-10 mt-8">
-                                    <Link href="/vendor-registration" className="inline-flex items-center text-sm font-bold text-white uppercase tracking-wider group/link">
+                                    <Link href="/registratsiya-postavshchika" className="inline-flex items-center text-sm font-bold text-white uppercase tracking-wider group/link">
                                         {t.whatWeDo.forBrands.partnerWithUs} <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover/link:translate-x-1" />
                                     </Link>
                                 </div>

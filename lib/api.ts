@@ -2336,3 +2336,21 @@ export async function getHeroSettings(): Promise<{ success: boolean; data: any }
         return { success: false, data: null };
     }
 }
+
+// ─── Vendor Registration ──────────────────────────────────────────────────
+export async function submitVendorRegistration(formData: FormData): Promise<{ success: boolean; message: string; data?: any }> {
+    try {
+        const res = await authFetch(`${API_URL}/api/vendors/register`, {
+            method: 'POST',
+            body: formData,
+        });
+        const json = await res.json();
+        if (!res.ok) {
+            throw new Error(json.message || 'Failed to submit registration');
+        }
+        return json;
+    } catch (error: any) {
+        console.error('Error submitting vendor registration:', error);
+        return { success: false, message: error.message };
+    }
+}
