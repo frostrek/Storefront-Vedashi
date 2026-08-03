@@ -830,12 +830,14 @@ export default function AccountPage() {
         fetchProfile();
         fetchProfileImage();
 
+        // Always fetch notifications for badge count
+        fetchNotificationsData();
+
         // Tab-specific fetching
-        fetchLoyaltyData();
+        if (activeTab === 'wallet' || activeTab === 'overview' || activeTab === 'profile') fetchLoyaltyData();
         if (activeTab === 'orders') fetchOrders();
         if (activeTab === 'addresses') fetchAddresses();
         if (activeTab === 'support') fetchEnquiries();
-        if (activeTab === 'notifications') fetchNotificationsData();
         if (activeTab === 'profile' || activeTab === 'overview') {
             fetchOrders();
             fetchReviewsCount();
@@ -1307,14 +1309,6 @@ export default function AccountPage() {
         }
     };
 
-    if (isLoading) {
-        return (
-            <div className="min-h-screen bg-cream flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-burgundy" />
-            </div>
-        );
-    }
-
     if (isLoading || !isAuthenticated) {
         return (
             <div className="min-h-screen bg-white flex items-center justify-center">
@@ -1324,8 +1318,8 @@ export default function AccountPage() {
                         <Loader2 className="h-12 w-12 animate-spin text-[#91c934] relative z-10" />
                     </div>
                     <div className="flex flex-col items-center">
-                        <h2 className="text-gray-900 font-serif text-xl font-medium tracking-tight">Vedashi Sanctuary</h2>
-                        <p className="text-gray-400 text-sm italic mt-1">Preparing your sacred space...</p>
+                        <h2 className="text-gray-900 font-serif text-xl font-medium tracking-tight">{RU_DICTIONARY.account.vedashiSanctuary}</h2>
+                        <p className="text-gray-400 text-sm italic mt-1">{RU_DICTIONARY.account.preparingSpace}</p>
                     </div>
                 </div>
             </div>
@@ -1360,6 +1354,16 @@ export default function AccountPage() {
         if (s === 'delivered') return RU_DICTIONARY.account.statusDelivered;
         if (s === 'cancelled') return RU_DICTIONARY.account.statusCancelled;
         return RU_DICTIONARY.account.pending;
+    };
+
+    const getLocalizedEnquiryStatus = (status: string) => {
+        const s = (status || '').toLowerCase();
+        if (s === 'open') return 'Открыт';
+        if (s === 'in_progress') return 'В процессе';
+        if (s === 'resolved') return 'Решен';
+        if (s === 'closed') return 'Закрыт';
+        if (s === 'pending') return 'В ожидании';
+        return status;
     };
 
     // Sidebar groups
@@ -1558,10 +1562,11 @@ export default function AccountPage() {
                         <button onClick={() => router.push('/account')} className="text-gray-400 hover:text-gray-900 transition-colors">{RU_DICTIONARY.account.account}</button>
                         <ChevronRight className="h-4 w-4 text-gray-300" />
                         <span className="text-gray-900 font-bold">
-                            {activeTab === 'profile' ? 'Profile Settings' :
-                                activeTab === 'addresses' ? 'Delivery Rituals' :
-                                    activeTab === 'privacy' ? RU_DICTIONARY.account.privacySanctuary :
-                                        activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+                            {activeTab === 'profile' ? RU_DICTIONARY.account.personalProfile : 
+                             activeTab === 'addresses' ? RU_DICTIONARY.addressesTab.header.manageAddresses :
+                             activeTab === 'orders' ? RU_DICTIONARY.account.orders : 
+                             activeTab === 'wishlist' ? RU_DICTIONARY.account.wishlist :
+                             RU_DICTIONARY.account.overview}
                         </span>
                     </div>
                 </header>
@@ -1650,7 +1655,7 @@ export default function AccountPage() {
                                         <div>
                                             <p className="text-xs font-bold text-warm-gray uppercase tracking-wider mb-1">{RU_DICTIONARY.account.recentOrders}</p>
                                             <h3 className="text-2xl font-bold text-gray-900 mb-1">{orders.length} {RU_DICTIONARY.account.total}</h3>
-                                            <p className="text-[11px] text-[#A8B28B] font-medium">{orders.filter((o: any) => o.status === 'SHIPPED').length} {RU_DICTIONARY.account.currentlyInTransit}</p>
+                                            <p className="text-[11px] text-[#A8B28B] font-medium">{orders.filter((o: any) => o.order_status === 'SHIPPED').length} {RU_DICTIONARY.account.currentlyInTransit}</p>
                                         </div>
                                     </div>
 
@@ -1830,7 +1835,7 @@ export default function AccountPage() {
 
                                             <div className="relative z-10">
                                                 <p className="text-[10px] font-bold tracking-widest text-white uppercase mb-1">{RU_DICTIONARY.account.vedashiWallet}</p>
-                                                <h3 className="text-3xl font-bold mb-1">${(Number(user?.wallet_balance || 0)).toFixed(2)}</h3>
+                                                <h3 className="text-3xl font-bold mb-1">{formatPrice ? formatPrice(Number(user?.wallet_balance || 0)) : `$${(Number(user?.wallet_balance || 0)).toFixed(2)}`}</h3>
                                                 <p className="text-[10px] text-white tracking-wide">{RU_DICTIONARY.account.availableBalance}</p>
                                             </div>
                                         </div>
@@ -2610,9 +2615,9 @@ export default function AccountPage() {
                                 {wishlistItems.length > pageSize && (
                                     <div className="flex items-center justify-between pt-6 border-t border-gray-100">
                                         <span className="text-sm font-medium text-warm-gray">
-                                            Showing <strong className="text-gray-900">
+                                            {RU_DICTIONARY.account.showing} <strong className="text-gray-900">
                                                 {Math.min((currentPage - 1) * pageSize + 1, wishlistItems.length)}-{Math.min(currentPage * pageSize, wishlistItems.length)}
-                                            </strong> of <strong className="text-gray-900">{wishlistItems.length}</strong> items
+                                            </strong> {RU_DICTIONARY.account.of} <strong className="text-gray-900">{wishlistItems.length}</strong> {RU_DICTIONARY.account.items}
                                         </span>
                                         <div className="flex items-center gap-2">
                                             <button
@@ -2620,7 +2625,7 @@ export default function AccountPage() {
                                                 disabled={currentPage === 1}
                                                 className={`px-4 py-2 text-sm font-bold rounded-xl border border-gray-100 transition-colors ${currentPage === 1 ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-gray-900 bg-white hover:bg-gray-50'}`}
                                             >
-                                                Previous
+                                                {RU_DICTIONARY.account.previous}
                                             </button>
 
                                             {Array.from({ length: Math.ceil(wishlistItems.length / pageSize) }).map((_, i) => (
@@ -2638,7 +2643,7 @@ export default function AccountPage() {
                                                 disabled={currentPage === Math.ceil(wishlistItems.length / pageSize)}
                                                 className={`px-4 py-2 text-sm font-bold rounded-xl border border-gray-100 transition-colors ${currentPage === Math.ceil(wishlistItems.length / pageSize) ? 'text-warm-gray bg-white opacity-50 cursor-not-allowed' : 'text-gray-900 bg-white hover:bg-gray-50'}`}
                                             >
-                                                Next
+                                                {RU_DICTIONARY.account.next}
                                             </button>
                                         </div>
                                     </div>
@@ -3163,7 +3168,7 @@ export default function AccountPage() {
                                                 className="w-full bg-[#91c934] text-white rounded-xl py-4 text-sm font-bold shadow-md hover:bg-[#7ab52a] hover:shadow-lg transition-all flex items-center justify-center gap-2 mb-4"
                                             >
                                                 {profileSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                                                SAVE ALL CHANGES
+                                                {RU_DICTIONARY.profileTab.actions.saveAllChanges}
                                             </button>
                                             <button
                                                 onClick={() => { fetchProfile(); toast.success(RU_DICTIONARY.profileTab.toasts.discarded); }}
@@ -3217,7 +3222,7 @@ export default function AccountPage() {
                                                     {profileData.is_mobile_verified ? (
                                                         <span className="text-xs font-bold text-green-600 bg-green-50 px-2.5 py-1 rounded-full flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> {RU_DICTIONARY.profileTab.status.verified}</span>
                                                     ) : (
-                                                        <button onClick={() => router.push(`/verify-otp`)} className="text-xs font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-full transition-colors flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {RU_DICTIONARY.profileTab.status.verify}</button>
+                                                        <button onClick={() => router.push(`/podtverzhdenie-otp`)} className="text-xs font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-full transition-colors flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {RU_DICTIONARY.profileTab.status.verify}</button>
                                                     )}
                                                 </div>
                                             </div>
@@ -3279,7 +3284,7 @@ export default function AccountPage() {
                                                         </div>
                                                         <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${selectedEnquiry.status === 'resolved' ? 'bg-green-100 text-green-700' : 'bg-[#D4A847]/20 text-[#B38720]'
                                                             }`}>
-                                                            {selectedEnquiry.status || RU_DICTIONARY.supportTab.detail.fallbackPending}
+                                                            {getLocalizedEnquiryStatus(selectedEnquiry.status) || RU_DICTIONARY.supportTab.detail.fallbackPending}
                                                         </span>
                                                     </div>
                                                     <div className="prose prose-sm max-w-none text-gray-900 leading-relaxed">
@@ -3417,16 +3422,7 @@ export default function AccountPage() {
                                                 <h2 className="text-xl font-bold text-gray-900">{RU_DICTIONARY.supportTab.header.historyTitle}</h2>
                                                 <p className="text-xs text-warm-gray mt-1">{RU_DICTIONARY.supportTab.header.historyDesc}</p>
                                             </div>
-                                            <div className="flex items-center gap-4">
-                                                <div className="relative group hidden sm:block">
-                                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-warm-gray" />
-                                                    <input
-                                                        type="text"
-                                                        placeholder={RU_DICTIONARY.supportTab.header.searchEnquiries}
-                                                        className="bg-white border border-gray-100 rounded-full pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-[#91c934]/40 transition-all w-48"
-                                                    />
-                                                </div>
-                                            </div>
+
                                         </div>
 
                                         <div className="divide-y divide-gray-100">
@@ -3478,7 +3474,7 @@ export default function AccountPage() {
                                                                         enquiry.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
                                                                             'bg-[#D4A847]/20 text-[#B38720]'
                                                                         }`}>
-                                                                        {enquiry.status || RU_DICTIONARY.supportTab.detail.fallbackPending}
+                                                                        {getLocalizedEnquiryStatus(enquiry.status) || RU_DICTIONARY.supportTab.detail.fallbackPending}
                                                                     </span>
                                                                     <span className="text-[10px] font-bold text-warm-gray uppercase tracking-widest">
                                                                         {new Date(enquiry.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -3580,29 +3576,6 @@ export default function AccountPage() {
                             document.body
                         )}
 
-                        {/* ═══ Delete Address Confirmation Modal ═══ */}
-                        {deletingAddressId && (
-                            <div className="fixed inset-0 z-50 flex items-center justify-center px-4" style={{ animation: 'fadeIn 0.2s ease-out' }}>
-                                <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setDeletingAddressId(null)} />
-                                <div className="relative w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl border border-light-border" style={{ animation: 'slideUp 0.25s ease-out' }}>
-                                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
-                                        <Trash2 className="h-5 w-5 text-red-500" />
-                                    </div>
-                                    <h3 className="text-center text-lg font-bold text-charcoal mb-1">Delete Address?</h3>
-                                    <p className="text-center text-sm text-warm-gray mb-5">This action cannot be undone.</p>
-                                    <div className="flex gap-3">
-                                        <button onClick={() => setDeletingAddressId(null)}
-                                            className="flex-1 rounded-xl border border-light-border py-2.5 text-sm font-medium text-charcoal hover:bg-cream transition-colors">
-                                            {RU_DICTIONARY.account.cancel}
-                                        </button>
-                                        <button onClick={() => deletingAddressId && handleDeleteAddress(deletingAddressId)}
-                                            className="flex-1 rounded-xl py-2.5 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors">
-                                            Delete
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
 
                         {/* ═══ Order Details Modal (Removed) ═══ */}
 
@@ -3792,7 +3765,7 @@ export default function AccountPage() {
                                                 trackOrderStatus === 'CONFIRMED' ? 'bg-[#F1F8E9] text-[#558B2F]' :
                                                     trackOrderStatus === 'CANCELLED' ? 'bg-[#FBE9E7] text-[#BF360C]' :
                                                         'bg-[#FFF8E1] text-[#F9A825]'
-                                            }`}>{trackOrderStatus}</span>
+                                            }`}>{getLocalizedStatus(trackOrderStatus || 'PENDING')}</span>
                                     )}
 
                                     {/* Growth Progress Bar */}
@@ -3890,7 +3863,7 @@ export default function AccountPage() {
                                             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cream-dark">
                                                 <BellRing className="h-5 w-5 text-burgundy" />
                                             </div>
-                                            <h2 className="text-xl font-bold text-charcoal">Manage Notifications</h2>
+                                            <h2 className="text-xl font-bold text-charcoal">{RU_DICTIONARY.profileTab.security.manageNotifications}</h2>
                                         </div>
                                         <button
                                             onClick={() => setShowNotificationOverlay(false)}
@@ -3911,7 +3884,7 @@ export default function AccountPage() {
                                             onClick={() => setShowNotificationOverlay(false)}
                                             className="rounded-lg bg-charcoal px-6 py-2.5 text-sm font-semibold text-white hover:bg-gray-800 transition-colors"
                                         >
-                                            Done
+                                            {RU_DICTIONARY.profileTab.modals.notification.doneBtn}
                                         </button>
                                     </div>
                                 </div>
@@ -3968,9 +3941,9 @@ export default function AccountPage() {
 
             <ConfirmModal
                 isOpen={!!deletingAddressId}
-                title="Delete Address"
-                message="Are you sure you want to permanently delete this address? This action cannot be undone."
-                confirmText="Delete"
+                title={RU_DICTIONARY.addressesTab.modal.deleteTitle}
+                message={RU_DICTIONARY.addressesTab.modal.deleteDesc}
+                confirmText={RU_DICTIONARY.addressesTab.modal.deleteBtn}
                 cancelText={RU_DICTIONARY.account.cancel}
                 isDestructive={true}
                 onConfirm={() => {
@@ -4019,7 +3992,7 @@ export default function AccountPage() {
                                         className="w-full bg-[#91c934] text-white rounded-xl py-3.5 text-sm font-bold shadow-xl hover:bg-[#7ab52a] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed border border-[#7ab52a]"
                                     >
                                         {emailOtpSubmitting ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : <Check className="h-4 w-4 text-white" />}
-                                        Verify & Save
+                                        {RU_DICTIONARY.profileTab.modals.emailOtp.verifyAndSave}
                                     </button>
                                 </div>
                                 <div className="text-center pt-2">
@@ -4077,7 +4050,7 @@ export default function AccountPage() {
                                         className="w-full bg-[#91c934] text-white rounded-xl py-3.5 text-sm font-bold shadow-xl hover:bg-[#7ab52a] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed border border-[#7ab52a]"
                                     >
                                         {phoneOtpSubmitting ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : <CheckCircle2 className="h-4 w-4 text-white" />}
-                                        Verify & Update
+                                        {RU_DICTIONARY.profileTab.modals.phoneOtp.verifyAndUpdate}
                                     </button>
                                 </div>
                                 <div className="text-center pt-2">
@@ -4235,7 +4208,7 @@ export default function AccountPage() {
                         <div className="p-8 max-h-[70vh] overflow-y-auto custom-scrollbar bg-white/80 backdrop-blur-md">
                             <div className="mb-6 bg-gray-50 p-4 rounded-3xl border border-gray-100/50">
                                 <p className="text-sm text-gray-900 flex items-center gap-2">
-                                    <Sparkles className="h-4 w-4 text-[#D4A847]" /> Master your periodic presence through mindful alerts.
+                                    <Sparkles className="h-4 w-4 text-[#D4A847]" /> {RU_DICTIONARY.profileTab.modals.notification.masterPresence}
                                 </p>
                             </div>
                             <NotificationPreferences hideHeader={true} isMobileVerified={profileData.is_mobile_verified} />

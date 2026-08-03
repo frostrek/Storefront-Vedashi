@@ -678,6 +678,8 @@ export const RU_DICTIONARY = {
       allItemsInCart: "Все товары уже в корзине в максимальном количестве.",
       allOutOfStock: "Все товары закончились.",
       addedItemsLimited: "товар(ов). Некоторые ограничены из-за наличия.",
+      failedToLoadDetails: "Не удалось загрузить детали заказа",
+      failedToLoadTracking: "Не удалось загрузить данные отслеживания",
       addedPrefix: "Добавлено",
       itemsAddedSuccess: "Товары успешно добавлены в корзину!",
       couldNotAddItems: "Не удалось добавить товары.",
@@ -848,6 +850,11 @@ export const RU_DICTIONARY = {
     recentOrders: "Последние заказы",
     total: "Всего",
     currentlyInTransit: "сейчас в пути",
+    vedashiSanctuary: "Святилище Ведаши",
+    preparingSpace: "Подготовка вашего священного пространства...",
+    showing: "Показано",
+    of: "из",
+    items: "товаров",
     loyaltyPoints: "Бонусные баллы",
     pts: "баллов",
     commonActions: "Частые действия",
@@ -1077,7 +1084,8 @@ export const RU_DICTIONARY = {
         notificationHarmony: "Гармония уведомлений",
         customiseAlerts: "Настройте свои осознанные оповещения",
         masterPresence: "Овладейте своим периодическим присутствием через осознанные оповещения.",
-        done: "ГОТОВО"
+        done: "ГОТОВО",
+        doneBtn: "Готово"
       }
     },
     notificationPreferences: {

@@ -123,7 +123,7 @@ const nextConfig: NextConfig = {
       { source: '/zabyly-parol', destination: '/forgot-password' },
       { source: '/sbros-parolya', destination: '/reset-password' },
       { source: '/podtverzhdenie-email', destination: '/verify-email' },
-      { source: '/podtverzhdenie-otp', destination: '/verify-otp' },
+
       { source: '/registratsiya-postavshchika', destination: '/vendor-registration' },
     ];
   },
