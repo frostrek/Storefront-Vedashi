@@ -6,7 +6,7 @@ import ProductsClientPage from '../ProductsClient';
 import { RU_DICTIONARY } from '@/content/ru';
 import { ROUTES } from '@/lib/routes';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashiherbals.com';
 
 type Props = {
     params: Promise<{ country: string, slugs: string[] }>;

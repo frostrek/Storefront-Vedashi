@@ -1,6 +1,6 @@
 import { ROUTES } from '@/lib/routes';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashiherbals.com';
 
 export async function GET() {
     const isProduction = process.env.NODE_ENV === 'production';
