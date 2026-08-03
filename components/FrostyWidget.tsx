@@ -7,7 +7,7 @@ import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 
 const FROSTY_API_ORIGIN = (
-  process.env.NEXT_PUBLIC_FROSTY_API_URL ?? "https://ai.vedashi.com"
+  process.env.NEXT_PUBLIC_FROSTY_API_URL ?? "https://ai.vedashiherbals.com"
 )
   .trim()
   .replace(/\/$/, "")
@@ -120,7 +120,7 @@ export default function FrostyWidget() {
             />
             <FrostyShopBridge />
             <Script
-                src="https://ai.vedashi.com/widget.js"
+                src="https://ai.vedashiherbals.com/widget.js"
                 data-api-url={FROSTY_API_ORIGIN}
                 data-tenant-id={FROSTY_TENANT_ID}
                 data-embed-key={FROSTY_EMBED_KEY}

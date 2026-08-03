@@ -162,7 +162,7 @@ export default function ContactClientPage() {
                             {
                                 icon: Mail,
                                 title: 'EMAIL US',
-                                lines: ['info@vedashi.com']
+                                lines: ['info@vedashiherbals.com']
                             },
                             {
                                 icon: Clock,

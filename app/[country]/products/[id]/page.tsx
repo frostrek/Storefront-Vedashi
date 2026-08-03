@@ -5,7 +5,7 @@ import { SUPPORTED_COUNTRIES } from '@/lib/currency';
 import { generateProductJsonLd, generateBreadcrumbJsonLd } from '@/lib/seo';
 import ProductClientPage from './ProductClient';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashiherbals.com';
 
 // Enable ISR/cache for product pages if needed, otherwise rely on Next.js default fetching behavior.
 export const revalidate = 3600; // revalidate at most every hour

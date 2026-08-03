@@ -4,7 +4,7 @@ import { generateBreadcrumbJsonLd } from '@/lib/seo';
 import { getCategories } from '@/lib/api';
 import ProductsClientPage from './ProductsClient';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashiherbals.com';
 
 type Props = {
     params: Promise<{ country: string }>;

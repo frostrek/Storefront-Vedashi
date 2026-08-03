@@ -1,7 +1,7 @@
 import { API_URL } from '@/lib/api';
 import { SUPPORTED_COUNTRIES, buildPath } from '@/lib/currency';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashiherbals.com';
 
 async function fetchSitemapData() {
     try {

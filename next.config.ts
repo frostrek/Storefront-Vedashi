@@ -65,10 +65,10 @@ const nextConfig: NextConfig = {
         has: [
           {
             type: 'host',
-            value: 'www.vedashi.com',
+            value: 'www.vedashiherbals.com',
           },
         ],
-        destination: 'https://vedashi.com/:path*',
+        destination: 'https://vedashiherbals.com/:path*',
         permanent: true,
       },
       {

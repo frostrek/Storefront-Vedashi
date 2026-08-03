@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { SUPPORTED_COUNTRIES } from '@/lib/currency';
 import HomeClientPage from './HomeClient';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashiherbals.com';
 
 export async function generateMetadata({ params }: { params: Promise<{ country: string }> }): Promise<Metadata> {
     const { country } = await params;

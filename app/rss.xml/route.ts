@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { API_URL } from '@/lib/api';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashiherbals.com';
 
 export async function GET() {
     try {

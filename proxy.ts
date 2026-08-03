@@ -114,8 +114,8 @@ async function fetchCountryFromIPinfo(ip: string): Promise<SupportedCountry | nu
 }
 
 // ─── URL Prefix Strategy ────────────────────────────────────────────
-// 'us' (worldwide) uses ROOT URLs: vedashi.com/products
-// 'ru' and 'kr' use PREFIXED URLs: vedashi.com/ru/products, vedashi.com/kr/products
+// 'us' (worldwide) uses ROOT URLs: vedashiherbals.com/products
+// 'ru' and 'kr' use PREFIXED URLs: vedashiherbals.com/ru/products, vedashiherbals.com/kr/products
 const PREFIXED_COUNTRIES = new Set<string>(['ru', 'kr']);
 
 // Old country prefixes that should 301 redirect to root
@@ -181,7 +181,7 @@ function applyLanguageCookies(
 }
 
 // ─── Constants ──────────────────────────────────────────────────────
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashiherbals.com';
 
 // ─── Proxy (Next.js 16 convention, replaces middleware) ──────────────
 
@@ -190,7 +190,7 @@ export async function proxy(request: NextRequest) {
 
   // 0. SEO: Enforce HTTPS and non-www canonical domain (redirect www to non-www)
   const host = request.headers.get('host') || request.nextUrl.hostname || '';
-  const isWww = host === 'www.vedashi.com' || host === 'www.vedashi.onrender.com';
+  const isWww = host === 'www.vedashiherbals.com' || host === 'www.vedashi.onrender.com';
   
   if (isWww) {
     const target = new URL(`${pathname}${search}`, SITE_URL);

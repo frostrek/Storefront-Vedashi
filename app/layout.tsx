@@ -34,7 +34,7 @@ const playfair = Playfair_Display({
   weight: ["600", "700"],
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashiherbals.com';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

@@ -62,7 +62,7 @@ export interface CategorySeoInput {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const SITE_NAME = 'Vedashi';
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashi.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashiherbals.com';
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-default.jpg`;
 
 // ─── Sanitization ─────────────────────────────────────────────────────────────
@@ -358,7 +358,7 @@ export function generateLocalBusinessJsonLd(): Record<string, unknown> {
         logo: `${SITE_URL}/logo.png`,
         image: `${SITE_URL}/og-default.jpg`,
         description: 'Premium Ayurvedic Wellness and Natural Herbal Remedies.',
-        email: 'info@vedashi.com',
+        email: 'info@vedashiherbals.com',
         // telephone: '+91-XXXXXXXXXX', // TODO: Add real business phone number when available
         address: {
             '@type': 'PostalAddress',

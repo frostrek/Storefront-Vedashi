@@ -330,8 +330,8 @@ export default function Footer() {
 
                                     <div className="flex items-center gap-2">
                                         <Mail className="text-gray-500 h-3 w-3 flex-shrink-0" />
-                                        <a href={`mailto:${isRussia ? 'info@vedashiherbals.com' : (data?.contact?.email || 'info@vedashi.com')}`} className="text-[11.5px] text-gray-400 hover:text-[#91C934] transition-colors">
-                                            {isRussia ? 'info@vedashiherbals.com' : (data?.contact?.email || 'info@vedashi.com')}
+                                        <a href={`mailto:${isRussia ? 'info@vedashiherbals.com' : (data?.contact?.email || 'info@vedashiherbals.com')}`} className="text-[11.5px] text-gray-400 hover:text-[#91C934] transition-colors">
+                                            {isRussia ? 'info@vedashiherbals.com' : (data?.contact?.email || 'info@vedashiherbals.com')}
                                         </a>
                                     </div>
                                     {isRussia && (
