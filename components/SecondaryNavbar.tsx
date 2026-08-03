@@ -5,6 +5,8 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { getCategories, getFilterOptions } from '@/lib/api';
 import { buildPath, getCountryFromPathname } from '@/lib/currency';
+import { RU_DICTIONARY } from '@/content/ru';
+import { ROUTES } from '@/lib/routes';
 
 
 interface Category {
@@ -12,6 +14,7 @@ interface Category {
   parent_id: string | null;
   name: string;
   slug: string;
+  full_path?: string;
   image_url?: string;
   children?: Category[];
 }
@@ -19,14 +22,7 @@ interface Category {
 const SecondaryMegaMenuLinks = ({ item, country, topLevelSlug, secondLevelSlug, level = 0 }: { item: Category, country: string, topLevelSlug: string, secondLevelSlug?: string, level?: number }) => {
   const hasChildren = item.children && item.children.length > 0;
 
-  let href = buildPath(country, `/products?category=${topLevelSlug}`);
-  if (level === 0) {
-    href += `&sub_category=${item.slug}`;
-  } else if (level === 1) {
-    href += `&sub_category=${secondLevelSlug}&sub_sub_category=${item.slug}`;
-  } else {
-    href += `&sub_category=${secondLevelSlug}&sub_sub_category=${item.slug}`; // Fallback for deeper levels
-  }
+  const href = buildPath(country, ROUTES.katalogPath(item.full_path || item.slug));
 
   return (
     <div className={`flex flex-col items-start ${level === 0 ? 'mb-6' : 'mb-0'}`}>
@@ -108,7 +104,7 @@ export default function SecondaryNavbar() {
                 <div key={parent.category_id} className="flex items-center h-full">
                   <div className="group/nav-item h-full flex items-center shrink-0">
                     <Link
-                      href={buildPath(country, `/products?category=${parent.slug}`)}
+                      href={buildPath(country, ROUTES.katalogPath(parent.full_path || parent.slug))}
                       className="flex items-center h-full px-1.5 transition-colors cursor-pointer border-b-2 border-transparent group-hover/nav-item:border-[#91CA35] hover:text-[#91CA35]"
                     >
                       {parent.name}
@@ -135,8 +131,8 @@ export default function SecondaryNavbar() {
 
                             {/* "View All" link positioned at the bottom right */}
                             <div className="flex justify-end mt-auto pt-4 border-t border-gray-50/50">
-                              <Link href={buildPath(country, `/products?category=${parent.slug}`)} className="text-[#FF0000] hover:text-[#CC0000] flex items-center gap-1 font-bold text-[13px] group/view-all">
-                                Explore All {parent.name} <span className="transition-transform group-hover/view-all:translate-x-1">→</span>
+                              <Link href={buildPath(country, ROUTES.katalogPath(parent.full_path || parent.slug))} className="text-[#FF0000] hover:text-[#CC0000] flex items-center gap-1 font-bold text-[13px] group/view-all">
+                                {RU_DICTIONARY.secondaryNav.exploreAll} {parent.name} <span className="transition-transform group-hover/view-all:translate-x-1">→</span>
                               </Link>
                             </div>
                           </div>
@@ -156,7 +152,7 @@ export default function SecondaryNavbar() {
             {/* Brands A-Z Dropdown */}
             <div className="group/nav-item h-full flex items-center shrink-0">
               <span className="flex items-center h-full px-1.5 hover:text-[#91CA35] transition-colors cursor-pointer border-b-2 border-transparent group-hover/nav-item:border-[#91CA35]">
-                Brands A-Z
+                {RU_DICTIONARY.secondaryNav.brandsAZ}
               </span>
 
               {/* Brands Mega Dropdown */}
@@ -164,7 +160,7 @@ export default function SecondaryNavbar() {
                 <div className="absolute top-full left-0 w-[90vw] rounded-br-xl bg-white shadow-[0_15px_50px_rgba(0,0,0,0.15)] opacity-0 invisible group-hover/nav-item:opacity-100 group-hover/nav-item:visible transition-all duration-300 z-[100]">
                   <div className="mx-auto px-8 pt-4 pb-8 max-h-[450px] overflow-y-auto w-full">
                     <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-4">
-                      <h3 className="text-xl font-bold text-gray-900">All Brands A-Z</h3>
+                      <h3 className="text-xl font-bold text-gray-900">{RU_DICTIONARY.secondaryNav.allBrandsAZ}</h3>
                       <div className="flex gap-2 invisible md:visible flex-wrap">
                         {alphabetKeys.map(letter => (
                           <a key={letter} href={`#brand-${letter}`} className="text-xs font-bold text-gray-400 hover:text-[#3B5D3B] py-1 px-2">{letter}</a>
@@ -180,7 +176,7 @@ export default function SecondaryNavbar() {
                             {groupedBrands[letter].map(brand => (
                               <li key={brand}>
                                 <Link
-                                  href={buildPath(country, `/products?brand=${encodeURIComponent(brand)}`)}
+                                  href={buildPath(country, `${ROUTES.katalog}?brand=${encodeURIComponent(brand)}`)}
                                   className="text-[13px] text-gray-600 font-medium hover:text-[#91CA35] transition-all block truncate"
                                 >
                                   {brand}
@@ -199,11 +195,11 @@ export default function SecondaryNavbar() {
 
           <div className="flex items-center h-full text-[13px] font-bold tracking-wide shrink-0 ml-4">
             <div className="h-4 w-[1px] bg-black/10 self-center mx-3" />
-            <Link href={buildPath(country, `/products?bestSeller=true`)} className="text-black hover:text-[#91CA35] h-full flex items-center">Best Sellers</Link>
+            <Link href={buildPath(country, `${ROUTES.katalog}?bestSeller=true`)} className="text-black hover:text-[#91CA35] h-full flex items-center uppercase">{RU_DICTIONARY.home.bestSellers}</Link>
             <div className="h-4 w-[1px] bg-black/10 self-center mx-3" />
-            <Link href={buildPath(country, `/products?newArrival=true`)} className="text-[#FF0000] font-bold h-full flex items-center gap-1.5 group">
+            <Link href={buildPath(country, `${ROUTES.katalog}?newArrival=true`)} className="text-[#FF0000] font-bold h-full flex items-center gap-1.5 group uppercase">
               <span className="flex h-2 w-2 rounded-full bg-[#FF0000] animate-promo-blink shadow-[0_0_8px_rgba(255,0,0,0.5)]"></span>
-              New Arrivals
+              {RU_DICTIONARY.home.newArrivals}
             </Link>
           </div>
         </div>

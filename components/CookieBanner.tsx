@@ -5,8 +5,11 @@ import { createPortal } from 'react-dom';
 import { useCookieConsent } from '@/context/CookieConsentContext';
 import { Shield, X, Check, Cookie, ChevronRight, Lock, BarChart2, Megaphone, Sliders } from 'lucide-react';
 import { API_URL } from '@/lib/api';
+import { RU_DICTIONARY } from '@/content/ru';
 
 export default function CookieBanner() {
+    const t = RU_DICTIONARY.cookieBanner;
+
     const { showBanner, acceptAll, rejectAll, openSettings, isSettingsOpen, closeSettings, updateConsent, consent } = useCookieConsent();
 
     const [localConsent, setLocalConsent] = useState({
@@ -70,7 +73,7 @@ export default function CookieBanner() {
         if (!policyContent) {
             setIsLoadingPolicy(true);
             try {
-                const res = await fetch(`${API_URL}/api/legal/public/privacy-policy`);
+                const res = await fetch(`${API_URL}/api/legal/public/type/privacy_policy`);
                 const json = await res.json();
                 if (json.success && json.data) {
                     let blocks: any[] = [];
@@ -183,8 +186,8 @@ export default function CookieBanner() {
 
                     const html = `<div style="font-family:DM Sans,sans-serif">${blocks.map(renderBlock).join('')}</div>`;
                     setPolicyContent(html);
-                } else { setPolicyContent('<p>Unable to load Cookie Policy.</p>'); }
-            } catch { setPolicyContent('<p>Unable to load Cookie Policy.</p>'); }
+                } else { setPolicyContent(t ? t.policy.error : '<p>Unable to load Cookie Policy.</p>'); }
+            } catch { setPolicyContent(t ? t.policy.error : '<p>Unable to load Cookie Policy.</p>'); }
             finally { setIsLoadingPolicy(false); }
         }
     };
@@ -199,8 +202,8 @@ export default function CookieBanner() {
     const cookieCategories = [
         {
             key: 'strictly_necessary',
-            label: 'Strictly Necessary',
-            desc: 'Essential for the website to function. Always active.',
+            label: t ? t.settings.categories.strictly_necessary.label : 'Strictly Necessary',
+            desc: t ? t.settings.categories.strictly_necessary.desc : 'Essential for the website to function. Always active.',
             icon: Lock,
             locked: true,
             color: '#065f46',
@@ -208,8 +211,8 @@ export default function CookieBanner() {
         },
         {
             key: 'analytics',
-            label: 'Analytics & Performance',
-            desc: 'Helps us understand how visitors interact with our site.',
+            label: t ? t.settings.categories.analytics.label : 'Analytics & Performance',
+            desc: t ? t.settings.categories.analytics.desc : 'Helps us understand how visitors interact with our site.',
             icon: BarChart2,
             locked: false,
             color: '#1d4ed8',
@@ -217,8 +220,8 @@ export default function CookieBanner() {
         },
         {
             key: 'marketing',
-            label: 'Marketing & Targeting',
-            desc: 'Delivers relevant ads and tracks campaign effectiveness.',
+            label: t ? t.settings.categories.marketing.label : 'Marketing & Targeting',
+            desc: t ? t.settings.categories.marketing.desc : 'Delivers relevant ads and tracks campaign effectiveness.',
             icon: Megaphone,
             locked: false,
             color: '#b45309',
@@ -226,8 +229,8 @@ export default function CookieBanner() {
         },
         {
             key: 'preferences',
-            label: 'Functional & Preferences',
-            desc: 'Enables personalized features like language settings.',
+            label: t ? t.settings.categories.preferences.label : 'Functional & Preferences',
+            desc: t ? t.settings.categories.preferences.desc : 'Enables personalized features like language settings.',
             icon: Sliders,
             locked: false,
             color: '#7c3aed',
@@ -553,21 +556,21 @@ export default function CookieBanner() {
                                 <Cookie style={{ width: 18, height: 18, color: '#fff' }} />
                             </div>
                             <div>
-                                <p className="ck-card-title">We value your privacy</p>
+                                <p className="ck-card-title">{t ? t.banner.title : 'We value your privacy'}</p>
                                 <p className="ck-card-text">
-                                    We use cookies to personalise content and analyse traffic.{' '}
-                                    <button className="ck-link" onClick={handleOpenPolicy}>Cookie Policy</button>
+                                    {t ? t.banner.desc : 'We use cookies to personalise content and analyse traffic.'}{' '}
+                                    <button className="ck-link" onClick={handleOpenPolicy}>{t ? t.banner.policyLink : 'Cookie Policy'}</button>
                                 </p>
                             </div>
                         </div>
 
                         <div className="ck-actions">
                             <div className="ck-btn-row">
-                                <button className="ck-accept" onClick={acceptAll}>Accept All</button>
-                                <button className="ck-reject" onClick={rejectAll}>Reject</button>
+                                <button className="ck-accept" onClick={acceptAll}>{t ? t.banner.acceptAll : 'Accept All'}</button>
+                                <button className="ck-reject" onClick={rejectAll}>{t ? t.banner.reject : 'Reject'}</button>
                             </div>
                             <button className="ck-manage" onClick={openSettings}>
-                                Manage Preferences
+                                {t ? t.banner.manage : 'Manage Preferences'}
                                 <ChevronRight style={{ width: 13, height: 13 }} />
                             </button>
                         </div>
@@ -587,8 +590,8 @@ export default function CookieBanner() {
                                     <Shield style={{ width: 18, height: 18, color: '#059669' }} />
                                 </div>
                                 <div>
-                                    <h2 className="ck-mhead-title">Privacy Preferences</h2>
-                                    <p className="ck-mhead-sub">Customize your cookie settings</p>
+                                    <h2 className="ck-mhead-title">{t ? t.settings.title : 'Privacy Preferences'}</h2>
+                                    <p className="ck-mhead-sub">{t ? t.settings.subtitle : 'Customize your cookie settings'}</p>
                                 </div>
                             </div>
                             <button className="ck-xbtn" onClick={handleCloseSettings}>
@@ -598,8 +601,8 @@ export default function CookieBanner() {
 
                         <div className="ck-mbody">
                             <p className="ck-info-box">
-                                Choose which cookies to allow. You can change these settings at any time via the link in our footer.{' '}
-                                <button className="ck-link" onClick={handleOpenPolicy}>View Cookie Policy →</button>
+                                {t ? t.settings.desc : 'Choose which cookies to allow. You can change these settings at any time via the link in our footer.'}{' '}
+                                <button className="ck-link" onClick={handleOpenPolicy}>{t ? t.settings.viewPolicy : 'View Cookie Policy →'}</button>
                             </p>
 
                             {cookieCategories.map((cat) => {
@@ -617,7 +620,7 @@ export default function CookieBanner() {
                                         {cat.locked ? (
                                             <span className="ck-always">
                                                 <Check style={{ width: 10, height: 10 }} />
-                                                Always On
+                                                {t ? t.settings.alwaysOn : 'Always On'}
                                             </span>
                                         ) : (
                                             <button
@@ -639,8 +642,8 @@ export default function CookieBanner() {
                         </div>
 
                         <div className="ck-mfoot">
-                            <button className="ck-btn-ghost" onClick={rejectAll}>Reject Optional</button>
-                            <button className="ck-btn-save" onClick={handleSaveSettings}>Save Preferences</button>
+                            <button className="ck-btn-ghost" onClick={rejectAll}>{t ? t.settings.rejectOptional : 'Reject Optional'}</button>
+                            <button className="ck-btn-save" onClick={handleSaveSettings}>{t ? t.settings.save : 'Save Preferences'}</button>
                         </div>
                     </div>
                 </div>,
@@ -676,10 +679,10 @@ export default function CookieBanner() {
                                 </div>
                                 <div>
                                     <h2 style={{ margin:0, fontSize:16, fontWeight:700, color:'#fff', letterSpacing:'-0.02em' }}>
-                                        Cookie Policy
+                                        {t ? t.policy.title : 'Cookie Policy'}
                                     </h2>
                                     <p style={{ margin:'3px 0 0', fontSize:12, color:'rgba(255,255,255,0.6)', fontFamily:'DM Sans, sans-serif' }}>
-                                        How we use cookies on our site
+                                        {t ? t.policy.subtitle : 'How we use cookies on our site'}
                                     </p>
                                 </div>
                             </div>
@@ -708,7 +711,7 @@ export default function CookieBanner() {
                                 ? (
                                     <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'48px 0', gap:14 }}>
                                         <div className="ck-spin" />
-                                        <p style={{ margin:0, fontSize:12.5, color:'#94a3b8', fontFamily:'DM Sans, sans-serif' }}>Loading policy…</p>
+                                        <p style={{ margin:0, fontSize:12.5, color:'#94a3b8', fontFamily:'DM Sans, sans-serif' }}>{t ? t.policy.loading : 'Loading policy…'}</p>
                                     </div>
                                 )
                                 : (
@@ -721,7 +724,7 @@ export default function CookieBanner() {
                         </div>
 
                         <div className="ck-mfoot">
-                            <button className="ck-btn-save" onClick={handleClosePolicyModal}>Got it</button>
+                            <button className="ck-btn-save" onClick={handleClosePolicyModal}>{t ? t.policy.gotIt : 'Got it'}</button>
                         </div>
                     </div>
                 </div>,

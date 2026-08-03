@@ -27,7 +27,7 @@ export default function RouteTracker() {
     const getPageType = (path: string | null) => {
         if (!path || path === '/' || path.match(/^\/[a-zA-Z]{2}$/)) return 'home';
         if (path.includes('/products/')) return 'product';
-        if (path.includes('/collections/') || path.includes('/search')) return 'category';
+        if (path.includes('/search')) return 'category';
         if (path.includes('/checkout')) return 'checkout';
         if (path.includes('/cart')) return 'cart';
         return 'other';

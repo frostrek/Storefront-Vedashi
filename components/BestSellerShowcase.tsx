@@ -8,6 +8,8 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { buildPath, getCountryFromPathname } from '@/lib/currency';
+import { RU_DICTIONARY } from '@/content/ru';
+import { ROUTES } from '@/lib/routes';
 
 // Ad banners that rotate  in the left panels
 // You can replace these with dedicated promotional images
@@ -33,7 +35,7 @@ export default function BestSellerShowcase({
   title,
   subtitle,
   viewAllLink,
-  viewAllText = 'Explore All',
+  viewAllText = RU_DICTIONARY.home.exploreAll,
 }: BestSellerShowcaseProps) {
   const params = useParams();
   const country = (Array.isArray(params?.country) ? params?.country[0] : params?.country) || 'us';
@@ -54,11 +56,10 @@ export default function BestSellerShowcase({
   // Show up to 8 products (4 columns × 2 rows)
   const displayProducts = products.slice(0, 8);
 
-  const resolvedViewAllLink = viewAllLink
-    ? viewAllLink.startsWith('/') && !viewAllLink.startsWith(buildPath(country, '/'))
-      ? buildPath(country, viewAllLink)
-      : viewAllLink
-    : buildPath(country, `/products?sort=popular&bestSeller=true`);
+  // Use a default path if viewAllLink is not provided. We fall back to the popular sorting.
+  const resolvedViewAllLink = viewAllLink 
+    ? viewAllLink 
+    : buildPath(country, `${ROUTES.katalog}?sort=popular&bestSeller=true`);
 
   return (
     <div className="relative pt-6 sm:pt-8 pb-0">
@@ -126,7 +127,7 @@ export default function BestSellerShowcase({
               >
                 <Image
                   src={adBanners[adIndex].src}
-                  alt="Promotional Banner"
+                  alt={RU_DICTIONARY.footer.promotionalBannerAlt}
                   fill
                   sizes="(max-width: 1024px) 85vw, 450px"
                   className="object-cover"

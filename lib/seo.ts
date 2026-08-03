@@ -6,6 +6,7 @@
 
 import type { Metadata } from 'next';
 import { SUPPORTED_COUNTRIES, buildPath } from './currency';
+import { ROUTES } from './routes';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -82,27 +83,27 @@ export function sanitizeMetaText(text: string, maxLength = 160): string {
 function productFallbackTitle(p: ProductSeoInput): string {
     const parts = [p.product_name];
     if (p.brand) parts.push(p.brand);
-    parts.push('Buy Online');
+    parts.push('Купить онлайн');
     return sanitizeMetaText(parts.join(' | '), 60);
 }
 
 function productFallbackDescription(p: ProductSeoInput): string {
-    const parts = [`Buy ${p.product_name}`];
-    if (p.brand) parts[0] += ` by ${p.brand}`;
+    const parts = [`Купите ${p.product_name}`];
+    if (p.brand) parts[0] += ` от ${p.brand}`;
     parts[0] += '.';
-    if (p.category) parts.push(`Premium authentic ${p.category}.`);
-    parts.push('Fast delivery and secure checkout.');
+    if (p.category) parts.push(`Премиальная аюрведическая ${p.category}.`);
+    parts.push('Быстрая доставка и безопасная оплата.');
     return sanitizeMetaText(parts.join(' '), 160);
 }
 
 function categoryFallbackTitle(c: CategorySeoInput): string {
-    return sanitizeMetaText(`Buy ${c.name} Online | Premium Ayurvedic Wellness`, 60);
+    return sanitizeMetaText(`Купить ${c.name} онлайн | Премиальная Аюрведа`, 60);
 }
 
 function categoryFallbackDescription(c: CategorySeoInput): string {
     return sanitizeMetaText(
         c.description ||
-        `Explore our collection of premium ${c.name}. Discover clinically tested Ayurvedic remedies and natural wellness solutions.`,
+        `Откройте коллекцию ${c.name}. Клинически проверенные аюрведические средства и натуральные решения для здоровья.`,
         160
     );
 }
@@ -127,10 +128,10 @@ export function buildProductMeta(product: ProductSeoInput, currentCountry: strin
     const title = `${seo?.meta_title || productFallbackTitle(product)} | ${regionName}`;
     const description = seo?.meta_description || productFallbackDescription(product);
     
-    const pathStrategy = `products/${product.slug || product.product_id}`;
+    const pathStrategy = ROUTES.tovar(product.slug || product.product_id).slice(1);
     const canonical = seo?.canonical_url || `${SITE_URL}${buildPath(currentCountry, pathStrategy)}`;
     
-    const ogImage = seo?.og_image || `${SITE_URL}${buildPath(currentCountry, `products/${product.slug || product.product_id}`)}/opengraph-image`;
+    const ogImage = seo?.og_image || `${SITE_URL}${buildPath(currentCountry, pathStrategy)}/opengraph-image`;
     const keywords = seo?.meta_keywords || [product.product_name, product.brand, product.category, SITE_NAME].filter(Boolean).join(', ');
 
     const robotsValue = seo?.robots || 'index, follow';
@@ -172,7 +173,7 @@ export function buildCategoryMeta(category: CategorySeoInput, currentCountry: st
     const title = `${seo?.meta_title || categoryFallbackTitle(category)} | ${regionName}`;
     const description = seo?.meta_description || categoryFallbackDescription(category);
     
-    const pathStrategy = `categories/${category.slug || category.category_id}`;
+    const pathStrategy = ROUTES.katalogPath(category.slug || category.category_id).slice(1);
     const canonical = seo?.canonical_url || `${SITE_URL}${buildPath(currentCountry, pathStrategy)}`;
     
     const ogImage = seo?.og_image || category.image_url || DEFAULT_OG_IMAGE;
@@ -210,10 +211,10 @@ export function buildCategoryMeta(category: CategorySeoInput, currentCountry: st
 
 /** Build Next.js Metadata for the product listing page */
 export function buildPLPMeta(hasFilters = false, currentCountry: string = 'us'): Metadata {
-    const pathStrategy = 'products';
+    const pathStrategy = ROUTES.katalog.slice(1);
     return {
-        title: 'Shop Premium Ayurvedic Wellness | Vedashi',
-        description: 'Browse our curated collection of premium Ayurvedic remedies and wellness formulations. Filter by category, benefit, and more. Fast delivery across India.',
+        title: 'Каталог — Премиальная Аюрведа | Vedashi',
+        description: 'Откройте нашу коллекцию премиальных аюрведических средств и натуральных формул. Фильтруйте по категории, бренду и цене. Быстрая доставка.',
         alternates: {
             canonical: `${SITE_URL}${buildPath(currentCountry, pathStrategy)}`,
             languages: buildHreflang(pathStrategy)
@@ -222,8 +223,8 @@ export function buildPLPMeta(hasFilters = false, currentCountry: string = 'us'):
             ? { index: false, follow: true }   // noindex filtered pages
             : { index: true, follow: true },
         openGraph: {
-            title: 'Shop Premium Ayurvedic Wellness | Vedashi',
-            description: 'Browse our curated collection of premium Ayurvedic remedies and wellness formulations.',
+            title: 'Каталог — Премиальная Аюрведа | Vedashi',
+            description: 'Откройте нашу коллекцию премиальных аюрведических средств и натуральных формул.',
             url: `${SITE_URL}${buildPath(currentCountry, pathStrategy)}`,
             siteName: SITE_NAME,
             type: 'website',
@@ -259,7 +260,7 @@ export function generateProductJsonLd(
         sku,
         mpn: sku,
         image: Array.from(imageSet),
-        url: `${SITE_URL}${buildPath(country, `products/${product.slug || product.product_id}`)}`,
+        url: `${SITE_URL}${buildPath(country, ROUTES.tovar(product.slug || product.product_id).slice(1))}`,
         brand: {
             '@type': 'Brand',
             name: product.brand || SITE_NAME
@@ -271,7 +272,7 @@ export function generateProductJsonLd(
             availability: inStock
                 ? 'https://schema.org/InStock'
                 : 'https://schema.org/OutOfStock',
-            url: `${SITE_URL}${buildPath(country, `products/${product.slug || product.product_id}`)}`,
+            url: `${SITE_URL}${buildPath(country, ROUTES.tovar(product.slug || product.product_id).slice(1))}`,
             priceValidUntil: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
             itemCondition: 'https://schema.org/NewCondition',
             seller: {
@@ -517,7 +518,7 @@ export function generateWebSiteJsonLd(): Record<string, unknown> {
             '@type': 'SearchAction',
             target: {
                 '@type': 'EntryPoint',
-                urlTemplate: `${SITE_URL}/products?search={search_term_string}`,
+                urlTemplate: `${SITE_URL}${ROUTES.search}?q={search_term_string}`,
             },
             'query-input': 'required name=search_term_string',
         },

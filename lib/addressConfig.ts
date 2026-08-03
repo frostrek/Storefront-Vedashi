@@ -29,13 +29,13 @@ export const ADDRESS_CONFIG: Record<string, AddressFieldConfig> = {
   },
   RU: {
     labels: {
-      state: 'Region',
-      city: 'City',
-      postalCode: 'Postal Code',
+      state: 'Регион',
+      city: 'Город',
+      postalCode: 'Индекс',
     },
     postalCode: {
       regex: /^\d{6}$/,
-      error: 'Postal code must be 6 digits',
+      error: 'Почтовый индекс должен содержать 6 цифр',
     },
   },
   KR: {

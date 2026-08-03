@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { buildPath, getCountryFromPathname } from '@/lib/currency';
+import { RU_DICTIONARY } from '@/content/ru';
 
 // Brand entries: name, slug (for URL filtering), and logo image paths
 // Add your brand logos to /public/brands/ and update the list below
@@ -35,7 +36,7 @@ export default function BrandReel() {
       <div className="mx-auto max-w-[1500px] w-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-center sm:justify-start">
           <div className="text-center sm:text-left">
-            <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-1">Brands People Like</h2>
+            <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-1">{RU_DICTIONARY.home.brandsTitle}</h2>
           </div>
         </div>
       </div>
@@ -66,13 +67,13 @@ export default function BrandReel() {
                 href={buildPath(country, `/products?brand=${encodeURIComponent(brand.slug)}`)}
                 className="flex-shrink-0 group"
               >
-                <div className="flex items-center justify-center px-2 sm:px-4 h-[60px] w-[120px] sm:h-[80px] sm:w-[160px] transition-all duration-300 group-hover:scale-110">
+                <div className="relative flex items-center justify-center px-2 sm:px-4 h-[60px] w-[120px] sm:h-[80px] sm:w-[160px] transition-all duration-300 group-hover:scale-110">
                   <Image
                     src={brand.logo}
                     alt={brand.name}
-                    width={140}
-                    height={65}
-                    className="max-h-[45px] max-w-[100px] sm:max-h-[65px] sm:max-w-[140px] object-contain transition-all duration-300 grayscale-[20%] group-hover:grayscale-0"
+                    fill
+                    sizes="(max-width: 640px) 100px, 140px"
+                    className="object-contain p-2 sm:p-3 transition-all duration-300 grayscale-[20%] group-hover:grayscale-0"
                     onError={(e) => {
                       // Fallback: show brand name as text if logo is missing
                       const target = e.target as HTMLImageElement;

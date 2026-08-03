@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { BlogPost } from '@/lib/api';
+import { RU_DICTIONARY } from '@/content/ru';
 
 interface BlogCardProps {
     post: BlogPost;
@@ -10,8 +11,9 @@ interface BlogCardProps {
 export default function BlogCard({ post }: BlogCardProps) {
     const slug = post.slug || `post-${post.post_id}`;
     const image = post.featured_image || post.cover_image || '/hero-ayurveda.png';
-    const categoryName = post.category_name || 'Wellness';
-    const readTime = post.reading_time ? `${post.reading_time} min` : '5 min';
+    const rawCategory = post.category_name || 'Wellness';
+    const categoryName = (RU_DICTIONARY.blog.categoriesMap as Record<string, string>)[rawCategory] || rawCategory;
+    const readTime = post.reading_time ? `${post.reading_time} ${RU_DICTIONARY.blog.meta.minRead}` : `5 ${RU_DICTIONARY.blog.meta.minRead}`;
 
     return (
         <div className="group flex flex-col pt-4">
@@ -40,7 +42,7 @@ export default function BlogCard({ post }: BlogCardProps) {
                 {/* Meta Header */}
                 <div className="flex items-center mb-3">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-[#8B9F8B]">
-                        {post.content_type || 'Article'}
+                        {post.content_type || RU_DICTIONARY.blog.card.article}
                     </span>
                     <span className="mx-3 w-6 h-[1px] bg-light-border"></span>
                     <span className="text-[10px] font-bold uppercase tracking-widest text-warm-gray">
@@ -57,7 +59,7 @@ export default function BlogCard({ post }: BlogCardProps) {
 
                 {/* Excerpt */}
                 <p className="text-warm-gray text-sm md:text-base leading-relaxed mb-6 line-clamp-2">
-                    {post.excerpt || 'Read this beautiful piece on our Ayurveda wisdom...'}
+                    {post.excerpt || RU_DICTIONARY.blog.card.fallbackExcerpt}
                 </p>
 
                 {/* Keep Reading CTA */}
@@ -66,7 +68,7 @@ export default function BlogCard({ post }: BlogCardProps) {
                         href={`/blog/${slug}`}
                         className="inline-flex items-center text-sm font-bold tracking-wide text-charcoal group-hover:text-[#91C934] transition-colors"
                     >
-                        Keep Reading
+                        {RU_DICTIONARY.blog.card.keepReading}
                         <svg className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>

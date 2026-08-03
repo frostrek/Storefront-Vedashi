@@ -274,60 +274,7 @@ export async function getFeaturedProducts(): Promise<Product[]> {
 
 import { TrafficSource } from '@/lib/analytics/attribution';
 
-export interface StorefrontCollection {
-    collection_id: string;
-    name: string;
-    slug: string;
-    description?: string;
-    image_url?: string;
-    icon?: string;
-    color_gradient?: string;
-    sort_order: number;
-    start_date?: string;
-    end_date?: string;
-    product_count?: number;
-    preview_products?: Array<{ product_id: string; product_name: string; thumbnail_url?: string }>;
-}
 
-export interface StorefrontCollectionDetail extends StorefrontCollection {
-    products: Product[];
-    total_products: number;
-}
-
-/** Fetch featured collections for the storefront homepage. */
-export async function getFeaturedCollections(limit: number = 6): Promise<StorefrontCollection[]> {
-    try {
-        const res = await fetch(`${API_URL}/api/collections/featured?limit=${limit}`, { cache: 'no-store', credentials: 'include' });
-        if (!res.ok) return [];
-        const json: ApiResponse<any> = await res.json();
-        return json.success && Array.isArray(json.data) ? json.data : [];
-    } catch (error) {
-        console.warn('[API] Failed to fetch featured collections.');
-        return [];
-    }
-}
-
-/** Fetch a single collection by slug with its products. */
-export async function getCollectionBySlug(slug: string, limit: number = 20, offset: number = 0): Promise<StorefrontCollectionDetail | null> {
-    try {
-        const res = await fetch(`${API_URL}/api/collections/${slug}?limit=${limit}&offset=${offset}`, { cache: 'no-store', credentials: 'include' });
-        if (!res.ok) return null;
-        const json: ApiResponse<any> = await res.json();
-        if (json.success && json.data) {
-            return {
-                ...json.data,
-                products: (json.data.products || []).map((p: any) => ({
-                    ...p,
-                    images: p.thumbnail_url ? [p.thumbnail_url] : [],
-                })),
-            };
-        }
-        return null;
-    } catch (error) {
-        console.warn(`[API] Failed to fetch collection: ${slug}`);
-        return null;
-    }
-}
 
 /* ─── Filtered Products (backend-powered) ─── */
 
@@ -1330,6 +1277,17 @@ export async function getBestAutoApplyCoupon(cart_total: number) {
     }
 }
 
+// ====== HOMEPAGE REELS ======
+export async function getHomepageReels() {
+    try {
+        const res = await fetch(`${API_URL}/api/homepage-reels`);
+        const json = await res.json();
+        return json.success ? (json.data || []) : [];
+    } catch {
+        return [];
+    }
+}
+
 export async function getMyOrders(customerId: string) {
     try {
         const res = await authFetch(`${API_URL}/api/orders/my`);
@@ -1360,6 +1318,33 @@ export async function cancelOrder(orderId: string, reason: string = '') {
         return res.json();
     } catch (error) {
         console.warn('[API] cancelOrder failed:', error);
+        return { success: false, message: 'Network error' };
+    }
+}
+
+export async function requestReturn(orderId: string, reason: string) {
+    try {
+        const res = await authFetch(`${API_URL}/api/orders/${orderId}/return`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reason }),
+        });
+        return res.json();
+    } catch (error) {
+        console.warn('[API] requestReturn failed:', error);
+        return { success: false, message: 'Network error' };
+    }
+}
+
+export async function cancelReturn(orderId: string) {
+    try {
+        const res = await authFetch(`${API_URL}/api/orders/${orderId}/cancel-return`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        });
+        return res.json();
+    } catch (error) {
+        console.warn('[API] cancelReturn failed:', error);
         return { success: false, message: 'Network error' };
     }
 }
@@ -2280,6 +2265,30 @@ export async function getLegalDocument(slug: string) {
     }
 }
 
+export async function getLegalDocumentByType(type: string) {
+    try {
+        const res = await fetch(`${API_URL}/api/legal/public/type/${type}`, { credentials: 'include' });
+        if (!res.ok) return null;
+        const json: ApiResponse<any> = await res.json();
+        return json.success ? json.data : null;
+    } catch (error) {
+        console.warn(`[API] Failed to fetch legal document by type: ${type}`);
+        return null;
+    }
+}
+
+export async function getLegalDocumentsList(): Promise<Array<{ slug: string; title: string }>> {
+    try {
+        const res = await fetch(`${API_URL}/api/legal/public/list`, { credentials: 'include' });
+        if (!res.ok) return [];
+        const json: ApiResponse<Array<{ slug: string; title: string }>> = await res.json();
+        return json.success && json.data ? json.data : [];
+    } catch (error) {
+        console.warn('[API] Failed to fetch legal documents list');
+        return [];
+    }
+}
+
 export async function trackOrder(orderId: string) {
     try {
         const res = await authFetch(`${API_URL}/api/orders/${orderId}/track`);
@@ -2325,5 +2334,23 @@ export async function getHeroSettings(): Promise<{ success: boolean; data: any }
     } catch (error) {
         console.warn('[API] Failed to fetch hero settings:', error);
         return { success: false, data: null };
+    }
+}
+
+// ─── Vendor Registration ──────────────────────────────────────────────────
+export async function submitVendorRegistration(formData: FormData): Promise<{ success: boolean; message: string; data?: any }> {
+    try {
+        const res = await authFetch(`${API_URL}/api/vendors/register`, {
+            method: 'POST',
+            body: formData,
+        });
+        const json = await res.json();
+        if (!res.ok) {
+            throw new Error(json.message || 'Failed to submit registration');
+        }
+        return json;
+    } catch (error: any) {
+        console.error('Error submitting vendor registration:', error);
+        return { success: false, message: error.message };
     }
 }

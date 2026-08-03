@@ -1,0 +1,357 @@
+'use client';
+
+import { useState, useEffect, Suspense } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { 
+    Send, MessageSquare, Sparkles, AlertCircle, 
+    ArrowRight, ChevronLeft, ShieldCheck, Mail, 
+    User, HelpCircle, Bug, Activity, Leaf 
+} from 'lucide-react';
+import { submitFeedback } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
+import toast from 'react-hot-toast';
+import { RU_DICTIONARY } from '@/content/ru';
+import { ROUTES } from '@/lib/routes';
+
+const CATEGORIES = [
+    { id: 'other', label: 'General Inquiry', icon: HelpCircle, color: '#A8B28B' },
+    { id: 'complaint', label: 'Issue / Complaint', icon: Activity, color: '#B35A5A' },
+    { id: 'suggestion', label: 'Improvement Suggestion', icon: Sparkles, color: '#D4A847' },
+    { id: 'bug_report', label: 'Technical Bug Report', icon: Bug, color: '#36453A' },
+    { id: 'contact', label: 'Collaborations', icon: Mail, color: '#4A5D23' },
+];
+
+function CustomerEnquiryContent() {
+    const params = useParams();
+    const searchParams = useSearchParams();
+    const country = params?.country || 'in';
+    const { user, isAuthenticated } = useAuth();
+    const orderIdParam = searchParams?.get('orderId') || '';
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitted, setSubmitted] = useState(false);
+    const [form, setForm] = useState({
+        name: '',
+        email: '',
+        type: 'other',
+        subject: '',
+        message: ''
+    });
+
+    // Sync auth state and order ID to form
+    useEffect(() => {
+        if (isAuthenticated && user) {
+            setForm(prev => ({
+                ...prev,
+                name: user.name || prev.name,
+                email: user.email || prev.email
+            }));
+        }
+    }, [isAuthenticated, user]);
+
+    // Pre-fill form when orderId is provided
+    useEffect(() => {
+        if (orderIdParam) {
+            setForm(prev => ({
+                ...prev,
+                type: 'complaint',
+                subject: `${RU_DICTIONARY.helpCenter.customerEnquiry.prefill.issueOrder}${orderIdParam.split('-')[0].toUpperCase()}`,
+                message: RU_DICTIONARY.helpCenter.customerEnquiry.prefill.messageTemplate.replace('{orderId}', orderIdParam)
+            }));
+        }
+    }, [orderIdParam]);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!form.message.trim() || !form.subject.trim()) {
+            toast.error(RU_DICTIONARY.helpCenter.customerEnquiry.toasts.fillBoth);
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            const res = await submitFeedback({
+                name: form.name,
+                email: form.email,
+                type: form.type,
+                subject: form.subject,
+                message: form.message
+            });
+
+            if (res.success) {
+                toast.success(RU_DICTIONARY.helpCenter.customerEnquiry.toasts.received);
+                setSubmitted(true);
+            } else {
+                toast.error(res.message || RU_DICTIONARY.helpCenter.customerEnquiry.toasts.failed);
+            }
+        } catch {
+            toast.error(RU_DICTIONARY.helpCenter.customerEnquiry.toasts.networkError);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    if (submitted) {
+        return (
+            <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center p-6">
+                <div className="max-w-xl w-full text-center bg-white rounded-[40px] border border-[#4A5D23]/10 p-12 shadow-2xl animate-in zoom-in-95 duration-500">
+                    <div className="w-24 h-24 rounded-full bg-[#4A5D23]/10 flex items-center justify-center mx-auto mb-8 shadow-inner overflow-hidden relative">
+                        <Leaf className="h-12 w-12 text-[#4A5D23] animate-bounce" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#4A5D23]/5 to-transparent"></div>
+                    </div>
+                    <h2 className="text-3xl md:text-4xl font-bold text-[#1a2408] mb-6">{RU_DICTIONARY.helpCenter.customerEnquiry.submitted.title}</h2>
+                    <p className="text-[#5B4A31] text-lg mb-10 leading-relaxed font-medium">
+                        {RU_DICTIONARY.helpCenter.customerEnquiry.submitted.desc}
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                        <Link 
+                            href={ROUTES.helpCenter} 
+                            className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-[#4A5D23] text-white font-bold hover:bg-[#3a491b] transition-all shadow-xl hover:-translate-y-1"
+                        >
+                            {RU_DICTIONARY.helpCenter.customerEnquiry.submitted.backBtn}
+                        </Link>
+                        {isAuthenticated && (
+                            <Link 
+                                href={`${ROUTES.account}/support`} 
+                                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-white border border-[#4A5D23]/20 text-[#4A5D23] font-bold hover:bg-[#4A5D23]/5 transition-all shadow-sm"
+                            >
+                                {RU_DICTIONARY.helpCenter.customerEnquiry.submitted.trackBtn} <ArrowRight className="h-4 w-4" />
+                            </Link>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen bg-[#FDFBF7]">
+            {/* Header section */}
+            <section className="relative py-20 px-6 overflow-hidden">
+                <div 
+                    className="absolute inset-0 z-0 opacity-30 bg-repeat bg-center"
+                    style={{ 
+                        backgroundImage: "url('/ayurvedic-texture.png')",
+                        backgroundSize: '400px',
+                        filter: 'sepia(0.2)'
+                    }}
+                ></div>
+                <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-[#FDFBF7] to-transparent z-0"></div>
+                
+                <div className="max-w-4xl mx-auto text-center relative z-10">
+                    <Link 
+                        href={ROUTES.helpCenter} 
+                        className="inline-flex items-center gap-2 text-[#4A5D23] font-bold text-sm uppercase tracking-widest mb-8 hover:gap-3 transition-all"
+                    >
+                        <ChevronLeft className="h-4 w-4" /> {RU_DICTIONARY.helpCenter.customerEnquiry.header.breadcrumb}
+                    </Link>
+                    <h1 className="text-4xl md:text-6xl font-bold text-[#1a2408] mb-6 tracking-tight">
+                        {RU_DICTIONARY.helpCenter.customerEnquiry.header.titlePart1} <span className="text-[#4A5D23]">{RU_DICTIONARY.helpCenter.customerEnquiry.header.titlePart2}</span>
+                    </h1>
+                    <p className="text-[#5B4A31] text-lg max-w-2xl mx-auto font-medium leading-relaxed">
+                        {RU_DICTIONARY.helpCenter.customerEnquiry.header.desc}
+                    </p>
+                </div>
+            </section>
+
+            <main className="max-w-5xl mx-auto px-6 pb-24 relative z-10">
+                <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-12">
+                    
+                    {/* Left: Form Area */}
+                    <div className="bg-white rounded-[40px] border border-[#4A5D23]/10 shadow-2xl p-8 md:p-12">
+                        <form onSubmit={handleSubmit} className="space-y-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="space-y-3">
+                                    <label className="text-xs font-black text-[#1a2408] uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
+                                        <User className="h-3 w-3 text-[#4A5D23]" /> {RU_DICTIONARY.helpCenter.customerEnquiry.form.nameLabel}
+                                    </label>
+                                    <input 
+                                        type="text"
+                                        value={form.name}
+                                        onChange={e => setForm({...form, name: e.target.value})}
+                                        placeholder={RU_DICTIONARY.helpCenter.customerEnquiry.form.namePlaceholder}
+                                        required
+                                        className="w-full px-6 py-4 rounded-2xl bg-gray-50/50 border border-transparent focus:bg-white focus:border-[#4A5D23]/30 focus:outline-none focus:ring-4 focus:ring-[#4A5D23]/5 transition-all font-medium text-gray-900"
+                                    />
+                                </div>
+                                <div className="space-y-3">
+                                    <label className="text-xs font-black text-[#1a2408] uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
+                                        <Mail className="h-3 w-3 text-[#4A5D23]" /> {RU_DICTIONARY.helpCenter.customerEnquiry.form.emailLabel}
+                                    </label>
+                                    <input 
+                                        type="email"
+                                        value={form.email}
+                                        onChange={e => setForm({...form, email: e.target.value})}
+                                        placeholder={RU_DICTIONARY.helpCenter.customerEnquiry.form.emailPlaceholder}
+                                        required
+                                        className="w-full px-6 py-4 rounded-2xl bg-gray-50/50 border border-transparent focus:bg-white focus:border-[#4A5D23]/30 focus:outline-none focus:ring-4 focus:ring-[#4A5D23]/5 transition-all font-medium text-gray-900"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <label className="text-xs font-black text-[#1a2408] uppercase tracking-[0.2em] ml-1">{RU_DICTIONARY.helpCenter.customerEnquiry.form.categoryLabel}</label>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                                    {CATEGORIES.map(cat => {
+                                        const Icon = cat.icon;
+                                        const isActive = form.type === cat.id;
+                                        const translatedLabel = (RU_DICTIONARY.helpCenter.customerEnquiry.form.categories as Record<string, string>)[cat.label] || cat.label;
+                                        return (
+                                            <button
+                                                key={cat.id}
+                                                type="button"
+                                                onClick={() => setForm({...form, type: cat.id})}
+                                                className={`flex flex-col items-center justify-center p-4 rounded-3xl border transition-all ${
+                                                    isActive 
+                                                    ? 'bg-[#4A5D23] border-[#4A5D23] shadow-lg -translate-y-1' 
+                                                    : 'bg-white border-gray-100 hover:border-[#4A5D23]/30 hover:bg-[#FDFBF7]'
+                                                }`}
+                                            >
+                                                <Icon className={`h-6 w-6 mb-2 ${isActive ? 'text-white' : 'text-[#4A5D23]'}`} />
+                                                <span className={`text-[10px] font-black uppercase tracking-wider text-center ${isActive ? 'text-white' : 'text-[#1a2408]'}`}>
+                                                    {translatedLabel.split(' ')[0]}
+                                                </span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <label className="text-xs font-black text-[#1a2408] uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
+                                    <MessageSquare className="h-3 w-3 text-[#4A5D23]" /> {RU_DICTIONARY.helpCenter.customerEnquiry.form.subjectLabel}
+                                </label>
+                                <input 
+                                    type="text"
+                                    value={form.subject}
+                                    onChange={e => setForm({...form, subject: e.target.value})}
+                                    placeholder={RU_DICTIONARY.helpCenter.customerEnquiry.form.subjectPlaceholder}
+                                    required
+                                    className="w-full px-6 py-4 rounded-2xl bg-gray-50/50 border border-transparent focus:bg-white focus:border-[#4A5D23]/30 focus:outline-none focus:ring-4 focus:ring-[#4A5D23]/5 transition-all font-medium text-gray-900"
+                                />
+                            </div>
+
+                            <div className="space-y-3">
+                                <label className="text-xs font-black text-[#1a2408] uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
+                                    <Send className="h-3 w-3 text-[#4A5D23]" /> {RU_DICTIONARY.helpCenter.customerEnquiry.form.messageLabel}
+                                </label>
+                                <textarea 
+                                    value={form.message}
+                                    onChange={e => setForm({...form, message: e.target.value})}
+                                    placeholder={RU_DICTIONARY.helpCenter.customerEnquiry.form.messagePlaceholder}
+                                    required
+                                    rows={6}
+                                    className="w-full px-6 py-6 rounded-[32px] bg-gray-50/50 border border-transparent focus:bg-white focus:border-[#4A5D23]/30 focus:outline-none focus:ring-4 focus:ring-[#4A5D23]/5 transition-all font-medium text-gray-900 resize-none leading-relaxed"
+                                />
+                            </div>
+
+                            <div className="pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-8">
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-[#1a2408] text-white px-12 py-5 rounded-2xl font-black text-lg hover:bg-[#4A5D23] transition-all disabled:opacity-50 cursor-pointer shadow-xl hover:-translate-y-1 group"
+                                >
+                                    {isSubmitting ? RU_DICTIONARY.helpCenter.customerEnquiry.form.submitting : RU_DICTIONARY.helpCenter.customerEnquiry.form.submitBtn}
+                                    <Send className={`h-6 w-6 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1 ${isSubmitting ? 'animate-pulse' : ''}`} />
+                                </button>
+                                <div className="flex items-center gap-3 text-sm font-bold text-[#5B4A31]/60">
+                                    <ShieldCheck className="h-5 w-5 text-[#4A5D23]" />
+                                    <span>{RU_DICTIONARY.helpCenter.customerEnquiry.form.encrypted}</span>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    {/* Right: Info Sidebar */}
+                    <div className="space-y-8">
+                        <div className="bg-[#4A5D23]/5 rounded-[32px] p-8 border border-[#4A5D23]/10">
+                            <h3 className="text-xl font-bold text-[#1a2408] mb-6">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.title}</h3>
+                            <div className="space-y-6">
+                                <div className="flex gap-4">
+                                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                                        <Leaf className="h-5 w-5 text-[#4A5D23]" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-xs font-black uppercase text-[#1a2408] mb-1">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.responseTime}</h4>
+                                        <p className="text-xs text-[#5B4A31] leading-relaxed">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.responseTimeDesc}</p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-4">
+                                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                                        <HelpCircle className="h-5 w-5 text-[#4A5D23]" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-xs font-black uppercase text-[#1a2408] mb-1">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.checkFaqs}</h4>
+                                        <p className="text-xs text-[#5B4A31] leading-relaxed">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.checkFaqsDesc1}<Link href={ROUTES.helpCenterFaq} className="text-[#4A5D23] underline font-bold">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.checkFaqsDesc2}</Link>.</p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-4">
+                                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                                        <ShieldCheck className="h-5 w-5 text-[#4A5D23]" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-xs font-black uppercase text-[#1a2408] mb-1">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.orderIssues}</h4>
+                                        <p className="text-xs text-[#5B4A31] leading-relaxed">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.orderIssuesDesc1}<Link href={ROUTES.helpCenterSupport} className="text-[#4A5D23] underline font-bold">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.orderIssuesDesc2}</Link>.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-[#1a2408] rounded-[32px] p-8 text-white relative overflow-hidden group">
+                            <div className="relative z-10">
+                                <h3 className="text-lg font-bold text-[#D4A847] mb-4">{RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.memberTitle}</h3>
+                                <p className="text-xs text-white/70 mb-6 leading-relaxed">
+                                    {RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.memberDesc}
+                                </p>
+                                {!isAuthenticated ? (
+                                    <Link 
+                                        href={ROUTES.login} 
+                                        className="inline-flex items-center gap-2 text-xs font-black uppercase bg-white text-[#1a2408] px-6 py-3 rounded-xl hover:bg-[#F2E8CF] transition-all"
+                                    >
+                                        {RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.loginBtn} <ArrowRight className="h-3.5 w-3.5" />
+                                    </Link>
+                                ) : (
+                                    <Link 
+                                        href={`${ROUTES.account}/support`} 
+                                        className="inline-flex items-center gap-2 text-xs font-black uppercase bg-[#4A5D23] text-white px-6 py-3 rounded-xl hover:bg-[#3a491b] transition-all"
+                                    >
+                                        {RU_DICTIONARY.helpCenter.customerEnquiry.sidebar.dashboardBtn} <ArrowRight className="h-3.5 w-3.5" />
+                                    </Link>
+                                )}
+                            </div>
+                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 transition-transform duration-700">
+                                <Sparkles className="h-16 w-16" />
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div className="mt-20 text-center">
+                    <p className="text-sm font-bold text-[#5B4A31]/40 uppercase tracking-widest mb-6 flex items-center justify-center gap-3">
+                        <span className="h-px w-8 bg-current"></span>
+                        {RU_DICTIONARY.helpCenter.customerEnquiry.footer.ethicsTitle}
+                        <span className="h-px w-8 bg-current"></span>
+                    </p>
+                    <div className="max-w-3xl mx-auto p-10 rounded-[40px] border border-dashed border-[#4A5D23]/20">
+                        <p className="italic text-[#5B4A31] text-lg font-medium leading-relaxed">
+                            {RU_DICTIONARY.helpCenter.customerEnquiry.footer.ethicsQuote}
+                        </p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    );
+}
+
+export default function CustomerEnquiryPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center">
+                <Leaf className="h-8 w-8 animate-spin text-[#4A5D23]" />
+            </div>
+        }>
+            <CustomerEnquiryContent />
+        </Suspense>
+    );
+}

@@ -72,6 +72,7 @@ export interface Category {
     parent_id: string | null;
     name: string;
     slug: string;
+    full_path?: string;
     children?: Category[];
 }
 
@@ -333,6 +334,11 @@ export interface Order {
     cancellation_reason?: string;
     refund_status?: 'NOT_APPLICABLE' | 'PENDING' | 'COMPLETED';
     refunded_at?: string;
+    // Return
+    return_status?: string;
+    return_reason?: string;
+    return_awb?: string;
+    return_tracking_url?: string;
 }
 
 export interface OrderItem {

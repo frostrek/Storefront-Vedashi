@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Search } from 'lucide-react';
+import { RU_DICTIONARY } from '@/content/ru';
 
 interface CheckboxGroupProps {
     options: string[];
@@ -18,8 +19,10 @@ export default function CheckboxGroup({
     onChange, 
     maxVisible = 5, 
     searchable = false,
-    placeholder = "Search..."
+    placeholder
 }: CheckboxGroupProps) {
+    const defaultPlaceholder = RU_DICTIONARY.search.searching;
+    const finalPlaceholder = placeholder || defaultPlaceholder;
     const [showAll, setShowAll] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -55,7 +58,7 @@ export default function CheckboxGroup({
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder={placeholder}
+                        placeholder={finalPlaceholder}
                         className="block w-full pl-9 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-[12px] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#91C934] focus:border-[#91C934] transition-all"
                     />
                 </div>
@@ -94,7 +97,7 @@ export default function CheckboxGroup({
                         </label>
                     ))
                 ) : (
-                    <p className="text-[11px] text-gray-400 italic py-1">No matches found</p>
+                    <p className="text-[11px] text-gray-400 italic py-1">{RU_DICTIONARY.plp.noMatchesFound}</p>
                 )}
             </div>
 
@@ -103,7 +106,7 @@ export default function CheckboxGroup({
                     onClick={() => setShowAll(!showAll)}
                     className="mt-1.5 text-[11px] font-bold text-gray-500 hover:text-gray-800 transition-colors flex items-center"
                 >
-                    {showAll ? '- show less' : `+ ${filteredOptions.length - maxVisible} more`}
+                    {showAll ? `- ${RU_DICTIONARY.plp.showLess}` : `+ ${filteredOptions.length - maxVisible} ${RU_DICTIONARY.plp.more}`}
                 </button>
             )}
         </div>

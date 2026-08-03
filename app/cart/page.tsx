@@ -1,0 +1,630 @@
+'use client';
+
+import Link from 'next/link';
+import { RU_DICTIONARY } from '@/content/ru';
+import { ROUTES } from '@/lib/routes';
+import { useRouter, useParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
+import { Minus, Plus, X, ShoppingCart, ArrowLeft, Loader2, Ticket, Bookmark, ArrowRight, Leaf, MapPin, Search, FileText, Info } from 'lucide-react';
+import { useCurrency } from '@/context/CurrencyContext';
+import toast from 'react-hot-toast';
+import ConfirmModal from '@/components/ui/ConfirmModal';
+
+/* ─── Step Indicators ─────────────────────────────────────────── */
+
+const STEPS = ['BAG', 'SHIPPING', 'PAYMENT', 'REVIEW'] as const;
+
+function StepIndicator({ currentStep = 0 }: { currentStep?: number }) {
+    return (
+        <div className="cart-step-bar">
+            {STEPS.map((step, i) => (
+                <div key={step} className="cart-step-item">
+                    <div className="flex flex-col items-center">
+                        <div
+                            className={`cart-step-circle ${i === currentStep ? 'active' : i < currentStep ? 'completed' : ''}`}
+                        >
+                            {i < currentStep ? '✓' : i + 1}
+                        </div>
+                        <span className={`cart-step-label ${i <= currentStep ? 'active' : ''}`}>
+                            {RU_DICTIONARY.cart[step.toLowerCase() as keyof typeof RU_DICTIONARY.cart] || step}
+                        </span>
+                    </div>
+                    {i < STEPS.length - 1 && (
+                        <div className={`cart-step-line ${i < currentStep ? 'completed' : ''}`} />
+                    )}
+                </div>
+            ))}
+        </div>
+    );
+}
+
+/* ─── Main Cart Page ─────────────────────────────────────────── */
+
+export default function CartPage() {
+    const { formatPrice, format, resolvePrice, resolveMrp, countryConfig, currencyConfigs } = useCurrency();
+    const currentConfig = currencyConfigs.find(c => c.country_code === countryConfig.code.toUpperCase());
+    const exchangeRate = currentConfig?.exchange_rate || 1;
+    const {
+        items, savedItems, updateQuantity, removeItem, saveForLater, moveToCart,
+        totalPrice, totalItems, loading, error,
+        couponCode, couponDiscount, couponType, couponError, applyCoupon, removeCoupon,
+        orderNotes, setOrderNotes,
+    } = useCart();
+    const { isAuthenticated } = useAuth();
+    const router = useRouter();
+    const params = useParams();
+    const country = (params.country as string) || 'in';
+    const [itemToRemove, setItemToRemove] = useState<string | null>(null);
+    const [couponInput, setCouponInput] = useState('');
+    const [applyingCoupon, setApplyingCoupon] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
+
+    // Shipping estimation state
+    const [shippingCountry, setShippingCountry] = useState('India');
+    const [shippingZip, setShippingZip] = useState('');
+
+    useEffect(() => {
+        setIsMounted(true);
+        if (items.length > 0) {
+            const inStock = items.filter(i => (i.stock_quantity ?? 0) > 0);
+            const total = inStock.reduce((sum, item) => sum + (item.price ?? 0) * item.quantity, 0);
+            import('@/lib/analytics/gtag').then(({ trackEcommerce }) => {
+                trackEcommerce('view_cart', {
+                    currency: 'INR',
+                    value: total,
+                    items: items.map(item => ({
+                        item_id: item.product_id || '',
+                        item_name: item.product_name || '',
+                        price: item.price || 0,
+                        quantity: item.quantity
+                    }))
+                });
+            });
+        }
+    }, [items.length]);
+
+    if (loading && items.length === 0) {
+        return (
+            <div className="cart-leaf-bg flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-[#6B8F5E]" />
+            </div>
+        );
+    }
+
+    if (items.length === 0 && savedItems.length === 0) {
+        return (
+            <div className="cart-leaf-bg flex items-center justify-center">
+                <div className="cart-noise-overlay" aria-hidden="true" />
+                <div className="text-center relative z-10 px-4 py-20">
+                    <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-white border border-[#E8E4DC]">
+                        <ShoppingCart className="h-10 w-10 text-[#91C934]" />
+                    </div>
+                    <h1 className="cart-page-title justify-center">{RU_DICTIONARY.cart.yourHealingBundleIsEmpty}</h1>
+                    <p className="mt-3 max-w-md mx-auto text-[#4A4A4A] text-sm">
+                        {RU_DICTIONARY.cart.exploreCollection}
+                    </p>
+                    <Link
+                        href={`/products`}
+                        className="cart-checkout-btn inline-flex mt-8"
+                        style={{ width: 'auto', display: 'inline-flex' }}
+                    >
+                        {RU_DICTIONARY.cart.exploreSacredShop}
+                        <ArrowRight className="h-4 w-4" />
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
+    // Show saved items section even when cart is empty but saved items exist
+    if (items.length === 0 && savedItems.length > 0) {
+        return (
+            <div className="cart-leaf-bg min-h-screen">
+                <div className="cart-noise-overlay" aria-hidden="true" />
+                <div className="border-b border-[#D4CFC0] bg-[#FFFFFF] sticky top-0 z-20 shadow-sm">
+                    <div className="mx-auto max-w-5xl">
+                        <StepIndicator currentStep={0} />
+                    </div>
+                </div>
+                <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12 relative z-10">
+                    <Link href={ROUTES.katalog} className="inline-flex items-center gap-2 text-sm font-semibold text-[#91c934] hover:text-[#5A7A4E] mb-6 transition-colors uppercase tracking-wider">
+                        <ArrowLeft className="h-4 w-4 text-[#91c934]" /> {RU_DICTIONARY.cart.continueShopping}
+                    </Link>
+                    <div className="cart-item-card text-center py-10 mb-6">
+                        <ShoppingCart className="h-8 w-8 text-[#91C934] mx-auto mb-3" />
+                        <p className="text-[#4A4A4A] font-medium">{RU_DICTIONARY.cart.yourActiveCartIsEmpty}</p>
+                        <Link href={ROUTES.katalog} className="text-sm text-[#91c934] font-semibold hover:underline mt-2 inline-block">{RU_DICTIONARY.cart.browseProducts}</Link>
+                    </div>
+                    <div>
+                        <h3 className="cart-saved-section-title">
+                            <Bookmark className="h-5 w-5 text-[#91C934]" />
+                            {RU_DICTIONARY.cart.savedForLater} ({savedItems.length})
+                        </h3>
+                        <div className="space-y-4">
+                            {savedItems.map(item => {
+                                const price = item.price ?? 0;
+                                const resolvedSp = resolvePrice(price, item.country_prices);
+                                return (
+                                    <div key={item.cart_item_id} className="cart-item-card flex items-center gap-4 bg-[#FAFAFA]">
+                                        <Link href={`${ROUTES.tovar((item as any).slug || item.product_id || item.product?.product_id || '')}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img w-16 h-16 rounded-lg flex-shrink-0">
+                                            {item.image_url ? <img src={item.image_url} alt="" /> : <span className="text-xl">🌿</span>}
+                                        </Link>
+                                        <div className="flex-1">
+                                            <Link href={`${ROUTES.tovar((item as any).slug || item.product_id || item.product?.product_id || '')}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
+                                                <h3 className="text-sm font-bold text-[#1A1A1A] hover:text-[#3d5c3a] transition-colors">{item.product_name || RU_DICTIONARY.cart.product}</h3>
+                                            </Link>
+                                            <p className="text-[#4A4A4A] mt-1">{format(resolvedSp)}</p>
+                                        </div>
+                                        <div className="flex flex-col items-end gap-2">
+                                            <button onClick={() => { moveToCart(item.cart_item_id); toast.success(RU_DICTIONARY.cart.movedToCart); }} disabled={loading} className="bg-[#6B8F5E] text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-[#5A7A4E]">
+                                                {RU_DICTIONARY.cart.moveToBag}
+                                            </button>
+                                            <button onClick={() => setItemToRemove(item.cart_item_id)} disabled={loading} className="text-[#C0392B] text-[11px] uppercase tracking-wider font-semibold hover:underline">
+                                                {RU_DICTIONARY.cart.remove}
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+                <ConfirmModal
+                    isOpen={!!itemToRemove}
+                    title={RU_DICTIONARY.cart.removeItem}
+                    message={RU_DICTIONARY.cart.areYouSureRemove}
+                    confirmText={RU_DICTIONARY.cart.remove}
+                    cancelText={RU_DICTIONARY.cart.cancel}
+                    isDestructive={true}
+                    onConfirm={() => {
+                        if (itemToRemove) {
+                            removeItem(itemToRemove);
+                            toast.success(RU_DICTIONARY.cart.removedItem);
+                            setItemToRemove(null);
+                        }
+                    }}
+                    onCancel={() => setItemToRemove(null)}
+                />
+            </div>
+        );
+    }
+
+    // Separate in-stock vs out-of-stock items
+    const inStockItems = items.filter(i => (i.stock_quantity ?? 0) > 0);
+    const outOfStockItems = items.filter(i => (i.stock_quantity ?? 0) === 0);
+    const insufficientStockItems = inStockItems.filter(i => i.quantity > (i.stock_quantity ?? 0));
+    const hasInsufficientStock = insufficientStockItems.length > 0;
+
+    // Calculate totals using ONLY in-stock items
+    const totalMRP = inStockItems.reduce((sum, item) => {
+        const itemMrp = resolveMrp(item.original_price, item.price, item.country_prices);
+        return sum + itemMrp * item.quantity;
+    }, 0);
+    const inStockTotal = inStockItems.reduce((sum, item) => {
+        const itemSp = resolvePrice(item.price, item.country_prices);
+        return sum + itemSp * item.quantity;
+    }, 0);
+    const saleDiscount = totalMRP - inStockTotal;
+    const deliveryFee = 0; // Shipping is free for all regions
+
+    // We should resolve the couponDiscount to local currency too.
+    // Assuming couponDiscount is in USD right now.
+    const localCouponDiscount = resolvePrice(couponDiscount, null);
+    const localDeliveryFee = 0;
+
+    const grandTotal = inStockTotal - localCouponDiscount + localDeliveryFee;
+    const inStockItemCount = inStockItems.reduce((sum, item) => sum + item.quantity, 0);
+
+    return (
+        <div className="cart-leaf-bg min-h-screen">
+            <div className="cart-noise-overlay" aria-hidden="true" />
+
+            {/* Step Indicator */}
+            <div className="border-b border-[#D4CFC0] bg-[#FFFFFF] sticky top-0 z-20 shadow-sm">
+                <div className="mx-auto max-w-5xl">
+                    <StepIndicator currentStep={0} />
+                </div>
+            </div>
+
+            {/* Main Content */}
+            <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12 relative z-10">
+                {/* Back Link */}
+                <Link href={ROUTES.katalog} className="inline-flex items-center gap-2 text-sm font-semibold text-[#91c934] hover:text-[#5A7A4E] mb-6 transition-colors uppercase tracking-wider">
+                    <ArrowLeft className="h-4 w-4 text-[#91c934]" /> {RU_DICTIONARY.cart.continueShopping}
+                </Link>
+
+                <div className="lg:grid lg:grid-cols-[1fr_400px] lg:gap-10">
+                    {/* Left Column: Cart Items & Widgets */}
+                    <div className="flex flex-col gap-8">
+                        {/* Cart Items */}
+                        <div className="space-y-4">
+                            {error && (
+                                <div className="mb-2 rounded-xl p-4 text-sm flex items-center gap-2 bg-red-50 border border-red-200 text-red-600">
+                                    <span>⚠</span> {error}
+                                </div>
+                            )}
+
+                            {outOfStockItems.length > 0 && (
+                                <div className="mb-4 rounded-xl p-4 text-sm flex items-start gap-3 bg-[#FFF3CD] border border-[#FFEEBA] text-[#856404]">
+                                    <span className="mt-0.5">⚠️</span>
+                                    <div>
+                                        <p className="font-bold">{RU_DICTIONARY.cart.inventoryUpdate}</p>
+                                        <p>Some items in your cart are out of stock. They won&apos;t be included in your order and will be saved for later when you checkout.</p>
+                                    </div>
+                                </div>
+                            )}
+                            {hasInsufficientStock && (
+                                <div className="mb-4 rounded-xl p-4 text-sm flex items-start gap-3 bg-[#FFF3CD] border border-[#FFEEBA] text-[#856404]">
+                                    <span className="mt-0.5">⚠️</span>
+                                    <div>
+                                        <p className="font-bold">{RU_DICTIONARY.cart.stockLimited}</p>
+                                        <p>{RU_DICTIONARY.cart.exceedAvailableStock}</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {items.length === 0 ? (
+                                <div className="cart-item-card text-center py-10">
+                                    <p className="text-[#4A4A4A] font-medium">{RU_DICTIONARY.cart.yourActiveCartIsEmpty}</p>
+                                </div>
+                            ) : (
+                                items.map(item => {
+                                    const price = item.price ?? 0;
+                                    const unitPrice = item.original_price ?? price;
+
+                                    const resolvedSp = resolvePrice(price, item.country_prices);
+                                    const resolvedMrp = resolveMrp(unitPrice, price, item.country_prices);
+
+                                    const isOutOfStock = (item.stock_quantity ?? 0) === 0;
+                                    const hasInsufficientStock = !isOutOfStock && item.quantity > (item.stock_quantity ?? 0);
+                                    const isAtStockLimit = !isOutOfStock && item.quantity >= (item.stock_quantity ?? Infinity);
+
+                                    return (
+                                        <div key={item.cart_item_id} className="cart-item-card flex flex-col sm:flex-row gap-6">
+                                            {/* Image */}
+                                            <Link href={`${ROUTES.tovar((item as any).slug || item.product_id || item.product?.product_id || '')}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img flex-shrink-0">
+                                                {item.image_url ? (
+                                                    <img src={item.image_url} alt={item.product_name || ''} />
+                                                ) : (
+                                                    <span className="text-3xl">🌿</span>
+                                                )}
+                                            </Link>
+
+                                            <div className="flex-1 flex flex-col justify-between">
+                                                <div className="flex justify-between items-start">
+                                                    <div>
+                                                        <Link href={`${ROUTES.tovar((item as any).slug || item.product_id || item.product?.product_id || '')}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
+                                                            <h3 className="cart-item-title text-lg font-bold">{item.product_name || RU_DICTIONARY.cart.product}</h3>
+                                                        </Link>
+                                                        {item.size_label && (
+                                                            <p className="text-xs mt-1 text-[#6B6B60] uppercase tracking-wider font-semibold">{item.size_label}</p>
+                                                        )}
+                                                        {isOutOfStock && (
+                                                            <p className="text-[10px] mt-2 text-[#C0392B] font-bold uppercase tracking-wider py-1 px-2 border border-[#C0392B] bg-red-50 inline-block rounded max-w-fit">{RU_DICTIONARY.cart.outOfStock}</p>
+                                                        )}
+                                                        {hasInsufficientStock && (
+                                                            <p className="text-xs mt-2 text-[#D35400] font-bold">Only {item.stock_quantity} left in stock</p>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <div className="text-lg font-bold text-[#1A1A1A]">
+                                                            {format(resolvedSp * item.quantity)}
+                                                        </div>
+                                                        {unitPrice > price && (
+                                                            <div className="flex items-center justify-end gap-1.5 mt-0.5">
+                                                                <span className="text-red-500 font-bold text-xs">
+                                                                    {Math.round((1 - price / unitPrice) * 100)}% OFF
+                                                                </span>
+                                                                <span className="text-gray-400 line-through text-xs">
+                                                                    {format(resolvedMrp * item.quantity)}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                        {item.quantity > 1 && (
+                                                            <div className="text-[10px] text-gray-400 mt-1 uppercase tracking-tight">
+                                                                {format(resolvedSp)} each
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center justify-between mt-4">
+                                                    {/* Quantity */}
+                                                    <div className={`cart-qty-control ${isOutOfStock ? 'opacity-40' : ''}`}>
+                                                        <button onClick={() => updateQuantity(item.cart_item_id, item.quantity - 1)} disabled={loading || isOutOfStock} className="cart-qty-btn disabled:opacity-50">
+                                                            <Minus className="h-3 w-3" />
+                                                        </button>
+                                                        <span className="cart-qty-value">{item.quantity}</span>
+                                                        <button onClick={() => { if (isAtStockLimit) { toast(RU_DICTIONARY.cart.maximumStockReached, { icon: '⚠️' }); return; } updateQuantity(item.cart_item_id, item.quantity + 1); }} disabled={loading || isOutOfStock || isAtStockLimit} className="cart-qty-btn disabled:opacity-50">
+                                                            <Plus className="h-3 w-3" />
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-2">
+                                                        <button onClick={() => { saveForLater(item.cart_item_id); toast.success(RU_DICTIONARY.cart.itemSaved); }} disabled={loading} className="text-[#] text-[13px] font-semibold hover:underline px-2">
+                                                            {RU_DICTIONARY.cart.saveForLater}
+                                                        </button>
+                                                        <button onClick={() => setItemToRemove(item.cart_item_id)} disabled={loading} className="cart-remove-btn">
+                                                            <X className="h-3.5 w-3.5" /> {RU_DICTIONARY.cart.remove}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
+
+                        {/* Saved for Later Section */}
+                        {savedItems.length > 0 && (
+                            <div className="mt-4">
+                                <h3 className="cart-saved-section-title">
+                                    <Bookmark className="h-5 w-5 text-[#91c934]" />
+                                    {RU_DICTIONARY.cart.savedForLater} ({savedItems.length})
+                                </h3>
+                                <div className="space-y-4">
+                                    {savedItems.map(item => {
+                                        const price = item.price ?? 0;
+                                        const resolvedSp = resolvePrice(price, item.country_prices);
+                                        return (
+                                            <div key={item.cart_item_id} className="cart-item-card flex items-center gap-4 bg-[#FAFAFA]">
+                                                <Link href={`${ROUTES.tovar((item as any).slug || item.product_id || item.product?.product_id || '')}${item.variant_id ? `?variant=${item.variant_id}` : ''}`} className="cart-item-img w-16 h-16 rounded-lg flex-shrink-0">
+                                                    {item.image_url ? <img src={item.image_url} alt="" /> : <span className="text-xl">🌿</span>}
+                                                </Link>
+                                                <div className="flex-1">
+                                                    <Link href={`${ROUTES.tovar((item as any).slug || item.product_id || item.product?.product_id || '')}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
+                                                        <h3 className="text-sm font-bold text-[#1A1A1A] hover:text-[#3d5c3a] transition-colors">{item.product_name || RU_DICTIONARY.cart.product}</h3>
+                                                    </Link>
+                                                    <p className="text-[#4A4A4A] mt-1">{format(resolvedSp)}</p>
+                                                </div>
+                                                <div className="flex flex-col items-end gap-2">
+                                                    <button onClick={() => { moveToCart(item.cart_item_id); toast.success(RU_DICTIONARY.cart.movedToCart); }} disabled={loading} className="bg-[#91C934] text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-[#7faf27]">
+                                                        {RU_DICTIONARY.cart.moveToBag}
+                                                    </button>
+                                                    <button onClick={() => setItemToRemove(item.cart_item_id)} disabled={loading} className="text-[#C0392B] text-[11px] uppercase tracking-wider font-semibold hover:underline">
+                                                        {RU_DICTIONARY.cart.remove}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Promo, Shipping and Notes Widgets */}
+                        {items.length > 0 && (
+                            <div className="flex flex-col gap-4">
+                                {/* Ayurvedic Practitioner Notes */}
+                                <div className="cart-item-card p-6 border-l-4 border-l-[#2D3B2D]">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <FileText className="h-5 w-5 text-[#91C934]" />
+                                        <h4 className="text-lg font-bold text-[#1A1A1A]">{RU_DICTIONARY.cart.orderNotes} <span className="text-[#6B6B60] font-normal text-xs">{RU_DICTIONARY.cart.optional}</span></h4>
+                                    </div>
+                                    <p className="text-[13px] text-[#6B6B60] mb-4">{RU_DICTIONARY.cart.addSpecificAllergies}</p>
+                                    <textarea
+                                        value={orderNotes}
+                                        onChange={e => setOrderNotes(e.target.value.slice(0, 200))}
+                                        maxLength={200}
+                                        rows={3}
+                                        placeholder={RU_DICTIONARY.cart.typeNotesHere}
+                                        className="w-full rounded-lg border border-[#D4CFC0] bg-[#F5F4F0] px-4 py-3 text-sm focus:border-[#2D3B2D] focus:outline-none resize-none font-medium"
+                                    />
+                                    <p className="mt-1 text-[10px] text-[#6B6B60] text-right font-bold tracking-wider">{orderNotes.length}/200</p>
+                                </div>
+
+                                <div className="grid sm:grid-cols-2 gap-4">
+                                    <div className="cart-item-card p-6 border-t-4 border-t-[#91C934]">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <Ticket className="h-5 w-5 text-[#91C934]" />
+                                            <h4 className="text-lg font-bold text-[#1A1A1A]">{RU_DICTIONARY.cart.promoOffering}</h4>
+                                        </div>
+                                        <p className="text-[13px] text-[#6B6B60] mb-4">{RU_DICTIONARY.cart.haveSacredPromo}</p>
+                                        {couponCode ? (
+                                            <div className="ritual-coupon-applied">
+                                                <div className="coupon-info text-[#1A1A1A] font-semibold text-sm">
+                                                    {couponCode} <span className="text-[#6B8F5E]">(-{formatPrice(couponDiscount)})</span>
+                                                </div>
+                                                <button onClick={() => { removeCoupon(); toast.success(RU_DICTIONARY.cart.couponRemoved); }} className="text-[#C0392B] text-xs font-semibold uppercase hover:underline">{RU_DICTIONARY.cart.remove}</button>
+                                            </div>
+                                        ) : (
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    placeholder={RU_DICTIONARY.cart.enterCode}
+                                                    value={couponInput}
+                                                    onChange={e => setCouponInput(e.target.value.toUpperCase())}
+                                                    className="flex-1 rounded-lg border border-[#D4CFC0] px-4 py-2 text-sm focus:border-[#8B7A3D] focus:outline-none bg-[#F5F4F0] font-mono uppercase"
+                                                />
+                                                <button
+                                                    onClick={async () => {
+                                                        if (!couponInput.trim()) return;
+                                                        setApplyingCoupon(true);
+                                                        const ok = await applyCoupon(couponInput.trim());
+                                                        if (ok) { toast.success(RU_DICTIONARY.cart.couponApplied); setCouponInput(''); }
+                                                        setApplyingCoupon(false);
+                                                    }}
+                                                    disabled={applyingCoupon || !couponInput.trim()}
+                                                    className="bg-[#91c934] text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-[#1F291F] transition-colors disabled:opacity-50 tracking-wide"
+                                                >
+                                                    {applyingCoupon ? <Loader2 className="h-4 w-4 animate-spin" /> : RU_DICTIONARY.cart.apply}
+                                                </button>
+                                            </div>
+                                        )}
+                                        {couponError && <p className="mt-2 text-xs text-[#C0392B]">{couponError}</p>}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                    </div>
+
+                    {/* ─── Ritual Summary Sidebar ─── */}
+                    <div className="mt-8 lg:mt-0">
+                        <div className="sticky top-28">
+                            <div className="ritual-summary">
+                                <div className="ritual-summary-title">
+                                    <div className="w-8 h-8 rounded-full bg-[#F5F4F0] flex items-center justify-center mr-2 border border-[#E8E4DC]">
+                                        <Leaf className="w-4 h-4 text-[#91C934]" />
+                                    </div>
+                                    {RU_DICTIONARY.cart.investmentSummary}
+                                    <span className="ritual-summary-badge">{inStockItemCount} {inStockItemCount === 1 ? RU_DICTIONARY.cart.item : RU_DICTIONARY.cart.items}</span>
+                                </div>
+                                <p className="text-[10px] uppercase tracking-[2px] text-[rgba(255,255,255,0.5)] mb-4 -mt-2">{RU_DICTIONARY.cart.preparingPath}</p>
+
+                                <div className="space-y-1 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                    {inStockItems.length === 0 ? (
+                                        <p className="text-[rgba(255,255,255,0.5)] text-xs text-center py-4">{RU_DICTIONARY.cart.noInStockItems}</p>
+                                    ) : inStockItems.map(item => {
+                                        const price = item.price ?? 0;
+                                        const resolvedSp = resolvePrice(price, item.country_prices);
+                                        const resolvedMrp = resolveMrp(item.original_price, item.price, item.country_prices);
+                                        const lineTotal = resolvedSp * item.quantity;
+                                        const lineMrpTotal = resolvedMrp * item.quantity;
+
+                                        return (
+                                            <div key={item.cart_item_id} className="ritual-summary-item pb-3 border-b border-[rgba(255,255,255,0.1)] last:border-0 last:pb-0">
+                                                <div className="ritual-summary-item-img">
+                                                    {item.image_url ? (
+                                                        <img src={item.image_url} alt="" />
+                                                    ) : (
+                                                        <span className="flex items-center justify-center h-full text-sm text-[#1A1A1A]">🌿</span>
+                                                    )}
+                                                </div>
+                                                <div className="ritual-summary-item-name">
+                                                    {item.product_name || RU_DICTIONARY.cart.product}
+                                                    <div className="ritual-summary-item-qty mt-0.5">Qty: {item.quantity}</div>
+                                                </div>
+                                                <div className="flex flex-col items-end">
+                                                    <span className="ritual-summary-item-price">{format(lineTotal)}</span>
+                                                    {resolvedMrp > resolvedSp && (
+                                                        <span className="text-[10px] text-[rgba(255,255,255,0.4)] line-through">
+                                                            {format(lineMrpTotal)}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                <div className="ritual-summary-divider" />
+
+                                <div className="space-y-2.5">
+                                    <div className="ritual-summary-row">
+                                        <span className="label">{RU_DICTIONARY.cart.totalMrp}</span>
+                                        <span className="value">{format(totalMRP)}</span>
+                                    </div>
+                                    {saleDiscount > 0 && (
+                                        <div className="ritual-summary-row">
+                                            <span className="label">{RU_DICTIONARY.cart.discountOnMrp}</span>
+                                            <span className="value !text-[#86EFAC]">- {format(saleDiscount)}</span>
+                                        </div>
+                                    )}
+                                    {couponDiscount > 0 && (
+                                        <div className="ritual-summary-row">
+                                            <span className="label">{RU_DICTIONARY.cart.couponDiscount}</span>
+                                            <span className="value !text-[#86EFAC]">- {format(localCouponDiscount)}</span>
+                                        </div>
+                                    )}
+                                    <div className="ritual-summary-row">
+                                        <span className="label">{RU_DICTIONARY.cart.platformFee}</span>
+                                        <span className="value !text-[#86EFAC] uppercase font-bold text-[10px] tracking-wider">{RU_DICTIONARY.cart.free}</span>
+                                    </div>
+                                    <div className="ritual-summary-row">
+                                        <span className="label">{RU_DICTIONARY.cart.shippingFee}</span>
+                                        <span className="value">{deliveryFee === 0 ? <span className="text-[#86EFAC] font-bold uppercase tracking-wider">{RU_DICTIONARY.cart.free}</span> : formatPrice(deliveryFee)}</span>
+                                    </div>
+                                </div>
+
+                                {(saleDiscount + couponDiscount) > 0 && (
+                                    <div className="mt-4 p-3 bg-white/10 rounded-xl border border-white/10 text-center">
+                                        <p className="text-[10px] font-bold text-[#86EFAC] uppercase tracking-widest">
+                                            {RU_DICTIONARY.cart.totalSavings} {format(saleDiscount + localCouponDiscount)}
+                                        </p>
+                                    </div>
+                                )}
+
+                                <div className="ritual-summary-total">
+                                    <div>
+                                        <div className="ritual-summary-total-label">{RU_DICTIONARY.cart.totalAmount}</div>
+                                        <div className="ritual-summary-total-value mt-1">{format(grandTotal)}</div>
+                                    </div>
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.05)]">
+                                        <Leaf className="h-5 w-5 text-white opacity-80" />
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={async () => {
+                                        if (hasInsufficientStock || loading || inStockItems.length === 0) return;
+                                        if (!isAuthenticated) {
+                                            toast(RU_DICTIONARY.cart.pleaseSignInToProceed, { icon: '🔐' });
+                                            router.push('/login?redirect=/cart');
+                                            return;
+                                        }
+                                        // Auto-save out-of-stock items for later before checkout
+                                        if (outOfStockItems.length > 0) {
+                                            for (const oosItem of outOfStockItems) {
+                                                try {
+                                                    await saveForLater(oosItem.cart_item_id);
+                                                } catch (e) {
+                                                    console.warn('Failed to save OOS item for later:', e);
+                                                }
+                                            }
+                                            toast.success(RU_DICTIONARY.cart.outOfStockItemsSaved);
+                                        }
+                                        router.push('/checkout');
+                                    }}
+                                    disabled={hasInsufficientStock || loading || inStockItems.length === 0}
+                                    className="cart-checkout-btn block w-full text-center hover:bg-[#8B7A3D] disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isAuthenticated ? RU_DICTIONARY.cart.confirmAndCompleteRitual : RU_DICTIONARY.cart.signInToCheckout}
+                                </button>
+
+                                <div className="mt-5 flex items-center justify-center gap-4 text-[9px] text-[rgba(255,255,255,0.5)] font-bold tracking-[1.5px] uppercase">
+                                    <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full border border-[rgba(255,255,255,0.5)] flex items-center justify-center"><div className="w-0.5 h-0.5 bg-white rounded-full"></div></div> {RU_DICTIONARY.cart.secureTransaction}</span>
+                                    <span>•</span>
+                                    <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full border border-[rgba(255,255,255,0.5)] flex items-center justify-center"><div className="w-0.5 h-0.5 bg-white rounded-full"></div></div> {RU_DICTIONARY.cart.fastProcessing}</span>
+                                </div>
+                            </div>
+
+                            <Link href={ROUTES.helpCenterSupport} className="cart-advisor-card cursor-pointer flex">
+                                <div className="icon-wrapper border border-[#D4CFC0]">
+                                    <Leaf className="w-5 h-5" />
+                                </div>
+                                <div className="text-content">
+                                    <p className="title">{RU_DICTIONARY.cart.needGuidance}</p>
+                                    <p className="subtitle">{RU_DICTIONARY.cart.vedicAdvisorsAvailable}</p>
+                                </div>
+                                <span className="action">{RU_DICTIONARY.cart.contactSupport}</span>
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Custom Remove Confirmation Modal via Portal */}
+            <ConfirmModal
+                isOpen={!!itemToRemove}
+                title={RU_DICTIONARY.cart.removeItem}
+                message={RU_DICTIONARY.cart.areYouSureRemoveFromRitual}
+                confirmText={RU_DICTIONARY.cart.remove}
+                cancelText={RU_DICTIONARY.cart.cancel}
+                isDestructive={true}
+                onConfirm={() => {
+                    if (itemToRemove) {
+                        removeItem(itemToRemove);
+                        toast.success(RU_DICTIONARY.cart.removedItem);
+                        setItemToRemove(null);
+                    }
+                }}
+                onCancel={() => setItemToRemove(null)}
+            />
+        </div>
+    );
+}

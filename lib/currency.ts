@@ -16,32 +16,23 @@ export const SUPPORTED_COUNTRIES: Record<SupportedCountryCode, CountryConfig> = 
 };
 
 /** Country codes that get a URL prefix. 'us' (worldwide) uses root URLs. */
-const PREFIXED_COUNTRIES = new Set<string>(['ru', 'kr']);
+const PREFIXED_COUNTRIES = new Set<string>([]);
 
 /**
  * Build a URL path respecting the country prefix convention.
- * - Worldwide ('us'): `/products`, `/about`, etc. (no prefix)
- * - Russia/Korea: `/ru/products`, `/kr/products`
+ * (Now flattened for Russia-only setup - always returns the raw path)
  */
 export function buildPath(country: string, path: string): string {
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  if (PREFIXED_COUNTRIES.has(country)) {
-    return `/${country}${cleanPath}`;
-  }
   return cleanPath || '/';
 }
 
 /**
  * Extract the country code from a browser pathname.
- * - `/ru/products` → 'ru'
- * - `/kr/about` → 'kr'
- * - `/products` → 'us' (worldwide default)
+ * (Now flattened for Russia-only setup - always returns 'ru')
  */
 export function getCountryFromPathname(pathname: string): SupportedCountryCode {
-  const segments = pathname.split('/').filter(Boolean);
-  const first = segments[0];
-  if (first && PREFIXED_COUNTRIES.has(first)) return first as SupportedCountryCode;
-  return 'us';
+  return 'ru';
 }
 
 /**

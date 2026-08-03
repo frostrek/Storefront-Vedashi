@@ -5,14 +5,15 @@ import { Suspense } from "react";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import FrostyWidget from "@/components/FrostyWidget"
+import FrostyWidget from "@/components/FrostyWidget";
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from "react-hot-toast";
 import { CookieConsentProvider } from "@/context/CookieConsentContext";
 import CookieBanner from "@/components/CookieBanner";
-import LanguageSuggestionBanner from "@/components/LanguageSuggestionBanner";
+import { CurrencyProvider } from "@/context/CurrencyContext";
+import GeoTracker from "@/components/analytics/GeoTracker";
 import DynamicScriptLoader from "@/components/DynamicScriptLoader";
 import RouteTracker from "@/components/RouteTracker";
 import GlobalErrorTracker from "@/components/GlobalErrorTracker";
@@ -21,14 +22,14 @@ import { generateLocalBusinessJsonLd, generateOrganizationJsonLd, generateWebSit
 import { API_URL } from "@/lib/api";
 
 const inter = Inter({
-  subsets: ["latin"],
+  subsets: ["latin", "cyrillic"],
   variable: "--font-sans",
   display: "swap",
   weight: ["400", "600"],
 });
 
 const playfair = Playfair_Display({
-  subsets: ["latin"],
+  subsets: ["latin", "cyrillic"],
   variable: "--font-serif",
   display: "swap",
   weight: ["600", "700"],
@@ -39,12 +40,11 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashiherbals.com
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Vedashi — Premium Ayurvedic Wellness",
-    template: "%s | Vedashi",
+    default: "ООО ВЕДАШИ ХЕРБАЛС — Премиальная Аюрведа",
+    template: "%s | Vedashi Herbals",
   },
-  description:
-    "Experience the healing power of authentic Ayurvedic remedies crafted from nature. Discover clinically tested herbal formulations for holistic wellness.",
-  keywords: ["ayurveda", "ayurvedic wellness", "herbal remedies", "Vedashi", "natural healing", "dosha", "panchakarma"],
+  description: "Откройте для себя коллекцию премиальных аюрведических продуктов, натуральной косметики и травяных сборов.",
+  keywords: ["аюрведа", "натуральная косметика", "здоровье", "Vedashi", "травы"],
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
     other: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION ? {
@@ -53,22 +53,22 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    siteName: "Vedashi",
-    title: "Vedashi — Premium Ayurvedic Wellness",
-    description: "Experience the healing power of authentic Ayurvedic remedies crafted from nature.",
+    siteName: "Vedashi Herbals",
+    title: "ООО ВЕДАШИ ХЕРБАЛС — Премиальная Аюрведа",
+    description: "Откройте для себя коллекцию премиальных аюрведических продуктов, натуральной косметики и травяных сборов.",
     images: [
       {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "Vedashi | Premium Ayurvedic Wellness",
+        alt: "Vedashi Herbals",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Vedashi — Premium Ayurvedic Wellness",
-    description: "Experience the healing power of authentic Ayurvedic remedies crafted from nature.",
+    title: "ООО ВЕДАШИ ХЕРБАЛС — Премиальная Аюрведа",
+    description: "Откройте для себя коллекцию премиальных аюрведических продуктов.",
     images: ["/opengraph-image"],
   },
 };
@@ -78,12 +78,11 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Check global maintenance status with a tight timeout to prevent site hangs
   let isMaintenance = false;
   let maintenanceMessage = "";
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 2500); // 2.5s ceiling for health check
+  const timeoutId = setTimeout(() => controller.abort(), 2500);
 
   try {
     const res = await fetch(`${API_URL}/health`, {
@@ -96,15 +95,13 @@ export default async function RootLayout({
       maintenanceMessage = data.maintenance.message || "The Vedashi experience is currently undergoing routine maintenance.";
     }
   } catch (error) {
-    // If the health check times out or fails, we assume the site is NOT in maintenance
-    // This prioritizes speed and prevents the "TimeoutError" crash in dev
   } finally {
     clearTimeout(timeoutId);
   }
 
   if (isMaintenance) {
     return (
-      <html lang="en" className={`${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
+      <html lang="ru" className={`${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
         <body className={`min-h-screen bg-[#1A1814] ${inter.className}`}>
           <MaintenancePage message={maintenanceMessage} />
         </body>
@@ -113,13 +110,11 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
+    <html lang="ru" className={`${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
       <head>
-        {/* Preconnect to CDN & API origins removed as Next.js Image Optimization proxies them */}
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://mc.yandex.ru" />
 
-        {/* GA4 — Set default consent BEFORE any gtag scripts load */}
         <Script
           id="ga4-default-consent"
           dangerouslySetInnerHTML={{
@@ -131,7 +126,6 @@ export default async function RootLayout({
           }}
         />
 
-        {/* Structured Data */}
         <script
           id="structured-data-organization"
           type="application/ld+json"
@@ -154,54 +148,54 @@ export default async function RootLayout({
             src="https://challenges.cloudflare.com/turnstile/v0/api.js"
             strategy="lazyOnload"
           />
-          <Script
-            src="https://checkout.razorpay.com/v1/checkout.js"
-            strategy="lazyOnload"
-          />
+
           <CookieConsentProvider>
             <DynamicScriptLoader />
             <Suspense fallback={null}>
               <RouteTracker />
             </Suspense>
             <GlobalErrorTracker />
-            <AuthProvider>
-              <CartProvider>
-                <WishlistProvider>
-                  <Toaster
-                    position="bottom-right"
-                    containerStyle={{ zIndex: 999999 }}
-                    toastOptions={{
-                      duration: 3500,
-                      className: 'modern-toast',
-                      style: {
-                        background: 'rgba(255, 255, 255, 0.95)',
-                        backdropFilter: 'blur(12px)',
-                        color: '#2D2926',
-                        borderRadius: '14px',
-                        fontSize: '13px',
-                        fontWeight: '600',
-                        padding: '8px 16px',
-                        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.08)',
-                        border: '1px solid rgba(255, 255, 255, 0.5)',
-                      },
-                      success: {
-                        iconTheme: { primary: '#91C934', secondary: '#fff' },
-                      },
-                      error: {
-                        iconTheme: { primary: '#ef4444', secondary: '#fff' },
-                      }
-                    }}
-                  />
-                  <Navbar />
-                  <main className="flex-1">{children}</main>
-                  <Footer />
-
-                  <CookieBanner />
-                  <LanguageSuggestionBanner />
-                  <FrostyWidget />
-                </WishlistProvider>
-              </CartProvider>
-            </AuthProvider>
+            <Suspense fallback={null}>
+              <AuthProvider>
+                <CurrencyProvider countryCode="ru">
+                  <GeoTracker country="ru" />
+                  <CartProvider>
+                    <WishlistProvider>
+                      <Toaster
+                        position="bottom-right"
+                        containerStyle={{ zIndex: 999999 }}
+                        toastOptions={{
+                          duration: 3500,
+                          className: 'modern-toast',
+                          style: {
+                            background: 'rgba(255, 255, 255, 0.95)',
+                            backdropFilter: 'blur(12px)',
+                            color: '#2D2926',
+                            borderRadius: '14px',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            padding: '8px 16px',
+                            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.08)',
+                            border: '1px solid rgba(255, 255, 255, 0.5)',
+                          },
+                          success: {
+                            iconTheme: { primary: '#91C934', secondary: '#fff' },
+                          },
+                          error: {
+                            iconTheme: { primary: '#ef4444', secondary: '#fff' },
+                          }
+                        }}
+                      />
+                      <Navbar />
+                      <main className="flex-1">{children}</main>
+                      <Footer />
+                      <CookieBanner />
+                      <FrostyWidget />
+                    </WishlistProvider>
+                  </CartProvider>
+                </CurrencyProvider>
+              </AuthProvider>
+            </Suspense>
           </CookieConsentProvider>
         </>
       </body>

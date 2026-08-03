@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { RU_DICTIONARY } from '@/content/ru';
+
 import StarRating from './StarRating';
 import ReviewCard from './ReviewCard';
 import ReviewForm from './ReviewForm';
@@ -36,10 +38,10 @@ interface ReviewSectionProps {
 }
 
 const SORT_OPTIONS = [
-    { label: 'Most Recent', value: 'recent' },
-    { label: 'Most Helpful', value: 'helpful' },
-    { label: 'Highest Rated', value: 'highest' },
-    { label: 'Lowest Rated', value: 'lowest' },
+    { label: RU_DICTIONARY.productPage.mostRecent, value: 'recent' },
+    { label: RU_DICTIONARY.productPage.mostHelpful, value: 'helpful' },
+    { label: RU_DICTIONARY.productPage.highestRated, value: 'highest' },
+    { label: RU_DICTIONARY.productPage.lowestRated, value: 'lowest' },
 ];
 
 export default function ReviewSection({ productId, product, selectedVariant, onAddToCart }: ReviewSectionProps) {
@@ -98,8 +100,8 @@ export default function ReviewSection({ productId, product, selectedVariant, onA
         <section className="pt-6">
             {/* Section header */}
             <div className="mb-10 max-w-2xl">
-                <h2 className="text-3xl font-bold text-gray-900 mb-2">Community Experiences</h2>
-                <p className="text-[15px] text-gray-500">Stories of restoration and balance from our collective.</p>
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">{RU_DICTIONARY.productPage.communityExperiences}</h2>
+                <p className="text-[15px] text-gray-500">{RU_DICTIONARY.productPage.storiesOfRestoration}</p>
             </div>
 
             {loading ? (
@@ -116,7 +118,7 @@ export default function ReviewSection({ productId, product, selectedVariant, onA
                         {reviews.length > 0 && (
                             <div className="mb-8 flex items-center justify-between">
                                 <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
-                                    {reviews.length} Review{reviews.length !== 1 ? 's' : ''}
+                                    {reviews.length} {reviews.length !== 1 ? RU_DICTIONARY.productPage.reviews : RU_DICTIONARY.productPage.review}
                                 </p>
                                 <select
                                     value={sort}
@@ -141,7 +143,7 @@ export default function ReviewSection({ productId, product, selectedVariant, onA
                             ) : (
                                 <div className="rounded-xl border border-dashed border-neutral-200 py-12 text-center bg-white h-full flex flex-col justify-center">
                                     <MessageSquare className="mx-auto h-8 w-8 text-neutral-300 mb-2" />
-                                    <p className="text-neutral-500 text-sm">No reviews yet. Be the first to share your thoughts!</p>
+                                    <p className="text-neutral-500 text-sm">{RU_DICTIONARY.productPage.beTheFirstToShare}</p>
                                 </div>
                             )}
                         </div>
@@ -173,7 +175,7 @@ export default function ReviewSection({ productId, product, selectedVariant, onA
                                         className="justify-center mt-3"
                                     />
                                     <p className="mt-3 text-sm text-neutral-500 font-medium">
-                                        Based on {summary?.total_reviews ?? 0} review{(summary?.total_reviews ?? 0) !== 1 ? 's' : ''}
+                                        {RU_DICTIONARY.productPage.basedOn} {summary?.total_reviews ?? 0} {(summary?.total_reviews ?? 0) !== 1 ? RU_DICTIONARY.productPage.reviews : RU_DICTIONARY.productPage.review}
                                     </p>
                                 </div>
 
@@ -242,14 +244,14 @@ export default function ReviewSection({ productId, product, selectedVariant, onA
                                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                                                     <circle cx="12" cy="12" r="3" />
                                                 </svg>
-                                                Preview Options
+                                                {RU_DICTIONARY.productPage.previewOptions}
                                             </button>
                                         ) : (
                                             <button
                                                 onClick={onAddToCart}
                                                 className="w-full bg-[#91C934] py-4 text-[11px] font-bold text-white transition-colors hover:bg-[#7ab52a] flex items-center justify-center gap-2 uppercase tracking-[0.2em]"
                                             >
-                                                Add to Bag
+                                                {RU_DICTIONARY.productPage.addToBag}
                                             </button>
                                         )}
                                     </div>

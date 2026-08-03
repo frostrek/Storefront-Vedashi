@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, useMemo, ReactNode, useRef } from 'react';
 import { BackendCartItem, BackendCart } from '@/types';
 import { useAuth } from '@/context/AuthContext';
+import { useCurrency } from '@/context/CurrencyContext';
 import { trackEcommerce } from '@/lib/analytics/gtag';
 import {
     createCart as apiCreateCart,
@@ -61,7 +62,7 @@ function flattenCartItem(item: BackendCartItem): BackendCartItem {
         size_label: item.variant?.size_label || item.size_label || '',
         image_url: item.product?.thumbnail_url || item.image_url || '',
         stock_quantity: item.variant?.stock_quantity ?? (item as unknown as Record<string, unknown>).stock_quantity as number ?? 0,
-        country_prices: item.product?.country_prices || [],
+        country_prices: (item.product?.country_prices || []).filter((cp: any) => !cp.variant_id || cp.variant_id === (item.variant_id || item.variant?.variant_id)),
     };
 }
 
@@ -71,9 +72,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const [cartId, setCartId] = useState<string | null>(null);
     const pendingQtyUpdates = useRef(0);
 
-    // DERIVED VALUE — single source of truth, can never desync from items
+    const { resolvePrice, currencyConfigs, countryCode } = useCurrency();
+    
+    // Derived values using useMemo
     const totalItems = useMemo(() => new Set(items.map(i => String(i.product_id))).size, [items]);
     const totalPrice = useMemo(() => items.reduce((s, i) => s + (i.price || 0) * i.quantity, 0), [items]);
+    
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [couponCode, setCouponCode] = useState<string | null>(null);
@@ -230,6 +234,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
                 let computedDiscount = 0;
 
+                // Calculate the accurate *local* cart total using active country overrides
+                const localCartTotal = items.reduce((sum, item) => sum + resolvePrice(item.price, item.country_prices) * item.quantity, 0);
+                
+                // Get current exchange rate for backwards conversion
+                const upperCode = countryCode.toUpperCase();
+                const config = currencyConfigs.find(c => c.country_code === upperCode);
+                const exchangeRate = config ? config.exchange_rate : 1.0;
+
                 if (res.data.coupon.discount_type === 'bogo') {
                     const buyQty = res.data.coupon.bogo_buy_qty || 1;
                     const getQty = res.data.coupon.bogo_get_qty || 1;
@@ -237,8 +249,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
                     const flatPrices: number[] = [];
                     items.forEach(it => {
                         for (let i = 0; i < it.quantity; i++) {
-                            // Effective price
-                            flatPrices.push(it.price || 0);
+                            // Effective localized price
+                            flatPrices.push(resolvePrice(it.price, it.country_prices));
                         }
                     });
 
@@ -246,15 +258,27 @@ export function CartProvider({ children }: { children: ReactNode }) {
                     const bogoGroups = Math.floor(flatPrices.length / (buyQty + getQty));
                     const freeItemsCount = bogoGroups * getQty;
 
-                    let bogoDiscount = 0;
+                    let bogoDiscountLocal = 0;
                     for (let i = 0; i < freeItemsCount; i++) {
-                        bogoDiscount += flatPrices[i];
+                        bogoDiscountLocal += flatPrices[i];
                     }
 
                     if (res.data.coupon.max_discount_cap !== null) {
-                        bogoDiscount = Math.min(bogoDiscount, parseFloat(res.data.coupon.max_discount_cap));
+                        const localCap = parseFloat(res.data.coupon.max_discount_cap) * exchangeRate;
+                        bogoDiscountLocal = Math.min(bogoDiscountLocal, localCap);
                     }
-                    computedDiscount = bogoDiscount;
+                    computedDiscount = bogoDiscountLocal / exchangeRate; // Store internally as USD
+                } else if (res.data.coupon.discount_type === 'percentage') {
+                    const localDiscountAmount = localCartTotal * (parseFloat(res.data.coupon.discount_value) / 100);
+                    let finalLocalDiscount = localDiscountAmount;
+                    if (res.data.coupon.max_discount_cap !== null) {
+                        const localCap = parseFloat(res.data.coupon.max_discount_cap) * exchangeRate;
+                        finalLocalDiscount = Math.min(finalLocalDiscount, localCap);
+                    }
+                    computedDiscount = finalLocalDiscount / exchangeRate; // Store internally as USD
+                } else if (res.data.coupon.discount_type === 'fixed') {
+                    // Fixed is already returned exactly as USD from backend
+                    computedDiscount = res.data.discount;
                 } else {
                     computedDiscount = res.data.discount;
                 }

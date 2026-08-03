@@ -1,5 +1,7 @@
 'use client';
 
+import { RU_DICTIONARY } from '@/content/ru';
+
 export default function QuoteBlock() {
     return (
         <div className="bg-white rounded-[2rem] p-8 border border-light-border/60 shadow-sm">
@@ -10,12 +12,12 @@ export default function QuoteBlock() {
             </div>
             
             <blockquote className="text-lg md:text-xl text-charcoal leading-relaxed mb-6">
-                "Health is a state of complete harmony of the body, mind and spirit. When one is free from physical disabilities and mental distractions, the gates of the soul open."
+                {RU_DICTIONARY.blog.quote.text}
             </blockquote>
             
             <div className="flex items-center justify-between border-t border-light-border pt-4">
                 <span className="text-[11px] font-bold uppercase tracking-widest text-warm-gray">
-                    — B.K.S. Iyengar
+                    {RU_DICTIONARY.blog.quote.author}
                 </span>
             </div>
         </div>

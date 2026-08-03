@@ -5,6 +5,8 @@ import { Bell, X, Check, Trash2, ExternalLink, ShieldAlert, Package, MessageSqua
 import { getMyNotifications, getUnreadNotificationCount, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { RU_DICTIONARY } from '@/content/ru';
+import { ROUTES, ACCOUNT_TABS } from '@/lib/routes';
 
 interface Notification {
   notification_id: string;
@@ -116,7 +118,7 @@ export default function NotificationCenter({ colors }: { colors: any }) {
       <button 
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 group transition-all duration-300 hover:scale-110"
-        aria-label="Notifications"
+        aria-label={RU_DICTIONARY.nav.notificationsTitle}
         suppressHydrationWarning
       >
         <Bell className="h-[20px] w-[20px] transition-colors" style={{ color: isOpen ? colors.navbar_hover : colors.navbar_text }} />
@@ -137,14 +139,14 @@ export default function NotificationCenter({ colors }: { colors: any }) {
           >
             {/* Header */}
             <div className="px-6 py-4 border-b border-gray-50 bg-gray-50/50 flex items-center justify-between">
-              <h3 className="font-bold text-[#1a2408]">Notifications</h3>
+              <h3 className="font-bold text-[#1a2408]">{RU_DICTIONARY.nav.notificationsTitle}</h3>
               <div className="flex items-center gap-3">
                 {unreadCount > 0 && (
                   <button 
                     onClick={handleMarkAllRead}
                     className="text-[10px] font-bold uppercase tracking-widest text-[#4A5D23] hover:underline"
                   >
-                    Mark all read
+                    {RU_DICTIONARY.nav.markAllRead}
                   </button>
                 )}
                 <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-gray-600">
@@ -158,15 +160,15 @@ export default function NotificationCenter({ colors }: { colors: any }) {
               {loading && notifications.length === 0 ? (
                 <div className="p-10 text-center space-y-3">
                   <div className="h-8 w-8 border-2 border-[#4A5D23] border-t-transparent rounded-full animate-spin mx-auto" />
-                  <p className="text-xs text-gray-400">Loading your alerts...</p>
+                  <p className="text-xs text-gray-400">{RU_DICTIONARY.nav.loadingAlerts}</p>
                 </div>
               ) : notifications.length === 0 ? (
                 <div className="p-10 text-center">
                   <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Bell className="h-8 w-8 text-gray-300" />
                   </div>
-                  <p className="text-sm font-medium text-gray-500">No notifications yet</p>
-                  <p className="text-xs text-gray-400 mt-1">We'll notify you when something happens.</p>
+                  <p className="text-sm font-medium text-gray-500">{RU_DICTIONARY.nav.noNotifications}</p>
+                  <p className="text-xs text-gray-400 mt-1">{RU_DICTIONARY.nav.weWillNotify}</p>
                 </div>
               ) : (
                 <div className="divide-y divide-gray-50">
@@ -184,7 +186,7 @@ export default function NotificationCenter({ colors }: { colors: any }) {
                           <p className={`text-sm font-semibold truncate ${!n.is_read ? 'text-[#1a2408]' : 'text-gray-700'}`}>
                             {n.title}
                           </p>
-                          {!n.is_read && <span className="h-1.5 w-1.5 bg-red-500 rounded-full flex-shrink-0" title="Unread" />}
+                          {!n.is_read && <span className="h-1.5 w-1.5 bg-red-500 rounded-full flex-shrink-0" title={RU_DICTIONARY.nav.unread} />}
                         </div>
                         <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
                           {n.message}
@@ -199,7 +201,7 @@ export default function NotificationCenter({ colors }: { colors: any }) {
                         <button 
                           onClick={(e) => { e.stopPropagation(); handleDelete(n.notification_id); }}
                           className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                          title="Delete"
+                          title={RU_DICTIONARY.nav.delete}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
@@ -213,10 +215,10 @@ export default function NotificationCenter({ colors }: { colors: any }) {
             {/* Footer */}
             <div className="px-6 py-3 border-t border-gray-50 bg-gray-50/30 text-center">
               <button 
-                onClick={() => { router.push('/account/notifications' as any); setIsOpen(false); }}
+                onClick={() => { router.push(ROUTES.accountTab(ACCOUNT_TABS.notifications) as any); setIsOpen(false); }}
                 className="text-[11px] font-bold text-[#4A5D23] hover:underline flex items-center justify-center gap-1 mx-auto"
               >
-                View all notifications <ExternalLink className="h-3 w-3" />
+                {RU_DICTIONARY.nav.viewAllNotifications} <ExternalLink className="h-3 w-3" />
               </button>
             </div>
           </motion.div>

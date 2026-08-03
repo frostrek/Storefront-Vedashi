@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Wallet, Star, History, ArrowUpRight, ArrowDownRight, Award, Loader2, Info, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
-
+import { RU_DICTIONARY } from '@/content/ru';
 interface MyWalletProps {
     customerId: string;
 }
@@ -32,7 +32,7 @@ export default function MyWallet({ customerId }: MyWalletProps) {
             if (walletData) setWallet(walletData);
             if (txnsData) setTransactions(txnsData);
         } catch (error) {
-            toast.error('Failed to load wallet data.');
+            toast.error(RU_DICTIONARY.walletTab.failedToLoad);
         } finally {
             setLoading(false);
         }
@@ -53,13 +53,13 @@ export default function MyWallet({ customerId }: MyWalletProps) {
                 <div className="w-20 h-20 bg-[#FDFBF7] rounded-full flex items-center justify-center mx-auto mb-6 border border-[#91c934]/10">
                     <Wallet className="h-10 w-10 text-[#91c934]/30" />
                 </div>
-                <h3 className="text-2xl font-bold text-[#1f2937]">Sanctuary Not Activated</h3>
-                <p className="text-[#4A5D4A] mt-2 max-w-sm mx-auto">Embrace the path of wellness. Your ritual journal begins with your first soulful purchase.</p>
+                <h3 className="text-2xl font-bold text-[#1f2937]">{RU_DICTIONARY.walletTab.notActivatedTitle}</h3>
+                <p className="text-[#4A5D4A] mt-2 max-w-sm mx-auto">{RU_DICTIONARY.walletTab.notActivatedDesc}</p>
                 <button
                     onClick={() => window.location.href = '/'}
                     className="mt-8 px-8 py-3 bg-[#91c934] text-white font-bold rounded-xl hover:bg-[#7ab52a] transition-all shadow-lg text-xs uppercase tracking-widest"
                 >
-                    Begin Your Journey
+                    {RU_DICTIONARY.walletTab.beginJourney}
                 </button>
             </div>
         );
@@ -71,7 +71,13 @@ export default function MyWallet({ customerId }: MyWalletProps) {
     const { tier_name, benefits, badge_color } = tierObj;
 
     // Auth context fallback fields
-    const displayTier = tier_name || user?.loyalty_tier || 'Bronze';
+    const getTierTranslation = (tierName: string) => {
+        if (!tierName) return RU_DICTIONARY.walletTab.bronze;
+        const tiers = (RU_DICTIONARY.walletTab as any).tiers;
+        return tiers?.[tierName] || tierName;
+    };
+
+    const displayTier = getTierTranslation(tier_name || user?.loyalty_tier);
     const displayBalance = balance ?? user?.wallet_balance ?? 0;
 
     return (
@@ -83,10 +89,10 @@ export default function MyWallet({ customerId }: MyWalletProps) {
                         <Wallet className="h-6 w-6" />
                     </div>
                     <div>
-                        <h2 className="text-3xl font-bold text-[#1f2937] tracking-tight">Vedic Ritual Rewards</h2>
+                        <h2 className="text-3xl font-bold text-[#1f2937] tracking-tight">{RU_DICTIONARY.walletTab.rewardsTitle}</h2>
                         <p className="text-sm text-[#4A5D4A] font-medium flex items-center gap-1.5 mt-1">
                             <Star className="h-3.5 w-3.5 text-[#FFD801] fill-[#FFD801]" />
-                            Your journey towards holistic wellness, rewarded.
+                            {RU_DICTIONARY.walletTab.rewardsSubtitle}
                         </p>
                     </div>
                 </div>
@@ -103,11 +109,11 @@ export default function MyWallet({ customerId }: MyWalletProps) {
 
                     <div className="relative z-10">
                         <div className="flex items-center justify-between mb-4">
-                            <p className="text-white text-[10px] font-bold tracking-[0.3em] uppercase">Active Plan</p>
+                            <p className="text-white text-[10px] font-bold tracking-[0.3em] uppercase">{RU_DICTIONARY.walletTab.activePlan}</p>
                             <div className="h-2 w-2 rounded-full bg-[#D4A847] shadow-[0_0_10px_#D4A847] animate-pulse" />
                         </div>
                         <h3 className="text-4xl md:text-5xl font-bold text-[#FFD801] mb-4 tracking-tight">
-                            {displayTier} Ritualist
+                            {displayTier} {RU_DICTIONARY.walletTab.ritualist}
                         </h3>
                         {benefits && Array.isArray(benefits) && benefits.length > 0 ? (
                             <p className="text-sm text-white leading-relaxed max-w-md font-medium">
@@ -115,17 +121,17 @@ export default function MyWallet({ customerId }: MyWalletProps) {
                             </p>
                         ) : (
                             <p className="text-sm text-white italic leading-relaxed">
-                                Unlock your potential. Your wellness journey is just beginning.
+                                {RU_DICTIONARY.walletTab.unlockPotential}
                             </p>
                         )}
                     </div>
 
                     <div className="relative z-10 flex items-end justify-between border-t border-white/10 pt-6 mt-4">
                         <div>
-                            <p className="text-[10px] uppercase font-bold text-white tracking-[0.2em] mb-1">Balance</p>
+                            <p className="text-[10px] uppercase font-bold text-white tracking-[0.2em] mb-1">{RU_DICTIONARY.walletTab.balance}</p>
                             <div className="flex items-baseline gap-2">
                                 <span className="text-5xl font-black text-white">{displayBalance}</span>
-                                <span className="text-xs font-bold text-[#FFD801] uppercase tracking-tighter">Points</span>
+                                <span className="text-xs font-bold text-[#FFD801] uppercase tracking-tighter">{RU_DICTIONARY.walletTab.points}</span>
                             </div>
                         </div>
                     </div>
@@ -140,7 +146,7 @@ export default function MyWallet({ customerId }: MyWalletProps) {
                         </div>
                         <div>
                             <h3 className="text-2xl font-bold text-[#1f2937] mb-0.5">{lifetime_earned || 0}</h3>
-                            <p className="text-[9px] font-bold text-[#4A5D4A] uppercase tracking-widest">Gained points</p>
+                            <p className="text-[9px] font-bold text-[#4A5D4A] uppercase tracking-widest">{RU_DICTIONARY.walletTab.gainedPoints}</p>
                         </div>
                     </div>
 
@@ -151,7 +157,7 @@ export default function MyWallet({ customerId }: MyWalletProps) {
                         </div>
                         <div>
                             <h3 className="text-2xl font-bold text-[#1f2937] mb-0.5">{Math.abs(lifetime_redeemed || 0)}</h3>
-                            <p className="text-[9px] font-bold text-[#4A5D4A] uppercase tracking-widest">Shared Blessings</p>
+                            <p className="text-[9px] font-bold text-[#4A5D4A] uppercase tracking-widest">{RU_DICTIONARY.walletTab.sharedBlessings}</p>
                         </div>
                     </div>
                 </div>
@@ -176,20 +182,20 @@ export default function MyWallet({ customerId }: MyWalletProps) {
 
                         <div className="relative z-10 mt-auto">
                             <div className="text-[10px] font-bold text-[#D4A847] uppercase tracking-widest mb-4 flex items-center gap-2">
-                                <div className="h-1 w-1 rounded-full bg-[#D4A847]" /> Tier Benefits
+                                <div className="h-1 w-1 rounded-full bg-[#D4A847]" /> {RU_DICTIONARY.walletTab.tierBenefits}
                             </div>
                             <ul className="space-y-3">
                                 <li className="text-[11px] font-medium text-[#1f2937] flex items-center gap-2">
                                     <div className="h-5 w-5 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100">
                                         <Check className="h-3 w-3 text-emerald-600" />
                                     </div>
-                                    Multiplier: <span className="font-bold">{tierObj.points_multiplier || 1}x</span>
+                                    {RU_DICTIONARY.walletTab.multiplier} <span className="font-bold">{tierObj.points_multiplier || 1}x</span>
                                 </li>
                                 <li className="text-[11px] font-medium text-[#1f2937] flex items-center gap-2">
                                     <div className="h-5 w-5 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100">
                                         <Check className="h-3 w-3 text-emerald-600" />
                                     </div>
-                                    Discount: <span className="font-bold">{tierObj.discount_percent || 0}%</span>
+                                    {RU_DICTIONARY.walletTab.discount} <span className="font-bold">{tierObj.discount_percent || 0}%</span>
                                 </li>
                             </ul>
                         </div>
@@ -201,10 +207,10 @@ export default function MyWallet({ customerId }: MyWalletProps) {
             <div className="pt-4 flex items-center justify-between border-b border-[#F0EAD6] pb-4">
                 <div className="flex items-center gap-3">
                     <History className="h-5 w-5 text-[#91C934]" />
-                    <h3 className="text-xl font-bold text-[#1f2937]">Ritual Journal</h3>
+                    <h3 className="text-xl font-bold text-[#1f2937]">{RU_DICTIONARY.walletTab.ritualJournal}</h3>
                 </div>
                 <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#4A5D4A] uppercase tracking-widest">
-                    <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" /> Real-time History
+                    <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" /> {RU_DICTIONARY.walletTab.realTimeHistory}
                 </div>
             </div>
 
@@ -215,9 +221,9 @@ export default function MyWallet({ customerId }: MyWalletProps) {
                         <div className="w-16 h-16 bg-[#FDFBF7] rounded-full flex items-center justify-center mx-auto mb-4 border border-[#F0EAD6]">
                             <History className="h-8 w-8 text-[#D4A847]/40" />
                         </div>
-                        <h4 className="text-lg font-bold text-[#1f2937]">Empty Journal</h4>
+                        <h4 className="text-lg font-bold text-[#1f2937]">{RU_DICTIONARY.walletTab.emptyJournal}</h4>
                         <p className="text-sm text-[#4A5D4A] max-w-xs mx-auto mt-2">
-                            Your journey has just begun. Manifest points by engaging in rituals and reviews.
+                            {RU_DICTIONARY.walletTab.emptyJournalDesc}
                         </p>
                     </div>
                 ) : (
@@ -236,18 +242,18 @@ export default function MyWallet({ customerId }: MyWalletProps) {
                                             </div>
                                             <div>
                                                 <p className="font-bold text-[#1f2937] text-base capitalize tracking-tight">
-                                                    {txn.transaction_type.replace(/_/g, ' ')}
+                                                    {RU_DICTIONARY.walletTab.transactionTypes[txn.transaction_type as keyof typeof RU_DICTIONARY.walletTab.transactionTypes] || txn.transaction_type.replace(/_/g, ' ')}
                                                 </p>
                                                 <div className="flex items-center gap-3 mt-1">
                                                     <p className="text-[10px] font-bold text-[#4A5D4A]/90 uppercase tracking-widest">
-                                                        {new Date(txn.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                        {new Date(txn.created_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })}
                                                     </p>
                                                     {txn.reference_type === 'order' && (
                                                         <span className="h-1 w-1 rounded-full bg-[#D4A847]" />
                                                     )}
                                                     {txn.reference_type === 'order' && (
                                                         <p className="text-[10px] font-bold text-[#D4A847] uppercase tracking-widest">
-                                                            Ref: #{txn.reference_id?.substring(0, 8)}
+                                                            {RU_DICTIONARY.walletTab.refPrefix}{txn.reference_id?.substring(0, 8)}
                                                         </p>
                                                     )}
                                                 </div>
@@ -255,7 +261,7 @@ export default function MyWallet({ customerId }: MyWalletProps) {
                                                     <div className="mt-2 flex items-center gap-1.5 px-2 py-0.5 bg-amber-50 border border-amber-100 rounded-md inline-flex">
                                                         <div className="h-1 w-1 rounded-full bg-amber-500" />
                                                         <p className="text-[9px] font-bold text-amber-700 uppercase tracking-tight">
-                                                            Aura Expires: {new Date(txn.expires_at).toLocaleDateString()}
+                                                            {RU_DICTIONARY.walletTab.auraExpires} {new Date(txn.expires_at).toLocaleDateString('ru-RU')}
                                                         </p>
                                                     </div>
                                                 )}
@@ -266,7 +272,7 @@ export default function MyWallet({ customerId }: MyWalletProps) {
                                                 {isCredit ? '+' : ''}{txn.points}
                                             </p>
                                             <div className="flex items-center justify-end gap-1 mt-1">
-                                                <span className="text-[9px] font-bold text-[#4A5D4A]/40 uppercase tracking-widest">Post Aura</span>
+                                                <span className="text-[9px] font-bold text-[#4A5D4A]/40 uppercase tracking-widest">{RU_DICTIONARY.walletTab.postAura}</span>
                                                 <p className="text-xs font-mono font-bold text-[#4A5D4A] tracking-tighter">{txn.balance_after}</p>
                                             </div>
                                         </div>
@@ -285,9 +291,9 @@ export default function MyWallet({ customerId }: MyWalletProps) {
                 </div>
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div className="max-w-md">
-                        <h4 className="text-2xl font-bold mb-2 text-[#FFD801]">The Essence of Reciprocity</h4>
+                        <h4 className="text-2xl font-bold mb-2 text-[#FFD801]">{RU_DICTIONARY.walletTab.essenceTitle}</h4>
                         <p className="text-sm text-white leading-relaxed">
-                            "In Nature, everything given returns in abundance. Your loyalty reflects the harmony of our shared values."
+                            {RU_DICTIONARY.walletTab.essenceQuote}
                         </p>
                     </div>
                 </div>

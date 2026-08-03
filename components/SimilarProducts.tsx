@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { RU_DICTIONARY } from '@/content/ru';
+
 import { getSimilarProducts } from '@/lib/api';
 import { Product } from '@/types';
 import { Sparkles } from 'lucide-react';
@@ -34,7 +36,7 @@ export default function SimilarProducts({ productId }: SimilarProductsProps) {
 
     return (
         <ProductReel
-            title="Similar Products"
+            title={RU_DICTIONARY.productPage.similarProducts}
             products={products}
             loading={loading}
         />
