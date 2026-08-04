@@ -14,7 +14,7 @@ interface AuthContextType {
     /** Log-in the user directly from verification data (after OTP verified and account created) */
     loginFromVerification: (customerData: Record<string, unknown>) => void;
     logout: () => void;
-    /** Update partial user info (like avatar_url) dynamically in cache and context */
+    /** Update partial user info (like avatar_url) dynamically in cache and contexts */
     updateUser: (updates: Partial<UserInfo>) => void;
     /** Register callbacks that run after login/logout so Carts + Wishlist can react */
     onAuthChange: (cb: AuthChangeCallback) => () => void;
@@ -148,7 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                                 setUser(null);
                                 localStorage.removeItem(USER_KEY);
                                 notifyListeners('logout', null);
-                                authFetch(`${API_URL}/api/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
+                                authFetch(`${API_URL}/api/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => { });
                                 return;
                             }
 
@@ -187,7 +187,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                             pushUserId(updatedUser.id);
                             notifyListeners('login', updatedUser);
                         } else {
-                            authFetch(`${API_URL}/api/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
+                            authFetch(`${API_URL}/api/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => { });
                         }
                     }
                 })
