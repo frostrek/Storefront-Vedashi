@@ -12,7 +12,7 @@ interface UseIntersectionObserverOptions {
 }
 
 /**
- * Custom hook wrapping IntersectionObserver.
+ * Custom hook wrapping IntersectionObservers.
  * Returns [ref callback, isIntersecting].
  * By default it disconnects after the first intersection (one-shot).
  */
