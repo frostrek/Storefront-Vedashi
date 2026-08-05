@@ -116,6 +116,7 @@ const nextConfig: NextConfig = {
       { source: '/lichnyy-kabinet/konfidentsialnost', destination: '/account/privacy' },
       { source: '/lichnyy-kabinet/podderzhka', destination: '/account/support' },
       { source: '/vhod', destination: '/login' },
+      { source: '/vhod/:path*', destination: '/login/:path*' },
       { source: '/poisk', destination: '/search' },
       { source: '/o-nas', destination: '/about' },
       { source: '/kontakty', destination: '/contact' },
