@@ -22,21 +22,20 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
     if (!product) {
         return {
-            title: "Product Not Found",
+            title: "Товар не найден — Vedashi Herbals",
         };
     }
 
     const categoryTitle = product.category ? `${product.category} | ` : '';
-    const title = `${product.product_name} | Buy Authentic Ayurvedic ${categoryTitle}Vedashi`;
-    const description = product.short_description || `Buy ${product.product_name} directly from India. Authentic Ayurvedic wellness and natural remedies.`;
+    const title = `${product.product_name} | ${categoryTitle}Купить онлайн — Vedashi Herbals`;
+    const description = product.short_description || `Купите ${product.product_name} в интернет-магазине Vedashi Herbals. Премиальные аюрведические продукты с доставкой по России.`;
     const productUrl = `${SITE_URL}/tovar/${product.slug || product.product_id}`;
 
-    const languages: Record<string, string> = {};
-    Object.keys(SUPPORTED_COUNTRIES).forEach((c) => {
-        const locale = SUPPORTED_COUNTRIES[c as keyof typeof SUPPORTED_COUNTRIES].locale;
-        languages[locale] = `${SITE_URL}/tovar/${product.slug || product.product_id}`;
-    });
-    languages['x-default'] = `${SITE_URL}/tovar/${product.slug || product.product_id}`;
+    // Russia-only: single canonical, no multi-country hreflang
+    const languages: Record<string, string> = {
+        'ru-RU': productUrl,
+        'x-default': productUrl
+    };
 
     // Get a default image string
     let ogImage: string | undefined = product.thumbnail_url;
@@ -60,6 +59,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
             title: product.product_name,
             description: description,
             url: productUrl,
+            locale: 'ru_RU',
             images: ogImage ? [ogImage] : [],
         }
     };

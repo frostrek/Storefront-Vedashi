@@ -54,6 +54,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "Vedashi Herbals",
+    locale: "ru_RU",
     title: "ООО ВЕДАШИ ХЕРБАЛС — Премиальная Аюрведа",
     description: "Откройте для себя коллекцию премиальных аюрведических продуктов, натуральной косметики и травяных сборов.",
     images: [

@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Metadata } from 'next';
+import { RU_DICTIONARY } from '@/content/ru';
 
 export const metadata: Metadata = {
-    title: 'Page Not Found — Vedashi',
-    description: 'The path you seek is hidden. Let us guide you back to our premium Ayurvedic wellness collections.',
+    title: RU_DICTIONARY.notFoundPage.meta.title,
+    description: RU_DICTIONARY.notFoundPage.meta.description,
     robots: { index: false, follow: true },
 };
 
@@ -16,7 +17,7 @@ export default function NotFound() {
                 <div className="relative w-full aspect-square">
                     <Image
                         src="/images/404-detective-clear.png"
-                        alt="Detective searching for page"
+                        alt={RU_DICTIONARY.notFoundPage.imageAlt}
                         fill
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         className="object-contain"
@@ -32,16 +33,18 @@ export default function NotFound() {
                 </h1>
 
                 <h2 className="text-lg md:text-xl text-[#2C2C2C] font-semibold mb-8 uppercase tracking-widest leading-relaxed">
-                    WE SEARCHED EVERYWHERE,<br className="hidden md:block" /> BUT COULDN&apos;T FIND THE PAGE
+                    {RU_DICTIONARY.notFoundPage.heading}<br className="hidden md:block" /> {RU_DICTIONARY.notFoundPage.subheading}
                 </h2>
 
                 <Link
                     href="/"
                     className="inline-flex items-center justify-center px-8 py-4 rounded-full border-2 border-[#2C2C2C] text-[#2C2C2C] font-bold text-sm tracking-[0.2em] uppercase bg-[#91C934] border-[#91C934] text-white transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
                 >
-                    Return to Homepage
+                    {RU_DICTIONARY.notFoundPage.backHome}
                 </Link>
             </div>
         </section>
     );
 }
+
+

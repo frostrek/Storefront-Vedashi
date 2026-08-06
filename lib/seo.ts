@@ -5,7 +5,6 @@
  */
 
 import type { Metadata } from 'next';
-import { SUPPORTED_COUNTRIES, buildPath } from './currency';
 import { ROUTES } from './routes';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -62,7 +61,7 @@ export interface CategorySeoInput {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const SITE_NAME = 'Vedashi';
+const SITE_NAME = 'Vedashi Herbals';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashiherbals.com';
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-default.jpg`;
 
@@ -112,26 +111,24 @@ function categoryFallbackDescription(c: CategorySeoInput): string {
 
 /** Generates alternate languages maps based on our supported regions. */
 export function buildHreflang(pathStrategy: string): Record<string, string> {
-    const languages: Record<string, string> = {
-        'x-default': `${SITE_URL}${buildPath('us', pathStrategy)}`
+    // Russia-only setup: single canonical URL, no multi-country hreflang
+    const url = `${SITE_URL}/${pathStrategy}`;
+    return {
+        'ru-RU': url,
+        'x-default': url
     };
-    Object.values(SUPPORTED_COUNTRIES).forEach((c) => {
-        languages[c.locale] = `${SITE_URL}${buildPath(c.code, pathStrategy)}`;
-    });
-    return languages;
 }
 
 /** Build Next.js Metadata for a product page */
-export function buildProductMeta(product: ProductSeoInput, currentCountry: string = 'us'): Metadata {
+export function buildProductMeta(product: ProductSeoInput, currentCountry: string = 'ru'): Metadata {
     const seo = product.seo;
-    const regionName = SUPPORTED_COUNTRIES[currentCountry as keyof typeof SUPPORTED_COUNTRIES]?.name || 'India';
-    const title = `${seo?.meta_title || productFallbackTitle(product)} | ${regionName}`;
+    const title = seo?.meta_title || productFallbackTitle(product);
     const description = seo?.meta_description || productFallbackDescription(product);
     
     const pathStrategy = ROUTES.tovar(product.slug || product.product_id).slice(1);
-    const canonical = seo?.canonical_url || `${SITE_URL}${buildPath(currentCountry, pathStrategy)}`;
+    const canonical = seo?.canonical_url || `${SITE_URL}/${pathStrategy}`;
     
-    const ogImage = seo?.og_image || `${SITE_URL}${buildPath(currentCountry, pathStrategy)}/opengraph-image`;
+    const ogImage = seo?.og_image || `${SITE_URL}/${pathStrategy}/opengraph-image`;
     const keywords = seo?.meta_keywords || [product.product_name, product.brand, product.category, SITE_NAME].filter(Boolean).join(', ');
 
     const robotsValue = seo?.robots || 'index, follow';
@@ -154,6 +151,7 @@ export function buildProductMeta(product: ProductSeoInput, currentCountry: strin
             description: seo?.og_description || description,
             url: canonical,
             siteName: SITE_NAME,
+            locale: 'ru_RU',
             images: [{ url: ogImage, width: 800, height: 800, alt: product.product_name }],
             type: 'website',
         },
@@ -167,14 +165,13 @@ export function buildProductMeta(product: ProductSeoInput, currentCountry: strin
 }
 
 /** Build Next.js Metadata for a category page */
-export function buildCategoryMeta(category: CategorySeoInput, currentCountry: string = 'us'): Metadata {
+export function buildCategoryMeta(category: CategorySeoInput, currentCountry: string = 'ru'): Metadata {
     const seo = category.seo;
-    const regionName = SUPPORTED_COUNTRIES[currentCountry as keyof typeof SUPPORTED_COUNTRIES]?.name || 'India';
-    const title = `${seo?.meta_title || categoryFallbackTitle(category)} | ${regionName}`;
+    const title = seo?.meta_title || categoryFallbackTitle(category);
     const description = seo?.meta_description || categoryFallbackDescription(category);
     
     const pathStrategy = ROUTES.katalogPath(category.slug || category.category_id).slice(1);
-    const canonical = seo?.canonical_url || `${SITE_URL}${buildPath(currentCountry, pathStrategy)}`;
+    const canonical = seo?.canonical_url || `${SITE_URL}/${pathStrategy}`;
     
     const ogImage = seo?.og_image || category.image_url || DEFAULT_OG_IMAGE;
 
@@ -197,6 +194,7 @@ export function buildCategoryMeta(category: CategorySeoInput, currentCountry: st
             description: seo?.og_description || description,
             url: canonical,
             siteName: SITE_NAME,
+            locale: 'ru_RU',
             images: [{ url: ogImage, width: 1200, height: 630, alt: category.name }],
             type: 'website',
         },
@@ -210,23 +208,24 @@ export function buildCategoryMeta(category: CategorySeoInput, currentCountry: st
 }
 
 /** Build Next.js Metadata for the product listing page */
-export function buildPLPMeta(hasFilters = false, currentCountry: string = 'us'): Metadata {
+export function buildPLPMeta(hasFilters = false, currentCountry: string = 'ru'): Metadata {
     const pathStrategy = ROUTES.katalog.slice(1);
     return {
-        title: 'Каталог — Премиальная Аюрведа | Vedashi',
+        title: 'Каталог — Премиальная Аюрведа | Vedashi Herbals',
         description: 'Откройте нашу коллекцию премиальных аюрведических средств и натуральных формул. Фильтруйте по категории, бренду и цене. Быстрая доставка.',
         alternates: {
-            canonical: `${SITE_URL}${buildPath(currentCountry, pathStrategy)}`,
+            canonical: `${SITE_URL}/${pathStrategy}`,
             languages: buildHreflang(pathStrategy)
         },
         robots: hasFilters
             ? { index: false, follow: true }   // noindex filtered pages
             : { index: true, follow: true },
         openGraph: {
-            title: 'Каталог — Премиальная Аюрведа | Vedashi',
+            title: 'Каталог — Премиальная Аюрведа | Vedashi Herbals',
             description: 'Откройте нашу коллекцию премиальных аюрведических средств и натуральных формул.',
-            url: `${SITE_URL}${buildPath(currentCountry, pathStrategy)}`,
+            url: `${SITE_URL}/${pathStrategy}`,
             siteName: SITE_NAME,
+            locale: 'ru_RU',
             type: 'website',
         },
     };
@@ -239,8 +238,8 @@ export function generateProductJsonLd(
     product: ProductSeoInput,
     shippingConfig?: any,
     returnConfig?: any,
-    currency: string = 'INR',
-    country: string = 'us'
+    currency: string = 'RUB',
+    country: string = 'ru'
 ): Record<string, unknown> {
     const defaultVariant = product.variants?.find((v: any) => v.is_default) || product.variants?.[0];
     const price = defaultVariant?.price || product.price || 0;
@@ -260,7 +259,7 @@ export function generateProductJsonLd(
         sku,
         mpn: sku,
         image: Array.from(imageSet),
-        url: `${SITE_URL}${buildPath(country, ROUTES.tovar(product.slug || product.product_id).slice(1))}`,
+        url: `${SITE_URL}${ROUTES.tovar(product.slug || product.product_id)}`,
         brand: {
             '@type': 'Brand',
             name: product.brand || SITE_NAME
@@ -272,7 +271,7 @@ export function generateProductJsonLd(
             availability: inStock
                 ? 'https://schema.org/InStock'
                 : 'https://schema.org/OutOfStock',
-            url: `${SITE_URL}${buildPath(country, ROUTES.tovar(product.slug || product.product_id).slice(1))}`,
+            url: `${SITE_URL}${ROUTES.tovar(product.slug || product.product_id)}`,
             priceValidUntil: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
             itemCondition: 'https://schema.org/NewCondition',
             seller: {
@@ -289,7 +288,7 @@ export function generateProductJsonLd(
             shippingRate: {
                 '@type': 'MonetaryAmount',
                 value: shippingConfig.is_free ? 0 : (shippingConfig.flat_rate || 0),
-                currency: shippingConfig.currency || 'INR'
+                currency: shippingConfig.currency || 'RUB'
             },
             deliveryTime: {
                 '@type': 'ShippingDeliveryTime',
@@ -308,7 +307,7 @@ export function generateProductJsonLd(
             },
             shippingDestination: {
                 '@type': 'DefinedRegion',
-                addressCountry: 'IN'
+                addressCountry: 'RU'
             }
         };
 
@@ -321,7 +320,7 @@ export function generateProductJsonLd(
     if (returnConfig && returnConfig.policy_days) {
         schema.hasMerchantReturnPolicy = {
             '@type': 'MerchantReturnPolicy',
-            applicableCountry: 'IN',
+            applicableCountry: 'RU',
             returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnPeriod',
             merchantReturnDays: returnConfig.policy_days,
             returnMethod: 'https://schema.org/ReturnByMail',
@@ -358,21 +357,22 @@ export function generateLocalBusinessJsonLd(): Record<string, unknown> {
         url: SITE_URL,
         logo: `${SITE_URL}/logo.png`,
         image: `${SITE_URL}/og-default.jpg`,
-        description: 'Premium Ayurvedic Wellness and Natural Herbal Remedies.',
+        description: 'Премиальные аюрведические продукты и натуральные травяные средства. Vedashi Herbals — ООО ВЕДАШИ ХЕРБАЛС.',
         email: 'info@vedashiherbals.com',
-        // telephone: '+91-XXXXXXXXXX', // TODO: Add real business phone number when available
+        // telephone: '+7-XXXXXXXXXX', // TODO: Add Russian business phone number
+        priceRange: '₽₽',
         address: {
             '@type': 'PostalAddress',
-            streetAddress: 'Plot No. E-56, Shop No. 2, Sector-09, Airoli',
-            addressLocality: 'Navi Mumbai',
-            addressRegion: 'Maharashtra',
-            postalCode: '400708',
-            addressCountry: 'IN'
+            streetAddress: 'ул. Шверника, д. 6, к. 1, помещ. 8П',
+            addressLocality: 'Москва',
+            addressRegion: 'Москва',
+            postalCode: '117292',
+            addressCountry: 'RU'
         },
         geo: {
             '@type': 'GeoCoordinates',
-            latitude: '19.1550',
-            longitude: '72.9980'
+            latitude: '55.6794',
+            longitude: '37.5859'
         },
         openingHoursSpecification: [
             {
@@ -389,11 +389,10 @@ export function generateLocalBusinessJsonLd(): Record<string, unknown> {
             }
         ],
         sameAs: [
-            // TODO: Replace with actual Vedashi social media profile URLs
-            // 'https://www.instagram.com/vedashi_official',
-            // 'https://www.facebook.com/vedashi',
-            // 'https://www.linkedin.com/company/vedashi',
-            // 'https://twitter.com/vedashi',
+            // TODO: Add Vedashi Herbals social media profiles when available
+            // 'https://vk.com/vedashiherbals',
+            // 'https://t.me/vedashiherbals',
+            // 'https://ok.ru/vedashiherbals',
         ]
     };
 }
@@ -482,7 +481,7 @@ export function generateItemListJsonLd(
                 offers: item.price ? {
                     '@type': 'Offer',
                     price: item.price,
-                    priceCurrency: 'INR'
+                    priceCurrency: 'RUB'
                 } : undefined
             }
         }))
@@ -497,12 +496,12 @@ export function generateOrganizationJsonLd(): Record<string, unknown> {
         name: SITE_NAME,
         url: SITE_URL,
         logo: `${SITE_URL}/logo.png`,
+        description: 'ООО ВЕДАШИ ХЕРБАЛС — российский поставщик премиальных аюрведических продуктов и натуральных травяных средств.',
         sameAs: [
-            // TODO: Replace with actual Vedashi social media profile URLs
-            // 'https://www.instagram.com/vedashi_official',
-            // 'https://www.facebook.com/vedashi',
-            // 'https://www.linkedin.com/company/vedashi',
-            // 'https://twitter.com/vedashi',
+            // TODO: Add Vedashi Herbals social media profiles when available
+            // 'https://vk.com/vedashiherbals',
+            // 'https://t.me/vedashiherbals',
+            // 'https://ok.ru/vedashiherbals',
         ],
     };
 }

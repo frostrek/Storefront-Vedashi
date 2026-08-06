@@ -71,6 +71,28 @@ const nextConfig: NextConfig = {
         destination: 'https://vedashiherbals.com/:path*',
         permanent: true,
       },
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'vedashi.com',
+          },
+        ],
+        destination: 'https://vedashiherbals.com/:path*',
+        permanent: true,
+      },
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'www.vedashi.com',
+          },
+        ],
+        destination: 'https://vedashiherbals.com/:path*',
+        permanent: true,
+      },
       { source: '/products', destination: '/katalog', permanent: true },
       { source: '/cart', destination: '/korzina', permanent: true },
       { source: '/checkout', destination: '/oformlenie-zakaza', permanent: true },

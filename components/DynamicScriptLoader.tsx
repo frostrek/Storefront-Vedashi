@@ -6,6 +6,7 @@ import Script from 'next/script';
 import { GA_MEASUREMENT_ID, GTM_ID, grantAnalyticsConsent, revokeAnalyticsConsent } from '@/lib/analytics/gtag';
 import { pushAttributionEvent } from '@/lib/analytics/attribution';
 import PerformanceStore from '@/lib/analytics/performance';
+import { YANDEX_METRIKA_ID, getMetrikaInitScript } from '@/lib/analytics/yandex-metrika';
 
 declare global {
     interface Window {
@@ -116,6 +117,15 @@ export default function DynamicScriptLoader() {
                         `}
                     </Script>
                 </>
+            )}
+
+            {/* ── Yandex.Metrika — loads AFTER analytics consent ── */}
+            {consent?.analytics && YANDEX_METRIKA_ID && (
+                <Script
+                    id="yandex-metrika"
+                    strategy="afterInteractive"
+                    dangerouslySetInnerHTML={{ __html: getMetrikaInitScript(YANDEX_METRIKA_ID) }}
+                />
             )}
 
             {/* ── Meta Pixel — only loads AFTER marketing consent ── */}

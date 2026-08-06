@@ -1,5 +1,4 @@
 import { Metadata } from 'next';
-import { SUPPORTED_COUNTRIES } from '@/lib/currency';
 import { generateBreadcrumbJsonLd } from '@/lib/seo';
 import { getCategories } from '@/lib/api';
 import ProductsClientPage from './ProductsClient';
@@ -8,12 +7,10 @@ import { RU_DICTIONARY } from '@/content/ru';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashiherbals.com';
 
 type Props = {
-    params: Promise<{ country: string }>;
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
-export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
-    const { country } = await params;
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
     const sParams = await searchParams;
     const categorySlug = typeof sParams.category === 'string' ? sParams.category : undefined;
     
@@ -33,14 +30,6 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     const category = categorySlug ? findCategory(categories, categorySlug) : null;
     const categoryName = category ? category.name : null;
 
-    const languages: Record<string, string> = {};
-    Object.keys(SUPPORTED_COUNTRIES).forEach((c) => {
-        const locale = SUPPORTED_COUNTRIES[c as keyof typeof SUPPORTED_COUNTRIES].locale;
-        const query = categorySlug ? `?category=${categorySlug}` : '';
-        languages[locale] = `${SITE_URL}/${c}/katalog${query}`;
-    });
-    languages['x-default'] = `${SITE_URL}/in/katalog${categorySlug ? `?category=${categorySlug}` : ''}`;
-
     const title = categoryName 
         ? RU_DICTIONARY.plp.seo.buyOnline.replace('{category}', categoryName) 
         : RU_DICTIONARY.plp.seo.allProductsTitle;
@@ -49,25 +38,30 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
         ? RU_DICTIONARY.plp.seo.categoryDesc.replace('{category}', categoryName)
         : RU_DICTIONARY.plp.seo.allProductsDesc;
 
+    // Flat Russian URL — no country prefix per developer architecture
     const canonicalPath = categorySlug ? `/katalog?category=${categorySlug}` : '/katalog';
+    const canonicalUrl = `${SITE_URL}${canonicalPath}`;
 
     return {
         title,
         description,
         alternates: {
-            canonical: `${SITE_URL}/${country}${canonicalPath}`,
-            languages: languages
+            canonical: canonicalUrl,
+            languages: {
+                'ru-RU': canonicalUrl,
+                'x-default': canonicalUrl
+            }
         },
         openGraph: {
             title,
             description,
-            url: `${SITE_URL}/${country}${canonicalPath}`,
+            url: canonicalUrl,
+            locale: 'ru_RU',
         }
     };
 }
 
-export default async function ProductsPage({ params, searchParams }: Props) {
-    const { country } = await params;
+export default async function ProductsPage({ searchParams }: Props) {
     const sParams = await searchParams;
     const categorySlug = typeof sParams.category === 'string' ? sParams.category : undefined;
 
@@ -86,14 +80,14 @@ export default async function ProductsPage({ params, searchParams }: Props) {
     const category = categorySlug ? findCategory(categories, categorySlug) : null;
 
     const breadcrumbItems = [
-        { name: RU_DICTIONARY.nav.home, url: `${SITE_URL}/${country}` },
-        { name: RU_DICTIONARY.nav.products, url: `${SITE_URL}/${country}/katalog` }
+        { name: RU_DICTIONARY.nav.home, url: SITE_URL },
+        { name: RU_DICTIONARY.nav.products, url: `${SITE_URL}/katalog` }
     ];
 
     if (category) {
         breadcrumbItems.push({ 
             name: category.name, 
-            url: `${SITE_URL}/${country}/katalog?category=${category.slug}` 
+            url: `${SITE_URL}/katalog?category=${category.slug}` 
         });
     }
 
@@ -109,3 +103,4 @@ export default async function ProductsPage({ params, searchParams }: Props) {
         </>
     );
 }
+
