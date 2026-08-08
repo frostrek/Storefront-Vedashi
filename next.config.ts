@@ -13,6 +13,18 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        hostname: '*.s3.twcstorage.ru',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'vedashi-herbals-storage.s3.twcstorage.ru',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'images.unsplash.com',
         port: '',
         pathname: '/**',
@@ -138,6 +150,7 @@ const nextConfig: NextConfig = {
       { source: '/lichnyy-kabinet/konfidentsialnost', destination: '/account/privacy' },
       { source: '/lichnyy-kabinet/podderzhka', destination: '/account/support' },
       { source: '/vhod', destination: '/login' },
+      { source: '/vhod/:path*', destination: '/login/:path*' },
       { source: '/poisk', destination: '/search' },
       { source: '/o-nas', destination: '/about' },
       { source: '/kontakty', destination: '/contact' },

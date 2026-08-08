@@ -216,7 +216,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                         units_count: v.units_count ?? (opts['Count'] ? parseInt(opts['Count'], 10) : null),
                         strength: v.strength ?? (opts['Strength'] || null),
                         flavor: v.flavor ?? (opts['Flavor'] || null),
-                        pack_quantity: v.pack_quantity ?? (opts['Pack'] && String(opts['Pack']).toLowerCase() !== 'single' ? parseInt(opts['Pack'].replace(/\D/g, '') || '1', 10) : 1),
+                        pack_quantity: v.pack_quantity ?? (opts['Pack'] ? (String(opts['Pack']).toLowerCase() === 'single' ? 1 : parseInt(String(opts['Pack']).replace(/\D/g, '') || '1', 10)) : 1),
                     };
                 });
                 setVariants(vs);
