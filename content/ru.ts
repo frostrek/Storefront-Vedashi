@@ -260,7 +260,7 @@ export const RU_DICTIONARY = {
     volume: "Объем",
     count: "Количество",
     flavour: "Вкус",
-    packOf: "В упаковке",
+    packOf: "Upakovka",
     comingSoon: "Скоро в продаже",
     availabilityEnded: "Продажи завершены",
     notifyMeWhenBackInStock: "Уведомить о появлении",
