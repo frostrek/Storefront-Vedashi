@@ -1406,7 +1406,43 @@ export const RU_DICTIONARY = {
       "Lifestyle": "Образ жизни",
       "Health": "Здоровье",
       "Herbs": "Травы"
-    }
+    },
+    category: {
+      noPosts: "В этой категории пока нет статей.",
+      allPosts: "← Все статьи",
+      loadingMore: "Загрузка...",
+      showMore: "Показать ещё",
+      articleOne: "статья",
+      articleFew: "статьи",
+      articleMany: "статей",
+    },
+    seo: {
+      listingTitle: "Блог — Аюрведа, Здоровье и Натуральный Уход | Vedashi Herbals",
+      listingDescription: "Читайте статьи о здоровье, аюрведе, натуральной косметике и травяных средствах. Советы экспертов и полезные рекомендации от Vedashi Herbals.",
+      listingOgDescription: "Читайте статьи о здоровье, аюрведе, натуральной косметике и травяных средствах.",
+      postNotFoundTitle: "Статья не найдена — Vedashi Herbals",
+      postTitleSuffix: "Блог Vedashi Herbals",
+      postFallbackDescription: "Читайте статью «{title}» в блоге Vedashi Herbals.",
+      categoryTitleTemplate: "{category} — Блог | Vedashi Herbals",
+      categoryDescriptionTemplate: "Статьи по теме «{category}» в блоге Vedashi Herbals. Аюрведа, здоровье и натуральный уход.",
+      categoryOgDescriptionTemplate: "Статьи по теме «{category}» в блоге Vedashi Herbals.",
+    },
+  },
+  rss: {
+    title: "Vedashi Herbals — Премиальная Аюрведа",
+    description: "Премиальные аюрведические продукты, натуральная косметика и травяные средства. Интернет-магазин Vedashi Herbals — ООО ВЕДАШИ ХЕРБАЛС.",
+  },
+  yml: {
+    shopName: "Vedashi Herbals",
+    companyName: "ООО ВЕДАШИ ХЕРБАЛС",
+  },
+  ogImage: {
+    alt: "Vedashi Herbals — Премиальная Аюрведа и Натуральный Уход",
+    brandName: "VEDASHI HERBALS",
+    subtitle: "Премиальная Аюрведа и Натуральный Уход",
+    footerNatural: "Натуральное",
+    footerTested: "Проверенное",
+    footerTimeless: "Вечное",
   },
   contact: {
     meta: {

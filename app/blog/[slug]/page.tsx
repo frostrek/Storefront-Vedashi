@@ -1,72 +1,76 @@
-'use client';
-
-import { useState, useEffect, use } from 'react';
+import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getBlogPostBySlug, getRelatedBlogPosts, getBlogComments, recordBlogView, BlogPost, BlogComment } from '@/lib/api';
+import { getBlogPostBySlug, getRelatedBlogPosts, getBlogComments } from '@/lib/api';
 import SocialShareBar from '@/components/blog/SocialShareBar';
 import BlogCommentSection from '@/components/blog/BlogCommentSection';
 import BlogPostCard from '@/components/blog/BlogPostCard';
+import BlogViewTracker from '@/components/blog/BlogViewTracker';
 import { generateBlogPostingJsonLd, generateBreadcrumbJsonLd } from '@/lib/seo';
 import { RU_DICTIONARY } from '@/content/ru';
 
-export default function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
-    const resolvedParams = use(params);
-    const [post, setPost] = useState<BlogPost | null>(null);
-    const [related, setRelated] = useState<BlogPost[]>([]);
-    const [comments, setComments] = useState<BlogComment[]>([]);
-    const [loading, setLoading] = useState(true);
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashiherbals.com';
 
-    useEffect(() => {
-        (async () => {
-            setLoading(true);
-            const p = await getBlogPostBySlug(resolvedParams.slug);
-            setPost(p);
-            if (p) {
-                recordBlogView(p.post_id);
-                const [rel, comm] = await Promise.all([
-                    getRelatedBlogPosts(p.post_id, 3),
-                    getBlogComments(p.post_id),
-                ]);
-                setRelated(rel);
-                setComments(comm);
-            }
-            setLoading(false);
-        })();
-    }, [resolvedParams.slug]);
+export const revalidate = 3600;
 
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-white pt-8">
-                <div className="max-w-3xl mx-auto px-4 space-y-6">
-                    <div className="h-6 w-32 bg-gray-100 animate-shimmer rounded" />
-                    <div className="h-10 w-3/4 bg-gray-100 animate-shimmer rounded" />
-                    <div className="h-64 bg-gray-100 animate-shimmer rounded-2xl" />
-                    <div className="space-y-3">
-                        {[1, 2, 3, 4, 5].map(i => (
-                            <div key={i} className="h-4 bg-gray-100 animate-shimmer rounded" />
-                        ))}
-                    </div>
-                </div>
-            </div>
-        );
-    }
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+    const { slug } = await params;
+    const post = await getBlogPostBySlug(slug);
 
     if (!post) {
-        return (
-            <div className="min-h-screen bg-white flex items-center justify-center">
-                <div className="text-center">
-                    <h1 className="text-3xl font-bold text-charcoal mb-3">{RU_DICTIONARY.blog.detail.notFoundTitle}</h1>
-                    <p className="text-warm-gray mb-6">{RU_DICTIONARY.blog.detail.notFoundDesc}</p>
-                    <Link href="/blog" className="px-6 py-3 rounded-full bg-burgundy text-white font-semibold hover:bg-burgundy-dark transition-colors">
-                        {RU_DICTIONARY.blog.detail.backToBlog}
-                    </Link>
-                </div>
-            </div>
-        );
+        return {
+            title: RU_DICTIONARY.blog.seo.postNotFoundTitle,
+            robots: { index: false, follow: true },
+        };
     }
 
+    const title = post.meta_title || `${post.title} | ${RU_DICTIONARY.blog.seo.postTitleSuffix}`;
+    const description = post.meta_description || post.excerpt || RU_DICTIONARY.blog.seo.postFallbackDescription.replace('{title}', post.title);
+    const postUrl = `${SITE_URL}/blog/${post.slug}`;
+    const ogImage = post.featured_image || post.cover_image || undefined;
+
+    return {
+        title,
+        description,
+        alternates: {
+            canonical: postUrl,
+        },
+        openGraph: {
+            title,
+            description,
+            url: postUrl,
+            siteName: 'Vedashi Herbals',
+            locale: 'ru_RU',
+            type: 'article',
+            publishedTime: post.published_at || undefined,
+            authors: post.author_name ? [post.author_name] : undefined,
+            images: ogImage ? [ogImage] : [],
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title,
+            description,
+            images: ogImage ? [ogImage] : [],
+        },
+    };
+}
+
+export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = await params;
+
+    const post = await getBlogPostBySlug(slug);
+
+    if (!post) {
+        notFound();
+    }
+
+    const [related, comments] = await Promise.all([
+        getRelatedBlogPosts(post.post_id, 3),
+        getBlogComments(post.post_id),
+    ]);
+
     const publishDate = post.published_at
-        ? new Date(post.published_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+        ? new Date(post.published_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
         : '';
 
     const categoryName = post.category_name
@@ -84,14 +88,18 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{
                     __html: JSON.stringify(generateBreadcrumbJsonLd([
-                        { name: RU_DICTIONARY.about.breadcrumbs.home || 'Home', url: '/' },
-                        { name: RU_DICTIONARY.blog.detail.blog, url: '/blog' },
-                        { name: categoryName || 'Category', url: `/blog/category/${post.category_slug}` },
-                        { name: post.title, url: `/blog/${post.slug}` },
+                        { name: RU_DICTIONARY.about.breadcrumbs.home || RU_DICTIONARY.nav.home, url: SITE_URL },
+                        { name: RU_DICTIONARY.blog.detail.blog, url: `${SITE_URL}/blog` },
+                        ...(categoryName ? [{ name: categoryName, url: `${SITE_URL}/blog/category/${post.category_slug}` }] : []),
+                        { name: post.title, url: `${SITE_URL}/blog/${post.slug}` },
                     ]))
                 }}
             />
-            {/* ── Header ──────────────────────────────────────────── */}
+
+            {/* Fire-and-forget view tracking (client-side) */}
+            <BlogViewTracker postId={post.post_id} />
+
+            {/* ── Article ──────────────────────────────────────────── */}
             <article className="max-w-3xl mx-auto px-4 pt-8 pb-16">
                 {/* Breadcrumb */}
                 <nav className="flex items-center gap-2 text-sm text-warm-gray mb-6">
@@ -162,16 +170,16 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
                     </div>
                 </div>
 
-                {/* Hero Image – use featured_image first (same source as the card thumbnail) */}
+                {/* Hero Image */}
                 {(post.featured_image || post.cover_image) && (
                     <div className="rounded-2xl overflow-hidden mb-8 border border-light-border">
                         <img 
                             src={post.featured_image || post.cover_image!} 
                             alt={post.title} 
                             className="w-full h-auto" 
-                            onError={(e) => { e.currentTarget.src = '/hero-ayurveda.png'; }}
                         />
                     </div>
+
                 )}
 
                 {/* Tags */}

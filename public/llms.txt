@@ -1,18 +1,22 @@
-# Vedashi
+# Vedashi Herbals (ООО ВЕДАШИ ХЕРБАЛС)
 
-> Vedashi is a premium wellness and natural products brand offering clinically tested formulations for holistic health.
+> Vedashi Herbals — российский интернет-магазин премиальных аюрведических продуктов, натуральной косметики и травяных средств. Все формулы клинически проверены и сертифицированы.
 
-## Key Pages
-- [Homepage](https://vedashiherbals.com): Discover our curated collection of premium wellness products, natural skincare, and herbal remedies.
-- [Products](https://vedashiherbals.com/products): Browse our full catalog of Ayurvedic herbs, dry fruits, spices, and natural beauty products.
-- [Collections](https://vedashiherbals.com/collections): Explore carefully curated product collections and bundles for specific wellness goals.
-- [Blog](https://vedashiherbals.com/blog): Read insightful articles on Ayurveda, holistic health tips, and wellness routines.
-- [About Us](https://vedashiherbals.com/about): Learn about our mission, our sourcing practices, and the science behind our natural formulations.
-- [Help Center](https://vedashiherbals.com/help-center): Access FAQs, knowledge base articles, and customer support resources.
-- [Contact](https://vedashiherbals.com/contact): Get in touch with our support team for inquiries and assistance.
-- [Return Policy](https://vedashiherbals.com/return-policy): Information on our 100% satisfaction guarantee, returns, and refunds.
-- [Shipping](https://vedashiherbals.com/shipping): Details on domestic and international shipping rates and timelines.
-- [Vendor Registration](https://vedashiherbals.com/vendor-registration): Portal for ethical suppliers and natural product vendors to partner with Vedashi.
+## Основные страницы
+- [Главная](https://vedashiherbals.com): Откройте для себя коллекцию премиальных аюрведических продуктов, натуральной косметики и травяных сборов.
+- [Каталог](https://vedashiherbals.com/katalog): Полный каталог аюрведических трав, сухофруктов, специй и натуральных средств для ухода.
+- [Блог](https://vedashiherbals.com/blog): Статьи об аюрведе, здоровом образе жизни и рекомендации по натуральному уходу.
+- [О нас](https://vedashiherbals.com/o-nas): О нашей миссии, процессе производства и научном подходе к натуральным формулам.
+- [Помощь](https://vedashiherbals.com/pomoshch): Часто задаваемые вопросы, база знаний и поддержка клиентов.
+- [Контакты](https://vedashiherbals.com/kontakty): Свяжитесь с нашей службой поддержки для консультации и помощи.
+- [Политика возврата](https://vedashiherbals.com/return-policy): Информация о гарантии качества, возврате и обмене товаров.
+- [Доставка](https://vedashiherbals.com/shipping): Условия и сроки доставки по России.
+- [Регистрация поставщиков](https://vedashiherbals.com/registratsiya-postavshchika): Портал для этичных поставщиков натуральных продуктов, желающих сотрудничать с Vedashi.
 
-## About
-Vedashi is dedicated to bringing the ancient wisdom of Ayurveda into modern wellness routines. We specialize in sourcing the highest quality natural ingredients to create premium skincare, dietary supplements, and herbal remedies. Our offerings are rigorously tested to ensure purity, potency, and efficacy, empowering our customers to achieve holistic health naturally.
+## О компании
+ООО ВЕДАШИ ХЕРБАЛС — российская компания, специализирующаяся на поставке премиальных аюрведических продуктов и натуральных травяных средств. Мы привносим древнюю мудрость Аюрведы в современную жизнь, тщательно отбирая ингредиенты высочайшего качества для создания натуральной косметики, биологически активных добавок и фитопрепаратов. Каждый продукт проходит строгий контроль качества для обеспечения чистоты, эффективности и безопасности. Наш офис расположен в Москве, мы осуществляем доставку по всей России.
+
+## Контактная информация
+- Юридический адрес: ул. Шверника, д. 6, к. 1, помещ. 8П, Москва, 117292, Россия
+- Email: info@vedashiherbals.com
+- Сайт: https://vedashiherbals.com
