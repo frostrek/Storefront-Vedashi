@@ -420,7 +420,7 @@ export async function getBestSellers(params?: {
     }
 }
 
-/* ─── New Arrivals (public endpoint) ─── */
+/* ─── New Arrivals (public endpoints) ─── */
 
 export async function getNewArrivals(params?: {
     limit?: number;
