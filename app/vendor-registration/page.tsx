@@ -29,7 +29,7 @@ const CERTIFICATIONS_LIST = ['FSSAI', 'GMP', 'ISO', 'Органический', 
 const EXPORT_EXPERIENCE_OPTIONS = ['Да', 'Нет'];
 
 interface VendorForm {
-  // Basic Information
+  // Basic Informations
   fullName: string;
   companyName: string;
   email: string;
