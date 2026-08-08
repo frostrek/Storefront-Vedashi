@@ -43,7 +43,7 @@ interface VendorForm {
   businessType: string;
   yearsInOperation: string;
 
-  // Product Information
+  // Product Informations
   productCategory: string;
   numberOfSKUs: string;
   productDescription: string;
