@@ -28,7 +28,7 @@ export default function NeedHelpSection() {
           setCategories(data.data || []);
         }
       } catch (err) {
-        console.error('Failed to fetch Need Help categories:', err);
+        console.warn('Failed to fetch Need Help categories (API might be unreachable).');
       } finally {
         setLoading(false);
       }

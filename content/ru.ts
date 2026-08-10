@@ -35,10 +35,10 @@ export const RU_DICTIONARY = {
   },
   footer: {
     becomePartner: "Стать партнером",
-    becomePartnerSub: "Начните продавать с Vedashi и охватите тысячи покупателей.",
+    becomePartnerSub: "Начните продавать с Vedashi Herbals и охватите тысячи покупателей.",
     registerNow: "Регистрация",
     bulkOrders: "Оптовые заказы",
-    bulkOrdersSub: "Запасайтесь продукцией Vedashi по специальным ценам.",
+    bulkOrdersSub: "Запасайтесь продукцией Vedashi Herbals по специальным ценам.",
     inquireNow: "Узнать",
     enterEmail: "Введите эл. почту",
     subscribe: "Подписаться",
@@ -130,7 +130,7 @@ export const RU_DICTIONARY = {
     shopNow: "В каталог",
     viewAll: "Смотреть все",
     exploreAllProducts: "Смотреть все товары",
-    srOnlyTitle: "Vedashi — Премиальные товары для здоровья и красоты",
+    srOnlyTitle: "Vedashi Herbals — Премиальные товары для здоровья и красоты",
     exploreAll: "Смотреть все",
   },
   search: {
@@ -980,7 +980,7 @@ export const RU_DICTIONARY = {
       category: "Категория",
       fallbackGeneral: "Общая",
       supportPhilosophy: "Философия поддержки",
-      philosophyText: "В Vedashi мы относимся к каждому запросу с такой же внимательностью, как и к созданию наших продуктов. Спасибо за ваше терпение.",
+      philosophyText: "В Vedashi Herbals мы относимся к каждому запросу с такой же внимательностью, как и к созданию наших продуктов. Спасибо за ваше терпение.",
       viewHelpCenter: "Открыть Справочный центр"
     },
     list: {
@@ -1575,7 +1575,7 @@ export const RU_DICTIONARY = {
       sidebar: {
         featured: "Рекомендуемое",
         promiseTitle: "Наше органическое обещание",
-        promiseDesc: "Прозрачность - наш корень. Каждый продукт Vedashi проверен на чистоту и влияние на окружающую среду.",
+        promiseDesc: "Прозрачность - наш корень. Каждый продукт Vedashi Herbals проверен на чистоту и влияние на окружающую среду.",
         promiseItems: [
           "Сертифицированные органические экстракты",
           "Восстановительные источники",
@@ -1789,7 +1789,7 @@ export const RU_DICTIONARY = {
       },
       footer: {
         ethicsTitle: "Этика ведической поддержки",
-        ethicsQuote: "\"Каждый запрос - это семя доверия. В Vedashi мы питаем это семя прозрачностью, осознанностью и приверженностью вашему целостному благополучию.\""
+        ethicsQuote: "\"Каждый запрос - это семя доверия. В Vedashi Herbals мы питаем это семя прозрачностью, осознанностью и приверженностью вашему целостному благополучию.\""
       }
     }
   },

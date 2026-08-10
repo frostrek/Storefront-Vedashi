@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getBlogPostBySlug, getRelatedBlogPosts, getBlogComments } from '@/lib/api';
@@ -140,9 +141,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
                 {/* Author & Meta */}
                 <div className="flex items-center gap-4 mb-8 pb-6 border-b border-light-border">
-                    <div className="w-11 h-11 rounded-full bg-burgundy/10 flex items-center justify-center text-burgundy font-bold text-lg flex-shrink-0">
+                    <div className="w-11 h-11 rounded-full bg-burgundy/10 flex items-center justify-center text-burgundy font-bold text-lg flex-shrink-0 relative overflow-hidden">
                         {post.author_avatar ? (
-                            <img src={post.author_avatar} alt={post.author_name} className="w-full h-full rounded-full object-cover" />
+                            <Image src={post.author_avatar} alt={post.author_name || ''} fill sizes="44px" className="object-cover" />
                         ) : (
                             post.author_name?.charAt(0) || '?'
                         )}
@@ -172,14 +173,15 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
                 {/* Hero Image */}
                 {(post.featured_image || post.cover_image) && (
-                    <div className="rounded-2xl overflow-hidden mb-8 border border-light-border">
-                        <img 
-                            src={post.featured_image || post.cover_image!} 
-                            alt={post.title} 
-                            className="w-full h-auto" 
+                    <div className="rounded-2xl overflow-hidden mb-8 border border-light-border relative">
+                        <Image
+                            src={post.featured_image || post.cover_image!}
+                            alt={post.title}
+                            width={1200}
+                            height={630}
+                            className="w-full h-auto object-cover"
                         />
                     </div>
-
                 )}
 
                 {/* Tags */}
@@ -219,9 +221,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                 {/* Author Bio */}
                 {post.author_bio && (
                     <div className="mt-8 rounded-2xl border border-light-border bg-white p-6 flex gap-4 items-start">
-                        <div className="w-14 h-14 rounded-full bg-burgundy/10 flex items-center justify-center text-burgundy font-bold text-xl flex-shrink-0">
+                        <div className="w-14 h-14 rounded-full bg-burgundy/10 flex items-center justify-center text-burgundy font-bold text-xl flex-shrink-0 relative overflow-hidden">
                             {post.author_avatar ? (
-                                <img src={post.author_avatar} alt={post.author_name} className="w-full h-full rounded-full object-cover" />
+                                <Image src={post.author_avatar} alt={post.author_name || ''} fill sizes="56px" className="object-cover" />
                             ) : (
                                 post.author_name?.charAt(0) || '?'
                             )}

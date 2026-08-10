@@ -388,12 +388,6 @@ export function generateLocalBusinessJsonLd(): Record<string, unknown> {
                 closes: '16:00'
             }
         ],
-        sameAs: [
-            // TODO: Add Vedashi Herbals social media profiles when available
-            // 'https://vk.com/vedashiherbals',
-            // 'https://t.me/vedashiherbals',
-            // 'https://ok.ru/vedashiherbals',
-        ]
     };
 }
 
@@ -488,6 +482,21 @@ export function generateItemListJsonLd(
     };
 }
 
+/** CollectionPage schema (JSON-LD) for category pages */
+export function generateCollectionPageJsonLd(
+    name: string,
+    url: string,
+    items: Array<{ name: string; url: string; image?: string; price?: number }>
+): Record<string, unknown> {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name,
+        url,
+        mainEntity: generateItemListJsonLd(items)
+    };
+}
+
 /** Organization schema (JSON-LD) — used in layout */
 export function generateOrganizationJsonLd(): Record<string, unknown> {
     return {
@@ -497,12 +506,6 @@ export function generateOrganizationJsonLd(): Record<string, unknown> {
         url: SITE_URL,
         logo: `${SITE_URL}/logo.png`,
         description: 'ООО ВЕДАШИ ХЕРБАЛС — российский поставщик премиальных аюрведических продуктов и натуральных травяных средств.',
-        sameAs: [
-            // TODO: Add Vedashi Herbals social media profiles when available
-            // 'https://vk.com/vedashiherbals',
-            // 'https://t.me/vedashiherbals',
-            // 'https://ok.ru/vedashiherbals',
-        ],
     };
 }
 
@@ -513,6 +516,7 @@ export function generateWebSiteJsonLd(): Record<string, unknown> {
         '@type': 'WebSite',
         name: SITE_NAME,
         url: SITE_URL,
+        inLanguage: 'ru-RU',
         potentialAction: {
             '@type': 'SearchAction',
             target: {
@@ -521,5 +525,39 @@ export function generateWebSiteJsonLd(): Record<string, unknown> {
             },
             'query-input': 'required name=search_term_string',
         },
+    };
+}
+
+/** WebPage schema with Speakable markup (JSON-LD) — for homepage voice search / YandexGPT */
+export function generateHomePageJsonLd(): Record<string, unknown> {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: 'Vedashi Herbals — Премиальная Аюрведа',
+        url: SITE_URL,
+        inLanguage: 'ru-RU',
+        isPartOf: {
+            '@type': 'WebSite',
+            name: SITE_NAME,
+            url: SITE_URL,
+        },
+        about: {
+            '@type': 'Organization',
+            name: 'ООО ВЕДАШИ ХЕРБАЛС',
+            legalName: 'ООО ВЕДАШИ ХЕРБАЛС',
+            taxID: '9727117720',
+            url: SITE_URL,
+        },
+        speakable: {
+            '@type': 'SpeakableSpecification',
+            cssSelector: ['h1', '.hero-title', '.hero-subtitle', 'meta[name="description"]'],
+        },
+        description: 'Vedashi Herbals — российский интернет-магазин премиальных аюрведических продуктов, натуральной косметики и травяных средств. ООО ВЕДАШИ ХЕРБАЛС, Москва.',
+        significantLink: [
+            `${SITE_URL}/katalog`,
+            `${SITE_URL}/blog`,
+            `${SITE_URL}/o-nas`,
+            `${SITE_URL}/kontakty`,
+        ],
     };
 }

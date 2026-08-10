@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { SUPPORTED_COUNTRIES } from '@/lib/currency';
 import HomeClientPage from './HomeClient';
+import { generateHomePageJsonLd } from '@/lib/seo';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashiherbals.com';
 
@@ -46,7 +47,12 @@ export default async function HomePage() {
         }
 
         return (
-            <HomeClientPage 
+            <>
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(generateHomePageJsonLd()) }}
+                />
+                <HomeClientPage 
                 initialBestSellers={bestRes.data || []}
                 initialNewArrivals={newRes.data || []}
                 initialCategories={catRes || []}
@@ -54,6 +60,7 @@ export default async function HomePage() {
                 initialHeroSettings={heroSettings}
                 initialReels={reelsRes || []}
             />
+            </>
         );
     } catch (e) {
         console.error("Failed to fetch initial SSR data for homepage", e);

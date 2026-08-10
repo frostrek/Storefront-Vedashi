@@ -11,7 +11,7 @@ const LeafIcon = ({ size = 40, className = "" }: { size?: number; className?: st
   >
     <Image
       src="/botanical-leaf.png"
-      alt="Vedic Leaf Doodle"
+      alt="Ведический лист - Vedashi Herbals"
       width={size}
       height={size}
       className="object-contain"
