@@ -11,7 +11,7 @@ interface AuthContextType {
     isLoading: boolean;
     login: (email: string, password: string, rememberMe?: boolean, turnstileToken?: string) => Promise<{ success: boolean; error?: string; code?: string; role?: string; access_token?: string; requireCaptcha?: boolean; blocked?: boolean; retryAfter?: number }>;
     register: (name: string, email: string, password: string, turnstileToken?: string) => Promise<RegisterResponse>;
-    /** Log-in the user directly from verifications data (after OTP verified and account created) */
+    /** Log-in the user directly from verification data (after OTP verified and account created) */
     loginFromVerification: (customerData: Record<string, unknown>) => void;
     logout: () => void;
     /** Update partial user info (like avatar_url) dynamically in cache and contexts */
