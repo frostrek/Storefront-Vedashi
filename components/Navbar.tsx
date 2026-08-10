@@ -358,7 +358,7 @@ export default function Navbar() {
                 {branding.logo_url ? (
                   <img src={branding.logo_url} alt={branding.logo_alt} className="h-8 sm:h-10 md:h-12 lg:h-14 w-auto transition-all" />
                 ) : (
-                  <img src="/vedashi-logo.png" alt="Vedashi" className="h-8 sm:h-10 md:h-12 lg:h-14 w-auto transition-all" />
+                  <img src="/vedashi-logo.png" alt="Логотип Vedashi Herbals" className="h-8 sm:h-10 md:h-12 lg:h-14 w-auto transition-all" />
                 )}
               </Link>
             </div>
@@ -499,7 +499,7 @@ export default function Navbar() {
             <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} className="fixed right-0 top-0 h-full w-[320px] bg-white z-[2001] flex flex-col">
               <div className="p-4 border-b flex justify-between items-center">
                 <div className="flex items-center gap-4">
-                  <img src="/vedashi-logo.png" alt="Vedashi" className="h-10 w-auto" />
+                  <img src="/vedashi-logo.png" alt="Логотип Vedashi Herbals" className="h-10 w-auto" />
                   <NotificationCenter colors={colors} />
                 </div>
                 <button

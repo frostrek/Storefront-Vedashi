@@ -115,7 +115,7 @@ export default function MaintenancePage({ message }: { message?: string }) {
                         letterSpacing: '0.15em',
                         fontWeight: 500,
                     }}>
-                        Vedashi Premium Wellness
+                        Vedashi Herbals Premium Wellness
                     </p>
                 </div>
             </div>

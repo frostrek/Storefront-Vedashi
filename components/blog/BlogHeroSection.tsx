@@ -34,7 +34,7 @@ export default function BlogHeroSection({ featuredPost }: BlogHeroSectionProps) 
                         <div className="absolute right-0 top-[5%] w-5/12 h-2/5 rounded-[2rem] overflow-hidden shadow-xl z-20">
                             <img
                                 src="/trust-lab.png"
-                                alt="Herbal Ingredients"
+                                alt="Растительные ингредиенты - Vedashi Herbals"
                                 className="w-full h-full object-cover"
                             />
                         </div>
@@ -43,7 +43,7 @@ export default function BlogHeroSection({ featuredPost }: BlogHeroSectionProps) 
                         <div className="absolute right-[5%] bottom-[5%] w-[45%] h-[45%] rounded-[2rem] overflow-hidden shadow-xl z-30">
                             <img
                                 src="/trust-healing.png"
-                                alt="Healing Tea"
+                                alt="Целебный чай - Vedashi Herbals"
                                 className="w-full h-full object-cover"
                             />
                         </div>

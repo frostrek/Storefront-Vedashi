@@ -83,28 +83,7 @@ const nextConfig: NextConfig = {
         destination: 'https://vedashiherbals.com/:path*',
         permanent: true,
       },
-      {
-        source: '/:path*',
-        has: [
-          {
-            type: 'host',
-            value: 'vedashi.com',
-          },
-        ],
-        destination: 'https://vedashiherbals.com/:path*',
-        permanent: true,
-      },
-      {
-        source: '/:path*',
-        has: [
-          {
-            type: 'host',
-            value: 'www.vedashi.com',
-          },
-        ],
-        destination: 'https://vedashiherbals.com/:path*',
-        permanent: true,
-      },
+
       { source: '/products', destination: '/katalog', permanent: true },
       { source: '/cart', destination: '/korzina', permanent: true },
       { source: '/checkout', destination: '/oformlenie-zakaza', permanent: true },
@@ -171,6 +150,14 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'X-Robots-Tag', value: 'all' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        ],
+      },
       {
         source: '/small%20banners/:path*',
         headers: [

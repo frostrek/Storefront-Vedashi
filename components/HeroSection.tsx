@@ -17,7 +17,7 @@ export default function HeroSection() {
             <div className="absolute inset-0">
                 <img
                     src="/hero-ayurveda.png"
-                    alt="Ayurvedic herbs and botanicals"
+                    alt="Аюрведические травы и растения - Vedashi Herbals"
                     className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-[#FAF8F0]/95 via-[#FAF8F0]/70 to-transparent" />
@@ -80,7 +80,7 @@ export default function HeroSection() {
                             <div className="relative w-[340px] h-[420px] rounded-2xl overflow-hidden shadow-2xl animate-float">
                                 <img
                                     src="/hero-ayurveda.png"
-                                    alt="Ayurvedic preparation"
+                                    alt="Аюрведические препараты и масла - Vedashi Herbals"
                                     className="w-full h-full object-cover"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />

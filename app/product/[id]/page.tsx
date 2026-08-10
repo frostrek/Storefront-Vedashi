@@ -1,8 +1,8 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getProduct, getProductDetails } from '@/lib/api';
+import { getProduct, getProductDetails, searchFaqs } from '@/lib/api';
 import { SUPPORTED_COUNTRIES } from '@/lib/currency';
-import { generateProductJsonLd, generateBreadcrumbJsonLd } from '@/lib/seo';
+import { generateProductJsonLd, generateBreadcrumbJsonLd, generateFAQPageJsonLd } from '@/lib/seo';
 import ProductClientPage from './ProductClient';
 import { RU_DICTIONARY } from '@/content/ru';
 
@@ -90,6 +90,10 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         { name: product.product_name, url: `${SITE_URL}/tovar/${product.slug || product.product_id}` },
     ]);
 
+    // Fetch FAQs related to this product for rich snippets
+    const faqsData = await searchFaqs(product.product_name);
+    const faqSchema = faqsData && faqsData.length > 0 ? generateFAQPageJsonLd(faqsData) : null;
+
     return (
         <>
             <script
@@ -100,6 +104,12 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }}
             />
+            {faqSchema && (
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+                />
+            )}
             <ProductClientPage id={id} country="ru" initialProduct={product} />
         </>
     );
