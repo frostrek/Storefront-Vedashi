@@ -836,9 +836,10 @@ export async function updateCheckoutDraft(cartId: string, draftData: any) {
     }
 }
 
-export async function addCartItem(cartId: string, itemId: string, quantity: number, isVariant = true) {
+export async function addCartItem(cartId: string, itemId: string, quantity: number, isVariant = true, packSize?: number) {
     try {
         const body: Record<string, unknown> = { cart_id: cartId, quantity };
+        if (packSize) body.pack_size = packSize;
         if (isVariant) {
             body.variant_id = itemId;
         } else {
@@ -870,12 +871,14 @@ export async function addCartItem(cartId: string, itemId: string, quantity: numb
     }
 }
 
-export async function updateCartItem(itemId: string, quantity: number) {
+export async function updateCartItem(itemId: string, quantity: number, packSize?: number) {
     try {
+        const body: Record<string, unknown> = { quantity };
+        if (packSize) body.pack_size = packSize;
         const res = await authFetch(`${API_URL}/api/cart/items/${itemId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ quantity }),
+            body: JSON.stringify(body),
         });
         return res.json();
     } catch (error) {

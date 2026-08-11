@@ -200,11 +200,15 @@ export default function CartPage() {
 
     // Calculate totals using ONLY in-stock items
     const totalMRP = inStockItems.reduce((sum, item) => {
-        const itemMrp = resolveMrp(item.original_price, item.price, item.country_prices);
+        const packSize = item.pack_size || 1;
+        const itemMrp = resolveMrp(item.original_price, item.price, item.country_prices) * packSize;
         return sum + itemMrp * item.quantity;
     }, 0);
     const inStockTotal = inStockItems.reduce((sum, item) => {
-        const itemSp = resolvePrice(item.price, item.country_prices);
+        const packSize = item.pack_size || 1;
+        const packDiscount = item.pack_discount_percent || 0;
+        const baseSp = resolvePrice(item.price, item.country_prices);
+        const itemSp = Math.round(baseSp * (1 - packDiscount / 100)) * packSize;
         return sum + itemSp * item.quantity;
     }, 0);
     const saleDiscount = totalMRP - inStockTotal;
@@ -272,11 +276,21 @@ export default function CartPage() {
                                 </div>
                             ) : (
                                 items.map(item => {
-                                    const price = item.price ?? 0;
-                                    const unitPrice = item.original_price ?? price;
+                                    const rawPrice = item.price ?? 0;
+                                    const rawUnitPrice = item.original_price ?? rawPrice;
+                                    
+                                    const packSize = item.pack_size || 1;
+                                    const packDiscount = item.pack_discount_percent || 0;
 
-                                    const resolvedSp = resolvePrice(price, item.country_prices);
-                                    const resolvedMrp = resolveMrp(unitPrice, price, item.country_prices);
+                                    const resolvedBaseSp = resolvePrice(rawPrice, item.country_prices);
+                                    const resolvedBaseMrp = resolveMrp(rawUnitPrice, rawPrice, item.country_prices);
+
+                                    const discountedBaseSp = resolvedBaseSp * (1 - packDiscount / 100);
+                                    const resolvedSp = Math.round(discountedBaseSp) * packSize;
+                                    const resolvedMrp = resolvedBaseMrp * packSize;
+
+                                    const price = resolvedSp;
+                                    const unitPrice = resolvedMrp;
 
                                     const isOutOfStock = (item.stock_quantity ?? 0) === 0;
                                     const hasInsufficientStock = !isOutOfStock && item.quantity > (item.stock_quantity ?? 0);
@@ -302,6 +316,9 @@ export default function CartPage() {
                                                         {item.size_label && (
                                                             <p className="text-xs mt-1 text-[#6B6B60] uppercase tracking-wider font-semibold">{item.size_label}</p>
                                                         )}
+                                                        {item.pack_size && item.pack_size > 1 && (
+                                                            <p className="text-xs mt-1 text-[#91C934] uppercase tracking-wider font-bold">{RU_DICTIONARY.productPage.bundlePackOf} {item.pack_size}</p>
+                                                        )}
                                                         {isOutOfStock && (
                                                             <p className="text-[10px] mt-2 text-[#C0392B] font-bold uppercase tracking-wider py-1 px-2 border border-[#C0392B] bg-red-50 inline-block rounded max-w-fit">{RU_DICTIONARY.cart.outOfStock}</p>
                                                         )}
@@ -325,7 +342,12 @@ export default function CartPage() {
                                                         )}
                                                         {item.quantity > 1 && (
                                                             <div className="text-[10px] text-gray-400 mt-1 uppercase tracking-tight">
-                                                                {format(resolvedSp)} each
+                                                                {format(resolvedSp)} {item.pack_size && item.pack_size > 1 ? 'per pack' : 'each'}
+                                                            </div>
+                                                        )}
+                                                        {item.pack_size && item.pack_size > 1 && (
+                                                            <div className="text-[11px] text-[#6B8F5E] mt-0.5 font-semibold tracking-tight">
+                                                                ({format(resolvedSp / item.pack_size)} {RU_DICTIONARY.productPage.perUnit})
                                                             </div>
                                                         )}
                                                     </div>
@@ -379,6 +401,9 @@ export default function CartPage() {
                                                     <Link href={`${ROUTES.tovar((item as any).slug || item.product_id || item.product?.product_id || '')}${item.variant_id ? `?variant=${item.variant_id}` : ''}`}>
                                                         <h3 className="text-sm font-bold text-[#1A1A1A] hover:text-[#3d5c3a] transition-colors">{item.product_name || RU_DICTIONARY.cart.product}</h3>
                                                     </Link>
+                                                    {item.pack_size && item.pack_size > 1 && (
+                                                        <p className="text-[11px] mt-0.5 text-[#91C934] uppercase tracking-wider font-bold">Bundle: Pack of {item.pack_size}</p>
+                                                    )}
                                                     <p className="text-[#4A4A4A] mt-1">{format(resolvedSp)}</p>
                                                 </div>
                                                 <div className="flex flex-col items-end gap-2">
@@ -480,9 +505,19 @@ export default function CartPage() {
                                     {inStockItems.length === 0 ? (
                                         <p className="text-[rgba(255,255,255,0.5)] text-xs text-center py-4">{RU_DICTIONARY.cart.noInStockItems}</p>
                                     ) : inStockItems.map(item => {
-                                        const price = item.price ?? 0;
-                                        const resolvedSp = resolvePrice(price, item.country_prices);
-                                        const resolvedMrp = resolveMrp(item.original_price, item.price, item.country_prices);
+                                        const rawPrice = item.price ?? 0;
+                                        const rawUnitPrice = item.original_price ?? rawPrice;
+                                        
+                                        const packSize = item.pack_size || 1;
+                                        const packDiscount = item.pack_discount_percent || 0;
+
+                                        const resolvedBaseSp = resolvePrice(rawPrice, item.country_prices);
+                                        const resolvedBaseMrp = resolveMrp(rawUnitPrice, rawPrice, item.country_prices);
+
+                                        const discountedBaseSp = resolvedBaseSp * (1 - packDiscount / 100);
+                                        const resolvedSp = Math.round(discountedBaseSp) * packSize;
+                                        const resolvedMrp = resolvedBaseMrp * packSize;
+
                                         const lineTotal = resolvedSp * item.quantity;
                                         const lineMrpTotal = resolvedMrp * item.quantity;
 
@@ -497,6 +532,10 @@ export default function CartPage() {
                                                 </div>
                                                 <div className="ritual-summary-item-name">
                                                     {item.product_name || RU_DICTIONARY.cart.product}
+                                                    {item.size_label && <p className="text-[#a4a9a4] text-[10px] mt-0.5">{item.size_label}</p>}
+                                                    {item.pack_size && item.pack_size > 1 && (
+                                                        <p className="text-[10px] mt-0.5 text-[#91C934] uppercase tracking-wider font-bold">{RU_DICTIONARY.productPage.bundlePackOf} {item.pack_size}</p>
+                                                    )}
                                                     <div className="ritual-summary-item-qty mt-0.5">Qty: {item.quantity}</div>
                                                 </div>
                                                 <div className="flex flex-col items-end">

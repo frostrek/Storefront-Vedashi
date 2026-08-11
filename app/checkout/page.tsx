@@ -289,15 +289,26 @@ function CheckoutContent() {
     const checkoutItems = isBuyNow && buyNowItem ? [buyNowItem] : items;
     const itemsCount = isBuyNow && buyNowItem ? buyNowItem.quantity : totalItems;
 
-    const baseSubtotal = isBuyNow && buyNowItem
-        ? resolvePrice(buyNowItem.unit_price, (buyNowItem as any).country_prices) * buyNowItem.quantity
-        : items.reduce((sum, item) => sum + resolvePrice(item.price ?? 0, item.country_prices) * item.quantity, 0);
+    const baseSubtotal = checkoutItems.reduce((sum, item) => {
+        const rawPrice = isBuyNow ? (item as BuyNowItem).unit_price : (item as any).price ?? 0;
+        const packSize = (item as any).pack_size || 1;
+        const packDiscount = (item as any).pack_discount_percent || 0;
+        
+        const resolvedBaseSp = resolvePrice(rawPrice, (item as any).country_prices);
+        const discountedBaseSp = resolvedBaseSp * (1 - packDiscount / 100);
+        const itemSp = Math.round(discountedBaseSp) * packSize;
+        return sum + itemSp * item.quantity;
+    }, 0);
 
-    const totalMrp = isBuyNow && buyNowItem
-        ? resolveMrp(buyNowItem.original_price || buyNowItem.unit_price, buyNowItem.unit_price, (buyNowItem as any).country_prices) * buyNowItem.quantity
-        : items.reduce((sum, item) => {
-              return sum + resolveMrp((item as any).original_price ?? item.price ?? 0, item.price ?? 0, item.country_prices) * item.quantity;
-          }, 0);
+    const totalMrp = checkoutItems.reduce((sum, item) => {
+        const rawPrice = isBuyNow ? (item as BuyNowItem).unit_price : (item as any).price ?? 0;
+        const originalPrice = isBuyNow ? (item as BuyNowItem).original_price : (item as any).original_price ?? rawPrice;
+        const packSize = (item as any).pack_size || 1;
+        
+        const resolvedBaseMrp = resolveMrp(originalPrice, rawPrice, (item as any).country_prices);
+        const itemMrp = resolvedBaseMrp * packSize;
+        return sum + itemMrp * item.quantity;
+    }, 0);
 
     const mrpDiscount = totalMrp - baseSubtotal;
 
@@ -1781,8 +1792,16 @@ function CheckoutContent() {
                                         const price = isBuyNow ? (item as BuyNowItem).unit_price : (item as any).price ?? 0;
                                         const originalPrice = isBuyNow ? (item as BuyNowItem).original_price : (item as any).original_price ?? price;
                                         
-                                        const resolvedSp = resolvePrice(price, (item as any).country_prices);
-                                        const resolvedMrp = resolveMrp(originalPrice, price, (item as any).country_prices);
+                                        const packSize = (item as any).pack_size || 1;
+                                        const packDiscount = (item as any).pack_discount_percent || 0;
+
+                                        const resolvedBaseSp = resolvePrice(price, (item as any).country_prices);
+                                        const resolvedBaseMrp = resolveMrp(originalPrice, price, (item as any).country_prices);
+
+                                        const discountedBaseSp = resolvedBaseSp * (1 - packDiscount / 100);
+                                        const resolvedSp = Math.round(discountedBaseSp) * packSize;
+                                        const resolvedMrp = resolvedBaseMrp * packSize;
+                                        
                                         const lineTotal = resolvedSp * item.quantity;
                                         const lineMrpTotal = resolvedMrp * item.quantity;
 
@@ -1796,9 +1815,12 @@ function CheckoutContent() {
                                                     )}
                                                 </div>
                                                 <div className="ritual-summary-item-name">
-                                                    {item.product_name || 'Product'}
+                                                    {item.product_name || RU_DICTIONARY.checkoutFlow.item}
                                                     {(item as any).size_label && <p className="text-[#a4a9a4] text-xs">{(item as any).size_label}</p>}
-                                                    <div className="ritual-summary-item-qty mt-0.5">Qty: {item.quantity}</div>
+                                                    {packSize > 1 && (
+                                                        <p className="text-[10px] mt-0.5 text-[#91C934] uppercase tracking-wider font-bold">{RU_DICTIONARY.productPage.bundlePackOf} {packSize}</p>
+                                                    )}
+                                                    <div className="ritual-summary-item-qty mt-0.5">{RU_DICTIONARY.checkoutFlow.qty} {item.quantity}</div>
                                                 </div>
                                                 <div className="flex flex-col items-end">
                                                     <span className="ritual-summary-item-price">{format(lineTotal)}</span>
