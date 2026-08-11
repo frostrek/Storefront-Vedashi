@@ -829,7 +829,7 @@ function CheckoutContent() {
             widget.pay('charge',
                 {
                     publicId: public_id,
-                    description: description || 'Vedashi — Holistic Wellness Order',
+                    description: description || 'Vedashi Herbals — Holistic Wellness Order',
                     amount: amount,
                     currency: currency || 'RUB',
                     invoiceId: invoice_id,

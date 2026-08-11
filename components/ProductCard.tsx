@@ -103,7 +103,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
 
         const shareData = {
             title: product.product_name,
-            text: `Check out ${product.product_name} on Vedashi — Premium Ayurvedic Wellness.`,
+            text: `Check out ${product.product_name} on Vedashi Herbals — Premium Ayurvedic Wellness.`,
             url: `${window.location.origin}${ROUTES.tovar(product.slug || product.product_id)}`,
         };
 

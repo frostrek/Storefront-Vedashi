@@ -68,7 +68,7 @@ function GoogleCallbackContent() {
                     loginFromVerification(data.data.customer);
 
                     if (data.data.is_new_user) {
-                        toast.success('Account created! Welcome to Vedashi 🌿');
+                        toast.success('Account created! Welcome to Vedashi Herbals 🌿');
                     } else if (data.data.account_linked) {
                         toast.success('Google account linked to your existing account!');
                     } else {

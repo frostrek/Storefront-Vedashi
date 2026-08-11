@@ -161,7 +161,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
     const handleShare = () => {
         const shareData = {
             title: product?.product_name || 'Vedashi Wellness',
-            text: `Check out ${product?.product_name} on Vedashi — Premium Ayurvedic Wellness.`,
+            text: `Check out ${product?.product_name} on Vedashi Herbals — Premium Ayurvedic Wellness.`,
             url: window.location.href,
         };
 

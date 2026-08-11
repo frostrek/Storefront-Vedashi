@@ -57,6 +57,7 @@ export async function GET() {
         `Clean-param: sort&min_price&max_price&brand&page&per_page ${ROUTES.katalog}`,
         '',
         `Sitemap: ${SITE_URL}/sitemap.xml`,
+        `Sitemap: ${SITE_URL}/turbo-rss.xml`,
     ];
 
     return new Response(lines.join('\n'), {

@@ -32,7 +32,7 @@ function LoginContent() {
 
     useEffect(() => {
         if (searchParams.get('logout') === 'true') {
-            logout(); // local Vedashi logout
+            logout(); // local Vedashi Herbals logout
             router.replace('/login');
         }
     }, [searchParams, logout, router]);
