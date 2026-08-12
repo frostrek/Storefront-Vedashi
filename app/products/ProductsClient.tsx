@@ -46,7 +46,13 @@ interface CategoryContext {
     sub_sub_category?: string;
 }
 
-function ProductsContent({ categoryContext }: { categoryContext?: CategoryContext }) {
+function ProductsContent({ 
+    categoryContext,
+    initialProducts 
+}: { 
+    categoryContext?: CategoryContext,
+    initialProducts?: any[]
+}) {
     const { formatPrice, format, resolvePrice, countryCode } = useCurrency();
     const {
         filters,
@@ -103,10 +109,10 @@ function ProductsContent({ categoryContext }: { categoryContext?: CategoryContex
     const sentinelRef = useRef<HTMLDivElement>(null);
 
     // Lazy-load / infinite scroll state
-    const [products, setProducts] = useState<FilteredProduct[]>([]);
+    const [products, setProducts] = useState<FilteredProduct[]>(initialProducts || []);
     const [meta, setMeta] = useState<FilterMeta | null>(null);
     // loading = true during the FIRST page fetch (shows full skeleton)
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(initialProducts && initialProducts.length > 0 ? false : true);
     // loadingMore = true while fetching subsequent pages (shows bottom spinner)
     const [loadingMore, setLoadingMore] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
@@ -286,8 +292,17 @@ function ProductsContent({ categoryContext }: { categoryContext?: CategoryContex
         }
     };
 
+    const isInitialMount = useRef(true);
+
     // Reset to page 1 whenever filters change
     useEffect(() => {
+        // If we have initial products and this is the very first render, skip the fetch!
+        if (isInitialMount.current && initialProducts && initialProducts.length > 0) {
+            isInitialMount.current = false;
+            return;
+        }
+        isInitialMount.current = false;
+
         window.scrollTo({ top: 0, behavior: 'smooth' });
         const cancelled = { value: false };
         setCurrentPage(1);
@@ -1115,10 +1130,16 @@ function ProductsContent({ categoryContext }: { categoryContext?: CategoryContex
     );
 }
 
-export default function ProductsClientPage({ categoryContext }: { categoryContext?: CategoryContext }) {
+export default function ProductsClientPage({ 
+    categoryContext,
+    initialProducts
+}: { 
+    categoryContext?: CategoryContext,
+    initialProducts?: any[]
+}) {
     return (
         <Suspense fallback={<div className="min-h-screen bg-white p-8 pt-24"><SkeletonProductGrid count={8} /></div>}>
-            <ProductsContent categoryContext={categoryContext} />
+            <ProductsContent categoryContext={categoryContext} initialProducts={initialProducts} />
         </Suspense>
     );
 }

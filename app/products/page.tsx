@@ -117,7 +117,7 @@ export default async function ProductsPage({ searchParams }: Props) {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }}
             />
-            <ProductsClientPage />
+            <ProductsClientPage initialProducts={products} />
         </>
     );
 }
