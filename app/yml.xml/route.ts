@@ -13,7 +13,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashiherbals.com
  * endpoints and outputs valid YML XML that can be submitted to
  * Yandex.Market via the Yandex.Webmaster panel.
  */
-
+ 
 interface SitemapProduct {
     product_id: string;
     slug: string;

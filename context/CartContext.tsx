@@ -27,7 +27,7 @@ interface CartContextType {
     cartId: string | null;
     loading: boolean;
     error: string | null;
-    addItem: (productId: string, variantId: string | null, quantity?: number) => Promise<void>;
+    addItem: (productId: string, variantId: string | null, quantity?: number, packSize?: number) => Promise<void>;
     removeItem: (cartItemId: string) => Promise<void>;
     updateQuantity: (cartItemId: string, quantity: number) => Promise<void>;
     clearCart: (localOnly?: boolean) => Promise<void>;
@@ -60,9 +60,11 @@ function flattenCartItem(item: BackendCartItem): BackendCartItem {
         price: item.pricing?.effective_price ?? item.pricing?.unit_price ?? item.price ?? 0,
         original_price: item.pricing?.unit_price ?? item.price ?? 0,
         size_label: item.variant?.size_label || item.size_label || '',
+        pack_size: item.pack_size || 1,
         image_url: item.product?.thumbnail_url || item.image_url || '',
         stock_quantity: item.variant?.stock_quantity ?? (item as unknown as Record<string, unknown>).stock_quantity as number ?? 0,
         country_prices: (item.product?.country_prices || []).filter((cp: any) => !cp.variant_id || cp.variant_id === (item.variant_id || item.variant?.variant_id)),
+        pack_discount_percent: item.pack_discount_percent ?? 0,
     };
 }
 
@@ -76,7 +78,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
     
     // Derived values using useMemo
     const totalItems = useMemo(() => new Set(items.map(i => String(i.product_id))).size, [items]);
-    const totalPrice = useMemo(() => items.reduce((s, i) => s + (i.price || 0) * i.quantity, 0), [items]);
+    const totalPrice = useMemo(() => items.reduce((s, i) => {
+        const packDiscount = i.pack_discount_percent || 0;
+        const packSize = i.pack_size || 1;
+        const discountedUnitPrice = (i.price || 0) * (1 - packDiscount / 100);
+        const packPrice = discountedUnitPrice * packSize;
+        return s + packPrice * i.quantity;
+    }, 0), [items]);
     
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -365,7 +373,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [items.length, totalPrice]);
 
-    const addItem = useCallback(async (productId: string, variantId: string | null, quantity = 1) => {
+    const addItem = useCallback(async (productId: string, variantId: string | null, quantity = 1, packSize?: number) => {
         let activeCartId = cartId;
 
         // If no cart exists, create one (guest cart if not authenticated)
@@ -391,9 +399,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setError(null);
         try {
             if (variantId) {
-                await apiAddCartItem(activeCartId, variantId, quantity, true);
+                await apiAddCartItem(activeCartId, variantId, quantity, true, packSize);
             } else {
-                await apiAddCartItem(activeCartId, productId, quantity, false);
+                await apiAddCartItem(activeCartId, productId, quantity, false, packSize);
             }
             const freshCart = await fetchCart(activeCartId);
             const freshItems = freshCart ? (freshCart.items || []).map(flattenCartItem) : [];

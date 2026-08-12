@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense, useCallback, useRef, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { getCategories, getFilterOptions, getBestSellers, getNewArrivals, getFilteredProducts, subscribeNewsletter, getFormEnumOptions, getSpecialityEnumOptions } from '@/lib/api';
+import { getCategories, getFilterOptions, getBestSellers, getNewArrivals, getFilteredProducts, subscribeNewsletter } from '@/lib/api';
 import { useCurrency } from '@/context/CurrencyContext';
 import { ROUTES } from '@/lib/routes';
 import { FilteredProduct, FilterMeta, Category } from '@/types';
@@ -46,7 +46,13 @@ interface CategoryContext {
     sub_sub_category?: string;
 }
 
-function ProductsContent({ categoryContext }: { categoryContext?: CategoryContext }) {
+function ProductsContent({ 
+    categoryContext,
+    initialProducts 
+}: { 
+    categoryContext?: CategoryContext,
+    initialProducts?: any[]
+}) {
     const { formatPrice, format, resolvePrice, countryCode } = useCurrency();
     const {
         filters,
@@ -103,10 +109,10 @@ function ProductsContent({ categoryContext }: { categoryContext?: CategoryContex
     const sentinelRef = useRef<HTMLDivElement>(null);
 
     // Lazy-load / infinite scroll state
-    const [products, setProducts] = useState<FilteredProduct[]>([]);
+    const [products, setProducts] = useState<FilteredProduct[]>(initialProducts || []);
     const [meta, setMeta] = useState<FilterMeta | null>(null);
     // loading = true during the FIRST page fetch (shows full skeleton)
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(initialProducts && initialProducts.length > 0 ? false : true);
     // loadingMore = true while fetching subsequent pages (shows bottom spinner)
     const [loadingMore, setLoadingMore] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
@@ -193,13 +199,12 @@ function ProductsContent({ categoryContext }: { categoryContext?: CategoryContex
         getFilterOptions().then(opts => {
             setBrandOptions(opts.brands);
             setCountryOptions(opts.countries);
+            if (opts.forms) setFormFilterOptions(opts.forms);
+            if (opts.specialities) setSpecialityFilterOptions(opts.specialities);
             // NOTE: priceMax is now set dynamically by the scope-aware effect below
             if (opts.categories) setCategories(opts.categories);
             if (opts.attributes) setFilterAttributes(opts.attributes);
         });
-        // Fetch dynamic form & speciality filter options
-        getFormEnumOptions().then(setFormFilterOptions);
-        getSpecialityEnumOptions().then(setSpecialityFilterOptions);
     }, []);
 
 
@@ -286,8 +291,17 @@ function ProductsContent({ categoryContext }: { categoryContext?: CategoryContex
         }
     };
 
+    const isInitialMount = useRef(true);
+
     // Reset to page 1 whenever filters change
     useEffect(() => {
+        // If we have initial products and this is the very first render, skip the fetch!
+        if (isInitialMount.current && initialProducts && initialProducts.length > 0) {
+            isInitialMount.current = false;
+            return;
+        }
+        isInitialMount.current = false;
+
         window.scrollTo({ top: 0, behavior: 'smooth' });
         const cancelled = { value: false };
         setCurrentPage(1);
@@ -1115,10 +1129,16 @@ function ProductsContent({ categoryContext }: { categoryContext?: CategoryContex
     );
 }
 
-export default function ProductsClientPage({ categoryContext }: { categoryContext?: CategoryContext }) {
+export default function ProductsClientPage({ 
+    categoryContext,
+    initialProducts
+}: { 
+    categoryContext?: CategoryContext,
+    initialProducts?: any[]
+}) {
     return (
         <Suspense fallback={<div className="min-h-screen bg-white p-8 pt-24"><SkeletonProductGrid count={8} /></div>}>
-            <ProductsContent categoryContext={categoryContext} />
+            <ProductsContent categoryContext={categoryContext} initialProducts={initialProducts} />
         </Suspense>
     );
 }

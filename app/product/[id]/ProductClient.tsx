@@ -94,7 +94,7 @@ function LazyBestSellers({ title, icon }: {
 
 
 function ProductDetailContent({ id, country, initialProduct }: Props) {
-    const { formatPrice, formatMrp } = useCurrency();
+    const { formatPrice, formatMrp, format, resolvePrice, resolveMrp } = useCurrency();
     const [product, setProduct] = useState<ProductWithDetails | null>(initialProduct);
     const [loading, setLoading] = useState(!initialProduct);
     const [pageQuantity, setPageQuantity] = useState(1);
@@ -108,6 +108,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
     const [selectedCount, setSelectedCount] = useState<string | null>(null);
     const [selectedFlavor, setSelectedFlavor] = useState<string | null>(null);
     const [selectedPack, setSelectedPack] = useState<number | null>(null);
+    const [selectedBundleSize, setSelectedBundleSize] = useState<number>(1);
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
     const [ratingSummary, setRatingSummary] = useState<any>(null);
     const [activeInfoTab, setActiveInfoTab] = useState<'description' | 'howToUse' | 'specifications'>('description');
@@ -160,7 +161,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
     const handleShare = () => {
         const shareData = {
             title: product?.product_name || 'Vedashi Wellness',
-            text: `Check out ${product?.product_name} on Vedashi — Premium Ayurvedic Wellness.`,
+            text: `Check out ${product?.product_name} on Vedashi Herbals — Premium Ayurvedic Wellness.`,
             url: window.location.href,
         };
 
@@ -295,12 +296,18 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
 
             // Store the Buy Now item and redirect to checkout
             const timer = setTimeout(() => {
+                const discountTiers: Record<number, number> = { 1: 0, 2: 8, 3: 12, 4: 15, 5: 20 };
+                const pack_size = product.pack_sizes_enabled ? selectedBundleSize : undefined;
+                const pack_discount_percent = pack_size ? (discountTiers[pack_size] || 0) : 0;
+                
                 const buyNowItem = {
                     product_id: product.product_id,
                     product_name: product.product_name,
                     variant_id: selectedVariant?.variant_id || null,
                     size_label: selectedVariant?.size_label || '',
                     quantity: 1, // Default to 1 on express redirect
+                    pack_size: pack_size,
+                    pack_discount_percent: pack_discount_percent,
                     unit_price: Number(selectedVariant?.price ?? product.price ?? 0),
                     image_url: product.thumbnail_url || '',
                     country_prices: (selectedVariant as any)?.country_prices || (product as any).country_prices
@@ -342,9 +349,23 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
         selectedVariant?.price ?? product.price,
         selectedVariant?.sale_price ?? selectedVariant?.original_price ?? product.original_price ?? selectedVariant?.price ?? product.price
     );
+    
+    // Calculate bundle pricing based on country-resolved unit price
+    const discountTiers: Record<number, number> = { 1: 0, 2: 8, 3: 12, 4: 15, 5: 20 };
+    const packDiscount = product.pack_sizes_enabled ? (discountTiers[selectedBundleSize] || 0) : 0;
+    const packSize = product.pack_sizes_enabled ? selectedBundleSize : 1;
+    
+    const countryPrices = (selectedVariant as any)?.country_prices || (product as any).country_prices;
+    const resolvedBaseSp = resolvePrice(displayPrice, countryPrices);
+    const resolvedBaseMrp = resolveMrp(originalPrice, displayPrice, countryPrices);
+
+    const discountedBaseSp = resolvedBaseSp * (1 - packDiscount / 100);
+    const finalSp = Math.round(discountedBaseSp) * packSize;
+    const finalMrp = resolvedBaseMrp * packSize;
+
     const isOnSale = selectedVariant?.is_on_sale ?? product.is_on_sale ?? false;
-    const isDiscounted = originalPrice > displayPrice;
-    const calculatedDiscountPercent = isDiscounted ? Math.round((1 - displayPrice / originalPrice) * 100) : 0;
+    const isDiscounted = finalMrp > finalSp;
+    const calculatedDiscountPercent = isDiscounted ? Math.round((1 - finalSp / finalMrp) * 100) : 0;
     const discountPercent = calculatedDiscountPercent > 0 ? calculatedDiscountPercent : (selectedVariant?.discount_percentage ?? product.discount_percentage ?? 0);
 
     // Variant Activity
@@ -384,14 +405,29 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
     const handleAddToCart = async (e: React.MouseEvent<HTMLButtonElement>) => {
         if (!product || isOutOfStock) return;
 
+        let finalQty = pageQuantity;
+        let finalPack = product.pack_sizes_enabled ? selectedBundleSize : undefined;
+
+        if (product.pack_sizes_enabled) {
+            const totalUnits = pageQuantity * selectedBundleSize;
+            for (let size = 5; size >= 1; size--) {
+                if (totalUnits % size === 0) {
+                    finalPack = size;
+                    finalQty = totalUnits / size;
+                    break;
+                }
+            }
+        }
 
         await addItem(
             product.product_id,
             selectedVariant?.variant_id || null,
-            pageQuantity
+            finalQty,
+            finalPack
         );
         toast.success(`${RU_DICTIONARY.productPage.addedToCart}: ${pageQuantity} x ${product.product_name}`);
         setPageQuantity(1); // Reset counter to 1 after process
+        setSelectedBundleSize(1);
     };
 
     const handleBuyNow = async () => {
@@ -404,13 +440,32 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
             return;
         }
 
+        let finalQty = pageQuantity;
+        let finalPack = product.pack_sizes_enabled ? selectedBundleSize : undefined;
+
+        if (product.pack_sizes_enabled) {
+            const totalUnits = pageQuantity * selectedBundleSize;
+            for (let size = 5; size >= 1; size--) {
+                if (totalUnits % size === 0) {
+                    finalPack = size;
+                    finalQty = totalUnits / size;
+                    break;
+                }
+            }
+        }
+
         // User IS signed in — store the single item and go straight to checkout
+        const discountTiers: Record<number, number> = { 1: 0, 2: 8, 3: 12, 4: 15, 5: 20 };
+        const finalPackDiscount = finalPack ? (discountTiers[finalPack] || 0) : 0;
+
         const buyNowItem = {
             product_id: product.product_id,
             product_name: product.product_name,
             variant_id: selectedVariant?.variant_id || null,
             size_label: selectedVariant?.size_label || '',
-            quantity: pageQuantity,
+            quantity: finalQty,
+            pack_size: finalPack,
+            pack_discount_percent: finalPackDiscount,
             unit_price: displayPrice,
             original_price: originalPrice,
             image_url: product.thumbnail_url || '',
@@ -571,7 +626,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                             <div className="flex items-center gap-1.5 text-sm">
                                                 <span className="text-gray-500">{RU_DICTIONARY.product.mrp}</span>
                                                 <span className="text-gray-400 line-through">
-                                                    {formatMrp(originalPrice, displayPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
+                                                    {format(finalMrp)}
                                                 </span>
                                             </div>
                                         </div>
@@ -579,12 +634,19 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                 )}
                                 <div className="flex items-baseline gap-2">
                                     <p className="text-3xl font-extrabold text-[#C1262D]">
-                                        {formatPrice(displayPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
+                                        {format(finalSp)}
                                     </p>
-                                    <span className="text-sm text-gray-500">
-                                        {selectedVariant?.size_label && selectedVariant.size_label.toLowerCase() !== 'standard'
-                                            ? `(${selectedVariant.size_label})`
-                                            : RU_DICTIONARY.productPage.inclusiveOfTaxes}
+                                    <span className="text-sm text-gray-500 flex flex-col">
+                                        <span>
+                                            {selectedVariant?.size_label && selectedVariant.size_label.toLowerCase() !== 'standard'
+                                                ? `(${selectedVariant.size_label})`
+                                                : RU_DICTIONARY.productPage.inclusiveOfTaxes}
+                                        </span>
+                                        {packSize > 1 && (
+                                            <span className="text-[11px] font-bold text-[#91C934] mt-0.5 uppercase tracking-wider">
+                                                ({format(Math.round(discountedBaseSp))} {RU_DICTIONARY.productPage.perUnit})
+                                            </span>
+                                        )}
                                     </span>
                                 </div>
                             </div>
@@ -596,7 +658,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                 <p className="text-[11px] text-gray-400 uppercase tracking-tight leading-none mb-1">{RU_DICTIONARY.product.mrp}</p>
                                 <div className="flex items-baseline gap-1.5">
                                     <span className="text-xl font-bold text-black">
-                                        {formatMrp(originalPrice, displayPrice, (selectedVariant as any)?.country_prices || (product as any).country_prices)}
+                                        {format(finalMrp)}
                                     </span>
                                     <span className="text-[12px] text-gray-400">({RU_DICTIONARY.productPage.inclusiveOfTaxes})</span>
                                 </div>
@@ -973,6 +1035,37 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                     </div>
                                 );
                             })()}
+
+                            {/* Virtual Pack Sizes */}
+                            {product.pack_sizes_enabled && (
+                                <div className="flex items-start gap-3 mt-4 pt-4 border-t border-gray-100">
+                                    <p className="text-sm font-bold text-gray-900 w-[65px] pt-2.5 flex-shrink-0">{RU_DICTIONARY.productPage.bundleSize}</p>
+                                    <div className="flex gap-2.5 flex-wrap flex-1">
+                                        {[1, 2, 3, 4, 5].map((size) => {
+                                            const isSelected = selectedBundleSize === size;
+                                            const discountTiers: Record<number, number> = { 1: 0, 2: 8, 3: 12, 4: 15, 5: 20 };
+                                            const discount = discountTiers[size];
+
+                                            return (
+                                                <button
+                                                    key={size}
+                                                    onClick={() => setSelectedBundleSize(size)}
+                                                    className={`relative px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200 flex flex-col items-center justify-center min-w-[80px]
+                                                        ${isSelected
+                                                            ? 'bg-white text-[#91C934] border-[#91C934] border-2 shadow-sm'
+                                                            : 'bg-white border-gray-300 text-gray-700 hover:border-[#91C934] hover:text-[#91C934]'
+                                                        }`}
+                                                >
+                                                    <span>{RU_DICTIONARY.productPage.packOf} {size}</span>
+                                                    {discount > 0 && (
+                                                        <span className="text-[10px] text-red-500 font-bold mt-0.5 whitespace-nowrap">-{discount}% {RU_DICTIONARY.product.off}</span>
+                                                    )}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
 

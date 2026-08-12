@@ -83,28 +83,7 @@ const nextConfig: NextConfig = {
         destination: 'https://vedashiherbals.com/:path*',
         permanent: true,
       },
-      {
-        source: '/:path*',
-        has: [
-          {
-            type: 'host',
-            value: 'vedashi.com',
-          },
-        ],
-        destination: 'https://vedashiherbals.com/:path*',
-        permanent: true,
-      },
-      {
-        source: '/:path*',
-        has: [
-          {
-            type: 'host',
-            value: 'www.vedashi.com',
-          },
-        ],
-        destination: 'https://vedashiherbals.com/:path*',
-        permanent: true,
-      },
+
       { source: '/products', destination: '/katalog', permanent: true },
       { source: '/cart', destination: '/korzina', permanent: true },
       { source: '/checkout', destination: '/oformlenie-zakaza', permanent: true },
@@ -120,6 +99,7 @@ const nextConfig: NextConfig = {
       { source: '/account/support', destination: '/lichnyy-kabinet/podderzhka', permanent: true },
       { source: '/account', destination: '/lichnyy-kabinet', permanent: true },
       { source: '/login', destination: '/vhod', permanent: true },
+      { source: '/verify-email', destination: '/podtverzhdenie-email', permanent: true },
       { source: '/search', destination: '/poisk', permanent: true },
       { source: '/about', destination: '/o-nas', permanent: true },
       { source: '/contact', destination: '/kontakty', permanent: true },
@@ -171,6 +151,14 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'X-Robots-Tag', value: 'all' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        ],
+      },
       {
         source: '/small%20banners/:path*',
         headers: [

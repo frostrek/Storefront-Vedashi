@@ -40,23 +40,38 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashiherbals.com
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "ООО ВЕДАШИ ХЕРБАЛС — Премиальная Аюрведа",
+    default: "ВЕДАШИ ХЕРБАЛС — Премиальный велнес и натуральные индийские продукты",
     template: "%s | Vedashi Herbals",
   },
-  description: "Откройте для себя коллекцию премиальных аюрведических продуктов, натуральной косметики и травяных сборов.",
-  keywords: ["аюрведа", "натуральная косметика", "здоровье", "Vedashi", "травы"],
+  description: "Откройте для себя коллекцию премиальных аюрведических продуктов, натуральной косметики, специй и травяных сборов из Индии для здоровья и красоты.",
+  keywords: [
+    "аюрведа", "натуральная косметика", "здоровье", "Vedashi Herbals", "травы",
+    "аюрведические продукты", "купить аюрведу", "индийские специи", "сухофрукты",
+    "натуральный уход", "травяные средства", "аюрведические травы", "ашваганда",
+    "трифала", "масала чай", "гхи", "куркума", "интернет-магазин аюрведы",
+    "натуральная косметика из Индии", "ведаши хербалс", "велнес", "суперпродукты",
+    "чаванпраш", "органические продукты", "безопасная косметика", "без парабенов",
+    "органическая косметика из Индии", "аюрведический уход за кожей", "масло амлы",
+    "сандал", "терапевтическая косметика", "специи для иммунитета", "настоящие индийские специи"
+  ],
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
     other: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION ? {
       "msvalidate.01": [process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION],
     } : undefined,
   },
+  alternates: {
+    canonical: SITE_URL,
+    languages: {
+      'ru-RU': SITE_URL,
+    },
+  },
   openGraph: {
     type: "website",
     siteName: "Vedashi Herbals",
     locale: "ru_RU",
-    title: "ООО ВЕДАШИ ХЕРБАЛС — Премиальная Аюрведа",
-    description: "Откройте для себя коллекцию премиальных аюрведических продуктов, натуральной косметики и травяных сборов.",
+    title: "ВЕДАШИ ХЕРБАЛС — Премиальный велнес и натуральные индийские продукты",
+    description: "Откройте для себя коллекцию премиальных аюрведических продуктов, натуральной косметики, специй и травяных сборов из Индии для здоровья и красоты.",
     images: [
       {
         url: "/opengraph-image",
@@ -71,6 +86,9 @@ export const metadata: Metadata = {
     title: "ООО ВЕДАШИ ХЕРБАЛС — Премиальная Аюрведа",
     description: "Откройте для себя коллекцию премиальных аюрведических продуктов.",
     images: ["/opengraph-image"],
+  },
+  other: {
+    "vk:image": `${SITE_URL}/opengraph-image`,
   },
 };
 
@@ -115,6 +133,9 @@ export default async function RootLayout({
       <head>
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://mc.yandex.ru" />
+        <link rel="alternate" type="application/rss+xml" title="Vedashi Herbals — RSS" href={`${SITE_URL}/rss.xml`} />
+        <link rel="alternate" type="application/rss+xml" title="Vedashi Herbals — Turbo Pages" href={`${SITE_URL}/turbo-rss.xml`} />
+        <link rel="author" href="/humans.txt" />
 
         <Script
           id="ga4-default-consent"

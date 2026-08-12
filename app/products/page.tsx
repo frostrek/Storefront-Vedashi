@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
-import { generateBreadcrumbJsonLd } from '@/lib/seo';
-import { getCategories } from '@/lib/api';
+import { generateBreadcrumbJsonLd, generateCollectionPageJsonLd } from '@/lib/seo';
+import { getCategories, getFilteredProducts } from '@/lib/api';
 import ProductsClientPage from './ProductsClient';
 import { RU_DICTIONARY } from '@/content/ru';
 
@@ -93,13 +93,31 @@ export default async function ProductsPage({ searchParams }: Props) {
 
     const breadcrumbs = generateBreadcrumbJsonLd(breadcrumbItems);
 
+    // Fetch initial products for CollectionPage schema
+    const { data: products } = await getFilteredProducts({ category: categorySlug, limit: 12 });
+    
+    const collectionSchema = generateCollectionPageJsonLd(
+        category ? category.name : RU_DICTIONARY.plp.seo.allProductsTitle,
+        category ? `${SITE_URL}/katalog?category=${category.slug}` : `${SITE_URL}/katalog`,
+        products.map(p => ({
+            name: p.product_name,
+            url: `${SITE_URL}/tovar/${p.slug || p.product_id}`,
+            image: p.thumbnail_url || (p.images && p.images[0]) || '',
+            price: p.price
+        }))
+    );
+
     return (
         <>
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }}
             />
-            <ProductsClientPage />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }}
+            />
+            <ProductsClientPage initialProducts={products} />
         </>
     );
 }

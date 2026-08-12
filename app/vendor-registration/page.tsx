@@ -466,7 +466,7 @@ export default function VendorRegistrationPage() {
                   />
                   <CheckSquare className={`w-3.5 h-3.5 text-white ${form.consentContact ? 'opacity-100' : 'opacity-0'}`} strokeWidth={3} />
                 </div>
-                <span className="text-[15px] text-gray-700 font-medium">Я согласен, чтобы Vedashi связывались со мной по вопросам партнерства</span>
+                <span className="text-[15px] text-gray-700 font-medium">Я согласен, чтобы Vedashi Herbals связывались со мной по вопросам партнерства</span>
               </label>
             </div>
           </div>

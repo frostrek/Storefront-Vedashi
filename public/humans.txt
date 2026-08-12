@@ -1,0 +1,19 @@
+/* TEAM */
+Company: Vedashi Herbals (ООО ВЕДАШИ ХЕРБАЛС)
+Site: https://vedashiherbals.com
+Location: Москва, Россия
+Contact: info@vedashiherbals.com
+
+/* SITE */
+Standards: HTML5, CSS3, ECMAScript 2024
+Framework: Next.js 16
+Language: Russian (ru-RU)
+Components: React 19
+Hosting: Timeweb Cloud (Russia)
+Analytics: Yandex Metrika, Google Analytics 4
+Search: Yandex Webmaster, Google Search Console
+Payments: CloudPayments
+Captcha: Cloudflare Turnstile
+
+/* THANKS */
+Built with Ayurvedic wisdom and modern technology.

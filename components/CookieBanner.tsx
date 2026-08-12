@@ -79,7 +79,7 @@ export default function CookieBanner() {
                     let blocks: any[] = [];
                     try { blocks = JSON.parse(json.data.content); }
                     catch { blocks = [{ type: 'paragraph', text: json.data.content }]; }
-                    // Inline styles so we don't depend on Tailwind prose classes for spacing
+                    // Inline styles so we don't depend on Tailwind prose classes for spacings
                     const sectionHeadings = [
                         '1. Information Collection and Use', '2. Cookies Data', '3. Use of Data',
                         '4. Transfer of Data', '5. Security of Data', 'Contact Us', 'Personal Data', 'Usage Data',
@@ -663,25 +663,25 @@ export default function CookieBanner() {
                             position: 'relative', overflow: 'hidden', flexShrink: 0,
                         }}>
                             {/* BG decoration circles */}
-                            <div style={{ position:'absolute', top:-28, right:-28, width:110, height:110, borderRadius:'50%', background:'rgba(255,255,255,0.05)' }} />
-                            <div style={{ position:'absolute', bottom:-18, right:60, width:70, height:70, borderRadius:'50%', background:'rgba(255,255,255,0.04)' }} />
+                            <div style={{ position: 'absolute', top: -28, right: -28, width: 110, height: 110, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
+                            <div style={{ position: 'absolute', bottom: -18, right: 60, width: 70, height: 70, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
 
-                            <div style={{ display:'flex', alignItems:'center', gap:13, position:'relative', zIndex:1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 13, position: 'relative', zIndex: 1 }}>
                                 <div style={{
-                                    width:42, height:42, borderRadius:13,
-                                    background:'rgba(255,255,255,0.15)',
-                                    backdropFilter:'blur(8px)',
-                                    border:'1px solid rgba(255,255,255,0.2)',
-                                    display:'flex', alignItems:'center', justifyContent:'center',
+                                    width: 42, height: 42, borderRadius: 13,
+                                    background: 'rgba(255,255,255,0.15)',
+                                    backdropFilter: 'blur(8px)',
+                                    border: '1px solid rgba(255,255,255,0.2)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     flexShrink: 0,
                                 }}>
-                                    <Shield style={{ width:19, height:19, color:'#fff' }} />
+                                    <Shield style={{ width: 19, height: 19, color: '#fff' }} />
                                 </div>
                                 <div>
-                                    <h2 style={{ margin:0, fontSize:16, fontWeight:700, color:'#fff', letterSpacing:'-0.02em' }}>
+                                    <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' }}>
                                         {t ? t.policy.title : 'Cookie Policy'}
                                     </h2>
-                                    <p style={{ margin:'3px 0 0', fontSize:12, color:'rgba(255,255,255,0.6)', fontFamily:'DM Sans, sans-serif' }}>
+                                    <p style={{ margin: '3px 0 0', fontSize: 12, color: 'rgba(255,255,255,0.6)', fontFamily: 'DM Sans, sans-serif' }}>
                                         {t ? t.policy.subtitle : 'How we use cookies on our site'}
                                     </p>
                                 </div>
@@ -690,28 +690,28 @@ export default function CookieBanner() {
                             <button
                                 onClick={handleClosePolicyModal}
                                 style={{
-                                    width:32, height:32, flexShrink:0,
-                                    background:'rgba(255,255,255,0.12)',
-                                    border:'1px solid rgba(255,255,255,0.18)',
-                                    borderRadius:9, cursor:'pointer',
-                                    display:'flex', alignItems:'center', justifyContent:'center',
-                                    color:'rgba(255,255,255,0.8)',
-                                    transition:'background 0.15s, color 0.15s, transform 0.22s cubic-bezier(0.34,1.56,0.64,1)',
-                                    position:'relative', zIndex:1,
+                                    width: 32, height: 32, flexShrink: 0,
+                                    background: 'rgba(255,255,255,0.12)',
+                                    border: '1px solid rgba(255,255,255,0.18)',
+                                    borderRadius: 9, cursor: 'pointer',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    color: 'rgba(255,255,255,0.8)',
+                                    transition: 'background 0.15s, color 0.15s, transform 0.22s cubic-bezier(0.34,1.56,0.64,1)',
+                                    position: 'relative', zIndex: 1,
                                 }}
-                                onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background='rgba(255,255,255,0.22)'; b.style.color='#fff'; b.style.transform='rotate(90deg) scale(1.1)'; }}
-                                onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background='rgba(255,255,255,0.12)'; b.style.color='rgba(255,255,255,0.8)'; b.style.transform='rotate(0deg) scale(1)'; }}
+                                onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = 'rgba(255,255,255,0.22)'; b.style.color = '#fff'; b.style.transform = 'rotate(90deg) scale(1.1)'; }}
+                                onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = 'rgba(255,255,255,0.12)'; b.style.color = 'rgba(255,255,255,0.8)'; b.style.transform = 'rotate(0deg) scale(1)'; }}
                             >
-                                <X style={{ width:15, height:15 }} />
+                                <X style={{ width: 15, height: 15 }} />
                             </button>
                         </div>
 
                         <div className="ck-mbody" style={{ padding: '22px 26px' }}>
                             {isLoadingPolicy
                                 ? (
-                                    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'48px 0', gap:14 }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 0', gap: 14 }}>
                                         <div className="ck-spin" />
-                                        <p style={{ margin:0, fontSize:12.5, color:'#94a3b8', fontFamily:'DM Sans, sans-serif' }}>{t ? t.policy.loading : 'Loading policy…'}</p>
+                                        <p style={{ margin: 0, fontSize: 12.5, color: '#94a3b8', fontFamily: 'DM Sans, sans-serif' }}>{t ? t.policy.loading : 'Loading policy…'}</p>
                                     </div>
                                 )
                                 : (

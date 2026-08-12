@@ -32,7 +32,7 @@ function LoginContent() {
 
     useEffect(() => {
         if (searchParams.get('logout') === 'true') {
-            logout(); // local Vedashi logout
+            logout(); // local Vedashi Herbals logout
             router.replace('/login');
         }
     }, [searchParams, logout, router]);
@@ -295,7 +295,7 @@ function LoginContent() {
                     toast.success(RU_DICTIONARY.toast.verifyEmail);
                     setIsRedirecting(true);
                     setTimeout(() => {
-                        router.push(`/verify-email?registered=true&email=${encodeURIComponent(form.email)}`);
+                        router.push(`${ROUTES.verifyEmail}?registered=true&email=${encodeURIComponent(form.email)}`);
                     }, 1500);
                 } else {
                     if (result?.requireCaptcha) {

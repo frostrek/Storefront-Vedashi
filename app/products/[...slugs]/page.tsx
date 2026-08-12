@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { generateBreadcrumbJsonLd } from '@/lib/seo';
+import { getFilteredProducts } from '@/lib/api';
 import ProductsClientPage from '../ProductsClient';
 import { RU_DICTIONARY } from '@/content/ru';
 import { ROUTES } from '@/lib/routes';
@@ -71,10 +72,13 @@ export default async function CategoryPage({ params }: Props) {
 
     const breadcrumbs = generateBreadcrumbJsonLd(breadcrumbItems);
 
-    let categoryContext = {};
+    let categoryContext: any = {};
     if (slugs.length === 1) categoryContext = { category: slugs[0] };
     if (slugs.length === 2) categoryContext = { category: slugs[0], sub_category: slugs[1] };
     if (slugs.length === 3) categoryContext = { category: slugs[0], sub_category: slugs[1], sub_sub_category: slugs[2] };
+
+    // Fetch initial products for SSR
+    const { data: products } = await getFilteredProducts({ ...categoryContext, limit: 12 });
 
     return (
         <>
@@ -82,7 +86,7 @@ export default async function CategoryPage({ params }: Props) {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }}
             />
-            <ProductsClientPage categoryContext={categoryContext} />
+            <ProductsClientPage categoryContext={categoryContext} initialProducts={products} />
         </>
     );
 }

@@ -141,8 +141,8 @@ export async function authFetch(url: string, init?: RequestInit): Promise<Respon
 
     // ── Inactivity session expiry interceptors ──────────────────────────
     if (res.status === 401 && typeof window !== 'undefined') {
-        const isAuthEndpoint = url.includes('/api/auth/login') || url.includes('/api/auth/register') || url.includes('/api/auth/refresh-token') || url.includes('/api/auth/initiate-registration');
-        const isLoginPage = window.location.pathname.includes('/login');
+        const isAuthEndpoint = url.includes('/api/auth/login') || url.includes('/api/auth/register') || url.includes('/api/auth/refresh-token') || url.includes('/api/auth/initiate-registration') || url.includes('/api/auth/me');
+        const isLoginPage = window.location.pathname.includes('/login') || window.location.pathname.includes('/vhod');
 
         if (!isAuthEndpoint && !isLoginPage) {
             const cloned = res.clone();
@@ -153,7 +153,7 @@ export async function authFetch(url: string, init?: RequestInit): Promise<Respon
                     window.dispatchEvent(new CustomEvent('session-expired'));
                     const pathParts = window.location.pathname.split('/');
                     const country = pathParts[1] || 'us';
-                    window.location.href = buildPath(country, `/login?session_expired=1`);
+                    window.location.href = buildPath(country, `/vhod?session_expired=1`);
                     return res;
                 }
             } catch { /* ignore */ }
@@ -503,7 +503,7 @@ export async function getSpecialityEnumOptions(): Promise<string[]> {
 }
 
 /** Fetch all products once and extract unique brands & countries for filter options */
-export async function getFilterOptions(): Promise<{ brands: string[]; countries: string[]; maxPrice: number; categories: any[]; attributes: any[] }> {
+export async function getFilterOptions(): Promise<{ brands: string[]; countries: string[]; maxPrice: number; categories: any[]; attributes: any[]; forms: string[]; specialities: string[] }> {
     try {
         const [{ data: products }, { data: maxPriceProd }, catRes, attrRes] = await Promise.all([
             getFilteredProducts({ limit: 500 }),
@@ -514,9 +514,15 @@ export async function getFilterOptions(): Promise<{ brands: string[]; countries:
 
         const brandSet = new Set<string>();
         const countrySet = new Set<string>();
+        const formSet = new Set<string>();
+        const specialitySet = new Set<string>();
         products.forEach((p: FilteredProduct) => {
             if (p.brand) brandSet.add(p.brand);
             if (p.country_of_origin) countrySet.add(p.country_of_origin);
+            if (p.form) formSet.add(p.form);
+            if (p.specialities && Array.isArray(p.specialities)) {
+                p.specialities.forEach(s => specialitySet.add(s));
+            }
         });
 
         // Round up the max price nicely
@@ -534,11 +540,13 @@ export async function getFilterOptions(): Promise<{ brands: string[]; countries:
             countries: Array.from(countrySet).sort(),
             maxPrice: roundedMax,
             categories: catRes?.data || [],
-            attributes: attrRes?.data || []
+            attributes: attrRes?.data || [],
+            forms: Array.from(formSet).sort(),
+            specialities: Array.from(specialitySet).sort()
         };
     } catch (err) {
         console.warn('[API] Failed to fetch filter options:', err);
-        return { brands: [], countries: [], maxPrice: 500, categories: [], attributes: [] };
+        return { brands: [], countries: [], maxPrice: 500, categories: [], attributes: [], forms: [], specialities: [] };
     }
 }
 
@@ -836,9 +844,10 @@ export async function updateCheckoutDraft(cartId: string, draftData: any) {
     }
 }
 
-export async function addCartItem(cartId: string, itemId: string, quantity: number, isVariant = true) {
+export async function addCartItem(cartId: string, itemId: string, quantity: number, isVariant = true, packSize?: number) {
     try {
         const body: Record<string, unknown> = { cart_id: cartId, quantity };
+        if (packSize) body.pack_size = packSize;
         if (isVariant) {
             body.variant_id = itemId;
         } else {
@@ -870,12 +879,14 @@ export async function addCartItem(cartId: string, itemId: string, quantity: numb
     }
 }
 
-export async function updateCartItem(itemId: string, quantity: number) {
+export async function updateCartItem(itemId: string, quantity: number, packSize?: number) {
     try {
+        const body: Record<string, unknown> = { quantity };
+        if (packSize) body.pack_size = packSize;
         const res = await authFetch(`${API_URL}/api/cart/items/${itemId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ quantity }),
+            body: JSON.stringify(body),
         });
         return res.json();
     } catch (error) {
