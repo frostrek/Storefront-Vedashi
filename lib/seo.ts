@@ -352,14 +352,14 @@ export function generateProductJsonLd(
 export function generateLocalBusinessJsonLd(): Record<string, unknown> {
     return {
         '@context': 'https://schema.org',
-        '@type': 'Store',
+        '@type': 'LocalBusiness',
         name: SITE_NAME,
         url: SITE_URL,
         logo: `${SITE_URL}/logo.png`,
         image: `${SITE_URL}/og-default.jpg`,
         description: 'Премиальные аюрведические продукты и натуральные травяные средства. Vedashi Herbals — ООО ВЕДАШИ ХЕРБАЛС.',
         email: 'info@vedashiherbals.com',
-        // telephone: '+7-XXXXXXXXXX', // TODO: Add Russian business phone number
+        telephone: '+7 495 000 00 00', // TODO: Replace with real Russian business phone number when received
         priceRange: '₽₽',
         address: {
             '@type': 'PostalAddress',

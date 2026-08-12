@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         };
     }
 
-    const title = post.meta_title || `${post.title} | ${RU_DICTIONARY.blog.seo.postTitleSuffix}`;
+    const title = post.meta_title || post.title;
     const description = post.meta_description || post.excerpt || RU_DICTIONARY.blog.seo.postFallbackDescription.replace('{title}', post.title);
     const postUrl = `${SITE_URL}/blog/${post.slug}`;
     const ogImage = post.featured_image || post.cover_image || undefined;

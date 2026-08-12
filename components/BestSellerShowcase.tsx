@@ -14,10 +14,10 @@ import { ROUTES } from '@/lib/routes';
 // Ad banners that rotate  in the left panels
 // You can replace these with dedicated promotional images
 const adBanners = [
-  { src: '/small banners/1.webp', href: null },
-  { src: '/small banners/2.webp', href: null },
-  { src: '/small banners/3.webp', href: null },
-  { src: '/small banners/4.webp', href: null },
+  { src: '/small banners/1.webp', href: null, alt: 'Аюрведические средства для здоровья и иммунитета' },
+  { src: '/small banners/2.webp', href: null, alt: 'Натуральная индийская косметика без парабенов' },
+  { src: '/small banners/3.webp', href: null, alt: 'Традиционные органические специи из Индии' },
+  { src: '/small banners/4.webp', href: null, alt: 'Премиальный травяной чай и суперпродукты' },
 ];
 
 interface BestSellerShowcaseProps {
@@ -127,7 +127,7 @@ export default function BestSellerShowcase({
               >
                 <Image
                   src={adBanners[adIndex].src}
-                  alt={RU_DICTIONARY.footer.promotionalBannerAlt}
+                  alt={adBanners[adIndex].alt}
                   fill
                   sizes="(max-width: 1024px) 85vw, 450px"
                   className="object-cover"

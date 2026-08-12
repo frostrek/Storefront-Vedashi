@@ -25,6 +25,19 @@
   --foreground: #2C2C2C;
 }
 
+/* Screen-reader only: hidden from users, visible to AI crawlers in raw HTML */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
 .font-base {
   font-family: var(--font-sans);
 }
@@ -508,6 +521,7 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -515,6 +529,7 @@ div[class$="__menu-list"]::-webkit-scrollbar-button {
 .line-clamp-3 {
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
