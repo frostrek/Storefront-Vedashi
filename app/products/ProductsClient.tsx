@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense, useCallback, useRef, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { getCategories, getFilterOptions, getBestSellers, getNewArrivals, getFilteredProducts, subscribeNewsletter, getFormEnumOptions, getSpecialityEnumOptions } from '@/lib/api';
+import { getCategories, getFilterOptions, getBestSellers, getNewArrivals, getFilteredProducts, subscribeNewsletter } from '@/lib/api';
 import { useCurrency } from '@/context/CurrencyContext';
 import { ROUTES } from '@/lib/routes';
 import { FilteredProduct, FilterMeta, Category } from '@/types';
@@ -193,13 +193,12 @@ function ProductsContent({ categoryContext }: { categoryContext?: CategoryContex
         getFilterOptions().then(opts => {
             setBrandOptions(opts.brands);
             setCountryOptions(opts.countries);
+            if (opts.forms) setFormFilterOptions(opts.forms);
+            if (opts.specialities) setSpecialityFilterOptions(opts.specialities);
             // NOTE: priceMax is now set dynamically by the scope-aware effect below
             if (opts.categories) setCategories(opts.categories);
             if (opts.attributes) setFilterAttributes(opts.attributes);
         });
-        // Fetch dynamic form & speciality filter options
-        getFormEnumOptions().then(setFormFilterOptions);
-        getSpecialityEnumOptions().then(setSpecialityFilterOptions);
     }, []);
 
 

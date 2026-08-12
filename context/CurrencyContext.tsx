@@ -164,9 +164,8 @@ export function CurrencyProvider({
     const currentConfig = currencyConfigs.find(c => c.country_code === upperCode);
     
     return (localAmount: number | string | null | undefined): string => {
-      if (countryCode === 'us') return formatLocal(localAmount, 'USD', 'en-US');
       if (currentConfig) return formatLocal(localAmount, currentConfig.currency_code, countryConfig.locale);
-      return formatLocal(localAmount, 'USD', 'en-US');
+      return formatLocal(localAmount, countryConfig.currency, countryConfig.locale);
     };
   }, [countryCode, countryConfig.locale, currencyConfigs]);
 
@@ -217,14 +216,14 @@ export function useCurrency() {
   if (!context) {
     // If used outside provider (e.g. in root layout or admin), fallback to USD/US
     return {
-      countryCode: 'us' as SupportedCountryCode,
-      countryConfig: SUPPORTED_COUNTRIES['us'],
+      countryCode: 'ru' as SupportedCountryCode,
+      countryConfig: SUPPORTED_COUNTRIES['ru'],
       currencyConfigs: [],
       resolvePrice: (usdAmount: number | string | null | undefined, itemOverrides?: CountryPriceOverride[] | null | undefined) => Number(usdAmount) || 0,
       resolveMrp: (usdMrp: number | string | null | undefined, usdSp?: number | string | null | undefined, itemOverrides?: CountryPriceOverride[] | null | undefined) => Number(usdMrp) || 0,
-      format: (localAmount: number | string | null | undefined) => formatPrice(localAmount, 'USD', 1, 'en-US'),
-      formatPrice: (amount: number | string | null | undefined, countryPrices?: CountryPriceOverride[] | null) => formatPrice(amount, 'USD', 1, 'en-US'),
-      formatMrp: (usdMrp: number | string | null | undefined, usdSp?: number | string | null | undefined, countryPrices?: CountryPriceOverride[] | null) => formatPrice(usdMrp, 'USD', 1, 'en-US'),
+      format: (localAmount: number | string | null | undefined) => formatPrice(localAmount, 'RUB', 1, 'ru-RU'),
+      formatPrice: (amount: number | string | null | undefined, countryPrices?: CountryPriceOverride[] | null) => formatPrice(amount, 'RUB', 1, 'ru-RU'),
+      formatMrp: (usdMrp: number | string | null | undefined, usdSp?: number | string | null | undefined, countryPrices?: CountryPriceOverride[] | null) => formatPrice(usdMrp, 'RUB', 1, 'ru-RU'),
       isLoadingRates: false,
     };
   }
