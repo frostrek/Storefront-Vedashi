@@ -507,6 +507,9 @@ export function generateOrganizationJsonLd(): Record<string, unknown> {
         url: SITE_URL,
         logo: `${SITE_URL}/logo.png`,
         description: 'ООО ВЕДАШИ ХЕРБАЛС — российский поставщик премиальных аюрведических продуктов и натуральных травяных средств.',
+        sameAs: [
+            'https://www.linkedin.com/company/vedashi-herbals/'
+        ]
     };
 }
 
