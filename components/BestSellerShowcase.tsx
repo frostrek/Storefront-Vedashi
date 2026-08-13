@@ -91,7 +91,7 @@ export default function BestSellerShowcase({
             {/* Preload all banner images immediately so carousel rotations are instant */}
             <div className="hidden" aria-hidden="true">
               {adBanners.map((banner, i) => (
-                <Image key={i} src={banner.src} alt="" width={400} height={500} priority />
+                <Image key={i} src={banner.src} alt={banner.alt} width={400} height={500} priority />
               ))}
             </div>
             <AnimatePresence initial={false} custom={direction}>
