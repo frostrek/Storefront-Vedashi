@@ -60,6 +60,17 @@ export const metadata: Metadata = {
       "msvalidate.01": [process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION],
     } : undefined,
   },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/vedashi-logo.png", sizes: "120x120", type: "image/png" },
+      { url: "/vedashi-logo.webp", type: "image/webp" },
+    ],
+    shortcut: ["/favicon.ico"],
+    apple: [
+      { url: "/vedashi-logo.png", sizes: "120x120", type: "image/png" },
+    ],
+  },
   alternates: {
     canonical: SITE_URL,
     languages: {
