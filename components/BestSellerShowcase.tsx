@@ -57,8 +57,8 @@ export default function BestSellerShowcase({
   const displayProducts = products.slice(0, 8);
 
   // Use a default path if viewAllLink is not provided. We fall back to the popular sorting.
-  const resolvedViewAllLink = viewAllLink 
-    ? viewAllLink 
+  const resolvedViewAllLink = viewAllLink
+    ? viewAllLink
     : buildPath(country, `${ROUTES.katalog}?sort=popular&bestSeller=true`);
 
   return (
@@ -88,7 +88,7 @@ export default function BestSellerShowcase({
         {/* LEFT/TOP: Rotating Ad Banner */}
         <div className="flex flex-col flex-shrink-0 w-full px-4 sm:px-0 lg:px-0 lg:w-[350px] xl:w-[450px]">
           <div className="relative aspect-[4/5] sm:aspect-[16/9] lg:aspect-auto lg:h-full w-[85%] sm:w-full mx-auto overflow-hidden cursor-pointer rounded-2xl shadow-md border border-gray-100/50">
-            {/* Preload all banner images immediately so carousel rotations are instant */}
+            {/* Preload all banner images immediately so carousel rotation are instant */}
             <div className="hidden" aria-hidden="true">
               {adBanners.map((banner, i) => (
                 <Image key={i} src={banner.src} alt={banner.alt} width={400} height={500} priority />
