@@ -63,7 +63,7 @@ export interface CategorySeoInput {
 
 const SITE_NAME = 'Vedashi Herbals';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashiherbals.com';
-const DEFAULT_OG_IMAGE = `${SITE_URL}/og-default.jpg`;
+const DEFAULT_OG_IMAGE = `${SITE_URL}/vedashi-social-banner.png`;
 
 // ─── Sanitization ─────────────────────────────────────────────────────────────
 
@@ -355,11 +355,10 @@ export function generateLocalBusinessJsonLd(): Record<string, unknown> {
         '@type': 'LocalBusiness',
         name: SITE_NAME,
         url: SITE_URL,
-        logo: `${SITE_URL}/logo.png`,
-        image: `${SITE_URL}/og-default.jpg`,
+        logo: `${SITE_URL}/vedashi-logo.png`,
+        image: `${SITE_URL}/vedashi-social-banner.png`,
         description: 'Премиальные аюрведические продукты и натуральные травяные средства. Vedashi Herbals — ООО ВЕДАШИ ХЕРБАЛС.',
         email: 'info@vedashiherbals.com',
-        telephone: '+7 495 000 00 00', // TODO: Replace with real Russian business phone number when received
         priceRange: '₽₽',
         address: {
             '@type': 'PostalAddress',
@@ -427,7 +426,7 @@ export function generateBlogPostingJsonLd(post: any): Record<string, unknown> {
             name: SITE_NAME,
             logo: {
                 '@type': 'ImageObject',
-                url: `${SITE_URL}/logo.png`
+                url: `${SITE_URL}/vedashi-logo.png`
             }
         },
         mainEntityOfPage: {
@@ -505,7 +504,7 @@ export function generateOrganizationJsonLd(): Record<string, unknown> {
         name: SITE_NAME,
         alternateName: ['Vedashi', 'ООО ВЕДАШИ ХЕРБАЛС'],
         url: SITE_URL,
-        logo: `${SITE_URL}/logo.png`,
+        logo: `${SITE_URL}/vedashi-logo.png`,
         description: 'ООО ВЕДАШИ ХЕРБАЛС — российский поставщик премиальных аюрведических продуктов и натуральных травяных средств.',
         sameAs: [
             'https://www.linkedin.com/company/vedashi-herbals/'

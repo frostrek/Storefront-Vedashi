@@ -40,10 +40,10 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashiherbals.com
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "ВЕДАШИ ХЕРБАЛС — Индийские продукты и премиум велнес",
+    default: "Vedashi Herbals (ВЕДАШИ ХЕРБАЛС) — Индийские продукты и премиум велнес",
     template: "%s | Vedashi Herbals",
   },
-  description: "Откройте для себя коллекцию премиальных аюрведических продуктов, натуральной косметики, специй и травяных сборов из Индии для здоровья и красоты.",
+  description: "Vedashi Herbals — интернет-магазин премиальных аюрведических продуктов из Индии. Натуральная косметика, специи, травяные сборы и товары для здоровья.",
   keywords: [
     "аюрведа", "натуральная косметика", "здоровье", "Vedashi Herbals", "травы",
     "аюрведические продукты", "купить аюрведу", "индийские специи", "сухофрукты",
@@ -81,11 +81,11 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "Vedashi Herbals",
     locale: "ru_RU",
-    title: "ВЕДАШИ ХЕРБАЛС — Индийские продукты и премиум велнес",
-    description: "Откройте для себя коллекцию премиальных аюрведических продуктов, натуральной косметики, специй и травяных сборов из Индии для здоровья и красоты.",
+    title: "Vedashi Herbals (ВЕДАШИ ХЕРБАЛС) — Индийские продукты и премиум велнес",
+    description: "Vedashi Herbals — интернет-магазин премиальных аюрведических продуктов из Индии. Натуральная косметика, специи, травяные сборы и товары для здоровья.",
     images: [
       {
-        url: "/opengraph-image",
+        url: "/vedashi-social-banner.png",
         width: 1200,
         height: 630,
         alt: "Vedashi Herbals",
@@ -94,12 +94,12 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "ООО ВЕДАШИ ХЕРБАЛС — Премиальная Аюрведа",
-    description: "Откройте для себя коллекцию премиальных аюрведических продуктов.",
-    images: ["/opengraph-image"],
+    title: "ООО ВЕДАШИ ХЕРБАЛС — Премиальная Аюрведа | Vedashi Herbals",
+    description: "Vedashi Herbals — интернет-магазин премиальных аюрведических продуктов.",
+    images: ["/vedashi-social-banner.png"],
   },
   other: {
-    "vk:image": `${SITE_URL}/opengraph-image`,
+    "vk:image": `${SITE_URL}/vedashi-social-banner.png`,
   },
 };
 

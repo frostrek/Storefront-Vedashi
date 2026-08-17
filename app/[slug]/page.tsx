@@ -4,6 +4,7 @@ import { getLegalDocument, getLegalDocumentByType } from '@/lib/api';
 import LegalContentRenderer from '@/components/ui/LegalContentRenderer';
 import { notFound, redirect } from 'next/navigation';
 import type { Metadata } from 'next';
+import { RU_DICTIONARY } from '@/content/ru';
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -22,8 +23,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     
     if (!doc) return {};
     
+    const fallbackDescription = RU_DICTIONARY.globalSeo.legal.meta.fallbackDescription.replace('{title}', doc.title);
+    
     return {
-        title: `${doc.title} | Vedashi`,
+        title: `${doc.title} | Vedashi Herbals`,
+        description: doc.meta_description || fallbackDescription,
+        alternates: {
+            canonical: `https://vedashiherbals.com/${slug}`,
+        },
+        openGraph: {
+            title: `${doc.title} | Vedashi Herbals`,
+            description: doc.meta_description || fallbackDescription,
+            url: `https://vedashiherbals.com/${slug}`,
+            siteName: 'Vedashi Herbals',
+            locale: 'ru_RU',
+            type: 'website',
+        },
     };
 }
 

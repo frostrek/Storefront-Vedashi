@@ -44,8 +44,8 @@
 - [О нас](https://vedashiherbals.com/o-nas): О нашей миссии, процессе производства и научном подходе к натуральным формулам.
 - [Помощь](https://vedashiherbals.com/pomoshch): Часто задаваемые вопросы, база знаний и поддержка клиентов.
 - [Контакты](https://vedashiherbals.com/kontakty): Свяжитесь с нашей службой поддержки для консультации и помощи.
-- [Политика возврата](https://vedashiherbals.com/return-policy): Информация о гарантии качества, возврате и обмене товаров.
-- [Доставка](https://vedashiherbals.com/shipping): Условия и сроки доставки по России.
+- [Политика возврата](https://vedashiherbals.com/politika-vozvrata-i-obmena): Информация о гарантии качества, возврате и обмене товаров.
+- [Доставка](https://vedashiherbals.com/usloviya-dostavki-i-oplaty): Условия и сроки доставки по России.
 - [Регистрация поставщиков](https://vedashiherbals.com/registratsiya-postavshchika): Портал для этичных поставщиков натуральных продуктов, желающих сотрудничать с Vedashi Herbals.
 
 ## Часто задаваемые вопросы
