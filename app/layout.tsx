@@ -40,7 +40,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashiherbals.com
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "ВЕДАШИ ХЕРБАЛС — Премиальный велнес и натуральные индийские продукты",
+    default: "ВЕДАШИ ХЕРБАЛС — Индийские продукты и премиум велнес",
     template: "%s | Vedashi Herbals",
   },
   description: "Откройте для себя коллекцию премиальных аюрведических продуктов, натуральной косметики, специй и травяных сборов из Индии для здоровья и красоты.",
@@ -60,6 +60,17 @@ export const metadata: Metadata = {
       "msvalidate.01": [process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION],
     } : undefined,
   },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/vedashi-logo.png", sizes: "120x120", type: "image/png" },
+      { url: "/vedashi-logo.webp", type: "image/webp" },
+    ],
+    shortcut: ["/favicon.ico"],
+    apple: [
+      { url: "/vedashi-logo.png", sizes: "120x120", type: "image/png" },
+    ],
+  },
   alternates: {
     canonical: SITE_URL,
     languages: {
@@ -70,7 +81,7 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "Vedashi Herbals",
     locale: "ru_RU",
-    title: "ВЕДАШИ ХЕРБАЛС — Премиальный велнес и натуральные индийские продукты",
+    title: "ВЕДАШИ ХЕРБАЛС — Индийские продукты и премиум велнес",
     description: "Откройте для себя коллекцию премиальных аюрведических продуктов, натуральной косметики, специй и травяных сборов из Индии для здоровья и красоты.",
     images: [
       {
