@@ -107,6 +107,8 @@ export default async function ProductsPage({ searchParams }: Props) {
         }))
     );
 
+    const h1Title = category ? category.name : RU_DICTIONARY.plp.seo.allProductsTitle;
+
     return (
         <>
             <script
@@ -117,6 +119,7 @@ export default async function ProductsPage({ searchParams }: Props) {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }}
             />
+            <h1 className="sr-only">{h1Title}</h1>
             <ProductsClientPage initialProducts={products} />
         </>
     );
