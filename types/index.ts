@@ -22,6 +22,7 @@ export interface Product {
 
     created_at?: string;
     updated_at?: string;
+    pack_sizes_enabled?: boolean;
     /* Extended fields (may not exist in all DB rows) */
     price?: number;
     original_price?: number;
@@ -230,6 +231,7 @@ export interface BackendCartItem {
     variant_id: string | null;
     quantity: number;
     price: number;
+    pack_size?: number;
     added_at: string;
     country_prices?: any[] | null;
     product?: {
@@ -252,12 +254,14 @@ export interface BackendCartItem {
     pricing?: {
         unit_price: number;
         effective_price: number;
+        pack_unit_price?: number;
         discount_amount: number;
         discount_source: string | null;
         line_subtotal: number;
         line_total: number;
         currency?: string;
     };
+    pack_discount_percent?: number;
     /* Convenience getters added by frontend (computed) */
     product_name?: string;
     original_price?: number;

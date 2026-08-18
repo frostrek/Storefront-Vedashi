@@ -99,6 +99,7 @@ const nextConfig: NextConfig = {
       { source: '/account/support', destination: '/lichnyy-kabinet/podderzhka', permanent: true },
       { source: '/account', destination: '/lichnyy-kabinet', permanent: true },
       { source: '/login', destination: '/vhod', permanent: true },
+      { source: '/verify-email', destination: '/podtverzhdenie-email', permanent: true },
       { source: '/search', destination: '/poisk', permanent: true },
       { source: '/about', destination: '/o-nas', permanent: true },
       { source: '/contact', destination: '/kontakty', permanent: true },

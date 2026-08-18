@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { sendVerificationEmail, verifyEmail, createCart } from '@/lib/api';
 import { Mail, Loader2, CheckCircle2, XCircle, ArrowLeft, RefreshCw, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { RU_DICTIONARY } from '@/content/ru';
 
 function VerifyEmailContent() {
     const router = useRouter();
@@ -42,15 +43,15 @@ function VerifyEmailContent() {
             if (res.success) {
                 setOtpSent(true);
                 setCooldown(60);
-                toast.success('Verification code sent to your email!');
+                toast.success(RU_DICTIONARY.verifyEmailPage.toastSent);
             } else if (res.message?.includes('already verified')) {
                 setStatus('success');
-                toast.success('Email is already verified!');
+                toast.success(RU_DICTIONARY.verifyEmailPage.toastAlreadyVerified);
             } else {
-                toast.error(res.message || 'Failed to send verification code');
+                toast.error(res.message || RU_DICTIONARY.verifyEmailPage.toastSendFailed);
             }
         } catch {
-            toast.error('Network error. Please try again.');
+            toast.error(RU_DICTIONARY.verifyEmailPage.toastNetworkError);
         } finally {
             setSending(false);
         }
@@ -96,7 +97,7 @@ function VerifyEmailContent() {
     const handleVerify = useCallback(async () => {
         const code = otp.join('');
         if (code.length !== 6) {
-            setErrorMessage('Please enter the complete 6-digit code');
+            setErrorMessage(RU_DICTIONARY.verifyEmailPage.errorIncompleteCode);
             return;
         }
 
@@ -114,19 +115,19 @@ function VerifyEmailContent() {
                     } catch (cartErr) {
                         console.warn('⚠️ Cart creation failed:', cartErr);
                     }
-                    toast.success('Account created & verified! Welcome!');
+                    toast.success(RU_DICTIONARY.verifyEmailPage.toastAccountCreated);
                     setTimeout(() => router.push('/account'), 2000);
                 } else {
-                    toast.success('Email verified successfully!');
+                    toast.success(RU_DICTIONARY.verifyEmailPage.toastVerifiedSuccess);
                     setTimeout(() => router.push('/account'), 2000);
                 }
             } else {
                 setStatus('error');
-                setErrorMessage(res.message || 'Invalid verification code');
+                setErrorMessage(res.message || RU_DICTIONARY.verifyEmailPage.errorInvalidCode);
             }
         } catch {
             setStatus('error');
-            setErrorMessage('Network error. Please try again.');
+            setErrorMessage(RU_DICTIONARY.verifyEmailPage.toastNetworkError);
         } finally {
             setLoading(false);
         }
@@ -163,7 +164,7 @@ function VerifyEmailContent() {
                     onClick={() => router.push('/account')}
                     className="flex items-center gap-2 text-sm text-warm-gray hover:text-charcoal mb-6 transition-colors"
                 >
-                    <ArrowLeft className="h-4 w-4" /> Back to Account
+                    <ArrowLeft className="h-4 w-4" /> {RU_DICTIONARY.verifyEmailPage.backToAccount}
                 </button>
 
                 <div className="rounded-2xl border border-light-border bg-white overflow-hidden shadow-sm">
@@ -182,19 +183,19 @@ function VerifyEmailContent() {
                             )}
                         </div>
                         <h1 className="text-2xl font-bold text-white">
-                            {status === 'success' ? 'Email Verified!' : 'Verify Your Email'}
+                            {status === 'success' ? RU_DICTIONARY.verifyEmailPage.emailVerified : RU_DICTIONARY.verifyEmailPage.verifyYourEmail}
                         </h1>
                         <p className="mt-2 text-sm text-white/80">
                             {status === 'success'
-                                ? 'Your email has been verified successfully'
-                                : `We sent a 6-digit code to ${emailToUse || 'your email'}`}
+                                ? RU_DICTIONARY.verifyEmailPage.successDesc
+                                : `${RU_DICTIONARY.verifyEmailPage.weSentCodeTo} ${emailToUse || RU_DICTIONARY.verifyEmailPage.yourEmail}`}
                         </p>
                     </div>
 
                     <div className="p-6">
                         {status === 'success' ? (
                             <div className="text-center py-4">
-                                <p className="text-sm text-warm-gray mb-4">Redirecting to login...</p>
+                                <p className="text-sm text-warm-gray mb-4">{RU_DICTIONARY.verifyEmailPage.redirecting}</p>
                                 <Loader2 className="h-5 w-5 animate-spin text-[#91C934] mx-auto" />
                             </div>
                         ) : (
@@ -237,14 +238,14 @@ function VerifyEmailContent() {
                                                 style={{ backgroundColor: '#91C934' }}
                                             >
                                                 <RefreshCw className="inline h-3.5 w-3.5 mr-1.5 -mt-0.5" />
-                                                Retry OTP
+                                                {RU_DICTIONARY.verifyEmailPage.retryOtp}
                                             </button>
                                             <button
                                                 onClick={() => { router.push('/'); }}
                                                 className="flex-1 rounded-xl py-2.5 text-sm font-semibold border border-light-border text-charcoal hover:bg-gray-50 transition-colors"
                                             >
                                                 <Eye className="inline h-3.5 w-3.5 mr-1.5 -mt-0.5" />
-                                                Continue as Guest
+                                                {RU_DICTIONARY.verifyEmailPage.continueAsGuest}
                                             </button>
                                         </div>
                                     </div>
@@ -260,17 +261,17 @@ function VerifyEmailContent() {
                                     >
                                         {loading ? (
                                             <span className="flex items-center justify-center gap-2">
-                                                <Loader2 className="h-4 w-4 animate-spin" /> Verifying...
+                                                <Loader2 className="h-4 w-4 animate-spin" /> {RU_DICTIONARY.verifyEmailPage.verifying}
                                             </span>
                                         ) : (
-                                            'Verify Email'
+                                            RU_DICTIONARY.verifyEmailPage.verifyEmailBtn
                                         )}
                                     </button>
                                 )}
 
                                 {/* Resend */}
                                 <div className="text-center mt-5">
-                                    <p className="text-xs text-warm-gray mb-2">Didn&apos;t receive the code?</p>
+                                    <p className="text-xs text-warm-gray mb-2">{RU_DICTIONARY.verifyEmailPage.didntReceive}</p>
                                     <button
                                         onClick={handleSendOtp}
                                         disabled={sending || cooldown > 0}
@@ -278,10 +279,10 @@ function VerifyEmailContent() {
                                     >
                                         <RefreshCw className={`h-3.5 w-3.5 ${sending ? 'animate-spin' : ''}`} />
                                         {cooldown > 0
-                                            ? `Resend in ${cooldown}s`
+                                            ? `${RU_DICTIONARY.verifyEmailPage.resendIn} ${cooldown}${RU_DICTIONARY.verifyEmailPage.seconds}`
                                             : sending
-                                                ? 'Sending...'
-                                                : 'Resend Code'}
+                                                ? RU_DICTIONARY.verifyEmailPage.sending
+                                                : RU_DICTIONARY.verifyEmailPage.resendCode}
                                     </button>
                                 </div>
 
@@ -291,7 +292,7 @@ function VerifyEmailContent() {
                                         onClick={() => router.push('/')}
                                         className="text-xs font-medium text-warm-gray hover:text-charcoal transition-colors"
                                     >
-                                        Skip for now — Continue as Guest
+                                        {RU_DICTIONARY.verifyEmailPage.skipForNow}
                                     </button>
                                 </div>
                             </>

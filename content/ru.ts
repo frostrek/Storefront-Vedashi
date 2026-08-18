@@ -261,7 +261,10 @@ export const RU_DICTIONARY = {
     volume: "Объем",
     count: "Количество",
     flavour: "Вкус",
-    packOf: "Upakovka",
+    packOf: "Упаковка из",
+    bundleSize: "Размер набора",
+    bundlePackOf: "Набор из",
+    perUnit: "за шт.",
     comingSoon: "Скоро в продаже",
     availabilityEnded: "Продажи завершены",
     notifyMeWhenBackInStock: "Уведомить о появлении",
@@ -1893,5 +1896,34 @@ export const RU_DICTIONARY = {
       defaultSection: "Аюрведа и Здоровье",
       defaultTags: ["Аюрведа", "Велнес", "Натуральная косметика"]
     }
+  },
+  // VERIFY EMAIL PAGE
+  // ═══════════════════════════════════════════════════════════
+  verifyEmailPage: {
+    toastSent: "Код подтверждения отправлен на ваш email!",
+    toastAlreadyVerified: "Email уже подтвержден!",
+    toastSendFailed: "Не удалось отправить код подтверждения",
+    toastNetworkError: "Ошибка сети. Пожалуйста, попробуйте еще раз.",
+    errorIncompleteCode: "Пожалуйста, введите полный 6-значный код",
+    toastAccountCreated: "Аккаунт создан и подтвержден! Добро пожаловать!",
+    toastVerifiedSuccess: "Email успешно подтвержден!",
+    errorInvalidCode: "Неверный код подтверждения",
+    backToAccount: "Вернуться в аккаунт",
+    emailVerified: "Email подтвержден!",
+    verifyYourEmail: "Подтвердите ваш Email",
+    successDesc: "Ваш email был успешно подтвержден",
+    weSentCodeTo: "Мы отправили 6-значный код на",
+    yourEmail: "ваш email",
+    redirecting: "Перенаправление...",
+    retryOtp: "Очистить и повторить",
+    continueAsGuest: "Продолжить как гость",
+    verifying: "Подтверждение...",
+    verifyEmailBtn: "Подтвердить Email",
+    didntReceive: "Не получили код?",
+    resendIn: "Повторить через",
+    seconds: "с",
+    sending: "Отправка...",
+    resendCode: "Отправить код повторно",
+    skipForNow: "Пропустить пока — Продолжить как гость"
   }
 };
