@@ -362,7 +362,7 @@ export function generateLocalBusinessJsonLd(): Record<string, unknown> {
         priceRange: '₽₽',
         address: {
             '@type': 'PostalAddress',
-            streetAddress: 'ул. Шверника, д. 6, к. 1, помещ. 8П',
+            streetAddress: 'вн.тер.г. муниципальный округ Академический, ул. Шверника, д. 6, к. 1, помещ. 8П',
             addressLocality: 'Москва',
             addressRegion: 'Москва',
             postalCode: '117292',
@@ -502,10 +502,30 @@ export function generateOrganizationJsonLd(): Record<string, unknown> {
         '@context': 'https://schema.org',
         '@type': 'Organization',
         name: SITE_NAME,
+        legalName: 'ООО ВЕДАШИ ХЕРБАЛС',
         alternateName: ['Vedashi', 'ООО ВЕДАШИ ХЕРБАЛС'],
         url: SITE_URL,
         logo: `${SITE_URL}/vedashi-logo.png`,
         description: 'ООО ВЕДАШИ ХЕРБАЛС — российский поставщик премиальных аюрведических продуктов и натуральных травяных средств.',
+        taxID: '9727117720',
+        foundingLocation: {
+            '@type': 'Place',
+            name: 'Москва, Россия'
+        },
+        address: {
+            '@type': 'PostalAddress',
+            streetAddress: 'вн.тер.г. муниципальный округ Академический, ул. Шверника, д. 6, к. 1, помещ. 8П',
+            addressLocality: 'Москва',
+            addressRegion: 'Москва',
+            postalCode: '117292',
+            addressCountry: 'RU'
+        },
+        contactPoint: {
+            '@type': 'ContactPoint',
+            contactType: 'customer support',
+            email: 'info@vedashiherbals.com',
+            availableLanguage: 'Russian'
+        },
         sameAs: [
             'https://www.linkedin.com/company/vedashi-herbals/'
         ]
