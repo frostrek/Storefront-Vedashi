@@ -61,7 +61,7 @@ export function useFilters(formatPrice?: (v: number) => string) {
     const router = useRouter();
     const pathname = usePathname();
 
-    // Read current state from URL
+    // Read current state from URLs
     const filters: FilterState = useMemo(() => {
         const attributes: Record<string, string[]> = {};
         searchParams.forEach((val, key) => {
@@ -174,7 +174,7 @@ export function useFilters(formatPrice?: (v: number) => string) {
         filters.form.forEach(f => chips.push({ key: 'form', label: 'Form', value: f }));
         filters.specialities.forEach(s => chips.push({ key: 'specialities', label: 'Speciality', value: s }));
         filters.ratings.forEach(r => chips.push({ key: 'rating', label: 'Rating', value: r }));
-        
+
         const fmtPrice = formatPrice || ((v: number) => `₹${v.toLocaleString()}`);
         if (filters.priceRange[0] !== 0 || filters.priceRange[1] !== Infinity) {
             const min = fmtPrice(filters.priceRange[0]);
@@ -185,7 +185,7 @@ export function useFilters(formatPrice?: (v: number) => string) {
         if (filters.bestSellers) chips.push({ key: 'bestSellers', label: 'Collection', value: 'Best Sellers' });
         if (filters.newArrivals) chips.push({ key: 'newArrivals', label: 'Collection', value: 'New Arrivals' });
         if (filters.discountMin) chips.push({ key: 'discount_min', label: 'Discount', value: `${filters.discountMin}% & above` });
-        
+
         Object.entries(filters.attributes).forEach(([key, values]) => {
             values.forEach(v => chips.push({ key: `attr_${key}`, label: key.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()), value: v }));
         });
