@@ -126,7 +126,14 @@ export function buildProductMeta(product: ProductSeoInput, currentCountry: strin
     const description = seo?.meta_description || productFallbackDescription(product);
     
     const pathStrategy = ROUTES.tovar(product.slug || product.product_id).slice(1);
-    const canonical = seo?.canonical_url || `${SITE_URL}/${pathStrategy}`;
+    let canonical = seo?.canonical_url || `${SITE_URL}/${pathStrategy}`;
+    
+    // Fix broken canonicals from legacy database values
+    if (canonical.includes('/in/products/')) {
+        canonical = canonical.replace('/in/products/', '/tovar/');
+    } else if (canonical.includes('/in/product/')) {
+        canonical = canonical.replace('/in/product/', '/tovar/');
+    }
     
     const ogImage = seo?.og_image || `${SITE_URL}/${pathStrategy}/opengraph-image`;
     const keywords = seo?.meta_keywords || [product.product_name, product.brand, product.category, SITE_NAME].filter(Boolean).join(', ');
