@@ -50,6 +50,8 @@ export async function GET() {
         'User-agent: YandexImages',
         'User-agent: YandexMedia',
         'Allow: /',
+        'Allow: /llms.txt',
+        'Allow: /llms-full.txt',
         disallowBlock,
         '',
         '# ─── AI / LLM / Generative Engine Crawlers (GEO/AEO) ────',
