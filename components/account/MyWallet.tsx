@@ -284,7 +284,7 @@ export default function MyWallet({ customerId }: MyWalletProps) {
                 )}
             </div>
 
-            {/* Aesthetic Footer / Tip */}
+            {/*Aesthetic Footer / Tip */}
             <div className="p-8 bg-gradient-to-r from-[#5a9a1e] to-[#91c934] rounded-[2rem] text-white overflow-hidden relative group">
                 <div className="absolute top-0 right-0 p-4 opacity-10 transform -rotate-12 translate-x-4">
                     <Star className="h-32 w-32 text-white" />
