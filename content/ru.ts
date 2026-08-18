@@ -1421,7 +1421,7 @@ export const RU_DICTIONARY = {
       articleMany: "статей",
     },
     seo: {
-      listingTitle: "Блог — Аюрведа, Здоровье и Натуральный Уход | Vedashi Herbals",
+      listingTitle: "Блог об Аюрведе и Здоровье | Vedashi Herbals",
       listingDescription: "Читайте статьи о здоровье, аюрведе, натуральной косметике и травяных средствах. Советы экспертов и полезные рекомендации от Vedashi Herbals.",
       listingOgDescription: "Читайте статьи о здоровье, аюрведе, натуральной косметике и травяных средствах.",
       postNotFoundTitle: "Статья не найдена — Vedashi Herbals",
