@@ -3,6 +3,8 @@ import { ROUTES } from '@/lib/routes';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashiherbals.com';
 
+export const dynamic = 'force-dynamic';
+
 interface StaticPageEntry {
     path: string;
     changefreq: string;

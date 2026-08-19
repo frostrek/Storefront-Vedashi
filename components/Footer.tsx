@@ -339,6 +339,12 @@ export default function Footer() {
                                             {data?.contact?.email || 'info@vedashiherbals.com'}
                                         </a>
                                     </div>
+                                    <div className="flex items-center gap-2">
+                                        <Phone className="text-gray-500 h-3 w-3 flex-shrink-0" />
+                                        <a href={`tel:${data?.contact?.phone || '+7-985-110-01-35'}`} className="text-[11.5px] text-gray-400 hover:text-[#91C934] transition-colors">
+                                            {data?.contact?.phone || '+7-985-110-01-35'}
+                                        </a>
+                                    </div>
                                     <div className="flex items-start gap-2 mt-0.5">
                                         <FileText className="text-gray-500 h-3 w-3 flex-shrink-0 mt-0.5" />
                                         <div className="flex flex-col gap-0.5 text-[11.5px] text-gray-400 leading-tight">
