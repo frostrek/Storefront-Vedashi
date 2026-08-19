@@ -35,10 +35,28 @@ export default async function BlogPage() {
     const categories = catsRes || [];
 
     return (
-        <BlogListingClient
-            initialPosts={posts}
-            featuredPost={featuredPost}
-            categories={categories}
-        />
+        <>
+            <h1 className="sr-only">{RU_DICTIONARY.blog.seo.listingTitle}</h1>
+            <BlogListingClient
+                initialPosts={posts}
+                featuredPost={featuredPost}
+                categories={categories}
+            />
+            {/* Server-rendered content for AI crawlers & screen readers */}
+            <section className="sr-only" aria-label="Блог Vedashi Herbals">
+                <h2>Блог Vedashi Herbals — Аюрведа, здоровье и натуральный уход</h2>
+                <p>Блог Vedashi Herbals (ООО ВЕДАШИ ХЕРБАЛС) — статьи об аюрведе, здоровом образе жизни, натуральной косметике и травяных средствах. Советы экспертов по уходу за кожей, волосами и здоровью с использованием натуральных ингредиентов из Индии.</p>
+                {posts.length > 0 && (
+                    <ul>
+                        {posts.slice(0, 20).map((post: any) => (
+                            <li key={post.slug}>
+                                <a href={`${SITE_URL}/blog/${post.slug}`}>{post.title}</a>
+                                {post.excerpt && <p>{post.excerpt}</p>}
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </section>
+        </>
     );
 }

@@ -162,6 +162,11 @@ export default function ContactClientPage() {
                                 lines: RU_DICTIONARY.contact.info.email.lines
                             },
                             {
+                                icon: Phone,
+                                title: RU_DICTIONARY.contact.info.phone.title,
+                                lines: RU_DICTIONARY.contact.info.phone.lines
+                            },
+                            {
                                 icon: Clock,
                                 title: RU_DICTIONARY.contact.info.hours.title,
                                 lines: RU_DICTIONARY.contact.info.hours.lines
@@ -181,15 +186,25 @@ export default function ContactClientPage() {
                                 </div>
                                 <div className="space-y-1">
                                     <h3 className="font-bold text-[11px] tracking-wider text-[#1A1A1A] uppercase mb-2">{info.title}</h3>
-                                    {info.lines.map((line, j) => (
-                                        info.title === RU_DICTIONARY.contact.info.email.title ? (
-                                            <a key={j} href={`mailto:${line}`} className="block text-[14px] text-[#5c5c5c] leading-relaxed hover:text-[#91C934] transition-colors">
-                                                {line}
-                                            </a>
-                                        ) : (
-                                            <p key={j} className="text-[14px] text-[#5c5c5c] leading-relaxed">{line}</p>
-                                        )
-                                    ))}
+                                    {info.lines.map((line, j) => {
+                                        if (info.title === RU_DICTIONARY.contact.info.email.title) {
+                                            return (
+                                                <a key={j} href={`mailto:${line}`} className="block text-[14px] text-[#5c5c5c] leading-relaxed hover:text-[#91C934] transition-colors">
+                                                    {line}
+                                                </a>
+                                            );
+                                        } else if (info.title === RU_DICTIONARY.contact.info.phone.title) {
+                                            return (
+                                                <a key={j} href={`tel:${line}`} className="block text-[14px] text-[#5c5c5c] leading-relaxed hover:text-[#91C934] transition-colors">
+                                                    {line}
+                                                </a>
+                                            );
+                                        } else {
+                                            return (
+                                                <p key={j} className="text-[14px] text-[#5c5c5c] leading-relaxed">{line}</p>
+                                            );
+                                        }
+                                    })}
                                 </div>
                             </motion.div>
                         ))}

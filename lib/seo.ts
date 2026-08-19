@@ -360,6 +360,7 @@ export function generateLocalBusinessJsonLd(): Record<string, unknown> {
     return {
         '@context': 'https://schema.org',
         '@type': 'LocalBusiness',
+        '@id': `${SITE_URL}/#localbusiness`,
         name: SITE_NAME,
         url: SITE_URL,
         logo: `${SITE_URL}/vedashi-logo.png`,
@@ -439,6 +440,10 @@ export function generateBlogPostingJsonLd(post: any): Record<string, unknown> {
         mainEntityOfPage: {
             '@type': 'WebPage',
             '@id': `${SITE_URL}/blog/${post.slug}`
+        },
+        speakable: {
+            '@type': 'SpeakableSpecification',
+            cssSelector: ['h1', '.blog-content p:first-of-type', 'meta[name="description"]']
         }
     };
 }
@@ -508,6 +513,7 @@ export function generateOrganizationJsonLd(): Record<string, unknown> {
     return {
         '@context': 'https://schema.org',
         '@type': 'Organization',
+        '@id': `${SITE_URL}/#organization`,
         name: SITE_NAME,
         legalName: 'ООО ВЕДАШИ ХЕРБАЛС',
         alternateName: ['Vedashi', 'ООО ВЕДАШИ ХЕРБАЛС'],
@@ -515,6 +521,7 @@ export function generateOrganizationJsonLd(): Record<string, unknown> {
         logo: `${SITE_URL}/vedashi-logo.png`,
         description: 'ООО ВЕДАШИ ХЕРБАЛС — российский поставщик премиальных аюрведических продуктов и натуральных травяных средств.',
         taxID: '9727117720',
+        foundingDate: '2025',
         foundingLocation: {
             '@type': 'Place',
             name: 'Москва, Россия'
@@ -530,6 +537,7 @@ export function generateOrganizationJsonLd(): Record<string, unknown> {
         contactPoint: {
             '@type': 'ContactPoint',
             contactType: 'customer support',
+            telephone: '+7-985-110-01-35',
             email: 'info@vedashiherbals.com',
             availableLanguage: 'Russian'
         },
@@ -544,8 +552,10 @@ export function generateWebSiteJsonLd(): Record<string, unknown> {
     return {
         '@context': 'https://schema.org',
         '@type': 'WebSite',
+        '@id': `${SITE_URL}/#website`,
         name: SITE_NAME,
         url: SITE_URL,
+        publisher: { '@id': `${SITE_URL}/#organization` },
         inLanguage: 'ru-RU',
         potentialAction: {
             '@type': 'SearchAction',

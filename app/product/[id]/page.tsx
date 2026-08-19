@@ -22,17 +22,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         notFound();
     }
 
-    const productSchema = generateProductJsonLd({
-        ...product,
-        review_count: Number(product.review_count || 0)
-    } as any);
-
-    const breadcrumbs = generateBreadcrumbJsonLd([
-        { name: RU_DICTIONARY.nav.home, url: `${SITE_URL}` },
-        { name: RU_DICTIONARY.nav.products, url: `${SITE_URL}/katalog` },
-        { name: product.category || 'Category', url: `${SITE_URL}/katalog/${(product as any).category_slug || product.category || ''}` },
-        { name: product.product_name, url: `${SITE_URL}/tovar/${product.slug || product.product_id}` },
-    ]);
+    // Schema generation is handled by layout.tsx (ProductJsonLd and BreadcrumbJsonLd)
 
     // Fetch FAQs related to this product for rich snippets
     const faqsData = await searchFaqs(product.product_name);
@@ -40,14 +30,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
     return (
         <>
-            <script
-                type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
-            />
-            <script
-                type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }}
-            />
+
             {faqSchema && (
                 <script
                     type="application/ld+json"

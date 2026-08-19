@@ -147,6 +147,7 @@ export default async function RootLayout({
         <link rel="alternate" type="application/rss+xml" title="Vedashi Herbals — RSS" href={`${SITE_URL}/rss.xml`} />
         <link rel="alternate" type="application/rss+xml" title="Vedashi Herbals — Turbo Pages" href={`${SITE_URL}/turbo-rss.xml`} />
         <link rel="author" href="/humans.txt" />
+        <link rel="help" href="/llms.txt" type="text/plain" title="LLM Instructions" />
 
         <Script
           id="ga4-default-consent"

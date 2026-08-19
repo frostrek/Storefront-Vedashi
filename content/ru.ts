@@ -1493,6 +1493,10 @@ export const RU_DICTIONARY = {
         title: "НАПИШИТЕ НАМ",
         lines: ["info@vedashiherbals.com"]
       },
+      phone: {
+        title: "ПОЗВОНИТЕ НАМ",
+        lines: ["+7-985-110-01-35"]
+      },
       hours: {
         title: "ЧАСЫ РАБОТЫ",
         lines: [

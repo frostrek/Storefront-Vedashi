@@ -20,7 +20,8 @@ const COMPANY_REQUISITES = `ООО "ВЕДАШИ ХЕРБАЛС"
 ИНН 9727117720 / КПП 772701001
 ОГРН 1257700504709
 Адрес: 117292, г. Москва, вн.тер.г. муниципальный округ Академический, ул. Шверника, д. 6, к. 1, помещ. 8П
-Email: info@vedashiherbals.com`;
+Email: info@vedashiherbals.com
+Телефон: +7-985-110-01-35`;
 
 // ═══════════════════════════════════════════════════════════════════
 // 1. PUBLIC OFFER (Публичная оферта) — used on /ru/terms
@@ -233,7 +234,7 @@ export const returnPolicy: RuLegalDocument = {
         },
         {
             type: 'pre',
-            text: 'Email: info@vedashiherbals.com',
+            text: 'Email: info@vedashiherbals.com\nТелефон: +7-985-110-01-35',
         },
     ],
 };
@@ -301,7 +302,7 @@ export const deliveryPayment: RuLegalDocument = {
         },
         {
             type: 'pre',
-            text: 'Email: info@vedashiherbals.com',
+            text: 'Email: info@vedashiherbals.com\nТелефон: +7-985-110-01-35',
         },
     ],
 };
