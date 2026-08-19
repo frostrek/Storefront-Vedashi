@@ -3,7 +3,7 @@ import { API_URL } from '@/lib/api';
 import { SUPPORTED_COUNTRIES, buildPath } from '@/lib/currency';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashiherbals.com';
-const INDEXNOW_KEY = 'f8028a276d1d4a099131bec65b74d3b9';
+const INDEXNOW_KEY = 'cb4a122ed5324f55a81ebf55f673fb5f';
 const INDEXNOW_KEY_LOCATION = `${SITE_URL}/${INDEXNOW_KEY}.txt`;
 
 // Secure endpoint with a simple token to prevent abuse
