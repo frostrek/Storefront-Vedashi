@@ -863,10 +863,10 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                                                 disabled={!active}
                                                                 className={`px-5 py-2 rounded-lg border text-sm font-medium transition-all duration-200
                                                                     ${isSelected
-                                                                        ? 'bg-white text-[#91C934] border-[#91C934] border-2 shadow-sm'
+                                                                        ? 'bg-white text-black border-black border-2 shadow-sm'
                                                                         : !available
                                                                             ? 'border-gray-200 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
-                                                                            : 'bg-white border-gray-300 text-gray-700 hover:border-[#91C934] hover:text-[#91C934]'
+                                                                            : 'bg-white border-gray-300 text-gray-700 hover:border-black hover:text-black'
                                                                     }`}
                                                             >
                                                                 {formatWeight(w)}
@@ -894,10 +894,10 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                                                 disabled={!active}
                                                                 className={`px-5 py-2 rounded-lg border text-sm font-medium transition-all duration-200
                                                                     ${isSelected
-                                                                        ? 'bg-white text-[#91C934] border-[#91C934] border-2 shadow-sm'
+                                                                        ? 'bg-white text-black border-black border-2 shadow-sm'
                                                                         : !available
                                                                             ? 'border-gray-200 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
-                                                                            : 'bg-white border-gray-300 text-gray-700 hover:border-[#91C934] hover:text-[#91C934]'
+                                                                            : 'bg-white border-gray-300 text-gray-700 hover:border-black hover:text-black'
                                                                     }`}
                                                             >
                                                                 {str}
@@ -925,10 +925,10 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                                                 disabled={!active}
                                                                 className={`px-5 py-2 rounded-lg border text-sm font-medium transition-all duration-200
                                                                     ${isSelected
-                                                                        ? 'bg-white text-[#91C934] border-[#91C934] border-2 shadow-sm'
+                                                                        ? 'bg-white text-black border-black border-2 shadow-sm'
                                                                         : !available
                                                                             ? 'border-gray-200 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
-                                                                            : 'bg-white border-gray-300 text-gray-700 hover:border-[#91C934] hover:text-[#91C934]'
+                                                                            : 'bg-white border-gray-300 text-gray-700 hover:border-black hover:text-black'
                                                                     }`}
                                                             >
                                                                 {formatVolume(vol)}
@@ -956,10 +956,10 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                                                 disabled={!active}
                                                                 className={`px-5 py-2 rounded-lg border text-sm font-medium transition-all duration-200
                                                                     ${isSelected
-                                                                        ? 'bg-white text-[#91C934] border-[#91C934] border-2 shadow-sm'
+                                                                        ? 'bg-white text-black border-black border-2 shadow-sm'
                                                                         : !available
                                                                             ? 'border-gray-200 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
-                                                                            : 'bg-white border-gray-300 text-gray-700 hover:border-[#91C934] hover:text-[#91C934]'
+                                                                            : 'bg-white border-gray-300 text-gray-700 hover:border-black hover:text-black'
                                                                     }`}
                                                             >
                                                                 {countStr}
@@ -987,10 +987,10 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                                                 disabled={!active}
                                                                 className={`px-5 py-2 rounded-lg border text-sm font-medium transition-all duration-200
                                                                     ${isSelected
-                                                                        ? 'bg-white text-[#91C934] border-[#91C934] border-2 shadow-sm'
+                                                                        ? 'bg-white text-black border-black border-2 shadow-sm'
                                                                         : !available
                                                                             ? 'border-gray-200 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
-                                                                            : 'bg-white border-gray-300 text-gray-700 hover:border-[#91C934] hover:text-[#91C934]'
+                                                                            : 'bg-white border-gray-300 text-gray-700 hover:border-black hover:text-black'
                                                                     }`}
                                                             >
                                                                 {flav}
@@ -1018,10 +1018,10 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                                                 disabled={!active}
                                                                 className={`w-11 h-11 rounded-lg border text-sm font-semibold transition-all duration-200 flex items-center justify-center
                                                                     ${isSelected
-                                                                        ? 'bg-white text-[#91C934] border-[#91C934] border-2 shadow-sm'
+                                                                        ? 'bg-white text-black border-black border-2 shadow-sm'
                                                                         : !available
                                                                             ? 'border-gray-200 border-dashed text-gray-400 bg-gray-50/30 cursor-pointer text-xs'
-                                                                            : 'bg-white border-gray-300 text-gray-700 hover:border-[#91C934] hover:text-[#91C934]'
+                                                                            : 'bg-white border-gray-300 text-gray-700 hover:border-black hover:text-black'
                                                                     }`}
                                                             >
                                                                 {pack}
@@ -1052,8 +1052,8 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                                     onClick={() => setSelectedBundleSize(size)}
                                                     className={`relative px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200 flex flex-col items-center justify-center min-w-[80px]
                                                         ${isSelected
-                                                            ? 'bg-white text-[#91C934] border-[#91C934] border-2 shadow-sm'
-                                                            : 'bg-white border-gray-300 text-gray-700 hover:border-[#91C934] hover:text-[#91C934]'
+                                                            ? 'bg-white text-black border-black border-2 shadow-sm'
+                                                            : 'bg-white border-gray-300 text-gray-700 hover:border-black hover:text-black'
                                                         }`}
                                                 >
                                                     <span>{RU_DICTIONARY.productPage.packOf} {size}</span>
@@ -1158,7 +1158,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                         disabled={isUnavailable || cartLoading}
                                         className={`w-full rounded-lg py-2 flex justify-center items-center gap-2 font-bold transition-all h-[48px] ${isUnavailable
                                             ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
-                                            : 'bg-[#91C934] hover:bg-[#7ab52a] text-white shadow-sm'
+                                            : 'bg-black hover:bg-gray-800 text-white shadow-sm'
                                             }`}
                                     >{RU_DICTIONARY.productPage.buyNow}</button>
                                 </div>
@@ -1187,11 +1187,11 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                         onClick={(e) => handleAddToCart(e)}
                                         disabled={isUnavailable || cartLoading}
                                         className={`w-full rounded-lg py-2 flex cursor-pointer justify-center items-center gap-2 font-semibold transition-all h-[48px] ${isUnavailable
-                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-2 border-[#91C934]'
-                                            : 'bg-white border-2 border-[#91C934] hover:border-[#91C934] hover:bg-gray-50 text-[#91C934] shadow-sm'
+                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-2 border-gray-300'
+                                            : 'bg-white border-2 border-black hover:border-gray-800 hover:bg-gray-50 text-black shadow-sm'
                                             }`}
                                     >
-                                        <ShoppingCart size={18} className={isUnavailable ? "text-gray-400" : "text-[#91C934]"} />
+                                        <ShoppingCart size={18} className={isUnavailable ? "text-gray-400" : "text-black"} />
                                         {isComingSoon ? RU_DICTIONARY.productPage.comingSoon : isExpired ? RU_DICTIONARY.product.unavailable : isVariantInactive ? RU_DICTIONARY.product.unavailable : RU_DICTIONARY.product.addToCart}
                                     </button>
 
@@ -1200,7 +1200,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                                         disabled={isUnavailable || cartLoading}
                                         className={`w-full rounded-lg py-2 flex cursor-pointer justify-center items-center gap-2 font-bold transition-all h-[48px] ${isUnavailable
                                             ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
-                                            : 'bg-[#91C934] hover:bg-[#7ab52a] text-white shadow-sm'
+                                            : 'bg-black hover:bg-gray-800 text-white shadow-sm'
                                             }`}
                                     >
                                         {RU_DICTIONARY.productPage.buyNow}
