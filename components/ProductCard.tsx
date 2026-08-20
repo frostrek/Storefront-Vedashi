@@ -131,7 +131,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
     const imageSrc = product.thumbnail_url || product.images?.[0] || '/herbal_placeholder.png';
     const isExternal = imageSrc.startsWith('http');
     const isBase64 = imageSrc.startsWith('data:');
-    const productUrl = buildPath(params.country as string || 'in', ROUTES.tovar(product.slug || product.product_id));
+    const productUrl = buildPath(params.country as string || 'ru', ROUTES.tovar(product.slug || product.product_id));
 
     const closeCartModal = useCallback((e?: React.MouseEvent) => {
         if (e) {

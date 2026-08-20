@@ -1,6 +1,7 @@
 'use client';
 
 import StarRating from './StarRating';
+import { RU_DICTIONARY } from '@/content/ru';
 import { ThumbsUp, ThumbsDown, BadgeCheck, Flag, CornerDownRight } from 'lucide-react';
 import { voteHelpful, reportReview } from '@/lib/api';
 import { useState } from 'react';
@@ -113,7 +114,7 @@ export default function ReviewCard({ review }: ReviewCardProps) {
                 <div className="mt-4 ml-4 bg-[#91C934]/5 p-4 rounded-xl border-l-2 border-[#91C934]">
                     <div className="flex items-center gap-2 mb-1">
                         <CornerDownRight size={14} className="text-[#91C934]" />
-                        <span className="text-xs font-bold uppercase tracking-wider text-[#91C934]">Vedashi Response</span>
+                        <span className="text-xs font-bold uppercase tracking-wider text-[#91C934]">{RU_DICTIONARY.productPage.reviewsSection?.vedashiResponse || "Ответ Ведаши"}</span>
                         {review.admin_reply_at && (
                             <span className="text-xs text-gray-500 font-medium ml-1">
                                 {new Date(review.admin_reply_at).toLocaleDateString('en-US', {
@@ -184,7 +185,7 @@ export default function ReviewCard({ review }: ReviewCardProps) {
             {/* Report Form */}
             {isReporting && !hasReported && (
                 <div className="mt-3 p-3 bg-red-50 border border-red-100 rounded-md text-sm">
-                    <p className="font-medium text-red-800 mb-2">Report Review</p>
+                    <p className="font-medium text-red-800 mb-2">{RU_DICTIONARY.productPage.reviewsSection?.reportReview || "Пожаловаться на отзыв"}</p>
                     <textarea
                         value={reportReason}
                         onChange={(e) => setReportReason(e.target.value)}

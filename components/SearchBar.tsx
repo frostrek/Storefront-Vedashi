@@ -218,7 +218,7 @@ export default function SearchBar({
                 >
                     <div className="px-3 py-2 border-b border-gray-50 flex items-center gap-1.5">
                         <Sparkles className="h-3 w-3 text-[#3d5c3a]" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Suggestions</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{RU_DICTIONARY.search.suggestions || "Рекомендации"}</span>
                     </div>
                     <ul className="max-h-80 overflow-y-auto">
                         {suggestions.map((s, i) => (
@@ -257,7 +257,7 @@ export default function SearchBar({
                                 {/* Price */}
                                 {s.price != null && (
                                     <span className="text-sm font-bold text-[#3d5c3a] flex-shrink-0">
-                                        ₹{Number(s.price).toLocaleString('en-IN')}
+                                        ₽{Number(s.price).toLocaleString('ru-RU')}
                                     </span>
                                 )}
                             </li>

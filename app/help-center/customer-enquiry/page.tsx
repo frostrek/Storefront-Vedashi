@@ -25,7 +25,7 @@ const CATEGORIES = [
 function CustomerEnquiryContent() {
     const params = useParams();
     const searchParams = useSearchParams();
-    const country = params?.country || 'in';
+    const country = params?.country || 'ru';
     const { user, isAuthenticated } = useAuth();
     const orderIdParam = searchParams?.get('orderId') || '';
     const [isSubmitting, setIsSubmitting] = useState(false);

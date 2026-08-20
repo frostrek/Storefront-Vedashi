@@ -115,6 +115,10 @@ export const RU_DICTIONARY = {
     viewAllNotifications: "Все уведомления",
   },
   home: {
+    hero: {
+      vedashiMethod: "Метод Ведаши",
+      knowOurStory: "УЗНАЙТЕ НАШУ ИСТОРИЮ"
+    },
     categoriesSubtitle: "Исследуйте нашу коллекцию традиционной мудрости для современной жизни",
     bestSellers: "Бестселлеры",
     bestSellersSubtitle: "Наши самые любимые средства для естественного оздоровления, выбранные вами.",
@@ -135,6 +139,7 @@ export const RU_DICTIONARY = {
     exploreAll: "Смотреть все",
   },
   search: {
+    suggestions: "Рекомендации",
     pages: "Страницы",
     products: "Товары",
     searching: "Поиск...",
@@ -240,14 +245,25 @@ export const RU_DICTIONARY = {
     addToWishlist: "В избранное",
     removeFromWishlist: "Удалить из избранного",
     share: "Поделиться",
+    pureAyurvedicEssence: "Чистая аюрведическая эссенция",
+    productNotFound: "Товар не найден",
+  },
+  media: {
+    video: "Видео",
   },
   productPage: {
+    reviewsSection: {
+      vedashiResponse: "Ответ Ведаши",
+      reportReview: "Пожаловаться на отзыв"
+    },
     bestseller: "Бестселлер",
     newArrival: "Новинка",
     noReviewsYet: "Пока нет отзывов",
     boughtThisMonth: "куплено в этом месяце",
     review: "отзыв",
     reviews: "отзывов",
+    notFoundMetaTitle: "Товар не найден | Vedashi",
+    notFoundMetaDesc: "К сожалению, запрашиваемый товар не найден. Вернитесь в каталог для поиска других продуктов.",
     wow: "ВАУ!",
     limitedTimeOffer: "Ограниченное предложение",
     inclusiveOfTaxes: "Включая все налоги",
@@ -798,6 +814,35 @@ export const RU_DICTIONARY = {
     essenceQuote: "\"В Природе всё отданное возвращается в изобилии. Ваша преданность отражает гармонию наших общих ценностей.\""
   },
   account: {
+    exportOrdersModal: {
+      exportOrders: "Экспорт заказов",
+      downloadDetailed: "Скачать детализированные заказы в PDF (по 2 на страницу)",
+      format: "Формат",
+      pdfDocument: "Документ PDF",
+      csvExcelComingSoon: "CSV / Excel (Скоро)",
+      filtersOptional: "Фильтры (необязательно)",
+      orderStatus: "Статус заказа",
+      allStatuses: "Все статусы",
+      pending: "В ожидании",
+      confirmed: "Подтвержден",
+      shipped: "Отправлен",
+      delivered: "Доставлен",
+      cancelled: "Отменен",
+      paymentStatus: "Статус оплаты",
+      paid: "Оплачен",
+      unpaid: "Не оплачен",
+      failed: "Ошибка",
+      refunded: "Возвращен",
+      dateFrom: "Дата с",
+      dateTo: "Дата по",
+      minAmount: "Мин. сумма (₽)",
+      maxAmount: "Макс. сумма (₽)",
+      cancel: "Отмена",
+      downloadPdf: "Скачать PDF",
+      downloading: "Подготовка PDF...",
+      noOrdersMatch: "Нет заказов, соответствующих выбранным фильтрам",
+      onlyExportingFirst50: "Экспортируются только первые 50 заказов"
+    },
     coreExperience: "ОСНОВНОЕ",
     overview: "Обзор",
     notifications: "Уведомления",
@@ -1272,11 +1317,11 @@ export const RU_DICTIONARY = {
     whatWeDo: {
       heading: "Что мы",
       headingEmphasis: "делаем",
-      subtitle: "Создаём бесшовный мост между лучшими создателями Индии и мировым рынком.",
+      subtitle: "Создаём бесшовный мост между лучшими создателями Индии и российским рынком.",
 
       forConsumers: {
         title: "Для покупателей",
-        description: "Мы тщательно отбираем и доставляем премиальные индийские продукты для здоровья, красоты, питания и образа жизни прямо к вашему порогу — в любую точку мира. Почувствуйте подлинную суть Индии с бескомпромиссным качеством.",
+        description: "Мы тщательно отбираем и доставляем премиальные индийские продукты для здоровья, красоты, питания и образа жизни прямо к вашему порогу — в любую точку России. Почувствуйте подлинную суть Индии с бескомпромиссным качеством.",
       },
 
       forBrands: {
@@ -1308,13 +1353,13 @@ export const RU_DICTIONARY = {
           title: "Проверенное наследие",
           description: "Продукты и рецептуры, глубоко укоренённые в Аюрведе и традиционных индийских знаниях.",
         },
-        worldwideShipping: {
-          title: "Доставка по всему миру",
-          description: "Мы берём на себя всю логистику, чтобы доставить безграничное благополучие к вашему порогу в любую точку мира.",
+        nationwideShipping: {
+          title: "Доставка по всей России",
+          description: "Мы берём на себя всю логистику, чтобы доставить безграничное благополучие к вашему порогу в любую точку России.",
         },
         empoweringBrands: {
           title: "Поддержка индийских брендов",
-          description: "Мы помогаем отечественным стартапам и местным ремесленникам бесшовно выходить на мировые рынки.",
+          description: "Мы помогаем отечественным стартапам и местным ремесленникам бесшовно выходить на российский рынок.",
         },
       },
     },

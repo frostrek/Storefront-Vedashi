@@ -100,7 +100,7 @@ function CheckoutContent() {
     const exchangeRate = currentConfig?.exchange_rate || 1;
     const router = useRouter();
     const routeParams = useParams();
-    const routeCountry = (routeParams.country as string) || 'in';
+    const routeCountry = (routeParams.country as string) || 'ru';
     const searchParams = useSearchParams();
     const isBuyNow = searchParams.get('buyNow') === 'true';
     const { items, totalPrice, clearCart, cartId, couponCode, couponDiscount, couponType, removeCoupon, applyCoupon, totalItems, orderNotes, setOrderNotes } = useCart();
@@ -137,7 +137,7 @@ function CheckoutContent() {
     const [addressesLoading, setAddressesLoading] = useState(false);
     const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
     const [editAddressData, setEditAddressData] = useState<any>(null);
-    const editConfig = getAddressConfig(editAddressData?.country_code || 'IN');
+    const editConfig = getAddressConfig(editAddressData?.country_code || 'RU');
 
     const [addressActionLoading, setAddressActionLoading] = useState<string | null>(null); // Stores the address_id being deleted/updated
     const [addressToDelete, setAddressToDelete] = useState<string | null>(null);
@@ -155,7 +155,7 @@ function CheckoutContent() {
         full_name: '', email: '', address_line1: '', address_line2: '', city: '', state: '', pincode: '', phone: '', country: defaultCountryName, country_code: defaultCountryCode, label: ''
     });
 
-    const shippingConfig = getAddressConfig(newAddress.country_code || 'IN');
+    const shippingConfig = getAddressConfig(newAddress.country_code || 'RU');
 
     // Compute dial code for shipping address (matching /addresses page pattern)
     const shippingDialCode = (() => {
@@ -179,7 +179,7 @@ function CheckoutContent() {
         address_line1: '', address_line2: '', city: '', state: '', pincode: '', country: defaultCountryName, country_code: defaultCountryCode, label: ''
     });
 
-    const billingConfig = getAddressConfig(newBillingAddress.country_code || 'IN');
+    const billingConfig = getAddressConfig(newBillingAddress.country_code || 'RU');
 
     // Validation state
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -595,7 +595,7 @@ function CheckoutContent() {
         e.preventDefault();
         e.stopPropagation();
         setEditingAddressId(address.address_id);
-        const currentCountryCode = (address as any).country_code || 'IN';
+        const currentCountryCode = (address as any).country_code || 'RU';
         let phoneToEdit = address.phone || '';
 
         // Strip dial code prefix to show only local number (matching /addresses page pattern)
@@ -955,7 +955,7 @@ function CheckoutContent() {
 
             let finalNewBillingAddress = newBillingAddress;
             if (!billingSameAsShipping && useNewBillingAddress) {
-                const currentBillingCountryCode = (((newBillingAddress as any).country_code) || 'IN') as CountryCode;
+                const currentBillingCountryCode = (((newBillingAddress as any).country_code) || 'RU') as CountryCode;
                 // Assuming newBillingAddress has phone too, if not it won't hurt
                 if ((newBillingAddress as any).phone) {
                     const billingPhoneResult = validateOptionalPhoneNumber((newBillingAddress as any).phone, currentBillingCountryCode);
@@ -1106,7 +1106,7 @@ function CheckoutContent() {
 
     const validateAddress = (addr: any, prefix: string = '') => {
         const errors: Record<string, string> = {};
-        const addrConfig = getAddressConfig(addr.country_code || 'IN');
+        const addrConfig = getAddressConfig(addr.country_code || 'RU');
         if (!addr.full_name || !addr.full_name.trim() || addr.full_name.trim().length < 2) {
             errors[`${prefix}full_name`] = 'Full name is required (min 2 characters)';
         }

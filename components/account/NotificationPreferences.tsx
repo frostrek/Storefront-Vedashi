@@ -159,7 +159,7 @@ export default function NotificationPreferences({
                             </span>
                             <div className="flex items-center gap-2">
                                 <Smartphone className="h-4 w-4 shrink-0" style={{ color: isMobileVerified ? '#3B5D3B' : '#BDB7A3' }} />
-                                <span className="text-sm font-bold text-herbal-green">SMS</span>
+                                <span className="text-sm font-bold text-herbal-green">{RU_DICTIONARY.profileTab.notificationPreferences.channels.sms.label || "SMS"}</span>
                             </div>
                         </div>
                         {isMobileVerified ? (
@@ -182,7 +182,7 @@ export default function NotificationPreferences({
                             </span>
                             <div className="flex items-center gap-2">
                                 <Mail className="h-4 w-4 shrink-0" style={{ color: '#3B5D3B' }} />
-                                <span className="text-sm font-bold text-herbal-green">Email</span>
+                                <span className="text-sm font-bold text-herbal-green">{RU_DICTIONARY.profileTab.notificationPreferences.channels.email.label || "Email"}</span>
                             </div>
                         </div>
                         <span className="rounded-full bg-herbal-green/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-herbal-green border border-herbal-green/10">{RU_DICTIONARY.profileTab.notificationPreferences.badges.active}</span>
@@ -194,7 +194,7 @@ export default function NotificationPreferences({
                             <span className="relative flex h-5 w-5 items-center justify-center rounded-md border-2 border-light-border bg-cream/30"></span>
                             <div className="flex items-center gap-2">
                                 <MessageSquare className="h-4 w-4 shrink-0 text-warm-gray" />
-                                <span className="text-sm font-bold text-warm-gray/80">WhatsApp</span>
+                                <span className="text-sm font-bold text-warm-gray/80">{RU_DICTIONARY.profileTab.notificationPreferences.channels.whatsapp.label || "WhatsApp"}</span>
                             </div>
                         </div>
                         <span className="rounded-full bg-light-border/40 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-warm-gray/70">{RU_DICTIONARY.profileTab.notificationPreferences.badges.soon}</span>

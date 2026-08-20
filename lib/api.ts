@@ -1390,11 +1390,11 @@ export async function downloadInvoice(orderId: string) {
 
 /**
  * Format an INR amount for display.
- * e.g. 1500 → "₹1,500"
+ * e.g. 1500 → "₽1,500"
  */
 export function formatVND(amount: number | string | null | undefined): string {
     const n = Math.round(Number(amount) || 0);
-    return '₹' + n.toLocaleString('en-IN');
+    return '₽' + n.toLocaleString('ru-RU');
 }
 export const formatPrice = formatVND; // alias
 

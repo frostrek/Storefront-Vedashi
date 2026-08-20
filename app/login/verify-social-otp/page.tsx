@@ -23,7 +23,7 @@ export default function VerifySocialOTPPage() {
     const [cooldown, setCooldown] = useState(0);
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
     const params = useParams();
-    const country = params.country as string || 'in';
+    const country = params.country as string || 'ru';
 
     // Load data from sessionStorage
     useEffect(() => {

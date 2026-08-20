@@ -1,5 +1,6 @@
 import { ImageResponse } from 'next/og';
 import { getProductDetails } from '@/lib/api';
+import { RU_DICTIONARY } from '@/content/ru';
 
 // Route segment config
 export const runtime = 'edge';
@@ -15,7 +16,7 @@ export default async function Image({ params }: { params: { id: string } }) {
   const product = await getProductDetails(params.id);
 
   if (!product) {
-    return new Response('Product not found', { status: 404 });
+    return new Response(RU_DICTIONARY.product.productNotFound, { status: 404 });
   }
 
   const { product_name, brand, price, category, thumbnail_url } = product;
@@ -87,11 +88,11 @@ export default async function Image({ params }: { params: { id: string } }) {
                     fontWeight: 700 
                 }}
               >
-                ₹{price}
+                ₽{price}
               </div>
             )}
             <div style={{ fontSize: 24, color: '#999', marginLeft: 30, letterSpacing: '0.05em' }}>
-                Pure Ayurvedic Essence
+                {RU_DICTIONARY.product.pureAyurvedicEssence}
             </div>
           </div>
         </div>
@@ -137,7 +138,7 @@ export default async function Image({ params }: { params: { id: string } }) {
             letterSpacing: '0.1em'
           }}
         >
-          WWW.VEDASHI.COM
+          WWW.VEDASHIHERBALS.COM
         </div>
       </div>
     ),

@@ -14,11 +14,11 @@ interface StaticPageEntry {
 async function fetchSitemapData() {
     try {
         const extractData = async (url: string, fallbackUrl: string, fallbackKey: string) => {
-            let res = await fetch(url, { next: { revalidate: 3600 } });
+            let res = await fetch(url, { cache: 'no-store' });
             
             // Fallback if the dedicated sitemap endpoint doesn't exist (e.g. 404)
             if (!res.ok && fallbackUrl) {
-                res = await fetch(fallbackUrl, { next: { revalidate: 3600 } });
+                res = await fetch(fallbackUrl, { cache: 'no-store' });
             }
 
             if (!res.ok) return [];
@@ -55,7 +55,7 @@ async function fetchSitemapData() {
 
 async function fetchBlogPosts(): Promise<Array<{ slug: string; updated_at?: string }>> {
     try {
-        const res = await fetch(`${API_URL}/api/blogs?limit=500&status=published`, { next: { revalidate: 3600 } });
+        const res = await fetch(`${API_URL}/api/blogs?limit=500&status=published`, { cache: 'no-store' });
         if (!res.ok) return [];
         const json = await res.json();
         return json.success ? (json.data?.posts || json.data || []) : [];

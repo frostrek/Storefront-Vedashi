@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, Leaf, ShieldCheck, MapPin, BookOpen, Globe, Rocket, ShoppingBag, TrendingUp } from 'lucide-react';
+import { ArrowRight, Leaf, ShieldCheck, MapPin, BookOpen, Globe, Rocket, ShoppingBag, TrendingUp, Truck } from 'lucide-react';
 import { ROUTES } from '@/lib/routes';
 import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
 import { useParams } from 'next/navigation';
@@ -9,7 +9,7 @@ import { RU_DICTIONARY } from '@/content/ru';
 
 export default function AboutClientPage() {
     const params = useParams();
-    const country = (params.country as string) || 'in';
+    const country = (params.country as string) || 'ru';
     const t = RU_DICTIONARY.about;
 
     const features = [
@@ -17,7 +17,7 @@ export default function AboutClientPage() {
         { icon: MapPin, ...t.whyChoose.features.directFromIndia },
         { icon: Leaf, ...t.whyChoose.features.pureNatural },
         { icon: BookOpen, ...t.whyChoose.features.trustedHeritage },
-        { icon: Globe, ...t.whyChoose.features.worldwideShipping },
+        { icon: Truck, ...t.whyChoose.features.nationwideShipping },
         { icon: Rocket, ...t.whyChoose.features.empoweringBrands },
     ];
 

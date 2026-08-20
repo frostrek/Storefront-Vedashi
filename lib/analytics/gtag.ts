@@ -121,7 +121,7 @@ export function trackEcommerce(
   pushToDataLayer({ ecommerce: null });
 
   const ecommerceData: Record<string, unknown> = {
-    currency: payload.currency || 'INR',
+    currency: payload.currency || 'RUB',
     value: Number(payload.value || 0),
     items: payload.items.map(item => ({
       ...item,

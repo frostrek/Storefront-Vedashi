@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, FileText, Download, Calendar, DollarSign, Loader2 } from 'lucide-react';
 import { Order } from '@/types';
+import { RU_DICTIONARY } from '@/content/ru';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { getOrderById } from '@/lib/api';
@@ -31,7 +32,7 @@ const RED = [239, 68, 68] as [number, number, number];
 // en-US commas and append the VND symbol explicitly.
 const fmtPrice = (amount: number | string | null | undefined): string => {
     const n = Math.round(Number(amount) || 0);
-    return '₹' + n.toLocaleString('en-IN');
+    return '₽' + n.toLocaleString('ru-RU');
 };
 
 export default function ExportOrdersModal({
@@ -118,14 +119,14 @@ export default function ExportOrdersModal({
             }
 
             if (filteredOut.length === 0) {
-                toast.error('No orders match the selected filters');
+                toast.error(RU_DICTIONARY.account.exportOrdersModal.noOrdersMatch);
                 setIsExporting(false);
                 return;
             }
 
             const maxExportLength = Math.min(filteredOut.length, 50);
             if (filteredOut.length > 50)
-                toast('Only exporting first 50 orders', { icon: '⚠️' });
+                toast(RU_DICTIONARY.account.exportOrdersModal.onlyExportingFirst50, { icon: '⚠️' });
 
             // ── Fetch all order details up-front ──────────────────────────
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -534,12 +535,12 @@ export default function ExportOrdersModal({
             }
 
             doc.save(`Vedashi_Orders_Export_${new Date().toISOString().slice(0, 10)}.pdf`);
-            toast.success('Successfully exported orders as PDF');
+            toast.success("PDF успешно сгенерирован");
             onClose();
 
         } catch (error) {
             console.error('Export Error:', error);
-            toast.error('Failed to generate PDF export');
+            toast.error("Не удалось загрузить данные заказа");
         } finally {
             setIsExporting(false);
         }
@@ -562,8 +563,8 @@ export default function ExportOrdersModal({
                             <FileText className="h-6 w-6 text-[#3B5D3B]" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-charcoal">Export Orders</h2>
-                            <p className="text-sm text-warm-gray mt-0.5">Download detailed orders as PDF (2 per page)</p>
+                            <h2 className="text-xl font-bold text-charcoal">{RU_DICTIONARY.account.exportOrdersModal.exportOrders}</h2>
+                            <p className="text-sm text-warm-gray mt-0.5">{RU_DICTIONARY.account.exportOrdersModal.downloadDetailed}</p>
                         </div>
                     </div>
                     <button
@@ -579,59 +580,59 @@ export default function ExportOrdersModal({
 
                     {/* Format Selection */}
                     <div className="mb-8">
-                        <h3 className="text-xs font-bold text-warm-gray tracking-wider uppercase mb-3">Format</h3>
+                        <h3 className="text-xs font-bold text-warm-gray tracking-wider uppercase mb-3">{RU_DICTIONARY.account.exportOrdersModal.format}</h3>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="rounded-xl border-2 border-burgundy bg-burgundy/5 p-4 flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-sm">
                                 <FileText className="h-5 w-5 text-[#3B5D3B]" />
-                                <span className="font-semibold text-[#3B5D3B]">PDF Document</span>
+                                <span className="font-semibold text-[#3B5D3B]">{RU_DICTIONARY.account.exportOrdersModal.pdfDocument}</span>
                             </div>
                             <div className="rounded-xl border border-light-border bg-white p-4 flex items-center justify-center gap-2 opacity-50 cursor-not-allowed">
-                                <span className="font-medium text-warm-gray">CSV / Excel (Coming Soon)</span>
+                                <span className="font-medium text-warm-gray">{RU_DICTIONARY.account.exportOrdersModal.csvExcelComingSoon}</span>
                             </div>
                         </div>
                     </div>
 
                     {/* Filters Section */}
                     <div>
-                        <h3 className="text-xs font-bold text-warm-gray tracking-wider uppercase mb-3">Filters (Optional)</h3>
+                        <h3 className="text-xs font-bold text-warm-gray tracking-wider uppercase mb-3">{RU_DICTIONARY.account.exportOrdersModal.filtersOptional}</h3>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             {/* Order Status */}
                             <div>
-                                <label className="block text-sm font-medium text-charcoal mb-1">Order Status</label>
+                                <label className="block text-sm font-medium text-charcoal mb-1">{RU_DICTIONARY.account.exportOrdersModal.orderStatus}</label>
                                 <select
                                     className="w-full rounded-lg border border-light-border px-4 py-2.5 text-sm focus:border-burgundy focus:outline-none transition-colors bg-white shadow-sm"
                                     value={statusFilter}
                                     onChange={(e) => setStatusFilter(e.target.value)}
                                 >
-                                    <option value="All">All Statuses</option>
-                                    <option value="PENDING">Pending</option>
-                                    <option value="CONFIRMED">Confirmed</option>
-                                    <option value="SHIPPED">Shipped</option>
-                                    <option value="DELIVERED">Delivered</option>
-                                    <option value="CANCELLED">Cancelled</option>
+                                    <option value="All">{RU_DICTIONARY.account.exportOrdersModal.allStatuses}</option>
+                                    <option value="PENDING">{RU_DICTIONARY.account.exportOrdersModal.pending}</option>
+                                    <option value="CONFIRMED">{RU_DICTIONARY.account.exportOrdersModal.confirmed}</option>
+                                    <option value="SHIPPED">{RU_DICTIONARY.account.exportOrdersModal.shipped}</option>
+                                    <option value="DELIVERED">{RU_DICTIONARY.account.exportOrdersModal.delivered}</option>
+                                    <option value="CANCELLED">{RU_DICTIONARY.account.exportOrdersModal.cancelled}</option>
                                 </select>
                             </div>
 
                             {/* Payment Status */}
                             <div>
-                                <label className="block text-sm font-medium text-charcoal mb-1">Payment Status</label>
+                                <label className="block text-sm font-medium text-charcoal mb-1">{RU_DICTIONARY.account.exportOrdersModal.paymentStatus}</label>
                                 <select
                                     className="w-full rounded-lg border border-light-border px-4 py-2.5 text-sm focus:border-burgundy focus:outline-none transition-colors bg-white shadow-sm"
                                     value={paymentFilter}
                                     onChange={(e) => setPaymentFilter(e.target.value)}
                                 >
-                                    <option value="All">All Statuses</option>
-                                    <option value="PAID">Paid</option>
-                                    <option value="UNPAID">Unpaid</option>
-                                    <option value="FAILED">Failed</option>
-                                    <option value="REFUNDED">Refunded</option>
+                                    <option value="All">{RU_DICTIONARY.account.exportOrdersModal.allStatuses}</option>
+                                    <option value="PAID">{RU_DICTIONARY.account.exportOrdersModal.paid}</option>
+                                    <option value="UNPAID">{RU_DICTIONARY.account.exportOrdersModal.unpaid}</option>
+                                    <option value="FAILED">{RU_DICTIONARY.account.exportOrdersModal.failed}</option>
+                                    <option value="REFUNDED">{RU_DICTIONARY.account.exportOrdersModal.refunded}</option>
                                 </select>
                             </div>
 
                             {/* Date Area */}
                             <div>
-                                <label className="block text-sm font-medium text-charcoal mb-1">Date From</label>
+                                <label className="block text-sm font-medium text-charcoal mb-1">{RU_DICTIONARY.account.exportOrdersModal.dateFrom}</label>
                                 <div className="relative">
                                     <input
                                         type="date"
@@ -644,7 +645,7 @@ export default function ExportOrdersModal({
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-charcoal mb-1">Date To</label>
+                                <label className="block text-sm font-medium text-charcoal mb-1">{RU_DICTIONARY.account.exportOrdersModal.dateTo}</label>
                                 <div className="relative">
                                     <input
                                         type="date"
@@ -658,7 +659,7 @@ export default function ExportOrdersModal({
 
                             {/* Amount Area */}
                             <div>
-                                <label className="block text-sm font-medium text-charcoal mb-1">Min Amount (₹)</label>
+                                <label className="block text-sm font-medium text-charcoal mb-1">{RU_DICTIONARY.account.exportOrdersModal.minAmount}</label>
                                 <div className="relative">
                                     <input
                                         type="number"
@@ -672,7 +673,7 @@ export default function ExportOrdersModal({
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-charcoal mb-1">Max Amount (₹)</label>
+                                <label className="block text-sm font-medium text-charcoal mb-1">{RU_DICTIONARY.account.exportOrdersModal.maxAmount}</label>
                                 <div className="relative">
                                     <input
                                         type="number"

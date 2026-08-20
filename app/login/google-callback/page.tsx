@@ -25,7 +25,7 @@ import { Leaf } from 'lucide-react';
 function GoogleCallbackContent() {
     const searchParams = useSearchParams();
     const params = useParams();
-    const country = (params?.country as string) || 'in';
+    const country = (params?.country as string) || 'ru';
     const { loginFromVerification } = useAuth();
     const processedRef = useRef(false);
     const [status, setStatus] = useState('Connecting to your account...');

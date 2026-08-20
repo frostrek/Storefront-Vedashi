@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { RU_DICTIONARY } from '@/content/ru';
 import { ArrowRight, Leaf, Award, FlaskConical, ShieldCheck } from 'lucide-react';
 
 const trustBadges = [
@@ -94,8 +95,8 @@ export default function HeroSection() {
                                                 </svg>
                                             </div>
                                             <div>
-                                                <p className="text-xs text-[#6B6B60]">The Vedashi Method</p>
-                                                <p className="text-sm font-semibold text-[#2C2C2C]">KNOW OUR STORY</p>
+                                                <p className="text-xs text-[#6B6B60]">{RU_DICTIONARY.home.hero.vedashiMethod || "Метод Ведаши"}</p>
+                                                <p className="text-sm font-semibold text-[#2C2C2C]">{RU_DICTIONARY.home.hero.knowOurStory || "УЗНАЙТЕ НАШУ ИСТОРИЮ"}</p>
                                             </div>
                                         </div>
                                     </a>

@@ -40,7 +40,7 @@ export const FILTER_CONFIGS: FilterConfig[] = [
         min: 0,
         max: 500,
         step: 5,
-        formatLabel: (v: number) => `₹${v}`,
+        formatLabel: (v: number) => `₽${v}`,
         defaultValue: [0, 500],
     },
 

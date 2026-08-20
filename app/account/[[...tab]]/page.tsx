@@ -58,7 +58,7 @@ export default function AccountPage() {
     const params = useParams<{ country: string, tab?: string[] }>();
     const searchParams = useSearchParams();
     const urlOrderId = searchParams.get('orderId');
-    const country = params?.country || 'in';
+    const country = params?.country || 'ru';
     const { user, isAuthenticated, isLoading, logout, updateUser } = useAuth();
     const { items: wishlistItems, removeItem: removeWishlistItem, loading: wishlistLoading } = useWishlist();
     const { addItem: addCartItem, items: cartItems, getItemInCart, loading: cartLoading } = useCart();
@@ -129,7 +129,7 @@ export default function AccountPage() {
         country: defaultCountryName, country_code: defaultCountryCode, phone: '', label: '', is_default: false, full_name: '',
     });
 
-    const addressConfig = getAddressConfig(addressForm.country_code || 'IN');
+    const addressConfig = getAddressConfig(addressForm.country_code || 'RU');
     const addressDialCode = useMemo(() => {
         const match = Array.isArray(COUNTRY_CODES) ? COUNTRY_CODES.find(c => c.code === addressForm.country_code) : null;
         const fallbackMatch = COUNTRY_CODES.find(c => c.code === defaultCountryCode);
@@ -309,7 +309,7 @@ export default function AccountPage() {
                     }));
 
                     trackRefund({
-                        currency: canceledOrder.currency || 'INR',
+                        currency: canceledOrder.currency || 'RUB',
                         value: Number(canceledOrder.final_total || canceledOrder.total_amount || 0),
                         transaction_id: orderId,
                         items: refundItems,
@@ -1156,7 +1156,7 @@ export default function AccountPage() {
         }
 
         // Postal Code format validation
-        const config = getAddressConfig(addressForm.country_code || 'IN');
+        const config = getAddressConfig(addressForm.country_code || 'RU');
         const cleanPin = addressForm.pincode.toString().trim();
         if (config.postalCode) {
             if (!config.postalCode.regex.test(cleanPin)) {
@@ -1226,7 +1226,7 @@ export default function AccountPage() {
     };
 
     const startEditAddress = (addr: Address) => {
-        const cCode = (addr as any).country_code || 'IN';
+        const cCode = (addr as any).country_code || 'RU';
         const match = Array.isArray(COUNTRY_CODES) ? COUNTRY_CODES.find(c => c.code === cCode) : null;
         const fallbackMatch = COUNTRY_CODES.find(c => c.code === defaultCountryCode);
         const dCode = match ? match.dial_code : (fallbackMatch?.dial_code || '+1');

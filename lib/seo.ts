@@ -367,6 +367,7 @@ export function generateLocalBusinessJsonLd(): Record<string, unknown> {
         image: `${SITE_URL}/vedashi-social-banner.png`,
         description: 'Премиальные аюрведические продукты и натуральные травяные средства. Vedashi Herbals — ООО ВЕДАШИ ХЕРБАЛС.',
         email: 'info@vedashiherbals.com',
+        telephone: '+7-985-110-01-35',
         priceRange: '₽₽',
         address: {
             '@type': 'PostalAddress',
@@ -542,7 +543,8 @@ export function generateOrganizationJsonLd(): Record<string, unknown> {
             availableLanguage: 'Russian'
         },
         sameAs: [
-            'https://www.linkedin.com/company/vedashi-herbals/'
+            'https://www.linkedin.com/company/vedashi-herbals/',
+            'https://t.me/vedashiherbals'
         ]
     };
 }

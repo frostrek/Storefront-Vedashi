@@ -53,7 +53,7 @@ export default function SupportPage() {
 
 function SupportContent() {
     const params = useParams();
-    const country = params?.country || 'in';
+    const country = params?.country || 'ru';
     const { isAuthenticated, user } = useAuth();
     const searchParams = useSearchParams();
     const urlOrderId = searchParams.get('orderId');
@@ -377,10 +377,10 @@ function SupportContent() {
                                         className="w-full sm:w-auto px-6 py-4 rounded-[20px] bg-gray-50 border-transparent text-base font-bold focus:outline-none focus:ring-2 focus:ring-[#4A5D23]/20 cursor-pointer appearance-none min-w-[180px]"
                                     >
                                         <option value="">{RU_DICTIONARY.helpCenter.support.list.filterAll}</option>
-                                        <option value="open">Open</option>
-                                        <option value="in_progress">In Progress</option>
-                                        <option value="resolved">Resolved</option>
-                                        <option value="closed">Closed</option>
+                                        <option value="open">{RU_DICTIONARY.helpCenter.support.statuses?.Open || "Открыт"}</option>
+                                        <option value="in_progress">{RU_DICTIONARY.helpCenter.support.statuses?.["In Progress"] || "В процессе"}</option>
+                                        <option value="resolved">{RU_DICTIONARY.helpCenter.support.statuses?.Resolved || "Решен"}</option>
+                                        <option value="closed">{RU_DICTIONARY.helpCenter.support.statuses?.Closed || "Закрыт"}</option>
                                     </select>
                                     <span className="text-sm font-bold text-gray-400 uppercase tracking-widest bg-gray-50 px-5 py-2 rounded-full">
                                         {filteredTickets.length} {RU_DICTIONARY.helpCenter.support.list.results}

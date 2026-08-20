@@ -175,7 +175,7 @@ export function useFilters(formatPrice?: (v: number) => string) {
         filters.specialities.forEach(s => chips.push({ key: 'specialities', label: 'Speciality', value: s }));
         filters.ratings.forEach(r => chips.push({ key: 'rating', label: 'Rating', value: r }));
 
-        const fmtPrice = formatPrice || ((v: number) => `₹${v.toLocaleString()}`);
+        const fmtPrice = formatPrice || ((v: number) => `₽${v.toLocaleString('ru-RU')}`);
         if (filters.priceRange[0] !== 0 || filters.priceRange[1] !== Infinity) {
             const min = fmtPrice(filters.priceRange[0]);
             const max = filters.priceRange[1] === Infinity ? 'Max' : fmtPrice(filters.priceRange[1]);

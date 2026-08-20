@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import { RU_DICTIONARY } from '@/content/ru';
 
 interface SocialLoginButtonsProps {
     onLoadingChange?: (loading: boolean) => void;
@@ -72,7 +73,7 @@ export default function SocialLoginButtons({ onLoadingChange, disabled }: Social
                 ) : (
                     <GoogleIcon />
                 )}
-                <span>Continue with Google</span>
+                <span>{RU_DICTIONARY.auth.continueWithGoogle || "Продолжить с Google"}</span>
             </button>
         </div>
     );

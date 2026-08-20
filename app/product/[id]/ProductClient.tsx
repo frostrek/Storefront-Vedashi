@@ -259,7 +259,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
                 // GA4: view_item event
                 const viewPrice = Number(data.variants?.find((v: ProductVariant) => v.is_default)?.price ?? data.price ?? 0);
                 trackEcommerce('view_item', {
-                    currency: 'INR',
+                    currency: 'RUB',
                     value: viewPrice,
                     items: [{
                         item_id: data.product_id,

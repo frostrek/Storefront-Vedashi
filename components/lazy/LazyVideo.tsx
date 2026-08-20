@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { Play } from 'lucide-react';
+import { RU_DICTIONARY } from '@/content/ru';
 
 interface LazyVideoProps {
     /** Video source URL */
@@ -63,7 +64,7 @@ export default function LazyVideo({
                         />
                     ) : (
                         <div className="w-full h-full bg-neutral-900 flex items-center justify-center">
-                            <span className="text-neutral-500 text-sm">Video</span>
+                            <span className="text-neutral-500 text-sm">{RU_DICTIONARY.media?.video || "Видео"}</span>
                         </div>
                     )}
                     {/* Play overlay */}

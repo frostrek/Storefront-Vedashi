@@ -139,7 +139,7 @@ export default function DynamicScriptLoader() {
                         n.queue=[];t=b.createElement(e);t.async=!0;
                         t.src=v;s=b.getElementsByTagName(e)[0];
                         s.parentNode.insertBefore(t,s)}(window, document,'script',
-                        'https://connect.facebook.net/en_US/fbevents.js');
+                        'https://connect.facebook.net/ru_RU/fbevents.js');
                         fbq('init', '${process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID}');
                     `}
                 </Script>

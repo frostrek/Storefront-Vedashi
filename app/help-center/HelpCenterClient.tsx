@@ -14,7 +14,7 @@ interface HelpCenterClientProps {
 
 export default function HelpCenterClient({ initialFaqs }: HelpCenterClientProps) {
     const params = useParams();
-    const country = params?.country || 'in';
+    const country = params?.country || 'ru';
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [searching, setSearching] = useState(false);

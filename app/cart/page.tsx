@@ -56,7 +56,7 @@ export default function CartPage() {
     const { isAuthenticated } = useAuth();
     const router = useRouter();
     const params = useParams();
-    const country = (params.country as string) || 'in';
+    const country = (params.country as string) || 'ru';
     const [itemToRemove, setItemToRemove] = useState<string | null>(null);
     const [couponInput, setCouponInput] = useState('');
     const [applyingCoupon, setApplyingCoupon] = useState(false);

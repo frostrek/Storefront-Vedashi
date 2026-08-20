@@ -49,8 +49,8 @@ export async function generateMetadata({
 
     if (!product) {
         return {
-            title: 'Product Not Found | Vedashi',
-            description: 'The formulation you are looking for could not be found.',
+            title: RU_DICTIONARY.productPage.notFoundMetaTitle,
+            description: RU_DICTIONARY.productPage.notFoundMetaDesc,
         };
     }
 
@@ -107,7 +107,7 @@ async function fetchCategoryBreadcrumb(categoryId: string): Promise<Array<{ cate
 /** Server component that injects JSON-LD structured data */
 async function ProductJsonLd({ paramsPromise }: { paramsPromise: Promise<any> }) {
     const { id, country } = await paramsPromise;
-    const currentCountry = country || 'in';
+    const currentCountry = country || 'ru';
     const product = await fetchProductForMeta(id);
 
     if (!product) return null;
@@ -122,7 +122,7 @@ async function ProductJsonLd({ paramsPromise }: { paramsPromise: Promise<any> })
         gb: 'GBP',
         ae: 'AED',
     };
-    const currency = currencyMap[currentCountry] || 'INR';
+    const currency = currencyMap[currentCountry] || 'RUB';
 
     const productJsonLd = generateProductJsonLd({
         product_id: product.product_id,
