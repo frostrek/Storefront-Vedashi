@@ -109,6 +109,9 @@ const nextConfig: NextConfig = {
       { source: '/help-center/customer-enquiry', destination: '/pomoshch/zapros-klienta', permanent: true },
       { source: '/help-center', destination: '/pomoshch', permanent: true },
 
+      // Legacy Indian/English routes mapping to Russian structure
+      { source: '/in/products/:path*', destination: '/tovar/:path*', permanent: true },
+      { source: '/in/product/:path*', destination: '/tovar/:path*', permanent: true },
     ];
   },
   async rewrites() {

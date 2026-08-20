@@ -64,7 +64,7 @@ export default function BrandReel() {
             {duplicatedBrands.map((brand, index) => (
               <Link
                 key={`${brand.slug}-${index}`}
-                href={buildPath(country, `/products?brand=${encodeURIComponent(brand.slug)}`)}
+                href={buildPath(country, `/katalog?brand=${encodeURIComponent(brand.slug)}`)}
                 className="flex-shrink-0 group"
               >
                 <div className="relative flex items-center justify-center px-2 sm:px-4 h-[60px] w-[120px] sm:h-[80px] sm:w-[160px] transition-all duration-300 group-hover:scale-110">

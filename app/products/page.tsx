@@ -39,7 +39,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
         : RU_DICTIONARY.plp.seo.allProductsDesc;
 
     // Flat Russian URL — no country prefix per developer architecture
-    const canonicalPath = categorySlug ? `/katalog?category=${categorySlug}` : '/katalog';
+    const canonicalPath = categorySlug ? `/katalog/${categorySlug}` : '/katalog';
     const canonicalUrl = `${SITE_URL}${canonicalPath}`;
 
     return {
@@ -87,7 +87,7 @@ export default async function ProductsPage({ searchParams }: Props) {
     if (category) {
         breadcrumbItems.push({ 
             name: category.name, 
-            url: `${SITE_URL}/katalog?category=${category.slug}` 
+            url: `${SITE_URL}/katalog/${category.slug}` 
         });
     }
 
@@ -98,7 +98,7 @@ export default async function ProductsPage({ searchParams }: Props) {
     
     const collectionSchema = generateCollectionPageJsonLd(
         category ? category.name : RU_DICTIONARY.plp.seo.allProductsTitle,
-        category ? `${SITE_URL}/katalog?category=${category.slug}` : `${SITE_URL}/katalog`,
+        category ? `${SITE_URL}/katalog/${category.slug}` : `${SITE_URL}/katalog`,
         products.map(p => ({
             name: p.product_name,
             url: `${SITE_URL}/tovar/${p.slug || p.product_id}`,
@@ -106,6 +106,8 @@ export default async function ProductsPage({ searchParams }: Props) {
             price: p.price
         }))
     );
+
+    const h1Title = category ? category.name : RU_DICTIONARY.plp.seo.allProductsTitle;
 
     return (
         <>
@@ -117,6 +119,7 @@ export default async function ProductsPage({ searchParams }: Props) {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }}
             />
+            <h1 className="sr-only">{h1Title}</h1>
             <ProductsClientPage initialProducts={products} />
         </>
     );

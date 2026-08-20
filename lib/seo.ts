@@ -63,7 +63,7 @@ export interface CategorySeoInput {
 
 const SITE_NAME = 'Vedashi Herbals';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashiherbals.com';
-const DEFAULT_OG_IMAGE = `${SITE_URL}/og-default.jpg`;
+const DEFAULT_OG_IMAGE = `${SITE_URL}/vedashi-social-banner.png`;
 
 // ─── Sanitization ─────────────────────────────────────────────────────────────
 
@@ -126,7 +126,14 @@ export function buildProductMeta(product: ProductSeoInput, currentCountry: strin
     const description = seo?.meta_description || productFallbackDescription(product);
     
     const pathStrategy = ROUTES.tovar(product.slug || product.product_id).slice(1);
-    const canonical = seo?.canonical_url || `${SITE_URL}/${pathStrategy}`;
+    let canonical = seo?.canonical_url || `${SITE_URL}/${pathStrategy}`;
+    
+    // Fix broken canonicals from legacy database values
+    if (canonical.includes('/in/products/')) {
+        canonical = canonical.replace('/in/products/', '/tovar/');
+    } else if (canonical.includes('/in/product/')) {
+        canonical = canonical.replace('/in/product/', '/tovar/');
+    }
     
     const ogImage = seo?.og_image || `${SITE_URL}/${pathStrategy}/opengraph-image`;
     const keywords = seo?.meta_keywords || [product.product_name, product.brand, product.category, SITE_NAME].filter(Boolean).join(', ');
@@ -353,17 +360,17 @@ export function generateLocalBusinessJsonLd(): Record<string, unknown> {
     return {
         '@context': 'https://schema.org',
         '@type': 'LocalBusiness',
+        '@id': `${SITE_URL}/#localbusiness`,
         name: SITE_NAME,
         url: SITE_URL,
-        logo: `${SITE_URL}/logo.png`,
-        image: `${SITE_URL}/og-default.jpg`,
+        logo: `${SITE_URL}/vedashi-logo.png`,
+        image: `${SITE_URL}/vedashi-social-banner.png`,
         description: 'Премиальные аюрведические продукты и натуральные травяные средства. Vedashi Herbals — ООО ВЕДАШИ ХЕРБАЛС.',
         email: 'info@vedashiherbals.com',
-        telephone: '+7 495 000 00 00', // TODO: Replace with real Russian business phone number when received
         priceRange: '₽₽',
         address: {
             '@type': 'PostalAddress',
-            streetAddress: 'ул. Шверника, д. 6, к. 1, помещ. 8П',
+            streetAddress: 'вн.тер.г. муниципальный округ Академический, ул. Шверника, д. 6, к. 1, помещ. 8П',
             addressLocality: 'Москва',
             addressRegion: 'Москва',
             postalCode: '117292',
@@ -427,12 +434,16 @@ export function generateBlogPostingJsonLd(post: any): Record<string, unknown> {
             name: SITE_NAME,
             logo: {
                 '@type': 'ImageObject',
-                url: `${SITE_URL}/logo.png`
+                url: `${SITE_URL}/vedashi-logo.png`
             }
         },
         mainEntityOfPage: {
             '@type': 'WebPage',
             '@id': `${SITE_URL}/blog/${post.slug}`
+        },
+        speakable: {
+            '@type': 'SpeakableSpecification',
+            cssSelector: ['h1', '.blog-content p:first-of-type', 'meta[name="description"]']
         }
     };
 }
@@ -502,10 +513,37 @@ export function generateOrganizationJsonLd(): Record<string, unknown> {
     return {
         '@context': 'https://schema.org',
         '@type': 'Organization',
+        '@id': `${SITE_URL}/#organization`,
         name: SITE_NAME,
+        legalName: 'ООО ВЕДАШИ ХЕРБАЛС',
+        alternateName: ['Vedashi', 'ООО ВЕДАШИ ХЕРБАЛС'],
         url: SITE_URL,
-        logo: `${SITE_URL}/logo.png`,
+        logo: `${SITE_URL}/vedashi-logo.png`,
         description: 'ООО ВЕДАШИ ХЕРБАЛС — российский поставщик премиальных аюрведических продуктов и натуральных травяных средств.',
+        taxID: '9727117720',
+        foundingDate: '2025',
+        foundingLocation: {
+            '@type': 'Place',
+            name: 'Москва, Россия'
+        },
+        address: {
+            '@type': 'PostalAddress',
+            streetAddress: 'вн.тер.г. муниципальный округ Академический, ул. Шверника, д. 6, к. 1, помещ. 8П',
+            addressLocality: 'Москва',
+            addressRegion: 'Москва',
+            postalCode: '117292',
+            addressCountry: 'RU'
+        },
+        contactPoint: {
+            '@type': 'ContactPoint',
+            contactType: 'customer support',
+            telephone: '+7-985-110-01-35',
+            email: 'info@vedashiherbals.com',
+            availableLanguage: 'Russian'
+        },
+        sameAs: [
+            'https://www.linkedin.com/company/vedashi-herbals/'
+        ]
     };
 }
 
@@ -514,8 +552,10 @@ export function generateWebSiteJsonLd(): Record<string, unknown> {
     return {
         '@context': 'https://schema.org',
         '@type': 'WebSite',
+        '@id': `${SITE_URL}/#website`,
         name: SITE_NAME,
         url: SITE_URL,
+        publisher: { '@id': `${SITE_URL}/#organization` },
         inLanguage: 'ru-RU',
         potentialAction: {
             '@type': 'SearchAction',

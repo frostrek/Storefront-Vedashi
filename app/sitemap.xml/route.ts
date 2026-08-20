@@ -3,6 +3,8 @@ import { ROUTES } from '@/lib/routes';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashiherbals.com';
 
+export const dynamic = 'force-dynamic';
+
 interface StaticPageEntry {
     path: string;
     changefreq: string;
@@ -11,14 +13,35 @@ interface StaticPageEntry {
 
 async function fetchSitemapData() {
     try {
-        const [pRes, cRes] = await Promise.all([
-            fetch(`${API_URL}/api/sitemap/products`, { next: { revalidate: 3600 } }),
-            fetch(`${API_URL}/api/sitemap/categories`, { next: { revalidate: 3600 } }),
-        ]);
-        return {
-            products: pRes.ok ? await pRes.json() : [],
-            categories: cRes.ok ? await cRes.json() : []
+        const extractData = async (url: string, fallbackUrl: string, fallbackKey: string) => {
+            let res = await fetch(url, { next: { revalidate: 3600 } });
+            
+            // Fallback if the dedicated sitemap endpoint doesn't exist (e.g. 404)
+            if (!res.ok && fallbackUrl) {
+                res = await fetch(fallbackUrl, { next: { revalidate: 3600 } });
+            }
+
+            if (!res.ok) return [];
+            
+            try {
+                const json = await res.json();
+                if (Array.isArray(json)) return json;
+                if (json && json.data) {
+                    if (Array.isArray(json.data)) return json.data;
+                    if (json.data[fallbackKey] && Array.isArray(json.data[fallbackKey])) return json.data[fallbackKey];
+                }
+                return [];
+            } catch {
+                return [];
+            }
         };
+
+        const [products, categories] = await Promise.all([
+            extractData(`${API_URL}/api/sitemap/products`, `${API_URL}/api/products?limit=1000`, 'products'),
+            extractData(`${API_URL}/api/sitemap/categories`, `${API_URL}/api/categories?limit=500`, 'categories'),
+        ]);
+
+        return { products, categories };
     } catch (error) {
         const e = error as { code?: string; message?: string };
         if (e.code === 'ECONNREFUSED' || e.message?.includes('fetch failed')) {

@@ -34,6 +34,7 @@ export interface HeroSlide {
     buttons: ButtonElement[];
     overlay_opacity: number;
     link_url?: string;
+    alt_text?: string;
 }
 
 export interface HeroSettings {
@@ -203,7 +204,7 @@ export default function HeroCarousel({ initialSlides = [], initialSettings = und
                 >
                     <Image
                         src={s.image_url}
-                        alt={s.headings?.[0]?.text || 'Hero banner'}
+                        alt={s.alt_text || s.headings?.[0]?.text || 'Hero banner'}
                         fill
                         sizes="100vw"
                         className="object-cover object-center"
@@ -287,7 +288,7 @@ export default function HeroCarousel({ initialSlides = [], initialSettings = und
                     return (
                         <Link
                             href={`${slide.link_url.startsWith('/') ? '' : '/'}${slide.link_url}`}
-                            aria-label={slide.headings?.[0]?.text || 'View details'}
+                            aria-label={slide.alt_text || slide.headings?.[0]?.text || 'View details'}
                             className="relative z-20 mx-auto max-w-7xl px-4 py-2 sm:py-8 md:py-10 lg:py-12 text-center w-full h-full flex flex-col justify-center cursor-pointer"
                         >
                             {slideContent}

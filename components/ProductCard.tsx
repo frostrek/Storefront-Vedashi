@@ -888,7 +888,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             {isBase64 ? (
                                 <img
                                     src={imageSrc}
-                                    alt={`${product.product_name} - Premium ${product.category || 'Wellness Product'} by ${product.brand || 'Vedashi'}`}
+                                    alt={`${product.product_name} — ${product.category || 'Велнес продукт'} от ${product.brand || 'Vedashi Herbals'}`}
                                     className="object-contain w-full h-full transition-transform duration-500 group-hover:scale-105"
                                     loading={priority ? 'eager' : 'lazy'}
                                     decoding="async"
@@ -896,7 +896,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             ) : isExternal ? (
                                 <Image
                                     src={imageSrc}
-                                    alt={`${product.product_name} - Premium ${product.category || 'Wellness Product'} by ${product.brand || 'Vedashi'}`}
+                                    alt={`${product.product_name} — ${product.category || 'Велнес продукт'} от ${product.brand || 'Vedashi Herbals'}`}
                                     fill
                                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
                                     className="object-contain transition-transform duration-500 group-hover:scale-105"
@@ -908,7 +908,7 @@ export default function ProductCard({ product, onMoveToCart, priority = false, l
                             ) : (
                                 <Image
                                     src={imageSrc}
-                                    alt={`${product.product_name} - Premium ${product.category || 'Wellness Product'} by ${product.brand || 'Vedashi'}`}
+                                    alt={`${product.product_name} — ${product.category || 'Велнес продукт'} от ${product.brand || 'Vedashi Herbals'}`}
                                     width={400}
                                     height={400}
                                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"

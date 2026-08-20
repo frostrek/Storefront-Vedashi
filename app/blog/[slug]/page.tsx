@@ -45,6 +45,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
             type: 'article',
             publishedTime: post.published_at || undefined,
             authors: post.author_name ? [post.author_name] : undefined,
+            section: (post as any).category?.name || (post as any).category || RU_DICTIONARY.globalSeo.blog.defaultSection,
+            tags: (post as any).tags ? (Array.isArray((post as any).tags) ? (post as any).tags : (post as any).tags.split(',').map((t: string) => t.trim())) : RU_DICTIONARY.globalSeo.blog.defaultTags,
             images: ogImage ? [ogImage] : [],
         },
         twitter: {

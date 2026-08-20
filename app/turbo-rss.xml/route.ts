@@ -2,6 +2,8 @@ import { getBlogPosts, BlogPost } from '@/lib/api';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vedashiherbals.com';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Yandex Turbo Pages RSS Feed.
  *

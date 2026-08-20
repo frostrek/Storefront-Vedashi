@@ -49,7 +49,7 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-/** Flatten backend cart item → easy-to-consume shape with top-level product_id, product_name, price */
+/** Flatten backend cart item → easy-to-consume shapes with top-level product_id, product_name, price */
 function flattenCartItem(item: BackendCartItem): BackendCartItem {
     return {
         ...item,
@@ -75,7 +75,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const pendingQtyUpdates = useRef(0);
 
     const { resolvePrice, currencyConfigs, countryCode } = useCurrency();
-    
+
     // Derived values using useMemo
     const totalItems = useMemo(() => new Set(items.map(i => String(i.product_id))).size, [items]);
     const totalPrice = useMemo(() => items.reduce((s, i) => {
@@ -85,7 +85,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         const packPrice = discountedUnitPrice * packSize;
         return s + packPrice * i.quantity;
     }, 0), [items]);
-    
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [couponCode, setCouponCode] = useState<string | null>(null);
@@ -244,7 +244,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
                 // Calculate the accurate *local* cart total using active country overrides
                 const localCartTotal = items.reduce((sum, item) => sum + resolvePrice(item.price, item.country_prices) * item.quantity, 0);
-                
+
                 // Get current exchange rate for backwards conversion
                 const upperCode = countryCode.toUpperCase();
                 const config = currencyConfigs.find(c => c.country_code === upperCode);
