@@ -61,7 +61,7 @@ export function useFilters(formatPrice?: (v: number) => string) {
     const router = useRouter();
     const pathname = usePathname();
 
-    // Read current state from URLs
+    // Read current state from URL
     const filters: FilterState = useMemo(() => {
         const attributes: Record<string, string[]> = {};
         searchParams.forEach((val, key) => {
