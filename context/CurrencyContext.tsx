@@ -80,7 +80,7 @@ export function CurrencyProvider({
   useEffect(() => {
     async function fetchCurrencyConfig() {
       try {
-        const res = await fetch(`${API_URL}/api/currency-config`, { next: { revalidate: 3600 } } as any);
+        const res = await fetch(`${API_URL}/api/currency-config`);
         if (res.ok) {
           const data = await res.json();
           if (data.success && Array.isArray(data.data)) {

@@ -341,7 +341,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         if (!isAuthenticated) {
             restoreGuestCart();
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+         
     }, []);
 
     // Auto-apply effect
@@ -370,7 +370,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             });
         }
         // We only want to re-run this when items or total price changes to keep discount accurate
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+         
     }, [items.length, totalPrice]);
 
     const addItem = useCallback(async (productId: string, variantId: string | null, quantity = 1, packSize?: number) => {

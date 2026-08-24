@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Facebook, Instagram, Twitter, Youtube, Linkedin, Globe, MapPin, Phone, Mail, Leaf, Truck, RotateCcw, ShieldCheck, FileText, ExternalLink, Search } from 'lucide-react';
+import { Send, Facebook, Instagram, Twitter, Youtube, Linkedin, Globe, MapPin, Phone, Mail, Leaf, Truck, RotateCcw, ShieldCheck, FileText, ExternalLink, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { useCookieConsent } from '@/context/CookieConsentContext';
@@ -56,6 +56,7 @@ interface FooterData {
 // ─── Platform icon map ────────────────────────────────────────────
 
 const SOCIAL_ICONS: Record<string, any> = {
+    telegram: Send,
     instagram: Instagram,
     facebook: Facebook,
     twitter: Twitter,
@@ -89,7 +90,8 @@ const FALLBACK: FooterData = {
         },
     ],
     social: [
-        { platform: 'Instagram', url: '#', icon_name: 'instagram' },
+        { platform: 'Telegram', url: 'https://t.me/vedashiherbals', icon_name: 'telegram' },
+        { platform: 'Instagram', url: 'https://www.instagram.com/vedashiherbals/', icon_name: 'instagram' },
         { platform: 'YouTube', url: '#', icon_name: 'youtube' },
         { platform: 'Facebook', url: '#', icon_name: 'facebook' },
     ],

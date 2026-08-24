@@ -1,5 +1,5 @@
 'use client';
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 
 import { useState, useEffect, Suspense, useRef } from 'react';
 import { RU_DICTIONARY } from '@/content/ru';

@@ -129,7 +129,7 @@ export default function ExportOrdersModal({
                 toast(RU_DICTIONARY.account.exportOrdersModal.onlyExportingFirst50, { icon: '⚠️' });
 
             // ── Fetch all order details up-front ──────────────────────────
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             const detailedOrders: any[] = [];
             for (let i = 0; i < maxExportLength; i++) {
                 const basic = filteredOut[i];
@@ -142,7 +142,7 @@ export default function ExportOrdersModal({
                 }
 
                 // Pre-fetch item images
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 
                 const rawItems: any[] =
                     detail.items && detail.items.length > 0
                         ? detail.items
@@ -155,7 +155,7 @@ export default function ExportOrdersModal({
                         item._b64 = await getBase64ImageFromUrl(item.thumbnail_url);
                     }
                 }
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 
                 (detail as any)._items = rawItems;
                 detailedOrders.push(detail);
             }
@@ -296,7 +296,7 @@ export default function ExportOrdersModal({
                 doc.text(custEmail, ML + 3, currentY + 14);
 
                 // Shipping address (below email)
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 
                 const adr = (order as any).shipping_address;
                 let adrText = 'No address on record';
                 if (adr?.address_line1) {
@@ -367,9 +367,9 @@ export default function ExportOrdersModal({
                 currentY += 25; // after the two-column row
 
                 // ── Items table ────────────────────────────────────────────
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 
                 const items: any[] = order._items || [];
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 
                 const tableRows: any[] = items.map((item: any) => {
                     const name = item.product?.product_name || item.product_name || 'Product';
                     const brand = item.product?.brand || '';
@@ -425,7 +425,7 @@ export default function ExportOrdersModal({
                     },
                     alternateRowStyles: { fillColor: CREAM },
                     margin: { left: ML, right: MR },
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                     
                     didDrawCell: (data: any) => {
                         if (data.section === 'body' && data.column.index === 0) {
                             const item = items[data.row.index];
@@ -453,9 +453,9 @@ export default function ExportOrdersModal({
                 const rValX = PW - MR - 4;
                 const lineH = 6;
 
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 
                 const subtotalAmt = (order as any).subtotal ?? order.total_amount ?? 0;
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 
                 const grandTotal = (order as any).final_total ?? order.total_amount ?? 0;
 
                 const boxH = lineH + 12; // subtotal row + grand total row

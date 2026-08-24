@@ -29,7 +29,7 @@ export default async function Image() {
         }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+          { }
           <img 
             src={`data:image/png;base64,${logoData.toString('base64')}`} 
             alt="Vedashi Logo" 

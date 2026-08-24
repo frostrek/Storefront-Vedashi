@@ -204,7 +204,7 @@ function ProductImageGalleryInner({
     // Hydration fix: Base64 dataURIs load so fast they often finish before React attaches onLoad
     useEffect(() => {
         if (imageRef.current?.complete && !imageLoaded) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
+             
             setImageLoaded(true);
         }
     }, [activeIndex, images, imageLoaded]);

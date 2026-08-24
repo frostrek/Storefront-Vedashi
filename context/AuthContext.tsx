@@ -1,3 +1,4 @@
+"use no memo";
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
@@ -196,7 +197,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     setIsLoading(false);
                 });
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+         
     }, []);
 
     const login = useCallback(async (email: string, password: string, rememberMe: boolean = true, turnstileToken?: string | null) => {

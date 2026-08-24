@@ -1,3 +1,4 @@
+"use no memo";
 import React from 'react';
 
 interface Block {
@@ -42,7 +43,7 @@ export default function LegalContentRenderer({ content }: LegalContentRendererPr
                 </div>
             );
         }
-    } catch (e) {
+    } catch (e) { return null;
         // Fallback for legacy HTML content
     }
 

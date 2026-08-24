@@ -44,7 +44,7 @@ export function CookieConsentProvider({ children }: { children: ReactNode }) {
         if (match) {
             try {
                 const parsedConsent = JSON.parse(decodeURIComponent(match[2]));
-                // eslint-disable-next-line react-hooks/set-state-in-effect
+                 
                 setConsent(parsedConsent);
                 setShowBanner(false);
             } catch {

@@ -47,11 +47,12 @@ export function useScrollDepthTracker(pageType: string) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [pageType]);
   
-  return firedThresholds.current; // Expose for engagement score
+  return firedThresholds; // Return ref to avoid accessing .current during render
+
 }
 
 export function useTimeOnPageTracker(pageType: string) {
-  const startTime = useRef<number>(Date.now());
+  const startTime = useRef<number>(0);
   const hasFired = useRef<boolean>(false);
 
   useEffect(() => {
@@ -117,7 +118,7 @@ export function useEngagementScore(pageType: string) {
       
       if (!hasFiredScore.current && isConsentGranted()) {
         const timeSpent = Math.min(Math.round((Date.now() - timeTracker.current) / 1000), MAX_TIME_SECONDS);
-        const maxScroll = Math.max(0, ...Array.from(scrollTracker));
+        const maxScroll = Math.max(0, ...Array.from(scrollTracker.current));
 
         // Formula: (scroll% / 100) × 40 + (time / max_time) × 40 + interactions × 20
         // Cap the interaction term at 20 (assuming let's say 1 interaction = 2 points, max 10 interactions)

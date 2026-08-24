@@ -160,7 +160,7 @@ export function useFilters(formatPrice?: (v: number) => string) {
             case 'discount_min': setDiscountMin(null); break;
             case 'sort': setSort(''); break;
         }
-    }, [filters, setBrands, setCountry, setRatings, setCategory, setSubCategory, setSearch, setPriceRange, setInStock, setBestSellers, setNewArrivals, setSort, setDiscountMin, setAttribute, setParam]);
+    }, [filters, setBrands, setCountry, setForm, setSpecialities, setRatings, setCategory, setSubCategory, setSubSubCategory, setSearch, setPriceRange, setInStock, setBestSellers, setNewArrivals, setSort, setDiscountMin, setAttribute, setParam]);
 
     // Build chips from active filters
     const activeChips = useMemo(() => {
@@ -191,7 +191,7 @@ export function useFilters(formatPrice?: (v: number) => string) {
         });
 
         return chips;
-    }, [filters]);
+    }, [filters, formatPrice]);
 
     return {
         filters,

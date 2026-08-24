@@ -95,7 +95,7 @@ export function pushAttributionEvent(): void {
   const attribution = getAttribution();
   if (!attribution) return;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const w = window as any;
   w.dataLayer = w.dataLayer || [];
   w.dataLayer.push({

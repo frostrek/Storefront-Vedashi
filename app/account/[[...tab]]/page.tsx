@@ -81,7 +81,7 @@ export default function AccountPage() {
     // Orders state
     const [orders, setOrders] = useState<Order[]>([]);
     const [ordersLoading, setOrdersLoading] = useState(false);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const [selectedOrderDetails, setSelectedOrderDetails] = useState<any | null>(null);
     const [isOrderLoading, setIsOrderLoading] = useState(false);
     const [isTrackOrderModalOpen, setIsTrackOrderModalOpen] = useState(false);
@@ -1024,7 +1024,7 @@ export default function AccountPage() {
 
                 // Continue to update the rest of the profile if it was being edited
                 if (!user?.id) return;
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                 
                 const { has_password, is_email_verified, is_mobile_verified, email, ...updateData } = profileData;
                 const profileRes = await updateCustomerProfile(user.id, updateData);
 
@@ -1494,7 +1494,7 @@ export default function AccountPage() {
                     <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
                         <div className="h-9 w-9 rounded-full bg-[#91c934] flex items-center justify-center overflow-hidden border-2 border-white shadow-sm">
                             {profileImageUrl ? (
-                                // eslint-disable-next-line @next/next/no-img-element
+                                 
                                 <img
                                     src={profileImageUrl}
                                     alt="Profile"
@@ -1609,7 +1609,7 @@ export default function AccountPage() {
                                         <div className="absolute inset-0 bg-gradient-radial from-white to-[#F8F5F0] rounded-full shadow-[0_0_40px_rgba(212,168,71,0.15)] blur-md"></div>
                                         <div className="relative w-full h-full rounded-full border-4 border-white overflow-hidden shadow-xl bg-gray-200 flex items-center justify-center">
                                             {profileImageUrl ? (
-                                                // eslint-disable-next-line @next/next/no-img-element
+                                                 
                                                 <img
                                                     src={profileImageUrl}
                                                     alt="Profile"
@@ -1794,7 +1794,7 @@ export default function AccountPage() {
                                                     <div key={item.product_id} className="flex gap-4 group cursor-pointer" onClick={() => router.push(`/products/${item.slug || item.product_id}`)}>
                                                         <div className="h-16 w-16 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-center p-2 flex-shrink-0 overflow-hidden">
                                                             {item.image_url ? (
-                                                                // eslint-disable-next-line @next/next/no-img-element
+                                                                 
                                                                 <img src={item.image_url} alt={item.product_name} className="h-full w-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500" />
                                                             ) : (
                                                                 <Package className="h-6 w-6 text-warm-gray/40" />
@@ -2010,7 +2010,7 @@ export default function AccountPage() {
                                                             {/* Image */}
                                                             <div className="relative h-20 w-20 sm:h-24 sm:w-24 rounded-3xl bg-gray-50 border border-gray-100 flex-shrink-0 flex items-center justify-center overflow-hidden">
                                                                 {prodImg ? (
-                                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                                     
                                                                     <img src={prodImg} alt="Product" className="h-full w-full object-cover mix-blend-multiply" />
                                                                 ) : (
                                                                     <Package className="h-8 w-8 text-warm-gray/40" />
@@ -2169,7 +2169,7 @@ export default function AccountPage() {
                                                                         <div className="flex items-center gap-4 min-w-0">
                                                                             <div className="h-10 w-10 bg-white rounded-lg border border-gray-100 flex items-center justify-center p-1 flex-shrink-0">
                                                                                 {prodImg ? (
-                                                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                                                     
                                                                                     <img src={prodImg} alt={prodName} className="h-full w-full object-contain mix-blend-multiply" />
                                                                                 ) : (
                                                                                     <Package className="h-5 w-5 text-warm-gray/40" />
@@ -2958,7 +2958,7 @@ export default function AccountPage() {
                                         <div className="relative group">
                                             <div className="h-28 w-28 rounded-full border-4 border-white shadow-md overflow-hidden bg-cream-dark flex items-center justify-center">
                                                 {profileImageUrl ? (
-                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                     
                                                     <img
                                                         src={profileImageUrl}
                                                         alt="Profile"

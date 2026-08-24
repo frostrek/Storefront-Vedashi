@@ -389,7 +389,7 @@ export async function getBestSellers(params?: {
 
         const qs = sp.toString();
         const url = `${API_URL}/api/products/best-sellers${qs ? '?' + qs : ''}`;
-        const res = await fetch(url, { next: { revalidate: 60 }, credentials: 'include' });
+        const res = await fetch(url, { ...(typeof window === 'undefined' ? { next: { revalidate: 60 } } : {}), credentials: 'include' });
         const json = await res.json();
 
         if (json.success && json.data) {
@@ -449,7 +449,7 @@ export async function getNewArrivals(params?: {
 
         const qs = sp.toString();
         const url = `${API_URL}/api/products/new-arrivals${qs ? '?' + qs : ''}`;
-        const res = await fetch(url, { next: { revalidate: 60 }, credentials: 'include' });
+        const res = await fetch(url, { ...(typeof window === 'undefined' ? { next: { revalidate: 60 } } : {}), credentials: 'include' });
         const json = await res.json();
 
         if (json.success && json.data) {
@@ -1679,7 +1679,7 @@ export async function clearWishlist() {
 export async function getCategories(tree?: boolean): Promise<any[]> {
     try {
         const qs = tree ? '?tree=true' : '';
-        const res = await fetch(`${API_URL}/api/categories${qs}`, { next: { revalidate: 60 }, credentials: 'include' });
+        const res = await fetch(`${API_URL}/api/categories${qs}`, { ...(typeof window === 'undefined' ? { next: { revalidate: 60 } } : {}), credentials: 'include' });
         if (!res.ok) return [];
         const json: ApiResponse<any[]> = await res.json();
         return json.success && json.data ? json.data : [];
@@ -2315,7 +2315,7 @@ export async function trackOrder(orderId: string) {
 export async function getHeroSlides(): Promise<{ success: boolean; data: any[] }> {
     try {
         const res = await apiFetch(`${API_URL}/api/media/hero/active`, {
-            next: { revalidate: 60 },
+            ...(typeof window === 'undefined' ? { next: { revalidate: 60 } } : {}),
             credentials: 'include'
         });
         if (!res.ok) return { success: false, data: [] };
@@ -2333,7 +2333,7 @@ export async function getHeroSlides(): Promise<{ success: boolean; data: any[] }
 export async function getHeroSettings(): Promise<{ success: boolean; data: any }> {
     try {
         const res = await apiFetch(`${API_URL}/api/media/hero/settings`, {
-            next: { revalidate: 60 },
+            ...(typeof window === 'undefined' ? { next: { revalidate: 60 } } : {}),
             credentials: 'include'
         });
         if (!res.ok) return { success: false, data: null };

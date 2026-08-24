@@ -308,7 +308,7 @@ function ProductsContent({
         setHasMore(true);
         fetchPage(1, cancelled, true);
         return () => { cancelled.value = true; };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+         
     }, [filtersKey]);
 
     // GA4: view_item_list

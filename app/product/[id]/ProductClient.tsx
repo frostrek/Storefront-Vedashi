@@ -317,7 +317,7 @@ function ProductDetailContent({ id, country, initialProduct }: Props) {
             }, 300);
             return () => clearTimeout(timer);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+         
     }, [searchParams, isAuthenticated, product, loading]);
 
     if (loading) {
