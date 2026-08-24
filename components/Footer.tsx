@@ -90,6 +90,7 @@ const FALLBACK: FooterData = {
         },
     ],
     social: [
+        { platform: 'VK', url: 'https://vk.ru/vedashiherbals', icon_name: 'vk' },
         { platform: 'Telegram', url: 'https://t.me/vedashiherbals', icon_name: 'telegram' },
         { platform: 'Instagram', url: 'https://www.instagram.com/vedashiherbals/', icon_name: 'instagram' },
         { platform: 'YouTube', url: '#', icon_name: 'youtube' },

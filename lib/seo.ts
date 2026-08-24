@@ -543,6 +543,7 @@ export function generateOrganizationJsonLd(): Record<string, unknown> {
             availableLanguage: 'Russian'
         },
         sameAs: [
+            'https://vk.ru/vedashiherbals',
             'https://www.instagram.com/vedashiherbals/',
             'https://www.linkedin.com/company/vedashi-herbals/',
             'https://t.me/vedashiherbals'
